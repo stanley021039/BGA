@@ -6,6 +6,8 @@ import { readSpectatorSnapshot, type SpectatorSnapshot } from '../contracts/spec
 import UiButton from './UiButton.vue';
 import UiLink from './UiLink.vue';
 import UiPanel from './UiPanel.vue';
+import UiList from './UiList.vue';
+import UiListRow from './UiListRow.vue';
 import StatusSlot from './StatusSlot.vue';
 import RoomCountdown from './RoomCountdown.vue';
 import SpectatorCanvas from './SpectatorCanvas.vue';
@@ -237,7 +239,9 @@ onBeforeUnmount(() => {
         v-for="(section, i) in state.sections"
         :key="state.type + ':' + i"
         :title="section.title"
-        ><p v-for="(line, j) in section.lines" :key="j">{{ line }}</p
+        ><p v-if="!section.lines.length && !section.items.length">尚無公開資料。</p
+        ><UiList v-if="section.lines.length"
+          ><UiListRow v-for="(line, j) in section.lines" :key="j">{{ line }}</UiListRow></UiList
         ><dl v-if="section.items.length" class="vue-spectator-items"
           ><div v-for="(item, j) in section.items" :key="j"
             ><dt>{{ item.label }}</dt

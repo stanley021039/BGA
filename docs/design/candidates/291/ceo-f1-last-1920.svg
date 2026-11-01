@@ -1,0 +1,1558 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="CEO-S-20261026-R6-F1-LAST-1920" width="1920" height="2119" viewBox="0 0 1920 2119">
+  <g id="Node-1">
+    <rect x="0" y="0" width="1920" height="2118.8" rx="0" fill="rgb(251, 248, 252)" />
+    <g id="Node-33">
+      <rect x="0" y="0" width="1920" height="2118.8" rx="0" fill="rgb(251, 248, 252)" />
+      <g id="Node-34">
+        <g id="Node-35">
+          <rect x="0" y="56" width="1920" height="66" rx="0" fill="rgb(255, 218, 214)" />
+          <g id="Node-36">
+            <g id="Node-37">
+              <rect x="24" y="73" width="32" height="32" rx="9999" fill="rgb(186, 26, 26)" />
+              <g id="Icon-7" transform="translate(30 79)" color="rgb(255, 255, 255)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(255, 255, 255)" stroke="rgb(255, 255, 255)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </g>
+            </g>
+            <g id="Node-39">
+              <g id="Node-40">
+                <g id="Node-41">
+                  <text id="Text-9" x="64" y="86.4" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">第 13 輪・最後一輪行動階段</text>
+                </g>
+                <g id="Node-42">
+                  <rect x="313.188" y="68" width="56" height="20" rx="4" fill="rgb(186, 26, 26)" />
+                  <text id="Text-10" x="317.188" y="83.12" fill="rgb(255, 255, 255)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">最後一輪</text>
+                </g>
+                <g id="Node-43">
+                  <rect x="373.188" y="68" width="68" height="20" rx="4" fill="rgb(24, 24, 27)" />
+                  <text id="Text-11" x="377.188" y="83.12" fill="rgb(253, 251, 247)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">已觸發終局</text>
+                </g>
+                <g id="Node-44">
+                  <text id="Text-12" x="445.188" y="83.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">（非固定總輪數制）</text>
+                </g>
+              </g>
+              <g id="Node-45">
+                <text id="Text-13" x="64" y="110.24" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">⚠️ 終局倒數警示：已進入最後 1 輪！【全面禁止購買股票】，收購市場公司卡與發放集團股利仍依法正常可用！</text>
+              </g>
+            </g>
+          </g>
+          <g id="Node-46">
+            <g id="Node-47">
+              <rect x="1672" y="77" width="100" height="24" rx="4" fill="rgb(253, 251, 247)" />
+              <g id="Node-48">
+                <rect x="1680" y="85" width="8" height="8" rx="9999" fill="rgb(186, 26, 26)" />
+              </g>
+              <text id="Text-14" x="1692" y="94.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">股票市場凍結</text>
+            </g>
+            <g id="Node-49">
+              <rect x="1776" y="77" width="120" height="24" rx="4" fill="rgb(250, 204, 21)" />
+              <g id="Icon-8" transform="translate(1784 81)" color="rgb(24, 24, 27)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </g>
+              <text id="Text-15" x="1804" y="94.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">收購／股利正常</text>
+            </g>
+          </g>
+        </g>
+        <g id="Node-51">
+          <g id="Node-52">
+            <g id="Node-53">
+              <g id="Node-54">
+                <g id="Icon-9" transform="translate(24 150)" color="rgb(115, 92, 0)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(115, 92, 0)" stroke="rgb(115, 92, 0)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </g>
+                <text id="Text-16" x="52" y="168.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="600" xml:space="preserve">玩家席位概覽</text>
+              </g>
+              <g id="Node-56">
+                <text id="Text-17" x="298.325" y="165.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">3 位玩家</text>
+              </g>
+            </g>
+            <g id="Node-57">
+              <rect x="24" y="194" width="320" height="184" rx="12" fill="rgb(255, 255, 255)" />
+              <rect x="24" y="194" width="320" height="184" rx="12" fill="rgb(24, 24, 27)" />
+              <rect x="24" y="194" width="320" height="184" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-58">
+                <rect x="256" y="184" width="76" height="20" rx="4" fill="rgb(250, 204, 21)" />
+                <text id="Text-18" x="264" y="199.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">當前行動中</text>
+              </g>
+              <g id="Node-59">
+                <g id="Node-60">
+                  <rect x="40" y="210" width="40" height="40" rx="9999" fill="rgb(24, 24, 27)" />
+                  <text id="Text-19" x="48.2" y="238.8" fill="rgb(253, 251, 247)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">01</text>
+                </g>
+                <g id="Node-61">
+                  <g id="Node-62">
+                    <g id="Node-63">
+                      <text id="Text-20" x="88" y="228.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">本人</text>
+                    </g>
+                    <g id="Node-64">
+                      <text id="Text-21" x="122" y="227.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">(p0)</text>
+                    </g>
+                  </g>
+                  <g id="Node-65">
+                    <text id="Text-22" x="88" y="245.12" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">主導：科技集團</text>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-66">
+                <rect x="40" y="258" width="288" height="56" rx="8" fill="rgb(246, 242, 247)" />
+                <g id="Node-67">
+                  <g id="Node-68">
+                    <text id="Text-23" x="48" y="279.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">流動現金</text>
+                  </g>
+                  <g id="Node-69">
+                    <text id="Text-24" x="48" y="302.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 140</text>
+                  </g>
+                </g>
+                <g id="Node-70">
+                  <g id="Node-71">
+                    <text id="Text-25" x="186" y="279.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">公開資產</text>
+                  </g>
+                  <g id="Node-72">
+                    <text id="Text-26" x="186" y="302.8" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 90</text>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-73">
+                <g id="Node-74">
+                  <text id="Text-27" x="40" y="335.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">持有股權概況</text>
+                </g>
+                <g id="Node-75">
+                  <g id="Node-76">
+                    <rect x="40" y="342" width="88.488" height="20" rx="4" fill="rgb(228, 225, 230)" />
+                    <text id="Text-28" x="48" y="357.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="500" xml:space="preserve">自持科技 </text>
+                    <g id="Node-77">
+                      <text id="Text-29" x="98.7" y="357.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">1</text>
+                    </g>
+                    <text id="Text-30" x="105.787" y="357.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="500" xml:space="preserve"> 股</text>
+                  </g>
+                  <g id="Node-78">
+                    <rect x="134.488" y="342" width="64.488" height="20" rx="4" fill="rgb(228, 225, 230)" />
+                    <text id="Text-31" x="142.488" y="357.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="500" xml:space="preserve">硬體 </text>
+                    <g id="Node-79">
+                      <text id="Text-32" x="169.188" y="357.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">1</text>
+                    </g>
+                    <text id="Text-33" x="176.275" y="357.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="500" xml:space="preserve"> 股</text>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g id="Node-80" opacity="0.9">
+              <rect x="24" y="394" width="320" height="184" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-81">
+                <g id="Node-82">
+                  <g id="Node-83">
+                    <rect x="40" y="410" width="40" height="40" rx="9999" fill="rgb(228, 225, 230)" />
+                    <text id="Text-34" x="48.2" y="438.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">02</text>
+                  </g>
+                  <g id="Node-84">
+                    <g id="Node-85">
+                      <g id="Node-86">
+                        <text id="Text-35" x="88" y="428.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">Beatrice</text>
+                      </g>
+                      <g id="Node-87">
+                        <text id="Text-36" x="150.6" y="427.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">(p1)</text>
+                      </g>
+                    </g>
+                    <g id="Node-88">
+                      <text id="Text-37" x="88" y="445.12" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">主導：硬體集團</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-89">
+                  <rect x="276" y="420" width="52" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                  <text id="Text-38" x="284" y="435.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">待機中</text>
+                </g>
+              </g>
+              <g id="Node-90">
+                <rect x="40" y="458" width="288" height="56" rx="8" fill="rgb(246, 242, 247)" />
+                <g id="Node-91">
+                  <g id="Node-92">
+                    <text id="Text-39" x="48" y="479.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">流動現金</text>
+                  </g>
+                  <g id="Node-93">
+                    <text id="Text-40" x="48" y="502.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 85</text>
+                  </g>
+                </g>
+                <g id="Node-94">
+                  <g id="Node-95">
+                    <text id="Text-41" x="186" y="479.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">公開資產</text>
+                  </g>
+                  <g id="Node-96">
+                    <text id="Text-42" x="186" y="502.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 110</text>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-97">
+                <g id="Node-98">
+                  <text id="Text-43" x="40" y="535.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">持有股權概況</text>
+                </g>
+                <g id="Node-99">
+                  <g id="Node-100">
+                    <rect x="40" y="542" width="112.037" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                    <text id="Text-44" x="48" y="557.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">科技 </text>
+                    <g id="Node-101">
+                      <text id="Text-45" x="74.713" y="557.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="900" xml:space="preserve">4</text>
+                    </g>
+                    <text id="Text-46" x="81.8" y="557.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve"> 股 (大股東)</text>
+                  </g>
+                  <g id="Node-102">
+                    <rect x="158.038" y="542" width="88.513" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                    <text id="Text-47" x="166.038" y="557.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">自持硬體 </text>
+                    <g id="Node-103">
+                      <text id="Text-48" x="216.75" y="557.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="900" xml:space="preserve">6</text>
+                    </g>
+                    <text id="Text-49" x="223.838" y="557.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve"> 股</text>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g id="Node-104" opacity="0.9">
+              <rect x="24" y="594" width="320" height="184" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-105">
+                <g id="Node-106">
+                  <g id="Node-107">
+                    <rect x="40" y="610" width="40" height="40" rx="9999" fill="rgb(228, 225, 230)" />
+                    <text id="Text-50" x="48.2" y="638.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">03</text>
+                  </g>
+                  <g id="Node-108">
+                    <g id="Node-109">
+                      <g id="Node-110">
+                        <text id="Text-51" x="88" y="628.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">Charlie</text>
+                      </g>
+                      <g id="Node-111">
+                        <text id="Text-52" x="143.338" y="627.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">(p2)</text>
+                      </g>
+                    </g>
+                    <g id="Node-112">
+                      <text id="Text-53" x="88" y="645.12" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">主導：3C集團</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-113">
+                  <rect x="276" y="620" width="52" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                  <text id="Text-54" x="284" y="635.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">待機中</text>
+                </g>
+              </g>
+              <g id="Node-114">
+                <rect x="40" y="658" width="288" height="56" rx="8" fill="rgb(246, 242, 247)" />
+                <g id="Node-115">
+                  <g id="Node-116">
+                    <text id="Text-55" x="48" y="679.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">流動現金</text>
+                  </g>
+                  <g id="Node-117">
+                    <text id="Text-56" x="48" y="702.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 83</text>
+                  </g>
+                </g>
+                <g id="Node-118">
+                  <g id="Node-119">
+                    <text id="Text-57" x="186" y="679.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">公開資產</text>
+                  </g>
+                  <g id="Node-120">
+                    <text id="Text-58" x="186" y="702.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 110</text>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-121">
+                <g id="Node-122">
+                  <text id="Text-59" x="40" y="735.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">持有股權概況</text>
+                </g>
+                <g id="Node-123">
+                  <g id="Node-124">
+                    <rect x="40" y="742" width="64.513" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                    <text id="Text-60" x="48" y="757.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">科技 </text>
+                    <g id="Node-125">
+                      <text id="Text-61" x="74.713" y="757.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="900" xml:space="preserve">2</text>
+                    </g>
+                    <text id="Text-62" x="81.8" y="757.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve"> 股</text>
+                  </g>
+                  <g id="Node-126">
+                    <rect x="110.513" y="742" width="82" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                    <text id="Text-63" x="118.513" y="757.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">自持 3C </text>
+                    <g id="Node-127">
+                      <text id="Text-64" x="162.713" y="757.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="900" xml:space="preserve">7</text>
+                    </g>
+                    <text id="Text-65" x="169.8" y="757.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve"> 股</text>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g id="Node-128">
+              <rect x="24" y="794" width="320" height="169.75" rx="12" fill="rgb(247, 244, 236)" />
+              <g id="Node-129">
+                <g id="Icon-10" transform="translate(40 812)" color="rgb(115, 92, 0)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(115, 92, 0)" stroke="rgb(115, 92, 0)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                    <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </g>
+                <text id="Text-66" x="62" y="826.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">禁買股票專章提示</text>
+              </g>
+              <g id="Node-131">
+                <text id="Text-67" x="40" y="851.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">當有集團公開資產達成突破門檻或倒數觸發，</text>
+                <text id="Text-68" x="40" y="873.79" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">進入終局倒數！本輪已是最後一輪，各席位不</text>
+                <text id="Text-69" x="40" y="896.54" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">得再注入資金認購任何集團股票，請專注於收</text>
+                <text id="Text-70" x="40" y="919.29" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">購具分紅或資產加成的市場卡，或執行集團利</text>
+                <text id="Text-71" x="40" y="942.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">潤分配。</text>
+              </g>
+            </g>
+          </g>
+          <g id="Node-132">
+            <g id="Node-133">
+              <rect x="368" y="146" width="1184" height="620" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-134">
+                <g id="Node-135">
+                  <g id="Node-136">
+                    <g id="Node-137">
+                      <rect x="392" y="178" width="64" height="20" rx="4" fill="rgb(250, 204, 21)" />
+                      <text id="Text-72" x="400" y="193.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">主控集團</text>
+                    </g>
+                    <g id="Node-138">
+                      <text id="Text-73" x="460" y="200.08" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="28" font-weight="700" xml:space="preserve">科技集團 經營控制台</text>
+                    </g>
+                  </g>
+                  <g id="Node-139">
+                    <text id="Text-74" x="392" y="226.24" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">旗下已收購 3 家核心產業 | 下一股購買價：</text>
+                    <g id="Node-140">
+                      <text id="Text-75" x="654.1" y="226.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">99 元</text>
+                    </g>
+                    <text id="Text-76" x="687.8" y="226.24" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve"> | 自持股權：</text>
+                    <g id="Node-141">
+                      <text id="Text-77" x="767.862" y="226.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">1 股</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-142">
+                  <g id="Node-143">
+                    <rect x="1310.838" y="174" width="104" height="52" rx="8" fill="rgb(234, 231, 235)" />
+                    <g id="Node-144">
+                      <text id="Text-78" x="1326.838" y="193.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">集團公開資產</text>
+                    </g>
+                    <g id="Node-145">
+                      <text id="Text-79" x="1331.412" y="216.8" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 90</text>
+                    </g>
+                  </g>
+                  <g id="Node-146">
+                    <rect x="1422.838" y="174" width="105.162" height="52" rx="8" fill="rgb(234, 231, 235)" />
+                    <g id="Node-147">
+                      <text id="Text-80" x="1440" y="193.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">每股分紅收益</text>
+                    </g>
+                    <g id="Node-148">
+                      <text id="Text-81" x="1438.838" y="216.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">7 元 / 股</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-149">
+                <rect x="392" y="254" width="1136" height="92" rx="8" fill="rgb(246, 242, 247)" />
+                <g id="Node-150">
+                  <g id="Node-151">
+                    <text id="Text-82" x="408" y="283.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">科技集團發行股權分佈 (共 7 股)</text>
+                  </g>
+                  <g id="Node-152">
+                    <text id="Text-83" x="1430.3" y="283.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">100.0% 已發行</text>
+                  </g>
+                </g>
+                <g id="Node-153">
+                  <rect x="408" y="290" width="1104" height="16" rx="9999" fill="rgb(234, 231, 235)" />
+                  <g id="Node-154">
+                    <rect x="408" y="290" width="157.863" height="16" rx="0" fill="rgb(250, 204, 21)" />
+                  </g>
+                  <g id="Node-155">
+                    <rect x="565.862" y="290" width="630.375" height="16" rx="0" fill="rgb(24, 24, 27)" />
+                  </g>
+                  <g id="Node-156">
+                    <rect x="1196.238" y="290" width="315.738" height="16" rx="0" fill="rgb(95, 94, 97)" />
+                  </g>
+                </g>
+                <g id="Node-157">
+                  <g id="Node-158">
+                    <g id="Node-159">
+                      <rect x="408" y="316" width="12" height="12" rx="2" fill="rgb(250, 204, 21)" />
+                    </g>
+                    <g id="Node-160">
+                      <text id="Text-84" x="426" y="327.12" fill="rgb(27, 27, 30)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">本人 (p0)：</text>
+                      <g id="Node-161">
+                        <text id="Text-85" x="488.125" y="327.12" fill="rgb(27, 27, 30)" font-family="Noto Sans TC" font-size="12" font-weight="900" xml:space="preserve">1 股 (14.3%)</text>
+                      </g>
+                    </g>
+                  </g>
+                  <g id="Node-162">
+                    <g id="Node-163">
+                      <rect x="838.788" y="316" width="12" height="12" rx="2" fill="rgb(24, 24, 27)" />
+                    </g>
+                    <g id="Node-164">
+                      <text id="Text-86" x="856.788" y="327.12" fill="rgb(27, 27, 30)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">Beatrice (p1)：</text>
+                      <g id="Node-165">
+                        <text id="Text-87" x="942.638" y="327.12" fill="rgb(27, 27, 30)" font-family="Noto Sans TC" font-size="12" font-weight="900" xml:space="preserve">4 股 (57.1%)</text>
+                      </g>
+                      <text id="Text-88" x="1012.938" y="327.12" fill="rgb(27, 27, 30)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve"> 外部控股</text>
+                    </g>
+                  </g>
+                  <g id="Node-166">
+                    <g id="Node-167">
+                      <rect x="1344.013" y="316" width="12" height="12" rx="2" fill="rgb(95, 94, 97)" />
+                    </g>
+                    <g id="Node-168">
+                      <text id="Text-89" x="1362.013" y="327.12" fill="rgb(27, 27, 30)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">Charlie (p2)：</text>
+                      <g id="Node-169">
+                        <text id="Text-90" x="1441.7" y="327.12" fill="rgb(27, 27, 30)" font-family="Noto Sans TC" font-size="12" font-weight="900" xml:space="preserve">2 股 (28.6%)</text>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-170">
+                <rect x="392" y="362" width="1136" height="84" rx="8" fill="rgb(247, 244, 236)" />
+                <g id="Node-171">
+                  <g id="Node-172">
+                    <rect x="408" y="386" width="36" height="36" rx="8" fill="rgb(234, 231, 235)" />
+                    <g id="Icon-11" transform="translate(416 394)" color="rgb(24, 24, 27)">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                        <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </g>
+                  </g>
+                  <g id="Node-174">
+                    <g id="Node-175">
+                      <g id="Node-176">
+                        <text id="Text-91" x="452" y="400.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">本人私人增減牌</text>
+                      </g>
+                      <g id="Node-177">
+                        <rect x="558" y="384" width="123.912" height="20" rx="4" fill="rgb(255, 218, 214)" />
+                        <text id="Text-92" x="566" y="399.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">僅自己可見 (共 2 張)</text>
+                      </g>
+                    </g>
+                    <g id="Node-178">
+                      <text id="Text-93" x="452" y="420.24" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局結算時修正集團公開資產，不計入公司得分</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-179">
+                  <g id="Node-180">
+                    <rect x="1360" y="378" width="72" height="52" rx="8" fill="rgb(255, 218, 214)" />
+                    <g id="Node-181">
+                      <text id="Text-94" x="1372" y="399.12" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">減值密牌</text>
+                    </g>
+                    <g id="Node-182">
+                      <text id="Text-95" x="1380.5" y="420.4" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">-15</text>
+                    </g>
+                  </g>
+                  <g id="Node-183">
+                    <rect x="1440" y="378" width="72" height="52" rx="8" fill="rgb(255, 223, 154)" />
+                    <g id="Node-184">
+                      <text id="Text-96" x="1452" y="399.12" fill="rgb(37, 26, 0)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">增值密牌</text>
+                    </g>
+                    <g id="Node-185">
+                      <text id="Text-97" x="1458.3" y="420.4" fill="rgb(37, 26, 0)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">+10</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-186">
+                <g id="Node-187">
+                  <g id="Node-188">
+                    <text id="Text-98" x="392" y="478.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">旗下已收購公司清單（共 3 家，合計公開資產 NT$ 90，基礎 1 收入 + 6 = 7 元/股）</text>
+                  </g>
+                  <g id="Node-189">
+                    <text id="Text-99" x="1429.65" y="477.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">基礎收入：1 元/股</text>
+                  </g>
+                </g>
+                <g id="Node-190">
+                  <g id="Node-191">
+                    <rect x="392" y="486" width="368" height="180" rx="8" fill="rgb(253, 251, 247)" />
+                    <g id="Node-192">
+                      <g id="Node-193">
+                        <g id="Node-194">
+                          <rect x="408" y="502" width="64" height="20" rx="4" fill="rgb(255, 223, 154)" />
+                          <text id="Text-100" x="416" y="517.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">娛樂類別</text>
+                        </g>
+                        <g id="Node-195">
+                          <text id="Text-101" x="688.65" y="517.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">資產 30 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-196">
+                        <text id="Text-102" x="408" y="548.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">娛樂商務社</text>
+                      </g>
+                      <g id="Node-197">
+                        <g id="Node-198">
+                          <g id="Node-199">
+                            <text id="Text-103" x="408" y="578.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股息加成：</text>
+                          </g>
+                          <g id="Node-200">
+                            <text id="Text-104" x="684.525" y="578.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+2 元 / 股</text>
+                          </g>
+                        </g>
+                        <g id="Node-201">
+                          <g id="Node-202">
+                            <text id="Text-105" x="408" y="602.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                          </g>
+                          <g id="Node-203">
+                            <text id="Text-106" x="679.112" y="602.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">固定 40 分</text>
+                          </g>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-204">
+                      <rect x="408" y="622" width="336" height="28" rx="4" fill="rgb(246, 242, 247)" />
+                      <text id="Text-107" x="416" y="643.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">狀態：營運中・穩定分紅</text>
+                    </g>
+                  </g>
+                  <g id="Node-205">
+                    <rect x="776" y="486" width="368" height="180" rx="8" fill="rgb(253, 251, 247)" />
+                    <g id="Node-206">
+                      <g id="Node-207">
+                        <g id="Node-208">
+                          <rect x="792" y="502" width="64" height="20" rx="4" fill="rgb(228, 225, 230)" />
+                          <text id="Text-108" x="800" y="517.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">金融類別</text>
+                        </g>
+                        <g id="Node-209">
+                          <text id="Text-109" x="1072.65" y="517.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">資產 50 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-210">
+                        <text id="Text-110" x="792" y="548.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">金融事業部</text>
+                      </g>
+                      <g id="Node-211">
+                        <g id="Node-212">
+                          <g id="Node-213">
+                            <text id="Text-111" x="792" y="578.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股息加成：</text>
+                          </g>
+                          <g id="Node-214">
+                            <text id="Text-112" x="1068.525" y="578.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+3 元 / 股</text>
+                          </g>
+                        </g>
+                        <g id="Node-215">
+                          <g id="Node-216">
+                            <text id="Text-113" x="792" y="602.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                          </g>
+                          <g id="Node-217">
+                            <text id="Text-114" x="1063.113" y="602.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">固定 60 分</text>
+                          </g>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-218">
+                      <rect x="792" y="622" width="336" height="28" rx="4" fill="rgb(255, 218, 214)" />
+                      <text id="Text-115" x="800" y="643.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="500" xml:space="preserve">特殊：抽私人減值牌 (已入庫)</text>
+                    </g>
+                  </g>
+                  <g id="Node-219">
+                    <rect x="1160" y="486" width="368" height="180" rx="8" fill="rgb(253, 251, 247)" />
+                    <g id="Node-220">
+                      <g id="Node-221">
+                        <g id="Node-222">
+                          <rect x="1176" y="502" width="64" height="20" rx="4" fill="rgb(228, 225, 230)" />
+                          <text id="Text-116" x="1184" y="517.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">金融類別</text>
+                        </g>
+                        <g id="Node-223">
+                          <text id="Text-117" x="1456.65" y="517.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">資產 10 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-224">
+                        <text id="Text-118" x="1176" y="548.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">金融工作室</text>
+                      </g>
+                      <g id="Node-225">
+                        <g id="Node-226">
+                          <g id="Node-227">
+                            <text id="Text-119" x="1176" y="578.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股息加成：</text>
+                          </g>
+                          <g id="Node-228">
+                            <text id="Text-120" x="1452.525" y="578.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+1 元 / 股</text>
+                          </g>
+                        </g>
+                        <g id="Node-229">
+                          <g id="Node-230">
+                            <text id="Text-121" x="1176" y="602.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                          </g>
+                          <g id="Node-231">
+                            <text id="Text-122" x="1447.113" y="602.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">固定 20 分</text>
+                          </g>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-232">
+                      <rect x="1176" y="622" width="336" height="28" rx="4" fill="rgb(255, 224, 131)" />
+                      <text id="Text-123" x="1184" y="643.12" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">特殊：抽私人增值牌 (已入庫)</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-233">
+                <g id="Node-234">
+                  <rect x="395" y="701" width="1136" height="44" rx="12" fill="rgb(24, 24, 27)" />
+                  <rect x="392" y="698" width="1136" height="44" rx="12" fill="rgb(250, 204, 21)" />
+                  <g id="Icon-12" transform="translate(687.188 710)" color="rgb(24, 24, 27)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                      <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </g>
+                  <text id="Text-124" x="715.188" y="726.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">發放本集團股利（當前旗下收入 7 元/股 × 各股東持股數 = 支付金額，本人得 7 元）</text>
+                </g>
+              </g>
+            </g>
+            <g id="Node-236">
+              <rect x="368" y="790" width="1184" height="670" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-237">
+                <g id="Node-238">
+                  <g id="Node-239">
+                    <g id="Node-240">
+                      <rect x="392" y="822" width="76" height="20" rx="4" fill="rgb(24, 24, 27)" />
+                      <text id="Text-125" x="400" y="837.12" fill="rgb(253, 251, 247)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">市場輸送帶</text>
+                    </g>
+                    <g id="Node-241">
+                      <text id="Text-126" x="476" y="844.08" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="28" font-weight="700" xml:space="preserve">公開公司卡市場</text>
+                    </g>
+                    <g id="Node-242">
+                      <rect x="675.1" y="822" width="100" height="20" rx="4" fill="rgb(250, 204, 21)" />
+                      <text id="Text-127" x="683.1" y="837.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">收購正常進行中</text>
+                    </g>
+                  </g>
+                  <g id="Node-243">
+                    <text id="Text-128" x="392" y="868.24" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">輸送帶由左至右遞增手續費。若購買標有【棄置】的公司，收購結算後將強制棄置輸送帶最左側之剩餘卡片！</text>
+                  </g>
+                </g>
+                <g id="Node-244">
+                  <rect x="1256.775" y="825" width="271.225" height="36" rx="8" fill="rgb(234, 231, 235)" />
+                  <g id="Node-245">
+                    <text id="Text-129" x="1272.775" y="848.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">您的可用現金</text>
+                  </g>
+                  <g id="Node-246">
+                    <text id="Text-130" x="1352.775" y="851.8" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 140</text>
+                  </g>
+                  <g id="Node-247">
+                    <rect x="1440" y="833" width="72" height="20" rx="4" fill="rgb(255, 224, 131)" />
+                    <text id="Text-131" x="1446" y="848.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">全部買得起</text>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-248">
+                <g id="Node-249">
+                  <rect x="392" y="892" width="368" height="264" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-250">
+                    <g id="Node-251">
+                      <g id="Node-252">
+                        <rect x="408" y="908" width="86.138" height="20" rx="4" fill="rgb(234, 231, 235)" />
+                        <text id="Text-132" x="416" y="923.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">格 1 (費 0 元)</text>
+                      </g>
+                      <g id="Node-253">
+                        <text id="Text-133" x="688.388" y="923.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">合計 10 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-254">
+                      <g id="Node-255">
+                        <rect x="408" y="940" width="30.962" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                        <text id="Text-134" x="416" y="955.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">3C</text>
+                      </g>
+                      <g id="Node-256">
+                        <text id="Text-135" x="446.962" y="958.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">3C工作室</text>
+                      </g>
+                    </g>
+                    <g id="Node-257">
+                      <g id="Node-258">
+                        <g id="Node-259">
+                          <text id="Text-136" x="408" y="988.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公司資產：</text>
+                        </g>
+                        <g id="Node-260">
+                          <text id="Text-137" x="710.3" y="988.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">10 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-261">
+                        <g id="Node-262">
+                          <text id="Text-138" x="408" y="1012.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股利收入：</text>
+                        </g>
+                        <g id="Node-263">
+                          <text id="Text-139" x="701.7" y="1012.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+1 / 股</text>
+                        </g>
+                      </g>
+                      <g id="Node-264">
+                        <g id="Node-265">
+                          <text id="Text-140" x="408" y="1036.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                        </g>
+                        <g id="Node-266">
+                          <text id="Text-141" x="679.112" y="1036.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">固定 20 分</text>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-267">
+                      <rect x="408" y="1048" width="336" height="24" rx="4" fill="rgba(255, 224, 131, 0.5)" />
+                      <text id="Text-142" x="416" y="1065.12" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">⚡ 抽私人增值牌 1 張</text>
+                    </g>
+                  </g>
+                  <g id="Node-268">
+                    <g id="Node-269">
+                      <rect x="411" y="1099" width="336" height="44" rx="12" fill="rgb(24, 24, 27)" />
+                      <rect x="408" y="1096" width="336" height="44" rx="12" fill="rgb(250, 204, 21)" />
+                      <g id="Icon-13" transform="translate(527.263 1110)" color="rgb(24, 24, 27)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                          <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </g>
+                      <text id="Text-143" x="549.263" y="1124.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">收購 (10 元)</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-271">
+                  <rect x="776" y="892" width="368" height="264" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-272">
+                    <g id="Node-273">
+                      <g id="Node-274">
+                        <rect x="792" y="908" width="86.138" height="20" rx="4" fill="rgb(234, 231, 235)" />
+                        <text id="Text-144" x="800" y="923.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">格 2 (費 0 元)</text>
+                      </g>
+                      <g id="Node-275">
+                        <text id="Text-145" x="1072.388" y="923.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">合計 30 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-276">
+                      <g id="Node-277">
+                        <rect x="792" y="940" width="40" height="20" rx="4" fill="rgb(228, 225, 230)" />
+                        <text id="Text-146" x="800" y="955.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">金融</text>
+                      </g>
+                      <g id="Node-278">
+                        <text id="Text-147" x="840" y="958.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">金融商務社</text>
+                      </g>
+                    </g>
+                    <g id="Node-279">
+                      <g id="Node-280">
+                        <g id="Node-281">
+                          <text id="Text-148" x="792" y="988.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公司資產：</text>
+                        </g>
+                        <g id="Node-282">
+                          <text id="Text-149" x="1094.3" y="988.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">30 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-283">
+                        <g id="Node-284">
+                          <text id="Text-150" x="792" y="1012.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股利收入：</text>
+                        </g>
+                        <g id="Node-285">
+                          <text id="Text-151" x="1085.7" y="1012.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+2 / 股</text>
+                        </g>
+                      </g>
+                      <g id="Node-286">
+                        <g id="Node-287">
+                          <text id="Text-152" x="792" y="1036.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                        </g>
+                        <g id="Node-288">
+                          <text id="Text-153" x="1063.113" y="1036.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">固定 40 分</text>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-289">
+                      <rect x="792" y="1048" width="336" height="24" rx="4" fill="rgb(255, 218, 214)" />
+                      <text id="Text-154" x="800" y="1065.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">⚠️ 購買後棄最左剩餘卡</text>
+                    </g>
+                  </g>
+                  <g id="Node-290">
+                    <g id="Node-291">
+                      <rect x="795" y="1099" width="336" height="44" rx="12" fill="rgb(24, 24, 27)" />
+                      <rect x="792" y="1096" width="336" height="44" rx="12" fill="rgb(250, 204, 21)" />
+                      <g id="Icon-14" transform="translate(911.263 1110)" color="rgb(24, 24, 27)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                          <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </g>
+                      <text id="Text-155" x="933.263" y="1124.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">收購 (30 元)</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-293">
+                  <rect x="1160" y="892" width="368" height="264" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-294">
+                    <g id="Node-295">
+                      <g id="Node-296">
+                        <rect x="1176" y="908" width="86.138" height="20" rx="4" fill="rgb(234, 231, 235)" />
+                        <text id="Text-156" x="1184" y="923.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">格 3 (費 2 元)</text>
+                      </g>
+                      <g id="Node-297">
+                        <text id="Text-157" x="1456.388" y="923.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">合計 22 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-298">
+                      <g id="Node-299">
+                        <rect x="1176" y="940" width="40" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                        <text id="Text-158" x="1184" y="955.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">零售</text>
+                      </g>
+                      <g id="Node-300">
+                        <text id="Text-159" x="1224" y="958.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">零售研發所</text>
+                      </g>
+                    </g>
+                    <g id="Node-301">
+                      <g id="Node-302">
+                        <g id="Node-303">
+                          <text id="Text-160" x="1176" y="988.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公司資產：</text>
+                        </g>
+                        <g id="Node-304">
+                          <text id="Text-161" x="1478.3" y="988.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">20 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-305">
+                        <g id="Node-306">
+                          <text id="Text-162" x="1176" y="1012.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股利收入：</text>
+                        </g>
+                        <g id="Node-307">
+                          <text id="Text-163" x="1469.7" y="1012.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+1 / 股</text>
+                        </g>
+                      </g>
+                      <g id="Node-308">
+                        <g id="Node-309">
+                          <text id="Text-164" x="1176" y="1036.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                        </g>
+                        <g id="Node-310">
+                          <text id="Text-165" x="1447.113" y="1036.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">固定 30 分</text>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-311">
+                      <rect x="1176" y="1048" width="336" height="24" rx="4" fill="rgb(246, 242, 247)" />
+                      <text id="Text-166" x="1184" y="1065.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">無額外負面效果</text>
+                    </g>
+                  </g>
+                  <g id="Node-312">
+                    <g id="Node-313">
+                      <rect x="1179" y="1099" width="336" height="44" rx="12" fill="rgb(24, 24, 27)" />
+                      <rect x="1176" y="1096" width="336" height="44" rx="12" fill="rgb(250, 204, 21)" />
+                      <g id="Icon-15" transform="translate(1295.263 1110)" color="rgb(24, 24, 27)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                          <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </g>
+                      <text id="Text-167" x="1317.263" y="1124.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">收購 (22 元)</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-315">
+                  <rect x="392" y="1172" width="368" height="264" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-316">
+                    <g id="Node-317">
+                      <g id="Node-318">
+                        <rect x="408" y="1188" width="86.138" height="20" rx="4" fill="rgb(234, 231, 235)" />
+                        <text id="Text-168" x="416" y="1203.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">格 4 (費 4 元)</text>
+                      </g>
+                      <g id="Node-319">
+                        <text id="Text-169" x="688.388" y="1203.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">合計 29 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-320">
+                      <g id="Node-321">
+                        <rect x="408" y="1220" width="40" height="20" rx="4" fill="rgb(250, 204, 21)" />
+                        <text id="Text-170" x="416" y="1235.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">科技</text>
+                      </g>
+                      <g id="Node-322">
+                        <text id="Text-171" x="456" y="1238.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">科技製造所</text>
+                      </g>
+                    </g>
+                    <g id="Node-323">
+                      <g id="Node-324">
+                        <g id="Node-325">
+                          <text id="Text-172" x="408" y="1268.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公司資產：</text>
+                        </g>
+                        <g id="Node-326">
+                          <text id="Text-173" x="710.3" y="1268.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">25 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-327">
+                        <g id="Node-328">
+                          <text id="Text-174" x="408" y="1292.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股利收入：</text>
+                        </g>
+                        <g id="Node-329">
+                          <text id="Text-175" x="701.7" y="1292.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+2 / 股</text>
+                        </g>
+                      </g>
+                      <g id="Node-330">
+                        <g id="Node-331">
+                          <text id="Text-176" x="408" y="1316.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                        </g>
+                        <g id="Node-332">
+                          <text id="Text-177" x="618.038" y="1316.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">每組科技+娛樂 40分</text>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-333">
+                      <rect x="408" y="1328" width="336" height="24" rx="4" fill="rgb(255, 218, 214)" />
+                      <text id="Text-178" x="416" y="1345.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">⚠️ 購買後棄最左剩餘卡</text>
+                    </g>
+                  </g>
+                  <g id="Node-334">
+                    <g id="Node-335">
+                      <rect x="411" y="1379" width="336" height="44" rx="12" fill="rgb(24, 24, 27)" />
+                      <rect x="408" y="1376" width="336" height="44" rx="12" fill="rgb(250, 204, 21)" />
+                      <g id="Icon-16" transform="translate(527.263 1390)" color="rgb(24, 24, 27)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                          <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </g>
+                      <text id="Text-179" x="549.263" y="1404.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">收購 (29 元)</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-337">
+                  <rect x="776" y="1172" width="368" height="264" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-338">
+                    <g id="Node-339">
+                      <g id="Node-340">
+                        <rect x="792" y="1188" width="86.138" height="20" rx="4" fill="rgb(234, 231, 235)" />
+                        <text id="Text-180" x="800" y="1203.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">格 5 (費 6 元)</text>
+                      </g>
+                      <g id="Node-341">
+                        <text id="Text-181" x="1072.388" y="1203.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">合計 31 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-342">
+                      <g id="Node-343">
+                        <rect x="792" y="1220" width="30.962" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                        <text id="Text-182" x="800" y="1235.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">3C</text>
+                      </g>
+                      <g id="Node-344">
+                        <text id="Text-183" x="830.963" y="1238.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">3C製造所</text>
+                      </g>
+                    </g>
+                    <g id="Node-345">
+                      <g id="Node-346">
+                        <g id="Node-347">
+                          <text id="Text-184" x="792" y="1268.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公司資產：</text>
+                        </g>
+                        <g id="Node-348">
+                          <text id="Text-185" x="1094.3" y="1268.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">25 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-349">
+                        <g id="Node-350">
+                          <text id="Text-186" x="792" y="1292.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股利收入：</text>
+                        </g>
+                        <g id="Node-351">
+                          <text id="Text-187" x="1085.7" y="1292.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+2 / 股</text>
+                        </g>
+                      </g>
+                      <g id="Node-352">
+                        <g id="Node-353">
+                          <text id="Text-188" x="792" y="1316.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                        </g>
+                        <g id="Node-354">
+                          <text id="Text-189" x="1012.588" y="1316.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">每組3C+零售 40分</text>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-355">
+                      <rect x="792" y="1328" width="336" height="24" rx="4" fill="rgb(255, 218, 214)" />
+                      <text id="Text-190" x="800" y="1345.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">⚠️ 購買後棄最左剩餘卡</text>
+                    </g>
+                  </g>
+                  <g id="Node-356">
+                    <g id="Node-357">
+                      <rect x="795" y="1379" width="336" height="44" rx="12" fill="rgb(24, 24, 27)" />
+                      <rect x="792" y="1376" width="336" height="44" rx="12" fill="rgb(250, 204, 21)" />
+                      <g id="Icon-17" transform="translate(911.263 1390)" color="rgb(24, 24, 27)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                          <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </g>
+                      <text id="Text-191" x="933.263" y="1404.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">收購 (31 元)</text>
+                    </g>
+                  </g>
+                </g>
+                <g id="Node-359">
+                  <rect x="1160" y="1172" width="368" height="264" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-360">
+                    <g id="Node-361">
+                      <g id="Node-362">
+                        <rect x="1176" y="1188" width="86.138" height="20" rx="4" fill="rgb(234, 231, 235)" />
+                        <text id="Text-192" x="1184" y="1203.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">格 6 (費 8 元)</text>
+                      </g>
+                      <g id="Node-363">
+                        <text id="Text-193" x="1456.388" y="1203.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">合計 43 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-364">
+                      <g id="Node-365">
+                        <rect x="1176" y="1220" width="40" height="20" rx="4" fill="rgb(228, 225, 230)" />
+                        <text id="Text-194" x="1184" y="1235.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">硬體</text>
+                      </g>
+                      <g id="Node-366">
+                        <text id="Text-195" x="1224" y="1238.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">硬體合作社</text>
+                      </g>
+                    </g>
+                    <g id="Node-367">
+                      <g id="Node-368">
+                        <g id="Node-369">
+                          <text id="Text-196" x="1176" y="1268.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公司資產：</text>
+                        </g>
+                        <g id="Node-370">
+                          <text id="Text-197" x="1478.3" y="1268.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">35 元</text>
+                        </g>
+                      </g>
+                      <g id="Node-371">
+                        <g id="Node-372">
+                          <text id="Text-198" x="1176" y="1292.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">股利收入：</text>
+                        </g>
+                        <g id="Node-373">
+                          <text id="Text-199" x="1469.7" y="1292.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">+2 / 股</text>
+                        </g>
+                      </g>
+                      <g id="Node-374">
+                        <g id="Node-375">
+                          <text id="Text-200" x="1176" y="1316.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">終局計分：</text>
+                        </g>
+                        <g id="Node-376">
+                          <text id="Text-201" x="1419.113" y="1316.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">硬體每張 20 分</text>
+                        </g>
+                      </g>
+                    </g>
+                    <g id="Node-377">
+                      <rect x="1176" y="1328" width="336" height="24" rx="4" fill="rgb(255, 218, 214)" />
+                      <text id="Text-202" x="1184" y="1345.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">⚠️ 購買後棄最左剩餘卡</text>
+                    </g>
+                  </g>
+                  <g id="Node-378">
+                    <g id="Node-379">
+                      <rect x="1179" y="1379" width="336" height="44" rx="12" fill="rgb(24, 24, 27)" />
+                      <rect x="1176" y="1376" width="336" height="44" rx="12" fill="rgb(250, 204, 21)" />
+                      <g id="Icon-18" transform="translate(1295.263 1390)" color="rgb(24, 24, 27)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                          <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </g>
+                      <text id="Text-203" x="1317.263" y="1404.24" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">收購 (43 元)</text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g id="Node-381">
+              <rect x="368" y="1484" width="1184" height="538.8" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-382">
+                <g id="Node-383">
+                  <g id="Node-384">
+                    <g id="Node-385">
+                      <rect x="392" y="1516" width="88" height="20" rx="4" fill="rgb(186, 26, 26)" />
+                      <text id="Text-204" x="400" y="1531.12" fill="rgb(255, 255, 255)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">股票交易凍結</text>
+                    </g>
+                    <g id="Node-386">
+                      <text id="Text-205" x="488" y="1538.08" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="28" font-weight="700" xml:space="preserve">全球六大集團持股與資產看板</text>
+                    </g>
+                  </g>
+                  <g id="Node-387">
+                    <text id="Text-206" x="392" y="1562.24" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">🚨 終局倒數中：所有集團股票一律禁止申購。請檢視各集團資本規模與分紅水準。</text>
+                  </g>
+                </g>
+                <g id="Node-388">
+                  <rect x="1396" y="1525" width="132" height="24" rx="4" fill="rgb(255, 218, 214)" />
+                  <g id="Icon-19" transform="translate(1404 1529)" color="rgb(186, 26, 26)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(186, 26, 26)" stroke="rgb(186, 26, 26)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                      <path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </g>
+                  <text id="Text-207" x="1424" y="1542.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">股票申購通道關閉</text>
+                </g>
+              </g>
+              <g id="Node-390">
+                <g id="Node-391">
+                  <rect x="392" y="1586" width="368" height="204.8" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-392">
+                    <g id="Node-393">
+                      <g id="Node-394">
+                        <rect x="408" y="1602" width="90.613" height="20" rx="4" fill="rgb(250, 204, 21)" />
+                        <text id="Text-208" x="416" y="1617.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">本人主導 (p0)</text>
+                      </g>
+                      <g id="Node-395">
+                        <text id="Text-209" x="676.65" y="1617.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">下一股 99 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-396">
+                      <text id="Text-210" x="408" y="1652.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">科技集團</text>
+                    </g>
+                    <g id="Node-397">
+                      <g id="Node-398">
+                        <g id="Node-399">
+                          <text id="Text-211" x="408" y="1686.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公開資產：</text>
+                        </g>
+                        <g id="Node-400">
+                          <text id="Text-212" x="676.575" y="1690.8" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 90</text>
+                        </g>
+                      </g>
+                      <g id="Node-401">
+                        <g id="Node-402">
+                          <text id="Text-213" x="408" y="1714.24" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">每股分紅：</text>
+                        </g>
+                        <g id="Node-403">
+                          <text id="Text-214" x="692.788" y="1714.24" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">7 元 / 股</text>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                  <g id="Node-404" opacity="0.8">
+                    <rect x="408" y="1730.8" width="336" height="44" rx="12" fill="rgb(234, 231, 235)" />
+                    <g id="Icon-20" transform="translate(523 1744.8)" color="rgb(95, 94, 97)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(95, 94, 97)" stroke="rgb(95, 94, 97)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                        <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </g>
+                    <text id="Text-215" x="545" y="1759.04" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">本輪禁買股票</text>
+                  </g>
+                </g>
+                <g id="Node-406">
+                  <rect x="776" y="1586" width="368" height="204.8" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-407">
+                    <g id="Node-408">
+                      <g id="Node-409">
+                        <rect x="792" y="1602" width="117.838" height="20" rx="4" fill="rgb(228, 225, 230)" />
+                        <text id="Text-216" x="800" y="1617.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">Beatrice 主導 (p1)</text>
+                      </g>
+                      <g id="Node-410">
+                        <text id="Text-217" x="1067.613" y="1617.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">下一股 8 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-411">
+                      <text id="Text-218" x="792" y="1652.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">硬體集團</text>
+                    </g>
+                    <g id="Node-412">
+                      <g id="Node-413">
+                        <g id="Node-414">
+                          <text id="Text-219" x="792" y="1691.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公開資產：</text>
+                        </g>
+                        <g id="Node-415">
+                          <text id="Text-220" x="1003.75" y="1690.8" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 110 </text>
+                          <g id="Node-416">
+                            <text id="Text-221" x="1087.513" y="1691.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="400" xml:space="preserve">🔥達標</text>
+                          </g>
+                        </g>
+                      </g>
+                      <g id="Node-417">
+                        <g id="Node-418">
+                          <text id="Text-222" x="792" y="1715.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">每股分紅：</text>
+                        </g>
+                        <g id="Node-419">
+                          <text id="Text-223" x="1076.787" y="1715.04" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">8 元 / 股</text>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                  <g id="Node-420" opacity="0.8">
+                    <rect x="792" y="1730.8" width="336" height="44" rx="12" fill="rgb(234, 231, 235)" />
+                    <g id="Icon-21" transform="translate(907 1744.8)" color="rgb(95, 94, 97)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(95, 94, 97)" stroke="rgb(95, 94, 97)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                        <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </g>
+                    <text id="Text-224" x="929" y="1759.04" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">本輪禁買股票</text>
+                  </g>
+                </g>
+                <g id="Node-422">
+                  <rect x="1160" y="1586" width="368" height="204.8" rx="12" fill="rgb(253, 251, 247)" />
+                  <g id="Node-423">
+                    <g id="Node-424">
+                      <g id="Node-425">
+                        <rect x="1176" y="1602" width="111.625" height="20" rx="4" fill="rgb(228, 225, 230)" />
+                        <text id="Text-225" x="1184" y="1617.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">Charlie 主導 (p2)</text>
+                      </g>
+                      <g id="Node-426">
+                        <text id="Text-226" x="1451.613" y="1617.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">下一股 5 元</text>
+                      </g>
+                    </g>
+                    <g id="Node-427">
+                      <text id="Text-227" x="1176" y="1652.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">3C集團</text>
+                    </g>
+                    <g id="Node-428">
+                      <g id="Node-429">
+                        <g id="Node-430">
+                          <text id="Text-228" x="1176" y="1691.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">公開資產：</text>
+                        </g>
+                        <g id="Node-431">
+                          <text id="Text-229" x="1387.75" y="1690.8" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 110 </text>
+                          <g id="Node-432">
+                            <text id="Text-230" x="1471.513" y="1691.12" fill="rgb(186, 26, 26)" font-family="Noto Sans TC" font-size="12" font-weight="400" xml:space="preserve">🔥達標</text>
+                          </g>
+                        </g>
+                      </g>
+                      <g id="Node-433">
+                        <g id="Node-434">
+                          <text id="Text-231" x="1176" y="1715.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">每股分紅：</text>
+                        </g>
+                        <g id="Node-435">
+                          <text id="Text-232" x="1460.787" y="1715.04" fill="rgb(115, 92, 0)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">9 元 / 股</text>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                  <g id="Node-436" opacity="0.8">
+                    <rect x="1176" y="1730.8" width="336" height="44" rx="12" fill="rgb(234, 231, 235)" />
+                    <g id="Icon-22" transform="translate(1291 1744.8)" color="rgb(95, 94, 97)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(95, 94, 97)" stroke="rgb(95, 94, 97)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                        <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </g>
+                    <text id="Text-233" x="1313" y="1759.04" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">本輪禁買股票</text>
+                  </g>
+                </g>
+                <g id="Node-438" opacity="0.8">
+                  <rect x="392" y="1806.8" width="368" height="192" rx="12" fill="rgb(247, 244, 236)" />
+                  <g id="Node-439">
+                    <g id="Node-440">
+                      <g id="Node-441">
+                        <rect x="408" y="1822.8" width="91.6" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                        <text id="Text-234" x="416" y="1837.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">NPC 市場標竿</text>
+                      </g>
+                      <g id="Node-442">
+                        <text id="Text-235" x="696" y="1837.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">不可申購</text>
+                      </g>
+                    </g>
+                    <g id="Node-443">
+                      <text id="Text-236" x="408" y="1873.2" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">娛樂集團</text>
+                    </g>
+                    <g id="Node-444">
+                      <g id="Node-445">
+                        <g id="Node-446">
+                          <text id="Text-237" x="408" y="1907.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">集團資產規模：</text>
+                        </g>
+                        <g id="Node-447">
+                          <text id="Text-238" x="664.775" y="1911.6" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 100</text>
+                        </g>
+                      </g>
+                      <g id="Node-448">
+                        <g id="Node-449">
+                          <text id="Text-239" x="408" y="1935.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">標竿狀態：</text>
+                        </g>
+                        <g id="Node-450">
+                          <text id="Text-240" x="660" y="1935.04" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">中性資產指數</text>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                  <g id="Node-451">
+                    <rect x="408" y="1950.8" width="336" height="32" rx="8" fill="rgb(234, 231, 235)" />
+                    <text id="Text-241" x="510.238" y="1971.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">純市場標竿 (無股票流通)</text>
+                  </g>
+                </g>
+                <g id="Node-452" opacity="0.8">
+                  <rect x="776" y="1806.8" width="368" height="192" rx="12" fill="rgb(247, 244, 236)" />
+                  <g id="Node-453">
+                    <g id="Node-454">
+                      <g id="Node-455">
+                        <rect x="792" y="1822.8" width="91.6" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                        <text id="Text-242" x="800" y="1837.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">NPC 市場標竿</text>
+                      </g>
+                      <g id="Node-456">
+                        <text id="Text-243" x="1080" y="1837.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">不可申購</text>
+                      </g>
+                    </g>
+                    <g id="Node-457">
+                      <text id="Text-244" x="792" y="1873.2" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">金融集團</text>
+                    </g>
+                    <g id="Node-458">
+                      <g id="Node-459">
+                        <g id="Node-460">
+                          <text id="Text-245" x="792" y="1907.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">集團資產規模：</text>
+                        </g>
+                        <g id="Node-461">
+                          <text id="Text-246" x="1048.775" y="1911.6" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 120</text>
+                        </g>
+                      </g>
+                      <g id="Node-462">
+                        <g id="Node-463">
+                          <text id="Text-247" x="792" y="1935.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">標竿狀態：</text>
+                        </g>
+                        <g id="Node-464">
+                          <text id="Text-248" x="1058" y="1935.04" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">高資產指數</text>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                  <g id="Node-465">
+                    <rect x="792" y="1950.8" width="336" height="32" rx="8" fill="rgb(234, 231, 235)" />
+                    <text id="Text-249" x="894.237" y="1971.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">純市場標竿 (無股票流通)</text>
+                  </g>
+                </g>
+                <g id="Node-466" opacity="0.8">
+                  <rect x="1160" y="1806.8" width="368" height="192" rx="12" fill="rgb(247, 244, 236)" />
+                  <g id="Node-467">
+                    <g id="Node-468">
+                      <g id="Node-469">
+                        <rect x="1176" y="1822.8" width="91.6" height="20" rx="4" fill="rgb(240, 237, 241)" />
+                        <text id="Text-250" x="1184" y="1837.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">NPC 市場標竿</text>
+                      </g>
+                      <g id="Node-470">
+                        <text id="Text-251" x="1464" y="1837.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">不可申購</text>
+                      </g>
+                    </g>
+                    <g id="Node-471">
+                      <text id="Text-252" x="1176" y="1873.2" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">零售集團</text>
+                    </g>
+                    <g id="Node-472">
+                      <g id="Node-473">
+                        <g id="Node-474">
+                          <text id="Text-253" x="1176" y="1907.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">集團資產規模：</text>
+                        </g>
+                        <g id="Node-475">
+                          <text id="Text-254" x="1432.775" y="1911.6" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">NT$ 140</text>
+                        </g>
+                      </g>
+                      <g id="Node-476">
+                        <g id="Node-477">
+                          <text id="Text-255" x="1176" y="1935.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">標竿狀態：</text>
+                        </g>
+                        <g id="Node-478">
+                          <text id="Text-256" x="1428" y="1935.04" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">頂尖資產指數</text>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                  <g id="Node-479">
+                    <rect x="1176" y="1950.8" width="336" height="32" rx="8" fill="rgb(234, 231, 235)" />
+                    <text id="Text-257" x="1278.238" y="1971.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">純市場標竿 (無股票流通)</text>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g id="Node-480">
+              <text id="Text-258" x="805.263" y="2075.92" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">王牌執行長 CEO © 2026 — S-20261026-R6 終局引擎快照</text>
+            </g>
+          </g>
+          <g id="Node-481">
+            <g id="Node-482">
+              <rect x="1576" y="146" width="320" height="260.25" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-483">
+                <g id="Node-484">
+                  <rect x="1592" y="170" width="12" height="12" rx="9999" fill="rgb(186, 26, 26)" />
+                </g>
+                <g id="Node-485">
+                  <text id="Text-259" x="1612" y="184.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">系統戰報廣播</text>
+                </g>
+              </g>
+              <g id="Node-486">
+                <rect x="1592" y="198" width="288" height="120.25" rx="8" fill="rgb(255, 218, 214)" />
+                <g id="Node-487">
+                  <text id="Text-260" x="1600" y="223.04" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">🚨 終局倒數觸發：</text>
+                </g>
+                <text id="Text-261" x="1600" y="245.79" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">「硬體集團」與「3C集團」公開資產皆已突</text>
+                <text id="Text-262" x="1600" y="268.54" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">破 </text>
+                <g id="Node-488">
+                  <text id="Text-263" x="1617.138" y="268.54" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">NT$ 100</text>
+                </g>
+                <text id="Text-264" x="1672.6" y="268.54" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">！</text>
+                <g id="Node-489" opacity="0.9">
+                  <text id="Text-265" x="1600" y="291.37" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">倒數計時結束，當前輪次已正式鎖定為【最終第 13</text>
+                  <text id="Text-266" x="1600" y="307.37" fill="rgb(147, 0, 10)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">輪】！本輪結束將直接進入大結算。</text>
+                </g>
+              </g>
+              <g id="Node-490">
+                <g id="Node-491">
+                  <g id="Icon-23" transform="translate(1592 330.25)" color="rgb(115, 92, 0)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(115, 92, 0)" stroke="rgb(115, 92, 0)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </g>
+                  <g id="Node-493">
+                    <text id="Text-267" x="1614" y="343.37" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">無競標機制、無借款利息</text>
+                  </g>
+                </g>
+                <g id="Node-494">
+                  <g id="Icon-24" transform="translate(1592 352.25)" color="rgb(115, 92, 0)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(115, 92, 0)" stroke="rgb(115, 92, 0)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </g>
+                  <g id="Node-496">
+                    <text id="Text-268" x="1614" y="365.37" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">股票購買功能：永久停用</text>
+                  </g>
+                </g>
+                <g id="Node-497">
+                  <g id="Icon-25" transform="translate(1592 374.25)" color="rgb(115, 92, 0)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" color="rgb(115, 92, 0)" stroke="rgb(115, 92, 0)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </g>
+                  <g id="Node-499">
+                    <text id="Text-269" x="1614" y="387.37" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">市場收購與股利發放：正常運作</text>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g id="Node-500">
+              <rect x="1576" y="422.25" width="320" height="385.5" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-501">
+                <g id="Icon-26" transform="translate(1592 442.25)" color="rgb(115, 92, 0)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(115, 92, 0)" stroke="rgb(115, 92, 0)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="2px">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </g>
+                <text id="Text-270" x="1618" y="460.65" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="700" xml:space="preserve">最後一輪行動指引</text>
+              </g>
+              <g id="Node-503">
+                <text id="Text-271" x="1592" y="491.29" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">身為</text>
+                <g id="Node-504">
+                  <text id="Text-272" x="1620" y="491.29" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">席位 01 (科技集團CEO)</text>
+                </g>
+                <text id="Text-273" x="1766.037" y="491.29" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">，您當前持有現金</text>
+                <text id="Text-274" x="1592" y="514.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">高達 </text>
+                <g id="Node-505">
+                  <text id="Text-275" x="1623.138" y="514.04" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="14" font-weight="700" xml:space="preserve">NT$ 140</text>
+                </g>
+                <text id="Text-276" x="1678.6" y="514.04" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">。您有兩個主要行動方向：</text>
+              </g>
+              <g id="Node-506">
+                <g id="Node-507">
+                  <rect x="1592" y="531.75" width="288" height="78" rx="8" fill="rgb(246, 242, 247)" />
+                  <g id="Node-508">
+                    <text id="Text-277" x="1602" y="554.87" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">選擇 A：收購市場卡</text>
+                  </g>
+                  <g id="Node-509">
+                    <text id="Text-278" x="1602" y="575.99" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">擴張旗下子公司數量，鎖定公司固定計分</text>
+                    <text id="Text-279" x="1602" y="595.99" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">（例如 40分、30分）或連鎖套餐計分。</text>
+                  </g>
+                </g>
+                <g id="Node-510">
+                  <rect x="1592" y="617.75" width="288" height="98" rx="8" fill="rgb(246, 242, 247)" />
+                  <g id="Node-511">
+                    <text id="Text-280" x="1602" y="640.87" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">選擇 B：發放本集團股利</text>
+                  </g>
+                  <g id="Node-512">
+                    <text id="Text-281" x="1602" y="661.99" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">雖然會分給 Beatrice 28 元與 Charlie 14</text>
+                    <text id="Text-282" x="1602" y="681.99" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">元，但您也能獲取流動現金增加最終結算資</text>
+                    <text id="Text-283" x="1602" y="701.99" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="14" font-weight="400" xml:space="preserve">本。</text>
+                  </g>
+                </g>
+              </g>
+              <g id="Node-513">
+                <rect x="1592" y="727.75" width="288" height="64" rx="4" fill="rgb(247, 244, 236)" />
+                <text id="Text-284" x="1600" y="748.87" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">💡 提醒：您手中持有 </text>
+                <g id="Node-514">
+                  <text id="Text-285" x="1717.912" y="748.87" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">[-15, +10]</text>
+                </g>
+                <text id="Text-286" x="1773.45" y="748.87" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve"> 兩張密牌，終局</text>
+                <text id="Text-287" x="1600" y="764.87" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">科技集團資產將淨減 5 元（90 - 5 = 85 元），計算最</text>
+                <text id="Text-288" x="1600" y="780.87" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">終股價時請留意。</text>
+              </g>
+            </g>
+            <g id="Node-515">
+              <rect x="1576" y="823.75" width="320" height="124" rx="12" fill="rgb(253, 251, 247)" />
+              <g id="Node-516">
+                <text id="Text-289" x="1592" y="852.87" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="700" xml:space="preserve">本輪事件紀錄</text>
+              </g>
+              <g id="Node-517">
+                <g id="Node-518">
+                  <g id="Node-519">
+                    <text id="Text-290" x="1592" y="876.87" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">[R13-00]</text>
+                  </g>
+                  <text id="Text-291" x="1641.05" y="876.87" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve"> 系統廣播：達成終局觸發條件，股票購買全</text>
+                  <text id="Text-292" x="1592" y="892.87" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">面禁絕。</text>
+                </g>
+                <g id="Node-520">
+                  <g id="Node-521">
+                    <text id="Text-293" x="1592" y="922.87" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">[R13-01]</text>
+                  </g>
+                  <text id="Text-294" x="1641.05" y="922.87" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve"> 輪到席位 01 本人 (p0) 決定最終決策行動。</text>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g id="Node-2">
+      <rect x="0" y="0" width="1920" height="56.8" rx="0" fill="rgb(251, 248, 252)" />
+      <g id="Node-3">
+        <g id="Node-4">
+          <g id="Node-5">
+            <g id="Node-6">
+              <text id="Text-1" x="24" y="36.4" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="20" font-weight="600" xml:space="preserve">王牌執行長 CEO</text>
+            </g>
+            <g id="Node-7">
+              <rect x="172.45" y="16" width="126.238" height="24" rx="4" fill="rgb(240, 237, 241)" />
+              <text id="Text-2" x="180.45" y="33.12" fill="rgb(95, 94, 97)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">[ 本站暫用替代牌庫 ]</text>
+            </g>
+          </g>
+          <g id="Node-8">
+            <rect x="314.688" y="20" width="1" height="16" rx="0" fill="rgb(228, 228, 231)" />
+          </g>
+          <g id="Node-9">
+            <g id="Node-10">
+              <rect x="331.688" y="24" width="8" height="8" rx="9999" fill="rgb(253, 196, 37)" />
+            </g>
+            <g id="Node-11">
+              <text id="Text-3" x="343.688" y="33.12" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="12" font-weight="500" xml:space="preserve">第 13 輪・最後一輪</text>
+            </g>
+          </g>
+        </g>
+        <g id="Node-12">
+          <g id="Node-13">
+            <rect x="1304.513" y="20" width="1" height="16" rx="0" fill="rgb(228, 228, 231)" />
+          </g>
+          <g id="Node-14">
+            <g id="Node-15">
+              <rect x="1329.913" y="13.6" width="88.8" height="28.8" rx="4" fill="none" stroke="rgb(228, 228, 231)" stroke-width="0.8" />
+              <g id="Node-16">
+                <g id="Icon-1" transform="translate(1338.313 18)" color="rgb(77, 70, 50)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(77, 70, 50)" stroke="rgb(77, 70, 50)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8px">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 11v6M12 7.5h.01" />
+                  </svg>
+                </g>
+              </g>
+              <text id="Text-4" x="1362.313" y="33.12" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">房間資訊</text>
+            </g>
+            <g id="Node-18">
+              <rect x="1427.513" y="13.6" width="119.288" height="28.8" rx="4" fill="none" stroke="rgb(228, 228, 231)" stroke-width="0.8" />
+              <g id="Node-19">
+                <g id="Icon-2" transform="translate(1435.912 18)" color="rgb(77, 70, 50)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(77, 70, 50)" stroke="rgb(77, 70, 50)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8px">
+                    <circle cx="9" cy="8" r="3" />
+                    <path d="M3 21v-3a6 6 0 0 1 12 0v3M17 5a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-3-5" />
+                  </svg>
+                </g>
+              </g>
+              <text id="Text-5" x="1459.912" y="33.12" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">玩家席位 (3人)</text>
+            </g>
+            <g id="Node-21">
+              <rect x="1555.6" y="13.6" width="88.8" height="28.8" rx="4" fill="none" stroke="rgb(228, 228, 231)" stroke-width="0.8" />
+              <g id="Node-22">
+                <g id="Icon-3" transform="translate(1564 18)" color="rgb(77, 70, 50)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(77, 70, 50)" stroke="rgb(77, 70, 50)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8px">
+                    <path d="M4 4h16v12H9l-5 4V4Z M8 8h8M8 12h5" />
+                  </svg>
+                </g>
+              </g>
+              <text id="Text-6" x="1588" y="33.12" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">聊天頻道</text>
+            </g>
+            <g id="Node-24">
+              <rect x="1653.2" y="13.6" width="88.8" height="28.8" rx="4" fill="none" stroke="rgb(228, 228, 231)" stroke-width="0.8" />
+              <g id="Node-25">
+                <g id="Icon-4" transform="translate(1661.6 18)" color="rgb(77, 70, 50)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(77, 70, 50)" stroke="rgb(77, 70, 50)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8px">
+                    <path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Z M12 5v15" />
+                  </svg>
+                </g>
+              </g>
+              <text id="Text-7" x="1685.6" y="33.12" fill="rgb(77, 70, 50)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">遊戲規則</text>
+            </g>
+            <g id="Node-27">
+              <rect x="1750.8" y="13.6" width="88.8" height="28.8" rx="4" fill="rgb(250, 204, 21)" stroke="rgb(24, 24, 27)" stroke-width="0.8" />
+              <g id="Node-28">
+                <g id="Icon-5" transform="translate(1759.2 18)" color="rgb(24, 24, 27)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(24, 24, 27)" stroke="rgb(24, 24, 27)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8px">
+                    <path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5" />
+                  </svg>
+                </g>
+              </g>
+              <text id="Text-8" x="1783.2" y="33.12" fill="rgb(24, 24, 27)" font-family="Noto Sans TC" font-size="12" font-weight="600" xml:space="preserve">專注模式</text>
+            </g>
+          </g>
+          <g id="Node-30">
+            <rect x="1864" y="12" width="32" height="32" rx="9999" fill="rgb(115, 92, 0)" />
+            <g id="Node-31">
+              <g id="Icon-6" transform="translate(1870 18)" color="rgb(255, 255, 255)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" color="rgb(255, 255, 255)" stroke="rgb(255, 255, 255)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8px">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 22v-2a8 8 0 0 1 16 0v2" />
+                </svg>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

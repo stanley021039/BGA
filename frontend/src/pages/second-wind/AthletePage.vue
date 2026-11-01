@@ -5,7 +5,8 @@ import { readAthleteSnapshot } from '../../contracts/second-wind';
 import GameRoomPage from '../../components/GameRoomPage.vue';
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import AthleteScene from './AthleteScene.vue';
-import { athleteHero } from './art';
+import UiPanel from '../../components/UiPanel.vue';
+import athleteHero from '../../assets/second-wind/hero-384.webp?url&no-inline';
 import AthleteArt from './AthleteArt.vue';
 import AthleteSettings from './AthleteSettings.vue';
 const athlete = useAthleteStore();
@@ -76,7 +77,17 @@ const phase = computed(() =>
           eager /></template
     ></RoomWaitingTemplate>
     <AthleteScene v-else-if="athlete.game" />
-    <p v-else-if="athlete.state?.interrupted">有人離席，本局已中止；房主可重新開局。</p>
+    <UiPanel
+      v-else-if="athlete.state"
+      :title="athlete.state.interrupted ? '本局已中止' : '等待下一局'"
+    >
+      <p>{{
+        athlete.state.interrupted
+          ? '有人離席，本局已中止；房主可重新開局。'
+          : '你未參與目前對局；等待房主開始下一局。'
+      }}</p
+      ><div id="athlete-restart-settings"></div>
+    </UiPanel>
     <template #settings
       ><AthleteSettings /><p
         >3–6 人，13 張 Twist。四場測試獎分：3／1、4／2、5／3、7／4。</p

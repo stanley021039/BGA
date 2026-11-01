@@ -10,7 +10,7 @@ const props = withDefaults(
     noticeKey?: string | number;
     active?: boolean;
     persistent?: boolean;
-    density?: 'regular' | 'compact';
+    density?: 'regular' | 'compact' | 'action';
   }>(),
   {
     message: '',
@@ -57,7 +57,8 @@ defineExpose({ dismiss, restart });
 </script>
 <template>
   <div class="ui-notice-slot" :data-density="density" :data-visible="visible || undefined">
-    <p
+    <component
+      :is="$slots.actions ? 'div' : 'p'"
       class="ui-notice"
       :data-tone="error ? 'danger' : tone || 'info'"
       :hidden="!visible"
@@ -65,7 +66,12 @@ defineExpose({ dismiss, restart });
       :aria-live="error ? 'assertive' : 'polite'"
       aria-atomic="true"
       tabindex="0"
-      >{{ visible ? message : '' }}</p
+      ><template v-if="$slots.actions"
+        ><span class="ui-notice-message" :tabindex="visible ? 0 : undefined">{{
+          visible ? message : ''
+        }}</span
+        ><div class="ui-notice-actions"><slot v-if="visible" name="actions" /></div></template
+      ><template v-else>{{ visible ? message : '' }}</template></component
     >
   </div>
 </template>

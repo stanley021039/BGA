@@ -4,6 +4,7 @@ import { useCeoStore } from '../../stores/ceo';
 import { usePartyActionsStore } from '../../stores/party-actions';
 import { industries, scoreText } from '../../contracts/ceo';
 import UiPanel from '../../components/UiPanel.vue';
+import UiStatistic from '../../components/UiStatistic.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiBadge from '../../components/UiBadge.vue';
 import UiNotice from '../../components/UiNotice.vue';
@@ -12,6 +13,11 @@ import UiList from '../../components/UiList.vue';
 import UiListRow from '../../components/UiListRow.vue';
 const ceo = useCeoStore(),
   actions = usePartyActionsStore();
+const log = computed(() =>
+  Array.isArray(ceo.state?.log)
+    ? ceo.state.log.filter((entry: unknown): entry is string => typeof entry === 'string')
+    : [],
+);
 const game = computed(() => ceo.game),
   ownGroup = computed(() => game.value?.groups.find((g) => g.playerId === ceo.state?.me));
 const name = (id: string | null) => ceo.state?.players.find((p) => p.id === id)?.name || 'NPC';
@@ -30,6 +36,7 @@ function held(playerId: string, groupId: string) {
 <template>
   <div class="ceo-scene">
     <UiNotice
+      v-if="!game?.results"
       persistent
       tone="warning"
       message="本站暫用替代牌庫：公司與增減牌數值非原版，平衡仍待試玩。"
@@ -42,14 +49,10 @@ function held(playerId: string, groupId: string) {
       }}</p>
     </UiPanel>
     <template v-else>
-      <UiPanel title="經營動態" density="compact">
+      <UiPanel v-if="game.phase === 'playing'" title="經營動態" density="compact">
         <div class="ceo-status">
           <UiBadge :tone="ceo.canAct ? 'primary' : 'neutral'">{{
-            game.phase === 'finished'
-              ? '結算完成'
-              : game.turnId === ceo.state?.me
-                ? '輪到你行動'
-                : `等待 ${name(game.turnId)}`
+            game.turnId === ceo.state?.me ? '輪到你行動' : `等待 ${name(game.turnId)}`
           }}</UiBadge>
           <span>第 {{ game.round }} 輪</span
           ><span v-if="ceo.me">我的現金 {{ ceo.me.cash }} 元</span>
@@ -70,14 +73,16 @@ function held(playerId: string, groupId: string) {
           />
           <span>你的集團收入 {{ ownGroup?.income || 0 }} 元／股；每位持有人按持股數領取。</span>
         </div>
-        <div class="ceo-feedback">
-          <UiNotice
-            :message="actions.notice"
-            :persistent="actions.pending || actions.canRetry"
-            :error="!actions.pending && !!actions.notice"
-          />
-          <UiButton v-if="actions.canRetry" label="重試同一操作" @click="actions.retrySame()" />
-        </div>
+        <UiNotice
+          :message="actions.notice"
+          :error="!actions.pending && !!actions.notice"
+          persistent
+          density="action"
+        >
+          <template #actions
+            ><UiButton v-if="actions.canRetry" label="重試同一操作" @click="actions.retrySame()"
+          /></template>
+        </UiNotice>
       </UiPanel>
       <UiPanel
         v-if="game.phase === 'playing'"
@@ -95,10 +100,12 @@ function held(playerId: string, groupId: string) {
           >
             <UiBadge>{{ industries[slot.card.industry] }}</UiBadge>
             <p>第 {{ index + 1 }} 格 · 資產 {{ slot.card.assets }} · 收入 {{ slot.card.income }}</p>
-            <p
-              >附加費 {{ slot.extraCost }} 元 · 合計
-              {{ (slot.card.assets || 0) + slot.extraCost }} 元</p
-            >
+            <UiStatistic
+              label="收購合計"
+              :value="(slot.card.assets || 0) + slot.extraCost"
+              suffix="元"
+            />
+            <p>附加費 {{ slot.extraCost }} 元</p>
             <p>{{ scoreText(slot.card) }}</p>
             <p>{{
               slot.card.adjustment === 'up'
@@ -108,6 +115,9 @@ function held(playerId: string, groupId: string) {
                   : '不抽增減牌'
             }}</p>
             <p>{{ slot.discardsLeftmost ? '購買後棄最左剩餘卡' : '購買後不棄卡' }}</p>
+            <p v-if="ceo.me && ceo.me.cash < (slot.card.assets || 0) + slot.extraCost"
+              >現金不足，還差 {{ (slot.card.assets || 0) + slot.extraCost - ceo.me.cash }} 元。</p
+            >
             <UiButton
               :label="`收購${slot.card.name}`"
               :disabled="
@@ -119,41 +129,60 @@ function held(playerId: string, groupId: string) {
         </div>
         <p v-if="!game.market.length">市場已無公司；仍可發放股利，非最後一輪時也可買股。</p>
       </UiPanel>
-      <UiPanel v-if="game.results" title="本局結算">
-        <UiHeading>{{ game.results.winners.map(name).join('、') }} 獲勝</UiHeading>
-        <UiList>
-          <UiListRow v-for="rank in game.results.ranking" :key="rank.groupId">
-            第 {{ rank.rank }} 名 · {{ groupName(rank.groupId) }}{{ rank.npc ? '（NPC）' : '' }} ·
-            最終資產 {{ rank.assets }} · 每股 {{ points(rank.stockValue) }} 分
-          </UiListRow>
-        </UiList>
-        <div class="ceo-groups">
-          <UiPanel
-            v-for="result in game.results.players"
-            :key="result.playerId"
-            :title="name(result.playerId)"
-            density="compact"
-          >
-            <strong>總分 {{ points(result.total) }}</strong>
-            <p
-              >股票 {{ points(result.stockScore) }} ＋公司 {{ result.companiesScore }} ＋現金
-              {{ result.cashScore }}</p
+      <template v-if="game.results">
+        <UiNotice
+          persistent
+          tone="success"
+          :message="game.results.winners.map(name).join('、') + ' 獲勝｜本站替代卡，非原版。'"
+        />
+        <UiPanel title="個人結算">
+          <div class="ceo-groups">
+            <UiPanel
+              v-for="result in game.results.players"
+              :key="result.playerId"
+              :title="name(result.playerId)"
+              :heading-level="3"
+              density="compact"
             >
-            <details
-              ><summary>股票與公司計分明細</summary>
-              <p v-for="stock in result.stock.filter((s) => s.count > 0)" :key="stock.groupId"
-                >{{ groupName(stock.groupId) }} {{ stock.count }} 股 ×
-                {{ points(stock.value) }} 分</p
+              <UiStatistic label="總分" :value="points(result.total)" suffix="分" />
+              <UiList
+                ><UiListRow>股票 {{ points(result.stockScore) }}</UiListRow
+                ><UiListRow>公司 {{ result.companiesScore }}</UiListRow
+                ><UiListRow>現金 {{ result.cashScore }}</UiListRow></UiList
               >
-              <p v-for="company in result.companies" :key="company.cardId"
-                >{{ cardName(company.cardId) }}：{{ company.score }} 分</p
+            </UiPanel>
+          </div>
+        </UiPanel>
+        <UiPanel title="集團結算"
+          ><UiList>
+            <UiListRow v-for="rank in game.results.ranking" :key="rank.groupId"
+              >第 {{ rank.rank }} 名 · {{ groupName(rank.groupId)
+              }}{{ rank.npc ? '（NPC）' : '' }} · 最終資產 {{ rank.assets }} · 每股
+              {{ points(rank.stockValue) }} 分</UiListRow
+            >
+          </UiList></UiPanel
+        >
+        <template v-for="result in game.results.players" :key="result.playerId">
+          <UiPanel :title="name(result.playerId) + '・股票明細'"
+            ><UiList>
+              <UiListRow v-for="stock in result.stock" :key="stock.groupId"
+                >{{ groupName(stock.groupId) }}：{{ stock.count }} 股 ×
+                {{ points(stock.value) }} 分</UiListRow
               >
-            </details>
-          </UiPanel>
-        </div>
-      </UiPanel>
-      <UiHeading>六大集團與持股</UiHeading>
-      <div class="ceo-groups">
+            </UiList></UiPanel
+          >
+          <UiPanel :title="name(result.playerId) + '・公司計分明細'"
+            ><UiList v-if="result.companies.length">
+              <UiListRow v-for="company in result.companies" :key="company.cardId"
+                >{{ cardName(company.cardId) }}：{{ company.score }} 分</UiListRow
+              > </UiList
+            ><p v-else>本局沒有收購公司。</p></UiPanel
+          >
+        </template>
+        <p>本站暫用替代牌庫：公司與增減牌數值非原版，平衡仍待試玩。</p>
+      </template>
+      <UiHeading v-if="!game.results">六大集團與持股</UiHeading>
+      <div v-if="!game.results" class="ceo-groups">
         <UiPanel
           v-for="group in game.groups"
           :key="group.id"
@@ -213,12 +242,9 @@ function held(playerId: string, groupId: string) {
         </UiPanel>
       </div>
       <UiPanel title="操作紀錄" density="compact"
-        ><UiList
-          ><UiListRow
-            v-for="(event, index) in ((ceo.state?.log as string[]) || []).slice(0, 12)"
-            :key="index"
-            >{{ event }}</UiListRow
-          ></UiList
+        ><p v-if="!log.length">尚無操作紀錄。</p
+        ><UiList v-else
+          ><UiListRow v-for="(event, index) in log" :key="index">{{ event }}</UiListRow></UiList
         ></UiPanel
       >
     </template>
@@ -241,7 +267,7 @@ function held(playerId: string, groupId: string) {
 .ceo-market,
 .ceo-groups {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: var(--stitch-space-16);
   align-items: stretch;
 }
@@ -256,9 +282,21 @@ function held(playerId: string, groupId: string) {
 .ceo-scene p {
   margin: 0;
 }
-.ceo-feedback {
-  min-height: 2.75rem;
+.ceo-market > .ui-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stitch-space-16);
+}
+.ceo-market > .ui-panel > .ui-button {
+  margin-top: auto;
+}
+.ceo-groups > .ui-panel {
   display: grid;
-  gap: var(--stitch-space-8);
+  gap: var(--stitch-space-16);
+  align-content: start;
+}
+.ceo-scene > .ui-panel:last-of-type .ui-stitch-list {
+  max-height: 24rem;
+  overflow: auto;
 }
 </style>

@@ -27,6 +27,19 @@
     padding: var(--stitch-space-2) var(--stitch-space-4);
     font-variant-numeric: tabular-nums;
   }
+  &[data-nowrap] {
+    flex-shrink: 0;
+    min-inline-size: max-content;
+    white-space: nowrap;
+  }
+  &[data-shape='circle'] {
+    flex: 0 0 var(--stitch-space-32);
+    inline-size: var(--stitch-space-32);
+    block-size: var(--stitch-space-32);
+    min-inline-size: var(--stitch-space-32);
+    padding: 0;
+    border-radius: var(--stitch-radius-pill);
+  }
 }
 :root body .ui-notice-slot {
   box-sizing: border-box;
@@ -45,6 +58,23 @@
     > .ui-notice {
       padding-block: var(--stitch-space-2);
       font-size: var(--stitch-text-hint);
+    }
+  }
+  &[data-density='action'] {
+    --_notice-height: calc(var(--stitch-space-48) * 3);
+    > .ui-notice {
+      grid-template-rows: minmax(0, 1fr) var(--stitch-control-height);
+      gap: var(--stitch-space-16);
+      padding: var(--stitch-space-16);
+      white-space: normal;
+      .ui-notice-message {
+        overflow: auto;
+      }
+      .ui-notice-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--stitch-gap-controls);
+      }
     }
   }
   > .ui-notice {
