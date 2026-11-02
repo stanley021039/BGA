@@ -1,5 +1,5 @@
 const { createRoomTransitions } = require('./transitions');
-const { expireEmptyRooms } = require('./lifecycle');
+const { expireEmptyRooms, hasOnlineHuman } = require('./lifecycle');
 const { runTestAIStep } = require('../ai');
 function advanceTimedPhase(room, transitions) {
   const now = Date.now();
@@ -61,15 +61,15 @@ function startRoomScheduler({
           }
           continue;
         }
-        if (Date.now() - Math.max(...r.players.map((p) => p.lastSeen)) > 86400000) {
-          rooms.delete(code);
-          onDelete(code);
-          continue;
-        }
         // Expired phases must advance before an AI attempts a now-illegal action.
         if (advanceTimedPhase(r, transitions)) continue;
         try {
-          if (r.type !== 'thunder' && runTestAIStep(r, { transitions, onDrawStroke })) continue;
+          if (
+            hasOnlineHuman(r) &&
+            r.type !== 'thunder' &&
+            runTestAIStep(r, { transitions, onDrawStroke })
+          )
+            continue;
         } catch (e) {
           console.error('Test AI action failed:', e);
         }

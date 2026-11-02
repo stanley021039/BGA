@@ -34,6 +34,35 @@ export function useRoomPage(
     streamLive = false,
     streamTried = 0,
     stateTag = '';
+  let presenceTimer: ReturnType<typeof setTimeout> | null = null;
+  let presenceJob: AbortController | null = null;
+  function stopPresence() {
+    if (presenceTimer) clearTimeout(presenceTimer);
+    presenceTimer = null;
+    presenceJob?.abort();
+    presenceJob = null;
+  }
+  function schedulePresence() {
+    stopPresence();
+    if (disposed || !document.hidden || !room.seat || room.terminal) return;
+    presenceTimer = setTimeout(async () => {
+      presenceTimer = null;
+      const controller = new AbortController();
+      presenceJob = controller;
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        await room.request('room-presence', {}, { signal: controller.signal });
+      } catch {
+        /* Foreground refresh reports connection failures. */
+      } finally {
+        clearTimeout(timeout);
+        if (presenceJob === controller) {
+          presenceJob = null;
+          schedulePresence();
+        }
+      }
+    }, 30000);
+  }
   function announce(live: boolean) {
     if (streamLive === live) return;
     streamLive = live;
@@ -188,9 +217,11 @@ export function useRoomPage(
   }
   function visibility() {
     foreground.value = !document.hidden;
+    stopPresence();
     if (document.hidden) {
       stop();
       closeStream();
+      schedulePresence();
     } else if (room.seat) {
       void refresh();
       streamTried = 0;
@@ -202,6 +233,7 @@ export function useRoomPage(
     () => {
       stop();
       closeStream();
+      schedulePresence();
       stateTag = '';
       streamTried = 0;
       if (room.seat) {
@@ -214,6 +246,7 @@ export function useRoomPage(
     () => room.terminal,
     (value) => {
       if (value) {
+        stopPresence();
         stop();
         closeStream();
       }
@@ -235,6 +268,7 @@ export function useRoomPage(
   });
   onBeforeUnmount(() => {
     disposed = true;
+    stopPresence();
     stop();
     closeStream();
     document.removeEventListener('visibilitychange', visibility);
