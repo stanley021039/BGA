@@ -103,6 +103,7 @@ const roomPersistence = require('./rooms/persistence');
 const { botSupport, addTestBot } = require('./ai');
 const { reconnectPlayer } = require('./rooms/reconnect');
 const { listRooms } = require('./rooms/listing');
+const { restoreRoomPresence } = require('./rooms/lifecycle');
 const { rejoinPlayer } = require('./rooms/membership');
 const { createLobby } = require('./rooms/lobby');
 const { createRoomSpace } = require('./rooms/space');
@@ -198,6 +199,8 @@ function createApp(config) {
   }
 }
 function initializeApp(config, dataLock, acquired) {
+  const maxRooms = config.maxRooms ?? 100;
+  if (!Number.isSafeInteger(maxRooms) || maxRooms < 1) throw Error('Invalid maxRooms');
   const achievementPurpose =
     config.achievementPurpose === undefined ? 'production' : config.achievementPurpose;
   if (!['production', 'test', 'tutorial'].includes(achievementPurpose))
@@ -1063,7 +1066,7 @@ function initializeApp(config, dataLock, acquired) {
         });
         const extra = result.extra || {};
         shiftTimers(room, delta, snapshot.savedAt);
-        for (const player of room.players) if (!player.bot) player.lastSeen = now;
+        if (!restoreRoomPresence(room, now)) continue;
         room.matchAchievements?.restore?.(extra.match);
         if (!(extra.seats instanceof Map)) throw Error('座位資料遺失');
         for (const [, playerId] of extra.seats) room.view(playerId);
@@ -1407,7 +1410,7 @@ function initializeApp(config, dataLock, acquired) {
             const saved = cocCampaigns.resumeRecord(user, data.id);
             let room = rooms.get(saved.row.room_code);
             if (room?.type !== 'coc' || room.campaignId !== saved.row.id) {
-              if (rooms.size >= 100)
+              if (rooms.size >= maxRooms)
                 throw new HttpError(409, 'ROOM_LIMIT', '房間數已達上限，請稍後恢復');
               let code = saved.row.room_code;
               if (!/^[A-Fa-f0-9]{6}$/.test(code) || rooms.has(code)) {
@@ -2062,7 +2065,7 @@ function initializeApp(config, dataLock, acquired) {
             );
           limitRate(roomRate, 'create:' + user.id, 20);
           limitRate(roomRate, 'create-ip:' + clientKey(req), 60);
-          if (rooms.size >= 100) throw Error('房間數已達上限');
+          if (rooms.size >= maxRooms) throw Error('房間數已達上限');
           if (
             ![
               'poker',
@@ -2226,6 +2229,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/join',
             '/api/reconnect',
             '/api/state',
+            '/api/room-presence',
             '/api/room-events',
             '/api/telephone/watch',
             '/api/watch',
@@ -2294,6 +2298,16 @@ function initializeApp(config, dataLock, acquired) {
           if (seats.get(room.code)?.has(user.id))
             throw new HttpError(409, 'ALREADY_SEATED', '已入座玩家請使用玩家畫面');
           return send(room.observerView());
+        }
+        if (url.pathname === '/api/room-presence') {
+          if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
+          limitRate(roomRate, 'room-presence:' + user.id, 120);
+          const id = seats.get(room.code)?.get(user.id);
+          const player = room.players.find((p) => p.id === id && !p.bot && !p.kicked);
+          if (!player) throw new HttpError(403, 'NOT_SEATED', '尚未加入此房間');
+          player.lastSeen = Date.now();
+          delete room.emptyDeadline;
+          return send({ alive: true });
         }
         // Revoke an expired controller before this request refreshes their seat lease.
         reconcileWatch(room);

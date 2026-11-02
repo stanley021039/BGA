@@ -70,7 +70,11 @@ function settings(env = process.env) {
   const marketAutomation = env.MARKET_AUTOMATION_ENABLED ?? 'true';
   if (!['true', 'false'].includes(marketAutomation))
     throw Error('MARKET_AUTOMATION_ENABLED must be true or false');
+  const maxRooms = Number(env.MAX_ROOMS || 100);
+  if (!Number.isSafeInteger(maxRooms) || maxRooms < 1)
+    throw Error('MAX_ROOMS must be a positive integer');
   return {
+    maxRooms,
     cocAdventureEnabled: env.COC_ADVENTURE_ENABLED !== 'false',
     ...(env.FRONTEND_ROOT ? { frontendRoot: path.resolve(env.FRONTEND_ROOT) } : {}),
     cocAi: {
