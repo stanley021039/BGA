@@ -966,6 +966,8 @@ function initializeApp(config, dataLock, acquired) {
     minimal: MinimalRoom,
     draw: DrawGuessRoom,
     lounge: LoungeRoom,
+    ceo: CeoRoom,
+    'second-wind': SecondWindRoom,
   };
   const tutorials = require('./tutorials/runtime').createTutorials();
   acquired.push(() => tutorials.clear());
@@ -1040,7 +1042,7 @@ function initializeApp(config, dataLock, acquired) {
     for (const saved of snapshot.rooms || []) {
       const Type = roomClasses[saved.type];
       if (rooms.has(saved.code)) continue;
-      // CEO and Second Wind cannot resume yet (#289); say so instead of dropping silently.
+      // Unknown game types cannot safely resume; keep other saved rooms independent.
       if (!Type) {
         console.warn('Room ' + saved.code + ' not restored; ' + saved.type + ' cannot resume');
         continue;

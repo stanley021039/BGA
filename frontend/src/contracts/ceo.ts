@@ -59,6 +59,7 @@ export interface CeoSnapshot extends RoomSnapshot {
   type: 'ceo';
   roundId: string | null;
   interrupted?: boolean;
+  restoreFailed?: boolean;
   catalogNotice: string;
   game: CeoGame | null;
 }
@@ -94,6 +95,7 @@ function card(value: unknown): CeoCard {
 export function readCeoSnapshot(value: unknown): CeoSnapshot {
   const base = readRoomSnapshot(value),
     row = record(value);
+  if (row.restoreFailed !== undefined && typeof row.restoreFailed !== 'boolean') invalid();
   if (
     base.type !== 'ceo' ||
     !['waiting', 'playing', 'finished'].includes(base.phase) ||

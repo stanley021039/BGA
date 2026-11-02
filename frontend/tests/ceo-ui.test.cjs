@@ -99,6 +99,10 @@ test('CEO scene keeps a restart mount target on interrupted game and displays no
     assert(f.host.querySelector('#ceo-restart-settings'));
     assert(f.host.textContent.includes('本局中止'));
     assert(!f.host.textContent.includes('公司市場'));
+    f.ceo.state.restoreFailed = true;
+    await vue.nextTick();
+    assert.match(f.host.textContent, /伺服器重啟後無法安全還原/);
+    assert.doesNotMatch(f.host.textContent, /有人離席/);
   } finally {
     f.app.unmount();
     f.host.remove();

@@ -43,9 +43,11 @@ function held(playerId: string, groupId: string) {
     />
     <UiPanel v-if="!game" title="本局已結束">
       <p>{{
-        ceo.state?.interrupted
-          ? '有人離席，本局中止，不計勝負。'
-          : '你未參與上一局；等待房主開始新局。'
+        ceo.state?.restoreFailed
+          ? '伺服器重啟後無法安全還原本局，已中止且不計勝負；房主可重新開局。'
+          : ceo.state?.interrupted
+            ? '有人離席，本局中止，不計勝負。'
+            : '你未參與上一局；等待房主開始新局。'
       }}</p>
     </UiPanel>
     <template v-else>

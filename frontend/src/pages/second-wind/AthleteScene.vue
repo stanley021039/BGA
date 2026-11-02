@@ -7,6 +7,8 @@ import { usePartyActionsStore } from '../../stores/party-actions';
 import { useRoomStore } from '../../stores/room';
 import UiPanel from '../../components/UiPanel.vue';
 import UiStatistic from '../../components/UiStatistic.vue';
+import UiDie from '../../components/UiDie.vue';
+import { useAthletePresentation } from './useAthletePresentation';
 import UiButton from '../../components/UiButton.vue';
 import UiBadge from '../../components/UiBadge.vue';
 import UiChoiceCard from '../../components/UiChoiceCard.vue';
@@ -21,6 +23,8 @@ const athlete = useAthleteStore(),
   actions = usePartyActionsStore(),
   room = useRoomStore();
 const game = computed(() => athlete.game!);
+const sceneRoot = ref<HTMLElement | null>(null);
+const { dice, tokens: motionTokens } = useAthletePresentation(sceneRoot, game);
 const me = computed(() => athlete.state?.me || '');
 const cards = computed(() => Object.fromEntries(game.value.catalog.map((c) => [c.id, c])));
 const name = (id: string) => athlete.state?.players.find((p) => p.id === id)?.name || id;
@@ -139,7 +143,7 @@ const eventBody = (e: (typeof game.value.events)[number]) =>
 const eventText = eventBody;
 </script>
 <template>
-  <div class="athlete-scene">
+  <div ref="sceneRoot" class="athlete-scene">
     <UiNotice
       :message="actions.notice"
       :error="!!actions.notice && !actions.pending"
@@ -183,6 +187,13 @@ const eventText = eventBody;
           "
           @click="teamsOpen = !teamsOpen"
       /></template>
+      <div class="athlete-dice-strip" tabindex="0" aria-label="最近六顆公開骰子，可左右捲動">
+        <p v-if="!dice.length">擲骰後會顯示最新公開結果。</p>
+        <div v-for="d in dice" :key="d.id" class="athlete-die-result">
+          <UiDie :value="d.value" :data-athlete-die="d.id" />
+          <span>{{ name(d.playerId) }} · {{ d.value }} 點{{ d.reroll ? '（作廢重擲）' : '' }}</span>
+        </div>
+      </div>
       <div id="athlete-scores" v-show="teamsOpen" class="athlete-scores">
         <UiPanel
           v-for="id in game.players"
@@ -441,6 +452,7 @@ const eventText = eventBody;
                       v-for="r in cell.racers"
                       :key="r.id"
                       class="athlete-piece"
+                      :data-athlete-racer="r.id"
                       :title="`${cardName(r.racerId)} · ${name(r.playerId)}${r.tripped ? ' · 絆倒' : ''}`"
                       :show-help="false"
                       tabindex="0"
@@ -460,6 +472,25 @@ const eventText = eventBody;
                 <UiBadge v-if="game.coins?.includes(cell.position)" label="金幣" tone="primary" />
               </div>
             </template>
+            <span
+              v-for="token in motionTokens"
+              :key="token.id"
+              class="athlete-motion-ghost"
+              :data-athlete-ghost="token.id"
+              aria-hidden="true"
+              :style="
+                trackPoint(
+                  game.racers?.find((r) => r.id === token.racer)?.position || 0,
+                  game.direction,
+                )
+              "
+            >
+              <UiBadge
+                shape="circle"
+                tone="primary"
+                :label="String.fromCharCode(65 + game.players.indexOf(token.playerId))"
+              />
+            </span>
             <div
               v-if="game.monster !== null && game.monster !== undefined"
               class="athlete-track-cell"
@@ -821,5 +852,31 @@ const eventText = eventBody;
 }
 .athlete-scene p {
   margin: 0;
+}
+.athlete-dice-strip {
+  display: flex;
+  gap: var(--stitch-space-16);
+  block-size: calc(var(--stitch-space-48) * 2);
+  overflow: auto;
+  align-items: center;
+}
+.athlete-die-result {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--stitch-space-8);
+  align-items: center;
+  flex: 0 0 10rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.athlete-motion-ghost {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  margin-inline-start: calc(var(--stitch-space-16) * -1);
+  margin-block-start: calc(var(--stitch-space-16) * -1);
+}
+.athlete-motion-ghost[hidden] {
+  display: none;
 }
 </style>

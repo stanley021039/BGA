@@ -115,7 +115,9 @@ test('secret selection locks without exposing other choices and reveals simultan
       id: view.events.at(-1).id,
       type: 'selection-locked',
       playerId: 'one',
+      at: view.events.at(-1).at,
     });
+    assert.ok(Number.isFinite(view.events.at(-1).at));
     assert.equal(view.selections, undefined);
   }
   assert.throws(() => act(game, 'one', { type: 'select', racerId: selected }), {
@@ -130,7 +132,8 @@ test('secret selection locks without exposing other choices and reveals simultan
   assert.throws(() => act(game, 'one', { type: 'roll' }), { code: 'INVALID_PHASE' });
 });
 
-test('invalid/stale/out-of-turn operations preserve revision, deck, rolls and future randomness', () => {
+test('invalid/stale/out-of-turn operations preserve revision, deck, rolls and future randomness', (t) => {
+  t.mock.method(Date, 'now', () => 1793592000000);
   const game = make(),
     control = make();
   assert.throws(() => game.act('outsider', { type: 'roll' }, 0), { code: 'NOT_SEATED' });

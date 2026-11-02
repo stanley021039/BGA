@@ -3,6 +3,7 @@
 const { randomBytes, createHash, createHmac } = require('node:crypto');
 const { racerSet } = require('./catalog');
 const { fail } = require('../party-base');
+const { requireState, readState, playerIds: savedPlayerIds, natural } = require('../private-state');
 const clone = (value) => structuredClone(value);
 
 function random(state, size) {
@@ -27,7 +28,12 @@ function clockwise(players, first) {
   return [...players.slice(at), ...players.slice(0, at)];
 }
 function event(state, type, details = {}) {
-  state.events.push({ id: state.events.length ? state.events.at(-1).id + 1 : 1, type, ...details });
+  state.events.push({
+    id: state.events.length ? state.events.at(-1).id + 1 : 1,
+    type,
+    ...details,
+    at: Date.now(),
+  });
   state.events = state.events.slice(-80);
 }
 // A tied value cannot win a roll-off. Try the next lower distinct value.
@@ -58,7 +64,62 @@ function beginDraft(state) {
 class SecondWindDraft {
   #state;
 
+  exportPersistentState() {
+    return clone({
+      version: 1,
+      kind: 'second-wind-draft',
+      racerSet: this.racerSet,
+      state: this.#state,
+    });
+  }
+  static restorePersistentState(snapshot) {
+    const saved = readState(snapshot, 'second-wind-draft'),
+      s = saved.state;
+    const ids = savedPlayerIds(s?.players);
+    const draft = new SecondWindDraft({ playerIds: ids, racerSet: saved.racerSet, seed: 0 });
+    const known = new Set(draft.catalog.map((c) => c.id));
+    requireState(
+      ['draft-rolloff', 'drafting', 'race-rolloff', 'choosing', 'race-ready'].includes(s.phase),
+    );
+    requireState(
+      natural(s.revision) && /^[a-f0-9]{64}$/.test(s.randomKey) && natural(s.randomIndex),
+    );
+    requireState(
+      [1, 2].includes(s.draftRound) && natural(s.draftIndex) && natural(s.rolloffAttempt),
+    );
+    requireState(
+      Array.isArray(s.deck) &&
+        Array.isArray(s.market) &&
+        ids.every((id) => Array.isArray(s.teams?.[id]) && s.teams[id].length <= 4),
+    );
+    const cards = [...s.deck, ...s.market, ...ids.flatMap((id) => s.teams[id])];
+    requireState(
+      cards.length === known.size &&
+        new Set(cards).size === cards.length &&
+        cards.every((id) => known.has(id)),
+    );
+    requireState(Array.isArray(s.draftOrder) && s.draftOrder.every((id) => ids.includes(id)));
+    requireState(s.phase !== 'drafting' || s.draftIndex < s.draftOrder.length);
+    requireState(
+      s.rolls &&
+        Object.entries(s.rolls).every(
+          ([id, n]) => ids.includes(id) && Number.isInteger(n) && n >= 1 && n <= 6,
+        ),
+    );
+    requireState(
+      s.selections &&
+        Object.entries(s.selections).every(
+          ([id, card]) => ids.includes(id) && s.teams[id].includes(card),
+        ),
+    );
+    requireState(Array.isArray(s.events) && s.events.length <= 80);
+    draft.#state = s;
+    for (const id of ids) draft.view(id);
+    return draft;
+  }
+
   constructor({ playerIds, seed = null, racerSet: set = 'second-wind' }) {
+    this.racerSet = set;
     this.catalog = racerSet(set);
     if (
       !Array.isArray(playerIds) ||

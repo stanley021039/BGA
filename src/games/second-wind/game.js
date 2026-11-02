@@ -6,6 +6,7 @@ const { allRacers: catalog, racerSet, twists, tracks } = require('./catalog');
 const base = require('./base-powers');
 const { effectivePowers, mandatoryDieStep } = require('./powers');
 const { fail } = require('../party-base');
+const { requireState, readState, natural } = require('../private-state');
 const copy = (x) => structuredClone(x);
 const awards = [
   [3, 1],
@@ -26,6 +27,82 @@ function shuffle(values) {
 
 /** Server-owned resumable effect queue. Choices never run a second main move. */
 class SecondWindGame {
+  exportPersistentState() {
+    return copy({
+      version: 1,
+      kind: 'second-wind-engine',
+      racerSet: this.racerSet,
+      draft: this.draft.exportPersistentState(),
+      state: this.state,
+    });
+  }
+  static restorePersistentState(snapshot) {
+    const saved = readState(snapshot, 'second-wind-engine');
+    const draft = SecondWindDraft.restorePersistentState(saved.draft);
+    requireState(saved.racerSet === saved.draft.racerSet);
+    const ids = draft.observerView().players;
+    const game = new SecondWindGame({ playerIds: ids, racerSet: saved.racerSet, seed: 0 });
+    game.draft = draft;
+    requireState(saved.state !== null || draft.observerView().phase !== 'race-ready');
+    if (saved.state !== null) {
+      const s = saved.state,
+        known = new Set(game.catalog.map((c) => c.id));
+      requireState(draft.observerView().phase === 'race-ready');
+      requireState(Array.isArray(s.players) && JSON.stringify(s.players) === JSON.stringify(ids));
+      requireState(
+        ['choosing', 'racing', 'race-result', 'finished'].includes(s.phase) && natural(s.revision),
+      );
+      requireState(Number.isInteger(s.race) && s.race >= 1 && s.race <= 4 && ids.includes(s.first));
+      requireState(
+        ids.every(
+          (id) =>
+            Array.isArray(s.teams?.[id]) &&
+            s.teams[id].every((card) => known.has(card)) &&
+            natural(s.scores?.[id]),
+        ),
+      );
+      requireState(
+        s.selections &&
+          Object.entries(s.selections).every(([id, card]) => ids.includes(id) && known.has(card)),
+      );
+      requireState(
+        Array.isArray(s.racers) && new Set(s.racers.map((r) => r.id)).size === s.racers.length,
+      );
+      requireState(
+        s.racers.every(
+          (r) =>
+            typeof r.id === 'string' &&
+            ids.includes(r.playerId) &&
+            known.has(r.racerId) &&
+            Number.isInteger(r.position) &&
+            Array.isArray(r.copiedPowers) &&
+            r.copiedPowers.every((card) => known.has(card)),
+        ),
+      );
+      requireState(Array.isArray(s.queue) && s.queue.every((op) => typeof op.kind === 'string'));
+      requireState(
+        s.pending === null ||
+          (s.phase === 'racing' &&
+            typeof s.pending?.id === 'string' &&
+            ids.includes(s.pending.playerId) &&
+            typeof s.pending.kind === 'string' &&
+            Array.isArray(s.pending.options) &&
+            s.pending.options.length > 0),
+      );
+      requireState(s.phase !== 'racing' || ids.includes(s.turnId));
+      requireState(Array.isArray(s.events) && s.events.length <= 100 && Array.isArray(s.results));
+      requireState(
+        Array.isArray(s.twistDeck) && s.twistDeck.every((id) => twists.some((t) => t.id === id)),
+      );
+      requireState(
+        Array.isArray(s.twistHistory) &&
+          s.twistHistory.every((id) => twists.some((t) => t.id === id)),
+      );
+      game.state = s;
+    }
+    for (const id of ids) game.view(id);
+    return game;
+  }
   constructor({ playerIds, seed = null, racerSet: set = 'second-wind' }) {
     this.catalog = racerSet(set);
     this.racerSet = set;
@@ -115,6 +192,10 @@ class SecondWindGame {
       type,
       text,
       ...data,
+      race: s.race,
+      trackId: s.trackId,
+      direction: s.direction,
+      at: Date.now(),
       ...(racer ? { playerId: racer.playerId, racerId: racer.racerId } : {}),
     });
     s.events = s.events.slice(-100);
@@ -388,7 +469,11 @@ class SecondWindGame {
       case 'trip':
         if (r && alive(r)) {
           r.tripped = true;
-          this.emit('trip', byId[r.racerId].name + ' 絆倒', { racer: r.id });
+          this.emit('trip', byId[r.racerId].name + ' 絆倒', {
+            racer: r.id,
+            from: r.position,
+            to: r.position,
+          });
         }
         break;
       case 'finish':
@@ -593,6 +678,7 @@ class SecondWindGame {
     if (step.reroll) {
       this.emit('reroll', byId[r.racerId].name + ' 的 6 作廢，Party Pooper 前進後重擲', {
         racer: r.id,
+        value: step.candidateValue,
       });
       // Fixed six + Party Pooper cannot resolve: do not generate an endless queue.
       if (s.fixed[r.playerId] === 6) {
@@ -955,6 +1041,8 @@ class SecondWindGame {
       r.position = Math.max(0, Math.min(30, position));
       this.emit('warp', byId[r.racerId].name + ' 傳送：' + from + ' → ' + r.position, {
         racer: r.id,
+        from,
+        to: r.position,
       });
       moved.push({ kind: r.position === 30 ? 'finish' : 'arrive', racer: id, simultaneous });
     }

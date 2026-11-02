@@ -169,6 +169,7 @@ function captureRoom(room, extra = {}) {
     name: room.name,
     callbacks,
     data,
+    privateState: room.exportPersistentState?.(),
     extra: capture(extra, room),
   };
 }
@@ -182,7 +183,24 @@ function restoreRoom(saved, build) {
     [...saved.data].map(([key, entry]) => [key, { ...entry, value: revive(entry.value, room) }]),
   );
   apply(room, revivedData);
-  return { room, extra: revive(saved.extra, room) };
+  let privateStateFailed = false;
+  if (typeof room.restorePersistentState === 'function') {
+    try {
+      room.restorePersistentState(saved.privateState);
+    } catch (error) {
+      if (typeof room.interruptPersistence !== 'function') throw error;
+      room.interruptPersistence();
+      privateStateFailed = true;
+      console.warn(
+        'Room ' +
+          room.code +
+          ' restored as interrupted; private game state is invalid or unsupported',
+      );
+    }
+  }
+  const extra = revive(saved.extra, room);
+  if (privateStateFailed && extra) extra.match = null;
+  return { room, extra, privateStateFailed };
 }
 
 function save(file, snapshot) {

@@ -4,6 +4,7 @@ const { PartyRoom, fail } = require('../party-base');
 const { SecondWindGame } = require('./game');
 const { racerSet } = require('./catalog');
 const { assertCanManageSettings } = require('../../rooms/permissions');
+const { exportRoomState, restoreRoomState, interruptRestore } = require('../private-state');
 
 class SecondWindRoom extends PartyRoom {
   #game = null;
@@ -11,6 +12,19 @@ class SecondWindRoom extends PartyRoom {
   constructor(code, name, rng, now) {
     super('second-wind', code, name, 6, 3, rng, now);
     this.options = { racerSet: 'second-wind' };
+  }
+  exportPersistentState() {
+    return exportRoomState(this, this.#game, this.#participants);
+  }
+  restorePersistentState(saved) {
+    const next = restoreRoomState(this, saved, SecondWindGame);
+    this.#game = next.game;
+    this.#participants = next.participants;
+  }
+  interruptPersistence() {
+    this.#game = null;
+    this.#participants.clear();
+    interruptRestore(this);
   }
   configure(id, data = {}) {
     assertCanManageSettings(this, id);
@@ -28,6 +42,7 @@ class SecondWindRoom extends PartyRoom {
       racerSet: this.options.racerSet,
     });
     this.prepare();
+    this.restoreFailed = false;
     this.#game = next;
     this.#participants = new Set(this.players.map((p) => p.id));
     this.roundId = randomUUID();
@@ -56,6 +71,7 @@ class SecondWindRoom extends PartyRoom {
   view(id) {
     return {
       ...this.baseView(id),
+      restoreFailed: this.restoreFailed === true,
       options: { ...this.options },
       game:
         this.#game && this.#participants.has(id) && !this.interrupted ? this.#game.view(id) : null,

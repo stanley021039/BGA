@@ -25,6 +25,7 @@ export interface AthleteResult {
   ranking: { playerId: string; racerId: string; rank: number; points: number }[];
 }
 export interface AthleteGame {
+  stage?: string;
   racerSet?: 'base' | 'second-wind' | 'mixed';
   revision: number;
   phase: string;
@@ -61,6 +62,13 @@ export interface AthleteGame {
     value?: number;
     playerId?: string;
     racerId?: string;
+    racer?: string;
+    from?: number;
+    to?: number;
+    race?: number;
+    direction?: number;
+    trackId?: string;
+    at?: number;
   }[];
   results?: AthleteResult[];
   winners?: string[];
@@ -71,6 +79,7 @@ export interface AthleteSnapshot extends RoomSnapshot {
   game: AthleteGame | null;
   roundId: string | null;
   interrupted?: boolean;
+  restoreFailed?: boolean;
   options?: { racerSet: 'base' | 'second-wind' | 'mixed' };
 }
 const phases = [
@@ -95,6 +104,7 @@ function strings(v: unknown): string[] {
 }
 export function readAthleteSnapshot(value: unknown): AthleteSnapshot {
   const base = readRoomSnapshot(value);
+  if (base.restoreFailed !== undefined && typeof base.restoreFailed !== 'boolean') invalid();
   if (base.type !== 'second-wind' || !['waiting', 'playing', 'finished'].includes(base.phase))
     invalid();
   const sets = ['base', 'second-wind', 'mixed'];
@@ -161,6 +171,15 @@ export function readAthleteSnapshot(value: unknown): AthleteSnapshot {
       integer(e.id, 1);
       if (!text(e.type)) invalid();
       if (e.playerId !== undefined && !players.includes(text(e.playerId))) invalid();
+      if (
+        e.value !== undefined &&
+        (!Number.isInteger(e.value) || (e.value as number) < 0 || (e.value as number) > 6)
+      )
+        invalid();
+      for (const key of ['from', 'to']) if (e[key] !== undefined && integer(e[key]) > 30) invalid();
+      if (e.direction !== undefined && ![1, -1].includes(e.direction as number)) invalid();
+      if (e.at !== undefined && (typeof e.at !== 'number' || !Number.isFinite(e.at) || e.at < 0))
+        invalid();
     }
     for (const v of array(g.awards)) {
       if (!Array.isArray(v) || v.length !== 2) invalid();

@@ -334,3 +334,10 @@ UiField 的 `labelHidden`（預設 false）供具可見欄／列標題的密集�
 `UiNotice density="action"` 保留144px固定槽位（space-48 × 3），可用具名 `#actions` 放重試等操作；訊息長文於槽內捲動，動作保留44px一列。提供actions時使用div而不是p，避免互動按鈕落入無效段落。訊息隱藏時不掛載操作，不留下可聚焦的隱形按鈕。處理中、未確認與必要失敗使用persistent；一般短暫提示維持原預設。角色／隊伍姓名、原版圖片與完整能力維持可讀，不因圖片化隱藏必要文字。
 
 `UiBadge nowrap` 固定短標記不換行；`shape="circle"` 為32px圓形位置字母，保留預設膠囊。手機收合的共用RoomSidePanel完整移出視窗，只保留44px展開把手，避免邊框遮住主內容。
+
+
+## 公開骰子（#283，2026-11-02）
+
+`UiDie` 接收伺服器提供的 `value`（1–6），使用 inline SVG 點陣與既有 Stitch primary／frame／on-primary token，固定 32px，保留「N 點」可讀名稱。元件本身不擲骰、不抽亂數、不管理動畫；不得用動畫修改結果。
+
+運動員以固定 96px 高的可橫向捲動列保留最近六顆公開骰子、姓名與作廢重擲文字；即使停用動畫仍保留結果。動畫 owner 接入 MotionPolicy／motion-lifetime，每批最多六顆骰子與六條棋子路徑；超出預算的呈現直接顯示伺服器結果。詳 [本批契約與驗證](specs/CEO-ATHLETE-NON-STITCH-283-288-289.md)。

@@ -3,6 +3,7 @@
 // Rules core only. No default deck: the supplied rulebook does not contain a full catalog.
 const { randomInt } = require('node:crypto');
 const { fail } = require('./party-base');
+const { requireState, readState, playerIds: savedPlayerIds, natural } = require('./private-state');
 
 const INDUSTRIES = Object.freeze([
   'entertainment',
@@ -192,6 +193,82 @@ function finalResults(state) {
 class CeoGame {
   #state;
   #catalog;
+
+  exportPersistentState() {
+    return clone({ version: 1, kind: 'ceo-engine', catalog: this.#catalog, state: this.#state });
+  }
+  static restorePersistentState(snapshot) {
+    const saved = readState(snapshot, 'ceo-engine'),
+      s = saved.state;
+    const ids = savedPlayerIds(s?.players?.map((p) => p.id));
+    const game = new CeoGame({ playerIds: ids, catalog: saved.catalog, rng: () => 0 });
+    requireState(
+      ['playing', 'finished'].includes(s.phase) &&
+        natural(s.revision) &&
+        natural(s.round) &&
+        s.round > 0,
+    );
+    requireState(
+      integer(s.turnIndex, 0, ids.length - 1) && integer(s.turnsInRound, 0, ids.length - 1),
+    );
+    requireState([null, 1, 2].includes(s.countdown) && typeof s.triggered === 'boolean');
+    requireState(Array.isArray(s.groups) && s.groups.length === 6);
+    requireState(
+      s.players.every(
+        (p) =>
+          natural(p.cash) &&
+          Array.isArray(p.holdings) &&
+          p.holdings.length === 6 &&
+          p.holdings.every((n) => integer(n, 0, 7)),
+      ),
+    );
+    const catalog = game.#catalog;
+    requireState(new Set(s.groups.map((g) => g.id)).size === 6);
+    requireState(
+      s.groups.every(
+        (g, i) =>
+          g.playerId === (ids[i] ?? null) &&
+          catalog.groups.some((card) => JSON.stringify(card) === JSON.stringify(g.card)) &&
+          g.id === g.card.id &&
+          natural(g.publicAssets) &&
+          integer(g.sold, 0, 7) &&
+          Array.isArray(g.companies) &&
+          Array.isArray(g.changes) &&
+          g.changes.every((n) => [10, 15, 20, -10, -15, -20].includes(n)),
+      ),
+    );
+    requireState(
+      Array.isArray(s.market) &&
+        s.market.length <= 6 &&
+        Array.isArray(s.deck) &&
+        Array.isArray(s.discarded),
+    );
+    const cards = [...s.market, ...s.deck, ...s.discarded, ...s.groups.flatMap((g) => g.companies)];
+    requireState(
+      cards.length === catalog.companies.length &&
+        new Set(cards.map((c) => c.id)).size === cards.length,
+    );
+    requireState(
+      cards.every((c) =>
+        catalog.companies.some((card) => JSON.stringify(card) === JSON.stringify(c)),
+      ),
+    );
+    requireState(
+      ['up', 'down'].every(
+        (kind) =>
+          Array.isArray(s.adjustments?.[kind]) &&
+          s.adjustments[kind].every((n) => catalog.adjustments[kind].includes(n)),
+      ),
+    );
+    requireState(
+      Array.isArray(s.events) &&
+        s.events.length <= 60 &&
+        (s.phase === 'finished' ? !!s.results : s.results === null),
+    );
+    game.#state = s;
+    for (const id of ids) game.view(id);
+    return game;
+  }
 
   constructor({ playerIds, catalog, rng = randomInt }) {
     this.#catalog = validateCatalog(catalog);

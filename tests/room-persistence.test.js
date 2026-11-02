@@ -129,6 +129,8 @@ const GAMES = [
   'minimal',
   'draw',
   'lounge',
+  'ceo',
+  'second-wind',
 ];
 test('open rooms of every game survive an app restart and keep playing', async (t) => {
   const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'bga-room-persist-'));
@@ -139,6 +141,8 @@ test('open rooms of every game survive an app restart and keep playing', async (
     fs.rmSync(root, { recursive: true, force: true, maxRetries: 5 });
   });
   const config = {
+    ceoEnabled: true,
+    secondWindEnabled: true,
     dbFile: path.join(root, 'app.sqlite'),
     communityDir: path.join(root, 'community'),
     musicDir: path.join(root, 'music'),

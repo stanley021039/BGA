@@ -100,20 +100,27 @@ function fixture(component = 'AthleteScene.vue', initialGame = {}) {
                     ? { usePartyActionsStore: () => actions }
                     : id.includes('stores/room')
                       ? { useRoomStore: () => ({ host: false }) }
-                      : id === './art'
+                      : id === './useAthletePresentation'
                         ? {
-                            athleteArt: (id, kind = 'portrait') => `/art/${id}-${kind}.webp`,
-                            trackArt: () => '/track.webp',
-                            trackPoint: (p) => ({ left: `${p}%`, top: '17%' }),
+                            useAthletePresentation: () => ({
+                              dice: vue.ref([]),
+                              tokens: vue.ref([]),
+                            }),
                           }
-                        : id.endsWith('.scss')
-                          ? {}
-                          : load(
-                              path.resolve(
-                                path.dirname(file),
-                                id + (path.extname(id) ? '' : '.ts'),
+                        : id === './art'
+                          ? {
+                              athleteArt: (id, kind = 'portrait') => `/art/${id}-${kind}.webp`,
+                              trackArt: () => '/track.webp',
+                              trackPoint: (p) => ({ left: `${p}%`, top: '17%' }),
+                            }
+                          : id.endsWith('.scss')
+                            ? {}
+                            : load(
+                                path.resolve(
+                                  path.dirname(file),
+                                  id + (path.extname(id) ? '' : '.ts'),
+                                ),
                               ),
-                            ),
       },
     );
     return m.exports;

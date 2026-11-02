@@ -82,9 +82,11 @@ const phase = computed(() =>
       :title="athlete.state.interrupted ? '本局已中止' : '等待下一局'"
     >
       <p>{{
-        athlete.state.interrupted
-          ? '有人離席，本局已中止；房主可重新開局。'
-          : '你未參與目前對局；等待房主開始下一局。'
+        athlete.state.restoreFailed
+          ? '伺服器重啟後無法安全還原本局，已中止且不計勝負；房主可重新開局。'
+          : athlete.state.interrupted
+            ? '有人離席，本局已中止；房主可重新開局。'
+            : '你未參與目前對局；等待房主開始下一局。'
       }}</p
       ><div id="athlete-restart-settings"></div>
     </UiPanel>

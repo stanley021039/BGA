@@ -4,6 +4,7 @@ const { randomUUID } = require('node:crypto');
 const { PartyRoom, fail } = require('./party-base');
 const { CeoGame } = require('./ceo');
 const { provisionalCatalog } = require('./ceo-catalog');
+const { exportRoomState, restoreRoomState, interruptRestore } = require('./private-state');
 
 class CeoRoom extends PartyRoom {
   #game = null;
@@ -11,6 +12,19 @@ class CeoRoom extends PartyRoom {
 
   constructor(code, name, rng, now) {
     super('ceo', code, name, 6, 3, rng, now);
+  }
+  exportPersistentState() {
+    return exportRoomState(this, this.#game, this.#participants);
+  }
+  restorePersistentState(saved) {
+    const next = restoreRoomState(this, saved, CeoGame);
+    this.#game = next.game;
+    this.#participants = next.participants;
+  }
+  interruptPersistence() {
+    this.#game = null;
+    this.#participants.clear();
+    interruptRestore(this);
   }
 
   start() {
@@ -22,6 +36,7 @@ class CeoRoom extends PartyRoom {
       rng: this.rng,
     });
     this.prepare();
+    this.restoreFailed = false;
     this.#game = next;
     this.#participants = new Set(this.players.map((player) => player.id));
     this.roundId = randomUUID();
@@ -65,6 +80,7 @@ class CeoRoom extends PartyRoom {
     const base = this.baseView(id);
     return {
       ...base,
+      restoreFailed: this.restoreFailed === true,
       catalogStatus: 'provisional',
       catalogNotice: '本站暫用替代牌庫；公司內容與原版不同。',
       game:
