@@ -8,7 +8,8 @@ const { validateRewardsDatabase } = require('../src/achievements/reward-store'),
   { rewards } = require('../src/achievements/rewards'),
   { attachMatchAchievements } = require('../src/achievements/match-tracker');
 function fixture(t) {
-  const db = openDatabase(':memory:');
+  // Historical claim/progress contract; post21 non-grants are in gacha-store.test.
+  const db = require('./helpers/pre-gacha-schema.cjs').preGachaSchema(openDatabase(':memory:'));
   t.after(() => db.close());
   const ids = [randomUUID(), randomUUID()];
   for (let i = 0; i < ids.length; i++)

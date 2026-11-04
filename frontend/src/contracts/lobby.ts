@@ -35,13 +35,23 @@ export interface SceneCombatStatus {
   regenerating: boolean;
   regenWaitMs: number;
   regenBlockedMs?: number;
+  sealedMs?: number;
   regenPerSecond: number;
 }
 export interface LobbyVisitor {
+  heroFlightUntil?: number;
+  sealedUntil?: number;
   combatStatus?: SceneCombatStatus;
   severed?: boolean;
   immobileUntil?: number;
-  knockback?: { id: string; fromX: number; fromY: number; at: number } | null;
+  knockback?: {
+    id: string;
+    fromX: number;
+    fromY: number;
+    at: number;
+    durationMs?: number;
+    vertical?: boolean;
+  } | null;
   dotPulse?: { id: string; damage: number; critical: boolean; at: number } | null;
   fragment?: { id: string; x: number; y: number; health: number; maxHealth: number } | null;
   kda?: { kills: number; deaths: number; assists: number };
@@ -80,6 +90,8 @@ export interface LobbyAttackHit {
   critical: boolean;
 }
 export interface LobbyAttack {
+  cancelled?: boolean;
+  head?: AttackHead;
   rays?: { x: number; y: number }[];
   ageMs?: number;
   hits?: LobbyAttackHit[];
@@ -99,6 +111,17 @@ export interface LobbyAttack {
   toY: number;
   at: number;
   until: number;
+}
+export interface AttackHead {
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  at: number;
+  contactAt: number;
+  biteAt: number;
+  finished: boolean;
+  cancelled: boolean;
 }
 export interface LobbySnapshot {
   attacks: LobbyAttack[];
@@ -235,7 +258,15 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           !finite(pulse.at)
         )
           throw Error('擊飛資料格式不正確。');
-        return { id: text(pulse.id), fromX: pulse.fromX, fromY: pulse.fromY, at: pulse.at };
+        return {
+          id: text(pulse.id),
+          fromX: pulse.fromX,
+          fromY: pulse.fromY,
+          at: pulse.at,
+          ...(pulse.durationMs === 1000 && pulse.vertical === true
+            ? { durationMs: 1000, vertical: true }
+            : {}),
+        };
       })(),
       dotPulse: (() => {
         if (!item.dotPulse) return null;
@@ -274,6 +305,8 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             (!finite(status.regenBlockedMs) ||
               status.regenBlockedMs < 0 ||
               status.regenBlockedMs > 5000)) ||
+          (status.sealedMs !== undefined &&
+            (!finite(status.sealedMs) || status.sealedMs < 0 || status.sealedMs > 2000)) ||
           !Number.isSafeInteger(status.regenPerSecond) ||
           Number(status.regenPerSecond) <= 0
         )
@@ -286,10 +319,13 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           regenerating: status.regenerating === true,
           regenWaitMs: status.regenWaitMs,
           regenBlockedMs: Number(status.regenBlockedMs || 0),
+          sealedMs: Number(status.sealedMs || 0),
           regenPerSecond: Number(status.regenPerSecond),
         };
       })(),
       health: finite(item.health) ? item.health : undefined,
+      heroFlightUntil: finite(item.heroFlightUntil) ? item.heroFlightUntil : 0,
+      sealedUntil: finite(item.sealedUntil) ? item.sealedUntil : 0,
       maxHealth: finite(item.maxHealth) ? item.maxHealth : undefined,
       respawnAt: finite(item.respawnAt) ? item.respawnAt : undefined,
       id: text(item.id),
@@ -335,10 +371,41 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           ![a.fromX, a.fromY, a.toX, a.toY].every(coordinate) ||
           !finite(a.at) ||
           !finite(a.until) ||
-          ![1800, 4400].includes(a.until - a.at)
+          !(a.head && ['shaohua_devour', 'shaohua_devour_alt'].includes(String(a.effect))
+            ? Number.isSafeInteger(a.until - a.at) && a.until > a.at
+            : [1800, 4400].includes(a.until - a.at))
         )
           throw Error('大廳攻擊資料格式不正確。');
         return {
+          cancelled: a.cancelled === true,
+          ...(a.head !== undefined
+            ? (() => {
+                const h = record(a.head);
+                if (
+                  ![h.x, h.y, h.targetX, h.targetY].every(coordinate) ||
+                  ![h.at, h.contactAt, h.biteAt].every(
+                    (v) => Number.isSafeInteger(v) && Number(v) >= 0,
+                  ) ||
+                  typeof h.finished !== 'boolean' ||
+                  typeof h.cancelled !== 'boolean' ||
+                  !['shaohua_devour', 'shaohua_devour_alt'].includes(String(a.effect))
+                )
+                  throw Error('吞噬追蹤資料格式不正確。');
+                return {
+                  head: {
+                    x: Number(h.x),
+                    y: Number(h.y),
+                    targetX: Number(h.targetX),
+                    targetY: Number(h.targetY),
+                    at: Number(h.at),
+                    contactAt: Number(h.contactAt),
+                    biteAt: Number(h.biteAt),
+                    finished: h.finished,
+                    cancelled: h.cancelled,
+                  },
+                };
+              })()
+            : {}),
           ...(a.rays !== undefined
             ? (() => {
                 if (a.effect !== 'bijuu_beam' || !Array.isArray(a.rays) || a.rays.length !== 3)
@@ -384,7 +451,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                             !stages.some((stage) => stage[2] === hit.phase) ||
                             !finite(hit.delayMs) ||
                             hit.delayMs < 0 ||
-                            hit.delayMs > 4100 ||
+                            (a.head ? !Number.isSafeInteger(hit.delayMs) : hit.delayMs > 4100) ||
                             typeof hit.pending !== 'boolean' ||
                             (hit.missed !== undefined && typeof hit.missed !== 'boolean')
                           )

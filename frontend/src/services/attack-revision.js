@@ -678,14 +678,6 @@ export function drawUltimateTitle(ctx, label, p, width, height) {
   ctx.lineTo(-100, cy + 5 - slide * 0.2);
   ctx.closePath();
 
-  const grad = ctx.createLinearGradient(0, cy - 30, width, cy + 30);
-  grad.addColorStop(0, 'rgba(0, 240, 255, 0.05)');
-  grad.addColorStop(0.3, 'rgba(255, 213, 86, 0.45)');
-  grad.addColorStop(0.7, 'rgba(255, 213, 86, 0.45)');
-  grad.addColorStop(1, 'rgba(212, 0, 75, 0.05)');
-  ctx.fillStyle = grad;
-  ctx.fill();
-
   // Top & Bottom Sharp Neon Hairlines
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = '#dbfcff';

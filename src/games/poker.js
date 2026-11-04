@@ -221,7 +221,9 @@ class Room {
     if (alive.length === 1) {
       const pot = this.players.reduce((s, p) => s + p.total, 0);
       alive[0].stack += pot;
-      this.results = [{ name: alive[0].name, amount: pot, hand: '其他玩家棄牌' }];
+      this.results = [
+        { playerId: alive[0].id, name: alive[0].name, amount: pot, hand: '其他玩家棄牌' },
+      ];
       this.finish();
       return;
     }
@@ -286,6 +288,7 @@ class Room {
         p.stack += win;
         let old = winnings.get(p.id);
         winnings.set(p.id, {
+          playerId: p.id,
           name: p.name,
           amount: (old?.amount || 0) + win,
           hand: labels[best[0]],

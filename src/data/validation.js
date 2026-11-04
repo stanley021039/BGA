@@ -1,4 +1,5 @@
 const { REWARD_TABLES } = require('../achievements/reward-schema');
+const { GACHA_TABLES } = require('../gacha/schema');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -119,6 +120,7 @@ function validateDatabase(file) {
       18: [...MARKET_AUTOMATION_TABLES, ...MARKET_CURVE_TABLES],
       19: ACHIEVEMENT_TABLES,
       20: REWARD_TABLES,
+      21: GACHA_TABLES,
     };
     for (const [version, names] of Object.entries(required))
       if (schemaVersion >= Number(version) && names.some((n) => !tables.includes(n)))
@@ -181,12 +183,31 @@ function validateDatabase(file) {
         imagesDigest.update(JSON.stringify({ ...row, bytes: sha(row.bytes) }) + '\n');
       marketImagesSha256 = imagesDigest.digest('hex');
     }
+    if (tables.includes('gacha_wallets')) {
+      try {
+        require('../gacha/validation').validateGachaDatabase(db);
+      } catch {
+        fail('INVALID_DATABASE', 'Gacha wallet, reward or operation records are invalid');
+      }
+    }
     const achievementsDigest = crypto.createHash('sha256');
-    for (const table of ['user_achievements', ...ACHIEVEMENT_TABLES, ...REWARD_TABLES].filter(
-      (name) => tables.includes(name),
-    )) {
+    const gachaDigest = crypto.createHash('sha256');
+    for (const table of [
+      'user_achievements',
+      ...ACHIEVEMENT_TABLES,
+      ...REWARD_TABLES,
+      ...GACHA_TABLES,
+    ].filter((name) => tables.includes(name))) {
+      const gachaOrder = {
+        gacha_wallets: 'user_id',
+        gacha_ownership: 'user_id,kind,reward_id',
+        gacha_ledger: 'event_id',
+        gacha_requests: 'user_id,request_id',
+        gacha_settings: 'name',
+      };
       const order =
-        table === 'achievement_match_events'
+        gachaOrder[table] ||
+        (table === 'achievement_match_events'
           ? 'event_id'
           : table === 'user_cosmetic_rewards'
             ? 'user_id,frame_id'
@@ -194,9 +215,10 @@ function validateDatabase(file) {
               ? 'unit_event_id'
               : table === 'achievement_progress'
                 ? 'user_id,achievement_id,rule_version,game_type'
-                : 'user_id,achievement_id';
+                : 'user_id,achievement_id');
+      const digest = GACHA_TABLES.includes(table) ? gachaDigest : achievementsDigest;
       for (const row of db.prepare(`SELECT * FROM ${table} ORDER BY ${order}`).iterate())
-        achievementsDigest.update(JSON.stringify([table, row]) + '\n');
+        digest.update(JSON.stringify([table, row]) + '\n');
     }
     const achievementsSha256 = achievementsDigest.digest('hex');
     const accountsDigest = crypto.createHash('sha256');
@@ -345,6 +367,7 @@ function validateDatabase(file) {
       blobDigests,
       accountsSha256: accountsDigest.digest('hex'),
       achievementsSha256,
+      ...(schemaVersion >= 21 ? { gachaSha256: gachaDigest.digest('hex') } : {}),
       ...(marketImagesSha256 === undefined ? {} : { marketImagesSha256 }),
       music: tables.includes('music_tracks')
         ? db.prepare('SELECT id,size,mime,ext FROM music_tracks ORDER BY id').all()
@@ -566,6 +589,7 @@ function validateData(p) {
       blobDigests: database.blobDigests,
       accountsSha256: database.accountsSha256,
       achievementsSha256: database.achievementsSha256,
+      ...(database.gachaSha256 === undefined ? {} : { gachaSha256: database.gachaSha256 }),
       ...(database.marketImagesSha256 === undefined
         ? {}
         : { marketImagesSha256: database.marketImagesSha256 }),

@@ -3,7 +3,9 @@ const assert = require('node:assert/strict');
 const { selectAttackTargets } = require('../src/rooms/attack-targets');
 const { createLobby } = require('../src/rooms/lobby');
 const { createRoomSpace } = require('../src/rooms/space');
-const effects = require('../public/shared/attack-effects.json').filter((effect) => effect.area);
+const effects = require('../public/shared/attack-effects.json').filter(
+  (effect) => effect.area && !effect.gachaOnly,
+);
 const rules = require('../public/shared/scene-rules.json');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
 

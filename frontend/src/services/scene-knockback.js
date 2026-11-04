@@ -13,7 +13,7 @@ export function playKnockback(node, visitor) {
       { translate: `${dx * 0.4}px ${dy * 0.4 - 38}px`, rotate: '16deg', offset: 0.5 },
       { translate: '0px 0px', rotate: '0deg' },
     ],
-    { duration: 450, easing: 'ease-out' },
+    { duration: hit.durationMs === 1000 ? 1000 : 450, easing: 'ease-out' },
   );
   let live = true,
     release = () => {};

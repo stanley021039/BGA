@@ -391,6 +391,60 @@ test('wrap destinations and cosmetic attacks survive the actual lobby contract w
   assert.equal(read(attacked).visitors[0].wrapId, 0);
 });
 
+test('persistent homing survives the real Vue contract past its decorative animation and settles a late bite', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  let now = 1000;
+  const lobby = createLobby(
+    () => now,
+    undefined,
+    () => 0.5,
+  );
+  const users = ['a', 'b'].map((id) => ({ id, display_name: id }));
+  users.forEach((u, i) => lobby.move(u, { x: 20 + i * 40, y: 50 }));
+  now += 10000;
+  users.forEach((u) => lobby.view(u));
+  const raw = {
+    ...lobby.attack(users[0], {
+      effect: 'shaohua_devour',
+      slot: 'q',
+      aspectRatio: 1,
+      requestId: 'late-homing-contract',
+    }),
+    serverNow: now,
+  };
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  const event = raw.attacks[0];
+  event.until = event.at + 105000;
+  event.head.at = 100000;
+  event.head.contactAt = 100000;
+  event.head.biteAt = 100400;
+  event.head.finished = true;
+  event.damage = 1200000;
+  event.hits = [
+    {
+      toId: 'b',
+      toX: 60,
+      toY: 50,
+      phase: 'bite',
+      delayMs: 100400,
+      pending: false,
+      damage: 1200000,
+      critical: false,
+    },
+  ];
+  assert.equal(read(raw).attacks[0].hits[0].delayMs, 100400);
+  for (const corrupt of [
+    (e) => (e.head.at = -1),
+    (e) => (e.head.biteAt = Infinity),
+    (e) => (e.hits[0].delayMs = 100400.5),
+    (e) => (e.effect = 'beam'),
+  ]) {
+    const broken = structuredClone(raw);
+    corrupt(broken.attacks[0]);
+    assert.throws(() => read(broken));
+  }
+});
+
 test('authoritative area hits survive the Vue contract and reject malformed victim payloads', () => {
   const { createLobby } = require('../../src/rooms/lobby');
   let now = 1000;

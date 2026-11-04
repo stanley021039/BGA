@@ -51,6 +51,7 @@ function rows(db) {
   );
 }
 function historical(f, kind) {
+  require('./helpers/pre-gacha-schema.cjs').dropEmptyGachaTables(f.db);
   if (kind === 'achievement17') {
     let now = Date.parse('2027-01-03T12:00:00Z');
     const market = new MarketStore(f.db, () => now),
@@ -114,7 +115,7 @@ for (const kind of ['achievement17', 'market17', 'market18'])
       const db = openDatabase(f.file);
       try {
         assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
-        assert.equal(SCHEMA_VERSION, 20);
+        assert.equal(SCHEMA_VERSION, 21);
         const after = rows(db);
         for (const name of Object.keys(before))
           assert.deepEqual(
@@ -125,8 +126,25 @@ for (const kind of ['achievement17', 'market17', 'market18'])
             name,
           );
         assert.equal(db.prepare('PRAGMA foreign_key_check').all().length, 0);
+        const earned = new Set(before.user_achievements.map((row) => row.achievement_id));
+        const expectedLegacy = require('../src/gacha/catalog')
+          .catalog.filter((item) => item.legacy && item.achievementIds.some((id) => earned.has(id)))
+          .map((item) => item.kind + ':' + item.id)
+          .sort();
+        assert.deepEqual(
+          after.gacha_ownership.map((row) => row.kind + ':' + row.reward_id).sort(),
+          expectedLegacy,
+        );
+        assert.ok(
+          after.gacha_ownership.every((row) => row.user_id === f.user && row.source === 'legacy'),
+        );
+        assert.deepEqual(
+          after.gacha_settings.map((row) => row.name),
+          ['legacy_imported_at'],
+        );
         for (const name of Object.keys(after).filter((n) => !Object.hasOwn(before, n)))
-          assert.deepEqual(after[name], [], name);
+          if (!['gacha_ownership', 'gacha_settings'].includes(name))
+            assert.deepEqual(after[name], [], name);
       } finally {
         db.close();
       }
@@ -147,7 +165,7 @@ for (const table of [
     assert.throws(() => validateDatabase(f.file));
     const db = new DatabaseSync(f.file);
     try {
-      assert.equal(db.prepare('PRAGMA user_version').get().user_version, 20);
+      assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
       assert.equal(db.prepare('SELECT name FROM sqlite_master WHERE name=?').get(table), undefined);
     } finally {
       db.close();

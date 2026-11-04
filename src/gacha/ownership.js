@@ -1,0 +1,52 @@
+'use strict';
+const codeGroups = {
+  frames: 'frames',
+  media: 'frames',
+  entrances: 'entrances',
+  openings: 'entrances',
+  attacks: 'other',
+  backgrounds: 'other',
+  sounds: 'pings',
+};
+const validAt = (at) =>
+  typeof at === 'string' && Number.isFinite(Date.parse(at)) && new Date(at).toISOString() === at;
+function enabled(db) {
+  return (
+    db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='gacha_ownership'").get()
+      ?.name === 'gacha_ownership'
+  );
+}
+function appearance(db, userId) {
+  const row = db.prepare('SELECT appearance FROM users WHERE id=?').get(userId);
+  try {
+    return JSON.parse(row?.appearance || '{}');
+  } catch {
+    return {};
+  }
+}
+function ownedIds(db, userId, kind, saved = appearance(db, userId)) {
+  const result = new Set();
+  if (enabled(db))
+    for (const row of db
+      .prepare('SELECT reward_id FROM gacha_ownership WHERE user_id=? AND kind=?')
+      .all(userId, kind))
+      result.add(row.reward_id);
+  const group = codeGroups[kind],
+    codes = saved.achievementRewardCodes || {};
+  if (validAt(codes[group]) || validAt(saved.achievementRewardCodeAt)) {
+    for (const i of require('./catalog').catalog) if (i.kind === kind) result.add(i.id);
+    if (kind === 'openings') result.add('soul-world');
+  }
+  const starter = saved.starterRewardPack;
+  if (starter?.version === 1 && validAt(starter.redeemedAt)) {
+    const allowed = new Set(
+      require('./catalog')
+        .catalog.filter((i) => i.kind === kind)
+        .map((i) => i.id),
+    );
+    for (const id of Array.isArray(starter.grants?.[kind]) ? starter.grants[kind] : [])
+      if (allowed.has(id)) result.add(id);
+  }
+  return [...result];
+}
+module.exports = { enabled, appearance, ownedIds, validAt };

@@ -486,6 +486,7 @@ function initializeApp(config, dataLock, acquired) {
     giftStore,
     drawWordStore,
     achievementStore,
+    gachaStore,
     artworkStore,
     musicStore,
     marketStore,
@@ -514,6 +515,9 @@ function initializeApp(config, dataLock, acquired) {
   giftStore = new GiftStore(db);
   drawWordStore = new DrawWordStore(db);
   achievementStore = new AchievementStore(db);
+  gachaStore = new (require('./gacha/store').GachaStore)(db, {
+    clock: config.gachaClock || Date.now,
+  });
   artworkStore = new ArtworkStore(db);
   musicStore = new MusicStore(
     db,
@@ -819,6 +823,11 @@ function initializeApp(config, dataLock, acquired) {
     );
   };
   const attachAchievementHooks = (room) => {
+    require('./gacha/match-tracker').attachGachaMatch(
+      room,
+      freezeAchievementParticipants,
+      achievementPurpose,
+    );
     require('./achievements/match-tracker').attachMatchAchievements(room);
     Object.defineProperties(room, {
       achievementUnitStart: {
@@ -860,6 +869,11 @@ function initializeApp(config, dataLock, acquired) {
   };
   const awardRoomAchievements = (room) => {
     try {
+      const gachaResult = room.gachaMatch?.finish();
+      if (gachaResult) {
+        gachaStore.awardMatch(gachaResult);
+        room.gachaMatch.acknowledge();
+      }
       collectAchievementUnits(room);
       room.matchAchievements?.finish();
       const matchResult = room.matchAchievements?.completed;
@@ -966,6 +980,7 @@ function initializeApp(config, dataLock, acquired) {
       try {
         const captured = roomPersistence.captureRoom(room, {
           match: room.matchAchievements?.snapshot?.() || null,
+          gacha: room.gachaMatch?.snapshot?.() || null,
           seats: seats.get(room.code) || null,
           departed: departedSeats.get(room.code) || null,
           kicked: kickedUsers.get(room.code) || null,
@@ -1033,6 +1048,7 @@ function initializeApp(config, dataLock, acquired) {
         shiftTimers(room, delta, snapshot.savedAt);
         for (const player of room.players) if (!player.bot) player.lastSeen = now;
         room.matchAchievements?.restore?.(extra.match);
+        room.gachaMatch?.restore?.(extra.gacha);
         if (!(extra.seats instanceof Map)) throw Error('座位資料遺失');
         for (const [, playerId] of extra.seats) room.view(playerId);
         seats.set(room.code, extra.seats);
@@ -1332,6 +1348,23 @@ function initializeApp(config, dataLock, acquired) {
           return send({ ok: true });
         }
         const user = auth.requireUser(req);
+        gachaStore.daily(user.id);
+        if (url.pathname === '/api/gacha' && req.method === 'GET')
+          return send(gachaStore.state(user.id));
+        if (url.pathname === '/api/gacha/history' && req.method === 'GET')
+          return send(gachaStore.history(user.id));
+        if (url.pathname === '/api/gacha/draw') {
+          if (req.method !== 'POST')
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '抽卡需使用 POST');
+          limitRate(roomRate, 'gacha:' + user.id, 30);
+          return send(gachaStore.draw(user.id, data));
+        }
+        if (url.pathname === '/api/gacha/exchange') {
+          if (req.method !== 'POST')
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '兌換需使用 POST');
+          limitRate(roomRate, 'gacha:' + user.id, 30);
+          return send(gachaStore.exchange(user.id, data));
+        }
         if (url.pathname.startsWith('/api/tutorial/')) {
           const expected = new URL(config.publicUrl || 'http://' + req.headers.host).origin;
           if (req.headers.origin && req.headers.origin !== expected)
@@ -2569,7 +2602,9 @@ function initializeApp(config, dataLock, acquired) {
           if (url.pathname === '/api/draw/result')
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
           if (url.pathname === '/api/draw/stroke') {
-            const result = room.addStroke(p.id, data);
+            const result = room.gachaMatch.humanAction(p.id, 'stroke', () =>
+              room.addStroke(p.id, data),
+            );
             if (!result.duplicate) publishDraw(room.code, 'stroke', result);
             return send(result);
           }
@@ -2708,9 +2743,11 @@ function initializeApp(config, dataLock, acquired) {
             if (url.pathname === '/api/action') {
               if (room.type === 'musicquiz' && data.action === 'card-frame')
                 achievementStore.assertFrame(user.id, data.frameId);
-              if (room.type === 'thunder' || !room.type)
-                room.humanAct(p.id, data.action, room.type === 'thunder' ? data : data.amount);
-              else room.act(p.id, data.action, data);
+              room.gachaMatch.humanAction(p.id, data.action, () => {
+                if (room.type === 'thunder' || !room.type)
+                  room.humanAct(p.id, data.action, room.type === 'thunder' ? data : data.amount);
+                else room.act(p.id, data.action, data);
+              });
             } else if (url.pathname === '/api/settings') {
               if (
                 ![
@@ -2851,6 +2888,31 @@ function initializeApp(config, dataLock, acquired) {
         if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
         return sendImage(req, res, url, row, url.searchParams.has('v'));
       }
+      if (url.pathname.startsWith('/assets/attacks/')) {
+        auth.requireUser(req);
+        const name = url.pathname.slice('/assets/attacks/'.length);
+        if (
+          ![
+            'shaohua-closed.webp',
+            'shaohua-open.webp',
+            'reaper-person-768.webp',
+            'reaper-person-128.webp',
+            'reaper-person-256.webp',
+            'reaper-person-512.webp',
+          ].includes(name)
+        )
+          throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到招式圖片');
+        const { bytes, version } = readStatic(
+          path.join(__dirname, '..', 'public/assets/attacks', name),
+        );
+        return sendImage(
+          req,
+          res,
+          url,
+          { bytes, mime: 'image/webp' },
+          url.searchParams.get('v') === version,
+        );
+      }
       if (url.pathname.startsWith('/assets/characters/')) {
         auth.requireUser(req);
         const asset = builtinCharacters
@@ -2955,6 +3017,7 @@ function initializeApp(config, dataLock, acquired) {
         '/second-wind': 'second-wind.html',
         '/rules': 'rules.html',
         '/achievements': 'achievements.html',
+        '/gacha': 'gacha.html',
         '/shared/achievement-glow.css': 'shared/achievement-glow.css',
         '/club.css': 'club.css',
         '/club-pages.css': 'club-pages.css',

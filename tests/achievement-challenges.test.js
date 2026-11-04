@@ -7,7 +7,8 @@ const { test } = require('node:test'),
   { attachMatchAchievements } = require('../src/achievements/match-tracker'),
   { validateRewardsDatabase } = require('../src/achievements/reward-store');
 function fixture(t) {
-  const db = openDatabase(':memory:');
+  // These are pre-gacha challenge-to-reward compatibility regressions.
+  const db = require('./helpers/pre-gacha-schema.cjs').preGachaSchema(openDatabase(':memory:'));
   t.after(() => db.close());
   const ids = Array.from({ length: 3 }, () => randomUUID());
   for (const [i, id] of ids.entries())

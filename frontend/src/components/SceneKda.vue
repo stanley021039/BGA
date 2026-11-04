@@ -23,6 +23,12 @@ const indicators = computed(() => {
     return [{ icon: 'timer', label: '重生中', tone: 'neutral' }] as Indicator[];
   const state = status.value;
   if (!state) return [{ icon: 'refresh', label: '狀態同步中', tone: 'neutral' }] as Indicator[];
+  if (state.sealedMs && state.sealedMs > 0)
+    items.push({
+      icon: 'lock',
+      label: '封印：' + (Math.ceil(state.sealedMs / 100) / 10).toFixed(1) + ' 秒內不能攻擊或瞬移',
+      tone: 'danger',
+    });
   const temporary = state.guanyin ? 1.1 : 1;
   const percent = (factor: number) => Math.round((factor - 1) * 1000) / 10;
   const hp = (state.authorBonus ? 1.5 : 1) * temporary,

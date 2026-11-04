@@ -151,7 +151,7 @@ onBeforeUnmount(() => {
           label="對話"
           aria-haspopup="dialog"
           :disabled="!lobby.connected"
-          @click="backdrop?.openChat()"
+          @click="backdrop?.openChat()" /><UiLink href="/gacha" label="獎勵抽卡機" icon="gift"
       /></template>
       <template #lobby-resume
         ><div class="vue-lobby-resume" aria-label="已入座的房間"

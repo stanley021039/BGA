@@ -30,6 +30,28 @@ function rewardLabels(id) {
   ];
 }
 function owned(store, userId) {
+  const gacha = require('../gacha/ownership');
+  if (gacha.enabled(store.db)) {
+    const saved = gacha.appearance(store.db, userId);
+    const ids = (kind) => gacha.ownedIds(store.db, userId, kind, saved);
+    return {
+      attacks: require('./attack-rewards').ownedAttacks(store.db, userId),
+      sounds: ids('sounds'),
+      entrances: ids('entrances'),
+      backgrounds: [
+        ...new Set(
+          require('../../public/shared/lobby-backgrounds.json')
+            .filter((b) => !b.achievementId)
+            .map((b) => b.id)
+            .concat(ids('backgrounds')),
+        ),
+      ],
+      openings: ['home-family', ...ids('openings')],
+      pingIcons: require('./redemption').grants(store.db, userId).pings
+        ? Object.keys(require('../../frontend/src/engines/ping-model.js').default.types)
+        : [],
+    };
+  }
   const ids = new Set(store.find.all(userId).map((row) => row.achievement_id));
   const grants = require('./redemption').grants(store.db, userId);
   const starter = require('./starter-rewards').receipt(store.db, userId)?.grants || {};
@@ -70,6 +92,8 @@ function owned(store, userId) {
   };
 }
 function ownedSounds(db, userId) {
+  const gacha = require('../gacha/ownership');
+  if (gacha.enabled(db)) return gacha.ownedIds(db, userId, 'sounds');
   const ids = new Set(
     db
       .prepare('SELECT achievement_id FROM user_achievements WHERE user_id=?')

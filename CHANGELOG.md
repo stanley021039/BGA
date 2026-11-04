@@ -2,6 +2,12 @@
 
 版本管理從既有 `1.0.0` 基線開始；更早的功能與部署紀錄見 `docs/`，不追補未曾實際標記的發行版。
 
+## [3.13.0] - 2026-10-30
+
+- 新增帳號獎勵抽卡與碎片兌換、有效對局抽卡幣，以及七款新招式與異色版的多人場景實裝。
+- 補齊少華與屍鬼人物圖片的權限及快取路由，縮小科技武器、放大英靈石像，沿用已確認的次元斬名稱。
+- 大嘴少華以角色 75% 速度持續追蹤，隨留場時間放大，咬合後使目標剩 1 HP。
+
 ## [3.12.1] - 2026-10-27
 
 - Lobby attacks share one canvas and lower their detail with load or on slow devices, sparks use a cached glow, and the lobby is pushed over an event stream instead of polled every 500 ms (#322).

@@ -504,6 +504,7 @@ for (const version of [13, 14, SCHEMA_VERSION])
     vote(f, f.members[0], id, 'rally');
     f.setTime(after);
     settle(f, id, 2);
+    require('./helpers/pre-gacha-schema.cjs').dropEmptyGachaTables(f.db);
     if (version < 17) legacyMarketSchema(f.db);
     if (version === 13) f.db.exec('DROP TABLE draw_word_exclusions');
     f.db.exec('PRAGMA user_version=' + version);

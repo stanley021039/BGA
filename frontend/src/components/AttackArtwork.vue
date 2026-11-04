@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { usePreferencesStore } from '../stores/preferences';
 import { playAttackArtwork } from '../services/attack-artwork';
+import { warmNewSkillAssets } from '../services/game-assets';
 import { attackColor, attackOptions } from '../services/attack-placement';
 import type { LobbyAttackHit } from '../contracts/lobby';
 const props = defineProps<{
@@ -44,6 +45,7 @@ async function play() {
     return;
   const { width, height } = stage.value.getBoundingClientRect();
   if (!width || !height) return;
+  warmNewSkillAssets(props.effect, width, height);
   cleanup = playAttackArtwork(
     surface.value,
     attackOptions(props, width, height, () => props.hits),

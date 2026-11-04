@@ -4,7 +4,6 @@ import MotionPolicy from '../engines/motion-policy.js';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { requestJson } from '../services/http';
 import { sizedImage } from '../services/image-size';
-import requirements from '../../../public/shared/entrance-requirements.json';
 import { apparate } from '../pages/lobby/apparition';
 import {
   entranceEffect,
@@ -15,12 +14,9 @@ import {
 import { usePreferencesStore } from '../stores/preferences';
 import UiChoiceCard from './UiChoiceCard.vue';
 const prefs = usePreferencesStore();
-const unlocked = ref<string[]>([]),
-  conditions = ref<Record<string, string>>({});
+const unlocked = ref<string[]>([]);
 const allowed = (id: string) => !id.startsWith('stitch-') || unlocked.value.includes(id);
-const condition = (id: string) =>
-  conditions.value[requirements.find((item) => item.id === id)?.achievementId || ''] ||
-  '完成對應成就解鎖；詳見成就頁';
+const condition = (_id: string) => '抽卡、碎片兌換或兌換碼解鎖';
 onMounted(async () => {
   try {
     const data = (await requestJson('/api/achievements')) as {
@@ -28,9 +24,6 @@ onMounted(async () => {
       achievements: { id: string; description: string }[];
     };
     unlocked.value = data.bonusRewards.entrances;
-    conditions.value = Object.fromEntries(
-      data.achievements.map((item) => [item.id, item.description]),
-    );
     if (!allowed(entranceEffect.value)) setEntranceEffect('classic');
   } catch {
     /* Server also verifies reward ownership. */

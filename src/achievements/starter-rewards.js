@@ -25,7 +25,9 @@ function catalog() {
   const frames = require('./rewards').rewards.map((r) => ({ id: r.frameId, label: r.label }));
   return {
     entrances: require('./entrance-rewards').rewards,
-    attacks: require('../../public/shared/attack-effects.json').filter((r) => r.achievementId),
+    attacks: require('../../public/shared/attack-effects.json').filter(
+      (r) => r.achievementId || r.gachaOnly,
+    ),
     frames,
     media: frames,
     // All ten current icons are free. Do not relock existing choices to manufacture gifts.

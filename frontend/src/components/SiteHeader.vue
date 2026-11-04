@@ -308,7 +308,7 @@ onBeforeUnmount(() => {
               @click="openPreferences"
             />
             <a href="/settings">帳號與個人化設定</a><a href="/collection">收藏庫</a
-            ><a href="/achievements">成就收藏冊</a>
+            ><a href="/achievements">成就收藏冊</a><a href="/gacha">獎勵抽卡機</a>
             <a v-if="session.user.role === 'admin'" id="site-admin" href="/admin">管理</a>
             <UiButton
               id="site-logout"

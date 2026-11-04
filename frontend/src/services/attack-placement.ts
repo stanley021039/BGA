@@ -1,5 +1,5 @@
 import { attackEffects } from '../stores/attack-loadout';
-import type { LobbyAttackHit } from '../contracts/lobby';
+import type { LobbyAttackHit, AttackHead, LobbyAttack } from '../contracts/lobby';
 
 export type AttackPoint = { x: number; y: number };
 export type AttackPlacement = {
@@ -9,6 +9,9 @@ export type AttackPlacement = {
   damage?: number;
   critical?: boolean;
   hits?: LobbyAttackHit[];
+  head?: AttackHead;
+  cancelled?: boolean;
+  casterImage?: string;
   rays?: AttackPoint[];
   aspectRatio?: number;
   from: AttackPoint;
@@ -26,6 +29,7 @@ export function attackOptions(
   width: number,
   height: number,
   currentHits: () => LobbyAttackHit[] | undefined = () => attack.hits,
+  currentAttack: () => Partial<LobbyAttack> = () => attack,
 ) {
   const point = (x: number, y: number) => ({ x: (x * width) / 100, y: (y * height) / 100 - 42 });
   const fitPreview =
@@ -37,7 +41,7 @@ export function attackOptions(
   const to = fitPreview ? { x: from.x + unit * 35, y: from.y } : point(attack.to.x, attack.to.y);
   return {
     ageMs: attack.ageMs,
-    readHits: attack.hits?.some((hit) => hit.phase)
+    readHits: Array.isArray(attack.hits)
       ? () =>
           (currentHits() || []).map((hit) => ({
             ...hit,
@@ -46,6 +50,21 @@ export function attackOptions(
             pathY: hit.aimY !== undefined ? (hit.aimY * height) / 100 - 42 : undefined,
           }))
       : undefined,
+    readHead: attack.head
+      ? () => {
+          const head = currentAttack().head;
+          return head
+            ? {
+                ...head,
+                ...point(head.x, head.y),
+                targetX: point(head.targetX, head.targetY).x,
+                targetY: point(head.targetX, head.targetY).y,
+              }
+            : null;
+        }
+      : undefined,
+    cancelled: () => currentAttack().cancelled === true,
+    casterImage: attack.casterImage,
     preview: attack.preview === true,
     rays: attack.rays?.map((ray) => point(ray.x, ray.y)),
     effect: attack.effect,

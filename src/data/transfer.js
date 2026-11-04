@@ -654,9 +654,14 @@ async function restore(request) {
       afterDatabase.accountsSha256 !== beforeDatabase.accountsSha256 ||
       (beforeDatabase.achievementsSha256 !== undefined &&
         afterDatabase.achievementsSha256 !== beforeDatabase.achievementsSha256) ||
+      (beforeDatabase.gachaSha256 !== undefined &&
+        afterDatabase.gachaSha256 !== beforeDatabase.gachaSha256) ||
       !binaryAssetsPreserved(beforeDatabase, afterDatabase)
     )
-      fail('VALIDATION_FAILED', 'Accounts, achievements or binary assets changed unexpectedly');
+      fail(
+        'VALIDATION_FAILED',
+        'Accounts, achievements, gacha records or binary assets changed unexpectedly',
+      );
     const result = {
       action: 'restore',
       dryRun: request.apply !== true,

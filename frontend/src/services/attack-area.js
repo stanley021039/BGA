@@ -107,9 +107,6 @@ export function createAreaAttack(ctx, options, onImpact) {
     if (tProgress < 0.28) {
       const prog = tProgress / 0.28;
       ctx.save();
-      // Atmospheric Dark Tint in the Box
-      ctx.fillStyle = `rgba(12, 14, 22, ${prog * 0.65})`;
-      ctx.fillRect(cx, cy - rectH / 2, rectW, rectH);
 
       // 6 Delicate Crimson Premonition Slices
       ctx.strokeStyle = `rgba(255, 51, 102, ${prog * 0.7})`;
@@ -435,12 +432,6 @@ export function createAreaAttack(ctx, options, onImpact) {
       areaPath();
       ctx.clip();
     }
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, Math.min(0.12, (1 - progress) * 0.16));
-    ctx.fillStyle = options.color;
-    areaPath();
-    ctx.fill();
-    ctx.restore();
     ctx.scale(scale, scale);
     renderers[index](0, progress, elapsed);
     for (let n = particles.length - 1; n >= 0; n--) {

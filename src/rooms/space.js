@@ -193,6 +193,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     }
     if (input.action === 'teleport') {
       combat.canMove(self, time);
+      combat.canCast(self, time);
       if (self.teleportedAt !== undefined && time - self.teleportedAt < 1000)
         throw new HttpError(429, 'TELEPORT_COOLDOWN', '瞬移冷卻中');
       self.teleportedAt = time;
@@ -226,14 +227,24 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       effect,
       input.aspectRatio,
     );
-    if ((attacks.get(room) || []).filter((event) => event.until > time).length >= 40)
+    combat.canCast(self, time);
+    if (
+      (attacks.get(room) || []).filter(
+        (event) =>
+          event.until > time &&
+          !(event.head && event.fromId === playerId && effect.startsWith('shaohua_devour')),
+      ).length >= 40
+    )
       throw new HttpError(429, 'ATTACK_SCENE_BUSY', '場景特效較多，請稍候再試');
     const target = targets[0];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '攻擊範圍內沒有其他玩家');
     const toId = target.id;
     const defensive = target === self;
     const hit = defensive ? combat.protect(self, time) : { damage: 0, critical: false };
-    const events = (attacks.get(room) || []).filter((e) => e.until > time);
+    const events = (attacks.get(room) || []).filter(
+      (e) =>
+        e.until > time && !(e.head && e.fromId === playerId && effect.startsWith('shaohua_devour')),
+    );
     const event = {
       id: randomBytes(12).toString('hex'),
       slot: input.slot,

@@ -489,9 +489,11 @@ test('native ping icons are independent of voice cues and reject unknown icon id
   const value = { ping: { iconType: 'admire', sound: { effect: 'ping-voice-amazing' } } };
   const db = {
     prepare: (sql) =>
-      sql.includes('user_achievements')
-        ? { all: () => [{ achievement_id: 'draw-fastest-correct' }] }
-        : { get: () => ({ appearance: null }) },
+      sql.includes('sqlite_master')
+        ? { get: () => undefined }
+        : sql.includes('user_achievements')
+          ? { all: () => [{ achievement_id: 'draw-fastest-correct' }] }
+          : { get: () => ({ appearance: null }) },
   };
   const saved = validatePingPreferences(db, 'test', value);
   assert.equal(saved.ping.iconType, 'admire');

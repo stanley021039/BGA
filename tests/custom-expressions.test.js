@@ -14,6 +14,9 @@ test('v3 character images migrate without losing existing expression bytes', () 
   try {
     const old = new DatabaseSync(file);
     old.exec(
+      'CREATE TABLE users(id TEXT PRIMARY KEY,username TEXT NOT NULL UNIQUE,display_name TEXT NOT NULL,password_hash TEXT NOT NULL,role TEXT NOT NULL,disabled INTEGER NOT NULL DEFAULT 0,appearance TEXT,created_at TEXT NOT NULL)',
+    );
+    old.exec(
       'CREATE TABLE player_characters(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL,name TEXT NOT NULL,created_at TEXT NOT NULL); CREATE TABLE character_images(character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,PRIMARY KEY(character_id,expression)); PRAGMA user_version=3',
     );
     old

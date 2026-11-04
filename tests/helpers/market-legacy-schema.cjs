@@ -65,6 +65,23 @@ function legacyMarketSchema(db, { preserveAchievements = false } = {}) {
   const foreignKeys = db.prepare('PRAGMA foreign_keys').get().foreign_keys;
   db.exec('PRAGMA foreign_keys=OFF; BEGIN IMMEDIATE');
   try {
+    // Historical fixtures predate gacha. Never relabel or discard real rewards.
+    const gacha = [
+      'gacha_requests',
+      'gacha_ledger',
+      'gacha_ownership',
+      'gacha_wallets',
+      'gacha_settings',
+    ];
+    for (const table of gacha.filter((t) => t !== 'gacha_settings'))
+      if (tables.has(table) && db.prepare('SELECT COUNT(*) n FROM ' + table).get().n)
+        throw Error('Legacy fixture must not discard gacha records');
+    if (
+      tables.has('gacha_settings') &&
+      db.prepare("SELECT COUNT(*) n FROM gacha_settings WHERE name!='legacy_imported_at'").get().n
+    )
+      throw Error('Legacy fixture must not discard gacha settings');
+    for (const table of gacha) if (tables.has(table)) db.exec('DROP TABLE ' + table);
     dropEmptyCurveTables(db);
     if (!preserveAchievements)
       for (const table of ['achievement_progress', 'processed_unit_events'])

@@ -2,11 +2,13 @@ const timing = require('../../public/shared/attack-timing.json');
 const rules = require('../../public/shared/scene-rules.json');
 const { inAttackArea, selectBijuuDirections } = require('./attack-targets');
 const { sceneDistance } = require('./scene-combat');
+const { prepareSpecial, advanceSpecial, queueHomingSteps } = require('./special-attacks');
 
 // No per-projectile timers. Polls/commands advance this bounded scene clock.
 // Actor references remain private, never in serialized snapshots.
 function createAttackTimeline(combat) {
   const runtime = new WeakMap();
+  const homingByCaster = new WeakMap();
   function prepare(event, self, targets, actors = targets) {
     if (event.effect === 'bijuu_beam')
       event.rays = selectBijuuDirections(self, actors, event.aspectRatio);
@@ -20,6 +22,19 @@ function createAttackTimeline(combat) {
         ? { comboDamage: combat.rollBabylonDamage(self) }
         : {}),
     };
+    const special = prepareSpecial(event, self, targets[0], source);
+    if (special) {
+      if (event.head) {
+        const previous = homingByCaster.get(self);
+        if (previous?.head && !previous.head.finished && !previous.head.cancelled) {
+          previous.head.cancelled = true;
+          previous.until = event.at + 400;
+        }
+        homingByCaster.set(self, event);
+      }
+      runtime.set(event, special);
+      return;
+    }
     const jobs = [];
     event.hits = [];
     for (const [delay, weight, phase] of timing[event.effect]) {
@@ -100,6 +115,7 @@ function createAttackTimeline(combat) {
     for (const event of events) {
       const state = runtime.get(event);
       if (!state) continue;
+      queueHomingSteps(event, state, time);
       for (const job of state.jobs)
         if (!job.done && job.at <= time) due.push({ event, state, job });
     }
@@ -112,6 +128,10 @@ function createAttackTimeline(combat) {
         advancedAt = job.at;
       }
       const map = new Map(combat.targets(bodies).map((actor) => [actor.id, actor]));
+      if (job.special) {
+        advanceSpecial(combat, event, state, job, bodies, map);
+        continue;
+      }
       if (job.recovery) {
         if (
           map.get(job.actor.id) === job.actor &&

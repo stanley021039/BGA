@@ -255,5 +255,9 @@ test('two explosions in the same completed match award the paired sound achievem
     .list(ids[0])
     .achievements.find((item) => item.id === 'quacks-double-explosion');
   assert.ok(achievement.unlockedAt);
-  assert.equal(achievement.rewardLabels.filter((label) => label.startsWith('音效：')).length, 2);
+  assert.deepEqual(
+    achievement.rewardLabels,
+    [],
+    'new achievements no longer grant cosmetic rewards',
+  );
 });
