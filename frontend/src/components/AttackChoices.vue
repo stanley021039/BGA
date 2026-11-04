@@ -122,19 +122,19 @@ function play(id: string) {
         />
       </UiPanel> </div
     ><p
-      >Q、E 配裝普通招式；R 配裝多人招式，滿 100 能量消耗整條施放；C 瞬移。普通命中 +10、受傷
-      +5、實際移動每秒 +1，多人施放者不靠該招命中回能。普通招式整套傷害：單段 100%、兩段 90%、三段
-      80%；多段每段命中均回能。不影響桌遊勝負。</p
+      >Q、E 配裝普通招式；R 配裝大招，滿 100 能量消耗整條施放；C 瞬移。普通命中 +10、受傷
+      +5、實際移動每秒 +1，大招施放者不靠該招命中回能。普通招式整套傷害：單段 100%、兩段 90%、三段
+      80%、四段 70%；多段每段命中均回能。不影響桌遊勝負。</p
     ><div class="attack-loadout"
       ><UiField
         v-for="slot in ['q', 'e', 'r'] as const"
         :key="slot"
         control="select"
-        :label="slot.toUpperCase() + (slot === 'r' ? ' 鍵多人招式' : ' 鍵普通招式')"
+        :label="slot.toUpperCase() + (slot === 'r' ? ' 鍵大招' : ' 鍵普通招式')"
         :model-value="selection[slot]"
         :disabled="!store.ready || store.pending"
         @update:model-value="change(slot, $event)"
-        ><option v-if="slot === 'r'" value="">尚未配裝多人招式</option
+        ><option v-if="slot === 'r'" value="">尚未配裝大招</option
         ><option
           v-for="effect in attackEffects.filter((effect) => fitsAttackSlot(slot, effect.id))"
           :key="effect.id"
@@ -188,9 +188,9 @@ function play(id: string) {
           ><span class="attack-effect-detail">{{
             allowed(effect.id) ? '已解鎖・預覽' : '未解鎖・預覽'
           }}</span
-          ><span v-if="effect.achievementId && !allowed(effect.id)" class="attack-effect-detail">{{
-            conditions[effect.achievementId] || '完成對應成就解鎖'
-          }}</span></template
+          ><span v-if="!allowed(effect.id)" class="attack-effect-detail"
+            >抽卡、碎片兌換或兌換碼解鎖</span
+          ></template
         ><template #selection
           ><span class="ui-choice-state" aria-hidden="true">{{
             preview === effect.id ? '✓ 正在預覽' : ''

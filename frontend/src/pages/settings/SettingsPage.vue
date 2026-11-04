@@ -621,7 +621,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
           ><UiPanel
             class="settings-pings-panel"
             title="房間標記"
-            description="挑選五個常用標記，依順序放入中央、上、左、下、右；每個標記的圖示、音效可分開選。語音需先取得成就獎勵或兌換。"
+            description="挑選五個常用標記，依順序放入中央、上、左、下、右；每個標記的圖示、音效可分開選。語音可從抽卡、碎片兌換或兌換碼取得，既有獎勵保留。"
             ><template #actions
               ><UiButton
                 class="settings-pings-reset"

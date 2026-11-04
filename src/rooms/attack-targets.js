@@ -95,6 +95,10 @@ function selectAttackTargets(self, actors, effect, aspect) {
         actor.id !== self.id &&
         actor.ownerId !== self.id &&
         actor.health > 0 &&
+        (!['gate_of_heroes', 'gate_of_heroes_alt', 'shaohua_devour', 'shaohua_devour_alt'].includes(
+          effect,
+        ) ||
+          actor.kind !== 'fragment') &&
         (areas.get(effect)?.shape === 'screenBeam' || sceneDistance(self, actor, aspect) <= range),
     )
     .sort(
@@ -102,6 +106,7 @@ function selectAttackTargets(self, actors, effect, aspect) {
         sceneDistance(self, a, aspect) - sceneDistance(self, b, aspect) || a.id.localeCompare(b.id),
     );
   if (!nearby.length) return [];
+  if (effect === 'gate_of_heroes' || effect === 'gate_of_heroes_alt') return nearby.slice(0, 1);
   const area = areas.get(effect);
   if (!area) return nearby.slice(0, 1);
   if (effect === 'bijuu_beam') {

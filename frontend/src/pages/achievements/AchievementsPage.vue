@@ -5,6 +5,7 @@ import UiIcon from '../../components/UiIcon.vue';
 import AchievementCard from './AchievementCard.vue';
 import AchievementRewards from '../../components/AchievementRewards.vue';
 import AchievementRedeem from '../../components/AchievementRedeem.vue';
+import UiLink from '../../components/UiLink.vue';
 const store = useAchievementsStore();
 onMounted(() => void store.load());
 </script>
@@ -14,6 +15,8 @@ onMounted(() => void store.load());
     ><div class="kicker">YOUR TABLE MOMENTS</div><h1>成就收藏冊<span>✦</span></h1
     ><p>記下玩過的桌遊時刻。</p></div
   >
+  <UiLink href="/gacha" label="獎勵抽卡機" icon="gift" variant="primary" />
+  <p>成就記錄遊玩里程碑；新外觀可透過抽卡、碎片兌換或兌換碼獲得，既有獎勵保留。</p>
   <AchievementRedeem @redeemed="store.load()" />
   <section
     class="page-panel vue-stitch-panel achievements-panel"

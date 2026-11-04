@@ -17,7 +17,11 @@ const source =
     .replace(/^import .*attack-figures.js';\n/m, '')
     .replace(/^import .*attack-revision.js';\n/m, '')
     .replace('export function createAreaAttack', 'function createAreaAttack');
-const effects = require('../../public/shared/attack-effects.json').filter((effect) => effect.area);
+// The original nine use this renderer; new gacha attacks have their own artwork
+// module and are exercised by attack-artwork.test.cjs with authoritative hits.
+const effects = require('../../public/shared/attack-effects.json').filter(
+  (effect) => effect.area && !effect.gachaOnly,
+);
 
 test('all nine adapted Stitch area effects render finite bounded geometry, one impact and a finite lifetime', () => {
   for (const effect of effects)

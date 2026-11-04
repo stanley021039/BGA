@@ -538,6 +538,7 @@ test('genuine schema17 migration preserves all old rows and creates only empty n
   });
   f.setTime(after);
   settle(f, id, 2);
+  require('./helpers/pre-gacha-schema.cjs').dropEmptyGachaTables(f.db);
   dropEmptyCocTables(f.db);
   f.db.exec('DROP TABLE market_curve_ledger; DROP TABLE market_forecasts; PRAGMA user_version=17');
   const tables = f.db
@@ -573,6 +574,7 @@ for (const table of ['market_forecasts', 'market_curve_ledger'])
   });
 test('schema18 partial migration failure rolls back to untouched schema17', (t) => {
   const f = fixture(t);
+  require('./helpers/pre-gacha-schema.cjs').dropEmptyGachaTables(f.db);
   dropEmptyCocTables(f.db);
   f.db.exec('DROP TABLE market_curve_ledger; DROP TABLE market_forecasts; PRAGMA user_version=17');
   const before = f.db.prepare('SELECT * FROM users ORDER BY id').all();

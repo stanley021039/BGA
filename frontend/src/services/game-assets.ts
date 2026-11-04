@@ -8,6 +8,20 @@ import athleteTrackPreview from '../assets/second-wind/twisty-twirl-1600.webp';
 // Art and sounds a game uses only once play starts, warmed while seats fill up.
 // Sound files follow the registry in public/shared/audio-settings.js.
 const sound = (name: string) => '/assets/game-sounds/' + name;
+export function warmNewSkillAssets(effect: string, width = 0, height = 0) {
+  if (effect.replace(/_alt$/, '') === 'shaohua_devour')
+    warm(['/assets/attacks/shaohua-closed.webp', '/assets/attacks/shaohua-open.webp']);
+  if (effect.replace(/_alt$/, '') === 'reaper_seal') {
+    const scale = Math.min(1.1, Math.max(0.38, height / 700), width / 550);
+    warm([
+      scale < 0.37
+        ? '/assets/attacks/reaper-person-128.webp'
+        : scale < 0.74
+          ? '/assets/attacks/reaper-person-256.webp'
+          : '/assets/attacks/reaper-person-512.webp',
+    ]);
+  }
+}
 const inGame: Partial<Record<GameType, readonly string[]>> = {
   'second-wind': [athleteTrackPreview],
   quacks: [

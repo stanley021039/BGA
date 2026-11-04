@@ -60,6 +60,8 @@ export function useSceneControls(options: {
       knockedOut.value ||
       !!pending[group(action)] ||
       seconds(action) > 0 ||
+      (until.flight || 0) > now.value ||
+      (!(action in sceneDirections) && (until.seal || 0) > now.value) ||
       (action === 'r' && energy.value < combatRules.energy.maximum)
     );
   }
@@ -97,6 +99,9 @@ export function useSceneControls(options: {
     options.snapshot,
     (snapshot) => {
       if (!snapshot) return;
+      const own = snapshot.visitors.find((v) => v.id === snapshot.selfId);
+      until.flight = Date.now() + Math.max(0, (own?.heroFlightUntil || 0) - snapshot.serverNow);
+      until.seal = Date.now() + Math.max(0, (own?.sealedUntil || 0) - snapshot.serverNow);
       // Server timestamps also cover actions from another tab or keyboard.
       for (const event of snapshot.attacks) {
         if (event.fromId !== snapshot.selfId) continue;

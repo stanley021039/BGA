@@ -146,7 +146,7 @@
   },
   {
     "id": "dimension_cleave",
-    "label": "次元斬・千重裂界",
+    "label": "龍鱗・反發・成雙之流星",
     "color": "#ff3366",
     "description": "密集次元斬將空間切開，命中後掉落可拾回的下半身；被摧毀時本體目前生命減半。",
     "achievementId": "bluff-convincing",
@@ -206,6 +206,133 @@
     "color": "#ff9d36",
     "description": "超巨大橘貓從天壓下，震波命中多人並讓受擊者不能移動1秒。",
     "achievementId": "draw-soul-artist",
+    "area": {
+      "shape": "burst",
+      "radius": 22.5
+    }
+  },
+  {
+    "id": "shaohua_devour",
+    "label": "大嘴少華・宅宅吞",
+    "color": "#ffb858",
+    "description": "以角色75%速度持續追蹤，留場越久頭越大；接觸咬合0.4秒後使對方剩1HP。",
+    "gachaOnly": true,
+    "ultimate": true
+  },
+  {
+    "id": "shaohua_devour_alt",
+    "label": "大嘴少華・宅宅吞（異色）",
+    "color": "#b388ff",
+    "description": "以角色75%速度持續追蹤，留場越久頭越大；接觸咬合0.4秒後使對方剩1HP。",
+    "gachaOnly": true,
+    "variantOf": "shaohua_devour",
+    "ultimate": true
+  },
+  {
+    "id": "reaper_seal",
+    "label": "憲鬼封盡・頭髮沒收",
+    "color": "#65e8c2",
+    "description": "施放扣目前HP20%，抽魂命中後封鎖攻擊與瞬移2秒，仍可走動。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "burst",
+      "radius": 26
+    }
+  },
+  {
+    "id": "reaper_seal_alt",
+    "label": "憲鬼封盡・頭髮沒收（異色）",
+    "color": "#b388ff",
+    "description": "施放扣目前HP20%，抽魂命中後封鎖攻擊與瞬移2秒，仍可走動。",
+    "gachaOnly": true,
+    "variantOf": "reaper_seal",
+    "area": {
+      "shape": "burst",
+      "radius": 26
+    }
+  },
+  {
+    "id": "railgun",
+    "label": "電磁軌道砲",
+    "color": "#55ddff",
+    "description": "六段線圈加速，950毫秒軌道砲命中。",
+    "gachaOnly": true
+  },
+  {
+    "id": "railgun_alt",
+    "label": "電磁軌道砲（異色）",
+    "color": "#b388ff",
+    "description": "六段線圈加速，950毫秒軌道砲命中。",
+    "gachaOnly": true,
+    "variantOf": "railgun"
+  },
+  {
+    "id": "plasma_pulse",
+    "label": "電漿脈衝砲",
+    "color": "#80edaf",
+    "description": "兩發磁環電漿各造成一半普通招式傷害。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "plasma_pulse_alt",
+    "label": "電漿脈衝砲（異色）",
+    "color": "#b388ff",
+    "description": "兩發磁環電漿各造成一半普通招式傷害。",
+    "gachaOnly": true,
+    "variantOf": "plasma_pulse",
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "micro_missiles",
+    "label": "微型飛彈齊射",
+    "color": "#ffad54",
+    "description": "四枚弧形導彈分段命中，同一目標共計一次普通傷害。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.7
+  },
+  {
+    "id": "micro_missiles_alt",
+    "label": "微型飛彈齊射（異色）",
+    "color": "#b388ff",
+    "description": "四枚弧形導彈分段命中，同一目標共計一次普通傷害。",
+    "gachaOnly": true,
+    "variantOf": "micro_missiles",
+    "damageMultiplier": 0.7
+  },
+  {
+    "id": "photon_sniper",
+    "label": "光子狙擊",
+    "color": "#ff779f",
+    "description": "全息瞄準鏡收束後，1250毫秒光子狙擊。",
+    "gachaOnly": true
+  },
+  {
+    "id": "photon_sniper_alt",
+    "label": "光子狙擊（異色）",
+    "color": "#b388ff",
+    "description": "全息瞄準鏡收束後，1250毫秒光子狙擊。",
+    "gachaOnly": true,
+    "variantOf": "photon_sniper"
+  },
+  {
+    "id": "gate_of_heroes",
+    "label": "英靈之門・英雄降臨",
+    "color": "#ffca28",
+    "description": "自身護盾，鎖定落點後躍升，2.1秒落地範圍傷害並擊飛1秒。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "burst",
+      "radius": 22.5
+    }
+  },
+  {
+    "id": "gate_of_heroes_alt",
+    "label": "英靈之門・英雄降臨（異色）",
+    "color": "#b388ff",
+    "description": "自身護盾，鎖定落點後躍升，2.1秒落地範圍傷害並擊飛1秒。",
+    "gachaOnly": true,
+    "variantOf": "gate_of_heroes",
     "area": {
       "shape": "burst",
       "radius": 22.5

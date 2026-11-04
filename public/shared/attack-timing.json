@@ -79,5 +79,35 @@
     [2810, 0.7, "hit1"],
     [3450, 0.3, "finish"]
   ],
-  "giant_orange_cat": [[2570, 1, "impact"]]
+  "giant_orange_cat": [[2570, 1, "impact"]],
+  "shaohua_devour": [[3400, 1, "bite"]],
+  "shaohua_devour_alt": [[3400, 1, "bite"]],
+  "reaper_seal": [[2600, 1, "seal"]],
+  "reaper_seal_alt": [[2600, 1, "seal"]],
+  "railgun": [[950, 1, "impact"]],
+  "railgun_alt": [[950, 1, "impact"]],
+  "plasma_pulse": [
+    [650, 0.5, "hit1"],
+    [1050, 0.5, "hit2"]
+  ],
+  "plasma_pulse_alt": [
+    [650, 0.5, "hit1"],
+    [1050, 0.5, "hit2"]
+  ],
+  "micro_missiles": [
+    [850, 0.25, "hit1"],
+    [1100, 0.25, "hit2"],
+    [1350, 0.25, "hit3"],
+    [1600, 0.25, "hit4"]
+  ],
+  "micro_missiles_alt": [
+    [850, 0.25, "hit1"],
+    [1100, 0.25, "hit2"],
+    [1350, 0.25, "hit3"],
+    [1600, 0.25, "hit4"]
+  ],
+  "photon_sniper": [[1250, 1, "impact"]],
+  "photon_sniper_alt": [[1250, 1, "impact"]],
+  "gate_of_heroes": [[2100, 1, "landing"]],
+  "gate_of_heroes_alt": [[2100, 1, "landing"]]
 }

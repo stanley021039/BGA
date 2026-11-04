@@ -35,7 +35,9 @@ function fixture(
   return { points, event, advance };
 }
 test('every current offensive attack has a bounded authoritative arrival, no eager damage, and no duplicate settlement', () => {
-  for (const definition of definitions.filter((e) => !['shield', 'sphere'].includes(e.id))) {
+  for (const definition of definitions.filter(
+    (e) => !['shield', 'sphere', 'gate_of_heroes', 'shaohua_devour'].includes(e.variantOf || e.id),
+  )) {
     const f = fixture(definition.id);
     const first = Math.min(...f.event.hits.map((h) => h.delayMs));
     assert.ok(first > 0 && first <= 4100, definition.id);

@@ -1,4 +1,5 @@
 const { HttpError } = require('../http/errors');
+const { attackKind } = require('./attack-kind');
 const rules = require('../../public/shared/scene-rules.json');
 const energy = require('./scene-energy');
 const { passageTarget } = require('../../frontend/src/engines/scene-path.js');
@@ -39,6 +40,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     actor.shieldUntil = 0;
     actor.shieldResidualUntil = 0;
     actor.immobileUntil = 0;
+    actor.heroFlightUntil = 0;
+    actor.sealedUntil = 0;
     actor.regenBlockedUntil = 0;
     actor.fragment = null;
     actor.severed = false;
@@ -128,6 +131,19 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     return { damage: 0, critical: false };
   }
   function cast(actor, effect, time) {
+    effect = attackKind(effect);
+    if (effect === 'gate_of_heroes') {
+      actor.heroFlightUntil = time + rules.heroLanding.delayMs;
+      freeze(actor, time, rules.heroLanding.delayMs);
+      protect(actor, time);
+    }
+    if (effect === 'reaper_seal') {
+      actor.health = Math.max(
+        1,
+        actor.health - Math.ceil(actor.health * rules.reaperSeal.currentHealthCost),
+      );
+      actor.lastHitAt = actor.regenAt = time;
+    }
     if (effect === 'gate_of_babylon') {
       actor.health = Math.max(
         1,
@@ -151,6 +167,13 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     if (time < (actor.immobileUntil || 0))
       throw new HttpError(409, 'SCENE_IMMOBILIZED', '暫時無法移動');
   }
+  function canCast(actor, time) {
+    alive(actor);
+    if (time < (actor.heroFlightUntil || 0))
+      throw new HttpError(409, 'SCENE_FLYING', '降臨途中暫時無法施法');
+    if (time < (actor.sealedUntil || 0))
+      throw new HttpError(409, 'SCENE_SEALED', '封印中暫時無法攻擊或瞬移');
+  }
   function collect(actor, from) {
     const part = actor.fragment;
     if (!part || !actor.health) return;
@@ -173,7 +196,21 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     }
   }
   function applyEffect(from, actor, time, effect, origin, aspect = 1, phase = '') {
+    effect = attackKind(effect);
     if (!actor.health || actor.kind === 'fragment') return;
+    if (effect === 'reaper_seal')
+      actor.sealedUntil = Math.max(actor.sealedUntil || 0, time + rules.reaperSeal.durationMs);
+    if (effect === 'gate_of_heroes') {
+      freeze(actor, time, rules.heroLanding.knockupMs);
+      actor.knockback = {
+        id: `${actor.lifeId}:${time}`,
+        fromX: actor.x,
+        fromY: actor.y,
+        at: time,
+        durationMs: rules.heroLanding.knockupMs,
+        vertical: true,
+      };
+    }
     if (effect === 'bijuu_beam' && random() < rules.bijuuImmobilize.chance)
       freeze(actor, time, rules.bijuuImmobilize.durationMs);
     if (effect === 'solar_phoenix' && phase.startsWith('burn'))
@@ -241,6 +278,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     return Math.round(reference / (actor.authorBonus ? 1 : rules.authorBonus.damageMultiplier));
   }
   function hit(from, to, time, effect, weight = 1, phase = '') {
+    effect = attackKind(effect);
     alive(from);
     // A downed actor cannot award another kill, even through a repeated event.
     if (to.health === 0 || from === to) return { damage: 0, critical: false };
@@ -252,7 +290,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       ? (from.comboDamage ?? rollBabylonDamage(from))
       : minimum +
         Math.floor(random() * ((rules.damage.max - rules.damage.min) * rules.unitScale + 1));
-    const critical = random() < rules.damage.criticalChance;
+    const critical = effect !== 'shaohua_devour' && random() < rules.damage.criticalChance;
     // A whole-cast budget preserves the requested author range. Integer partitions
     // sum exactly; Ea takes two thirds, the four weapon salvos share one third.
     const weapons = Math.round(base / 3);
@@ -284,11 +322,16 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       blockedPercent = min + Math.floor(random() * (max - min + 1));
       if (time >= to.shieldUntil) blockedPercent *= rules.shield.residualMultiplier;
     }
-    const damage = Math.round(
-      incoming *
-        (1 - blockedPercent / 100) *
-        (time < (to.excaliburUntil || 0) ? 1 - rules.excaliburGuard.reductionPercent / 100 : 1),
-    );
+    const damage =
+      effect === 'shaohua_devour'
+        ? Math.max(0, to.health - 1)
+        : Math.round(
+            incoming *
+              (1 - blockedPercent / 100) *
+              (time < (to.excaliburUntil || 0)
+                ? 1 - rules.excaliburGuard.reductionPercent / 100
+                : 1),
+          );
     if (to.kind === 'fragment') {
       to.health = Math.max(0, to.health - damage);
       if (!to.health && to.owner.fragment === to && to.owner.health > 0) {
@@ -317,6 +360,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       to.shieldResidualUntil = 0;
       to.guanyinUntil = 0;
       to.excaliburUntil = 0;
+      to.heroFlightUntil = 0;
+      to.sealedUntil = 0;
       to.regenBlockedUntil = 0;
       to.fragment = null;
       to.drillDot = null;
@@ -356,6 +401,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
                   )
                 : 0,
               regenBlockedMs: living ? Math.max(0, (actor.regenBlockedUntil || 0) - time) : 0,
+              sealedMs: living ? Math.max(0, (actor.sealedUntil || 0) - time) : 0,
               regenPerSecond: Math.round(
                 rules.regeneration.perSecond *
                   rules.unitScale *
@@ -372,6 +418,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       respawnAt: actor.respawnAt,
       kda: { ...stats(actor) },
       immobileUntil: actor.immobileUntil || 0,
+      heroFlightUntil: actor.heroFlightUntil || 0,
+      sealedUntil: actor.sealedUntil || 0,
       knockback:
         actor.knockback && actor.combatAt - actor.knockback.at < 1200
           ? { ...actor.knockback }
@@ -398,6 +446,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     view,
     freeze,
     canMove,
+    canCast,
     applyEffect,
     targets,
     collect,

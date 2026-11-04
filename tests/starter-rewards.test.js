@@ -117,8 +117,14 @@ test('starter handles fewer than five remaining attacks and rejects unavailable 
     store,
   } = fixture(t);
   const effects = starter.catalog().attacks;
-  for (const id of new Set(effects.slice(0, -1).map((r) => r.achievementId)))
-    store.insert.run(a, id, 'quacks:test', new Date().toISOString());
+  for (const item of effects.slice(0, -1))
+    db.prepare('INSERT INTO gacha_ownership VALUES(?,?,?,?,?)').run(
+      a,
+      'attacks',
+      item.id,
+      'legacy',
+      new Date().toISOString(),
+    );
   const missing = effects.filter((r) => !store.list(a).bonusRewards.attacks.includes(r.id));
   store.redeem(a, '新手大禮包');
   assert.deepEqual(

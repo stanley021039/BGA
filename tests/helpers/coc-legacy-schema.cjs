@@ -3,6 +3,7 @@ const { COC_TABLES } = require('../../src/coc/schema');
 // Historical fixtures must omit the new feature, rather than relabel schema 21.
 // Check every table before removing any; never discard a populated adventure.
 function dropEmptyCocTables(db) {
+  require('./pre-gacha-schema.cjs').dropEmptyGachaTables(db);
   const tables = new Set(
     db
       .prepare("SELECT name FROM sqlite_schema WHERE type='table'")

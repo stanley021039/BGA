@@ -30,8 +30,8 @@ test('defensive artwork targets its caster even in an otherwise empty lobby', ()
 
 test('both crescent variants are separate selectable persistent artwork IDs', () => {
   const effects = require('../public/shared/attack-effects.json');
-  assert.equal(effects.length, 23);
-  assert.equal(new Set(effects.map((e) => e.id)).size, 23);
+  assert.equal(effects.length, 37);
+  assert.equal(new Set(effects.map((e) => e.id)).size, effects.length);
   assert.ok(!effects.some((e) => e.id === 'flame_kick'));
   assert.equal(effects.find((e) => e.id === 'blade_aura').label, '藍黑半月劍氣');
   assert.equal(effects.find((e) => e.id === 'blade_aura_crimson').label, '紅黑半月劍氣');
@@ -119,7 +119,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.deepEqual(initial.body.bonusRewards.attacks, ['barrage', 'beam']);
   const redeemed = await post('/api/achievements/redeem', { code: '我愛作者' });
   assert.equal(redeemed.status, 200);
-  assert.equal(redeemed.body.bonusRewards.attacks.length, 23);
+  assert.equal(redeemed.body.bonusRewards.attacks.length, 37);
   assert.equal(
     (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: 'bijuu_beam' })).status,
     200,
@@ -204,7 +204,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   );
 });
 
-test('earned achievements unlock only their mapped attack and stale locked loadouts fall back', async (t) => {
+test('persistent gacha ownership unlocks attacks, new achievements do not, and stale loadouts fall back', async (t) => {
   const { base } = await appFixture(t, {
     seed: async (db) => {
       await createAuth(db).bootstrap('attack_earned', 'test-password-123');
@@ -212,6 +212,14 @@ test('earned achievements unlock only their mapped attack and stale locked loado
       db.prepare(
         'INSERT INTO user_achievements(user_id,achievement_id,source_key,unlocked_at) VALUES(?,?,?,?)',
       ).run(user.id, 'gift-first-gift', 'test:gift', new Date().toISOString());
+      for (const id of ['shield', 'gate_of_babylon'])
+        db.prepare('INSERT INTO gacha_ownership VALUES(?,?,?,?,?)').run(
+          user.id,
+          'attacks',
+          id,
+          'legacy',
+          new Date().toISOString(),
+        );
       db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
         JSON.stringify({ attackLoadout: { q: 'gate_of_babylon', e: 'flame_vortex' } }),
         user.id,
@@ -236,7 +244,7 @@ test('earned achievements unlock only their mapped attack and stale locked loado
   );
   const effects = require('../public/shared/attack-effects.json'),
     { definitions } = require('../src/achievements/catalog');
-  for (const e of effects.slice(2)) {
+  for (const e of effects.slice(2).filter((e) => !e.gachaOnly)) {
     const a = definitions.find((x) => x.id === e.achievementId);
     assert.ok(a);
     assert.ok(!['trpg', 'market'].includes(a.game));

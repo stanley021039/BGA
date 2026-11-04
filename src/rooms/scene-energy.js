@@ -1,8 +1,12 @@
 const { HttpError } = require('../http/errors');
 const rules = require('../../public/shared/scene-rules.json').energy;
 const effects = require('../../public/shared/attack-effects.json');
-const multi = new Set(effects.filter((effect) => effect.area).map((effect) => effect.id));
-const ordinary = new Set(effects.filter((effect) => !effect.area).map((effect) => effect.id));
+const multi = new Set(
+  effects.filter((effect) => effect.area || effect.ultimate).map((effect) => effect.id),
+);
+const ordinary = new Set(
+  effects.filter((effect) => !effect.area && !effect.ultimate).map((effect) => effect.id),
+);
 
 function fitsSlot(slot, effect) {
   return slot === 'r' ? multi.has(effect) : ['q', 'e'].includes(slot) && ordinary.has(effect);
@@ -24,12 +28,12 @@ function walk(actor, durationMs) {
 }
 function check(actor, slot, effect) {
   if (!fitsSlot(slot, effect))
-    throw new HttpError(400, 'INVALID_ATTACK_SLOT', 'Q、E 請配裝普通招式，R 請配裝多人招式');
+    throw new HttpError(400, 'INVALID_ATTACK_SLOT', 'Q、E 請配裝普通招式，R 請配裝大招');
   if (slot === 'r' && (actor.energy || 0) < rules.maximum)
     throw new HttpError(
       409,
       'INSUFFICIENT_SCENE_ENERGY',
-      `多人招式能量不足（${actor.energy || 0}／${rules.maximum}）`,
+      `大招能量不足（${actor.energy || 0}／${rules.maximum}）`,
     );
 }
 function spend(actor, slot) {

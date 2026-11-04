@@ -62,5 +62,21 @@
   "explosionRecovery": {
     "delayMs": 4100,
     "durationMs": 1000
+  },
+  "heroLanding": {
+    "delayMs": 2100,
+    "knockupMs": 1000,
+    "radius": 22.5
+  },
+  "reaperSeal": {
+    "currentHealthCost": 0.2,
+    "durationMs": 2000
+  },
+  "shaohua": {
+    "catchUpMs": 4000,
+    "biteMs": 400,
+    "speedMultiplier": 0.75,
+    "contactRadius": 3,
+    "stepMs": 50
   }
 }

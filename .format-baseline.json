@@ -175,7 +175,6 @@
     "tests/draw-renderer-sync.test.js": "21b0e1409c62d851c4d6ca6b94c03e9963c2d0d3e68420abaa1b635f493d8e48",
     "tests/draw-results-browser.test.js": "af1e713c8c7ceec1bdd49fb97303123c97fd60f8829eaeb6b2659f0600721aed",
     "tests/draw-timed-playback.test.js": "d98edb854cc0de06e47cbe2c10b7ab4963a391caa2ac9d2a13a00a5bbdbf2147",
-    "tests/draw-topics.test.js": "57787cb66906ab4ab0365b6e19b5abd1d6ad5bbce792a914638edf7db4a6d96c",
     "tests/draw-viewport-fit.test.js": "c2edd0f527294b88117773f0c9ed81f384cb310db89d638e9e740448a0d25624",
     "tests/empty-player-slots.test.js": "9b80198fb6f533342534947d6b2619b9415a9619ec1f8e4ce7370fb7e4eba4d3",
     "tests/engine.test.js": "46ec6dcd925eb5924f01f99662a5e654d6a2573c0d0be28ad45e1e7d64c3f3b4",

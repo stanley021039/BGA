@@ -53,7 +53,9 @@ class AchievementStore {
       achievements: definitions.map((item) => ({
         ...item,
         unlockedAt: unlocked.get(item.id) || null,
-        rewardLabels: require('./bonus-rewards').rewardLabels(item.id),
+        rewardLabels: require('../gacha/ownership').enabled(this.db)
+          ? []
+          : require('./bonus-rewards').rewardLabels(item.id),
         progress:
           item.id.endsWith('-regular') || item.id.endsWith('-veteran')
             ? { current: counts[item.game] || 0, target: item.id.endsWith('-regular') ? 3 : 10 }

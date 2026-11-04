@@ -7,7 +7,11 @@ export type AttackSlot = 'q' | 'e' | 'r';
 export const attackEffects = effects;
 export const fitsAttackSlot = (slot: AttackSlot, id: string) => {
   const effect = effects.find((item) => item.id === id);
-  return !!effect && (slot === 'r') === ('area' in effect && !!effect.area);
+  return (
+    !!effect &&
+    (slot === 'r') ===
+      (('area' in effect && !!effect.area) || ('ultimate' in effect && !!effect.ultimate))
+  );
 };
 export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
   const session = useSessionStore(),

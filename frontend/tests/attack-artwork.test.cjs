@@ -9,6 +9,9 @@ const source = fs
   .replace(/^import .*motion-lifetime.js';\n/m, '')
   .replace(/^import combatRules .*scene-rules.json';\n/m, '')
   .replace(/^import .*attack-stitch.js';\n/m, '')
+  .replace(/^import .*attack-new.js';\n/m, () =>
+    require('../../tests/helpers/new-attack-module.cjs')(),
+  )
   .replace(/^import .*attack-area.js';\n/m, '')
   .replace(/^import .*attack-revision.js';\n/m, '')
   .replace(/^import attackEffects .*attack-effects.json';\n/m, '')

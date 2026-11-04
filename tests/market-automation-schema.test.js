@@ -459,6 +459,7 @@ for (const table of MARKET_AUTOMATION_TABLES)
   });
 test('schema16 label cannot smuggle current actor columns or future automation tables', (t) => {
   const f = fixture(t);
+  require('./helpers/pre-gacha-schema.cjs').dropEmptyGachaTables(f.db);
   dropEmptyCurveTables(f.db);
   dropEmptyCocTables(f.db);
   f.db.exec('PRAGMA user_version=16');

@@ -64,6 +64,7 @@ test('COC schema 20 upgrade preserves prior records and rejects partial schema 2
     'member',
     '2026-01-01T00:00:00Z',
   );
+  require('./helpers/pre-gacha-schema.cjs').dropEmptyGachaTables(db);
   const tables = db
     .prepare(
       "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'coc_%' ORDER BY name",
@@ -90,7 +91,7 @@ test('COC schema 20 upgrade preserves prior records and rejects partial schema 2
   db.close();
   assert.throws(() => openDatabase(file), /COC|coc|Incomplete/);
   db = new DatabaseSync(file);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 21);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
   assert.equal(
     db.prepare("SELECT COUNT(*) n FROM sqlite_schema WHERE name='coc_receipts'").get().n,
     0,

@@ -44,10 +44,11 @@ function createLobby(
     attacks = [],
     receipts = new Map();
   function clean(time) {
-    timeline.advance(attacks, visitors.values(), time, advance);
     for (const [id, visitor] of visitors)
       if (time - visitor.seenAt > PRESENCE_MS) visitors.delete(id);
-    while (attacks.length && attacks[0].until < time) attacks.shift();
+    timeline.advance(attacks, visitors.values(), time, advance);
+    for (let i = attacks.length - 1; i >= 0; i--)
+      if (attacks[i].until <= time) attacks.splice(i, 1);
     while (barrages.length && time - barrages[0].at >= 8000) barrages.shift();
     for (const [key, value] of receipts) if (time - value.at > 60000) receipts.delete(key);
   }
@@ -216,11 +217,16 @@ function createLobby(
       effect,
       input.aspectRatio,
     );
-    if (attacks.length >= 40)
+    if (
+      attacks.filter(
+        (e) => !(e.head && e.fromId === self.id && effect.startsWith('shaohua_devour')),
+      ).length >= 40
+    )
       throw new HttpError(429, 'ATTACK_SCENE_BUSY', '場景特效較多，請稍候再試');
     const target = targets[0];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '目前沒有其他玩家可以互動');
     combat.alive(self);
+    combat.canCast(self, time);
     energy.spend(self, slot);
     const defensive = target === self;
     const hit = defensive ? combat.protect(self, time) : { damage: 0, critical: false };
@@ -251,6 +257,9 @@ function createLobby(
         targets,
         effect === 'bijuu_beam' ? combat.targets(visitors.values()) : targets,
       );
+    if (event.head)
+      for (let i = attacks.length - 1; i >= 0; i--)
+        if (attacks[i].head && attacks[i].fromId === self.id) attacks.splice(i, 1);
     attacks.push(event);
     if (attacks.length > 40) attacks.shift();
     receipts.set(key, { at: time, fingerprint });
@@ -331,6 +340,7 @@ function createLobby(
     const visitor = enter(user, entrance);
     combat.advance(visitor, now());
     combat.canMove(visitor, now());
+    combat.canCast(visitor, now());
     // Open gutters and the lower floor keep arrivals clear of the game carousel.
     const zones = [
       [6, 18, 45, 76],

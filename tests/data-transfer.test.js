@@ -89,7 +89,7 @@ function seedLegacyMarket(db, f) {
       confirmed: true,
     });
 }
-async function fixture(t, { minimal = false, sounds = false } = {}) {
+async function fixture(t, { minimal = false, sounds = false, gachaRewards = false } = {}) {
   const parent = fs.realpathSync(os.tmpdir()),
     root = fs.mkdtempSync(path.join(parent, 'afterhours-data-test-'));
   t.after(() => {
@@ -225,6 +225,33 @@ async function fixture(t, { minimal = false, sounds = false } = {}) {
     ).run(blockedId, 'transfer_disabled', '停用帳號', admin.password_hash, 'member', 1, at);
   }
   const expectedUsers = db.prepare('SELECT * FROM users ORDER BY id').all();
+  let gacha;
+  if (gachaRewards) {
+    const { GachaStore } = require('../src/gacha/store'),
+      { catalog } = require('../src/gacha/catalog');
+    const store = new GachaStore(db, { choose: () => 0 });
+    require('../src/db').transaction(db, () =>
+      store.ledger(
+        'transfer-fixture:' + member.id,
+        member.id,
+        'match',
+        2000,
+        1000,
+        crypto.createHash('sha256').update('transfer-fixture').digest('hex'),
+        new Date().toISOString(),
+      ),
+    );
+    const draw = store.draw(member.id, {
+      requestId: crypto.randomUUID(),
+      pool: 'attacks',
+      count: 10,
+    });
+    const exchange = store.exchange(member.id, {
+      requestId: crypto.randomUUID(),
+      key: catalog.find((i) => i.kind === 'frames').key,
+    });
+    gacha = { wallet: store.wallet(member.id), draw, exchange };
+  }
   db.close();
   const keyFile = path.join(root, 'private', 'backup.key');
   await run({ action: 'keygen', keyFile });
@@ -238,6 +265,7 @@ async function fixture(t, { minimal = false, sounds = false } = {}) {
     outputDir: bundleDir,
   };
   return {
+    gacha,
     root,
     source,
     keyFile,
@@ -495,12 +523,27 @@ function beforeUsers(file) {
   }
 }
 
+for (const corrupt of ['missing', 'mismatched'])
+  test('authenticated schema21 bundle rejects ' + corrupt + ' gacha digest', async (t) => {
+    const f = await fixture(t, { gachaRewards: true });
+    await run(f.exportRequest);
+    editManifest(f, (m) => {
+      if (corrupt === 'missing') delete m.summary.database.gachaSha256;
+      else m.summary.database.gachaSha256 = '0'.repeat(64);
+    });
+    await assert.rejects(run({ action: 'verify', bundleDir: f.bundleDir, keyFile: f.keyFile }), {
+      code: 'VALIDATION_FAILED',
+    });
+    assert.equal(fs.existsSync(f.destinationDir), false);
+  });
+
 test('encrypted full backup preserves accounts and assets; dry-run and real restore revoke tokens, hold outbox and remain bootable', async (t) => {
-  const f = await fixture(t, { sounds: true }),
+  const f = await fixture(t, { sounds: true, gachaRewards: true }),
     initial = validateData(f.source).summary;
   const exported = await run(f.exportRequest);
   assert.equal(exported.summary.database.tableCounts.users, 3);
   assert.equal(exported.summary.database.accountsSha256, initial.database.accountsSha256);
+  assert.equal(exported.summary.database.gachaSha256, initial.database.gachaSha256);
   assert.equal(exported.policy.accountCredentialsIncluded, true);
   assert.equal(exported.summary.database.tableCounts.character_sounds, 1);
   const manifest = JSON.parse(fs.readFileSync(path.join(f.bundleDir, 'manifest.json')));
@@ -516,6 +559,7 @@ test('encrypted full backup preserves accounts and assets; dry-run and real rest
   assert.equal(dry.dryRun, true);
   assert.equal(fs.existsSync(f.destinationDir), false);
   const restored = await run({ ...restoreRequest(f), apply: true });
+  assert.equal(restored.restoredSummary.database.gachaSha256, initial.database.gachaSha256);
   assert.equal(restored.dryRun, false);
   assert.equal(restored.changes.heldSubmissions, 2);
   assert.equal(restored.config.EXTERNAL_SIDE_EFFECTS_ENABLED, 'false');
@@ -523,6 +567,18 @@ test('encrypted full backup preserves accounts and assets; dry-run and real rest
     check = openDatabase(target.dbFile);
   try {
     assert.deepEqual(check.prepare('SELECT * FROM users ORDER BY id').all(), f.expectedUsers);
+    assert.deepEqual(
+      new (require('../src/gacha/store').GachaStore)(check).wallet(f.member.id),
+      f.gacha.wallet,
+    );
+    assert.equal(
+      check.prepare('SELECT COUNT(*) n FROM gacha_requests WHERE user_id=?').get(f.member.id).n,
+      2,
+    );
+    assert.equal(
+      check.prepare('SELECT COUNT(*) n FROM gacha_ownership WHERE user_id=?').get(f.member.id).n,
+      2,
+    );
     for (const table of ['sessions', 'invites', 'password_resets'])
       assert.equal(check.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get().n, 0);
     assert.equal(
@@ -2056,6 +2112,9 @@ test('claimed achievement cosmetics and canonical match receipts survive encrypt
     db = openDatabase(f.source.dbFile),
     { AchievementStore } = require('../src/achievements/store'),
     store = new AchievementStore(db);
+  // This historical claim existed before schema21; migrate that real ownership
+  // before validating the new encrypted transfer format.
+  require('./helpers/pre-gacha-schema.cjs').preGachaSchema(db);
   store.recordMatch({
     id: crypto.randomUUID(),
     game: 'musicquiz',
@@ -2066,6 +2125,7 @@ test('claimed achievement cosmetics and canonical match receipts survive encrypt
     .claim(f.adminId, 'vinyl')
     .rewards.find((r) => r.frameId === 'vinyl').claimedAt;
   db.close();
+  openDatabase(f.source.dbFile).close();
   const before = validateData(f.source).summary,
     exported = await run(f.exportRequest);
   assert.equal(exported.summary.database.tableCounts.achievement_match_events, 1);

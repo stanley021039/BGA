@@ -5,6 +5,7 @@ import attackEffects from '../../../public/shared/attack-effects.json';
  * Static reviewed drawing code only: no export UI, global inputs, dummy, shake or endless demo. */
 import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
 import { createStitchAttack } from './attack-stitch.js';
+import { createNewAttack } from './attack-new.js';
 import combatRules from '../../../public/shared/scene-rules.json';
 import attackTiming from '../../../public/shared/attack-timing.json';
 // Full detail for one attack on its own canvas; a shared stage lowers these by load.
@@ -50,7 +51,20 @@ export function createAttackScene(ctx, options) {
       (effect?.damageMultiplier ?? 1) *
       (area ? combatRules.areaDamageMultiplier : 1) *
       (options.effect === 'explosion' ? 1.5 : 1);
-    const points = options.hits?.length ? options.hits : [options.to];
+    const points = options.hits?.length
+      ? options.hits
+      : options.effect.replace(/_alt$/, '') === 'reaper_seal'
+        ? [-1, 0, 1].map((i) => ({
+            x: Math.max(
+              18,
+              Math.min(options.width - 18, options.to.x + i * Math.min(70, options.width * 0.12)),
+            ),
+            y: Math.min(
+              options.height - 18,
+              options.to.y + Math.abs(i) * Math.min(28, options.height * 0.12),
+            ),
+          }))
+        : [options.to];
     const hits = (attackTiming[options.effect] || []).flatMap(([delayMs, weight, phase]) =>
       points.slice(0, 32).map((point, index) => ({
         ...point,
@@ -566,6 +580,7 @@ export function createAttackScene(ctx, options) {
     }
   };
   const advanced =
+    createNewAttack(ctx, { ...options, label: definition?.label }) ||
     createAreaAttack(
       ctx,
       { ...options, area, label: definition?.label, range: combatRules.areaAttackRange },
