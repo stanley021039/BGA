@@ -80,7 +80,7 @@ Figma 連接器額度用盡，使用者已明確同意本批先完成本機介�
 
 ### 3.17.0 PR 候選驗證（2026-11-04）
 
-`test:affected --base origin/main` 因共用來源／資料遷移回退完整 265 檔：2222 項中 2221 通過、0 失敗、1 因缺 ffmpeg 略過（`work/pr-affected-final.log`）。前端全部 270 項通過（`work/pr-frontend-final.log`）；其後僅補大招／四段倍率文案，相關前後端 40 項通過（`work/pr-final-copy.log`）。型別、前端模組邊界及最終 Vite build 通過；格式、相對實際 main 的 minor 升版／UI 檢查與正式產物資源預算通過。
+`test:affected --base origin/main` 因共用來源／資料遷移回退完整 267 檔：2222 項中 2221 通過、0 失敗、1 因缺 ffmpeg 略過（`work/pr-affected-final.log`）。前端全部 270 項通過（`work/pr-frontend-final.log`）；其後僅補大招／四段倍率文案，相關前後端 40 項通過（`work/pr-final-copy.log`）。型別、前端模組邊界及最終 Vite build 通過；格式、相對實際 main 的 minor 升版／UI 檢查與正式產物資源預算通過。
 
 早期完整測試 7 項失敗的原日誌 `work/pr-affected.log` 保留：3 項因測試與 Vite 清理／重建產物同時執行、4 項發現少華與新增科技招式的分類／平衡整合缺口。已改為先完成 build，再重跑完整回歸；少華分類依使用者明確選擇處理，未略過既有普通招式保護。四段的有限循環與 400 組互打測試各自保留實際界線。
 
