@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import SceneHazards from '../../components/SceneHazards.vue';
 import MobileSceneControls from '../../components/MobileSceneControls.vue';
 import { sceneDirections, useSceneControls } from '../../services/scene-controls';
+import ScenePickups from '../../components/ScenePickups.vue';
+import SceneCovers from '../../components/SceneCovers.vue';
 import SceneFragments from '../../components/SceneFragments.vue';
 import ExpressionSounds from '../../engines/expression-sounds.js';
 import MotionPolicy from '../../engines/motion-policy.js';
 
 import { sizedImage } from '../../services/image-size';
 import { focusFromPointer } from '../../services/pointer-focus';
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { useLobbyBackgroundStore } from '../../stores/lobby-background';
 import UiDialog from '../../components/UiDialog.vue';
@@ -33,6 +36,17 @@ const lobby = useLobbyStore(),
   opened = ref(false),
   selfHover = ref(false),
   arrivals = ref(new Set<string>());
+const battlePlaying = computed(
+  () =>
+    lobby.snapshot?.arena?.match?.phase === 'running' &&
+    lobby.snapshot.arena.match.players.some((p) => p.id === lobby.snapshot?.selfId && !p.forfeited),
+);
+const battleDirections = [
+  { action: 'up', caption: '上' },
+  { action: 'left', caption: '左' },
+  { action: 'down', caption: '下' },
+  { action: 'right', caption: '右' },
+] as const;
 const controls = useSceneControls({
   context: () => lobby.snapshot?.selfId || '',
   enabled: () => lobby.connected,
@@ -229,8 +243,18 @@ const directions: Record<string, [number, number]> = {
   w: [0, -1],
   s: [0, 1],
 };
+function keyName(event: KeyboardEvent) {
+  return (
+    (
+      { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyQ: 'q', KeyE: 'e', KeyR: 'r' } as Record<
+        string,
+        string
+      >
+    )[event.code] || event.key.toLowerCase()
+  );
+}
 function release(event: KeyboardEvent) {
-  held.delete(event.key.toLowerCase());
+  held.delete(keyName(event));
 }
 function clearKeys() {
   held.clear();
@@ -241,7 +265,7 @@ function key(event: KeyboardEvent) {
     event.ctrlKey ||
     event.metaKey ||
     event.altKey ||
-    event.isComposing ||
+    (event.isComposing && !event.code.startsWith('Key')) ||
     document.hidden ||
     (event.target instanceof Element &&
       event.target.closest(
@@ -250,7 +274,7 @@ function key(event: KeyboardEvent) {
     document.querySelector('dialog[open]')
   )
     return;
-  const name = event.key.toLowerCase();
+  const name = keyName(event);
   if (name === 'q' || name === 'e' || name === 'r') {
     if (event.repeat) return;
     event.preventDefault();
@@ -318,7 +342,7 @@ defineExpose({ openChat });
 <template>
   <MobileSceneControls
     :controls="controls"
-    :enabled="lobby.connected"
+    :enabled="lobby.connected && !battlePlaying"
     :message="
       (lobby.attackStatus === '已向最近玩家發射特效' ? '' : lobby.attackStatus) ||
       lobby.presenceStatus
@@ -339,10 +363,16 @@ defineExpose({ openChat });
         :snapshot="lobby.snapshot"
         :connected="lobby.connected" /><LobbyBackgroundArt :id="background.selected" /><div
         class="lobby-visitors"
-        ><SceneFragments :visitors="lobby.snapshot?.visitors || []" /><LobbyVisitor
+        ><SceneHazards
+          v-if="battlePlaying"
+          :zones="lobby.snapshot?.arena?.hazards || []" /><ScenePickups
+          :items="lobby.snapshot?.arena?.pickups || []" /><SceneCovers
+          :covers="lobby.snapshot?.arena?.covers || []" /><SceneFragments
+          :visitors="lobby.snapshot?.visitors || []" /><LobbyVisitor
           v-for="visitor in lobby.snapshot?.visitors || []"
           :key="visitor.id"
           :visitor="visitor"
+          :team="lobby.snapshot?.arena?.teams.find((p) => p.id === visitor.id)?.team"
           :message="lobby.speeches[visitor.id]"
           :self="visitor.id === lobby.snapshot?.selfId"
           :reset="lobby.positionReset"
@@ -361,6 +391,32 @@ defineExpose({ openChat });
         label="重新連接大廳"
         :disabled="lobby.connected"
         @click="lobby.sync()" /></div
+  ></Teleport>
+  <Teleport to="body"
+    ><UiPanel
+      v-if="battlePlaying"
+      class="lobby-battle-controls"
+      density="compact"
+      aria-label="對戰操作"
+      ><div class="lobby-battle-actions"
+        ><UiButton
+          v-for="slot in ['q', 'e'] as const"
+          :key="slot"
+          :caption="slot.toUpperCase()"
+          :label="slot.toUpperCase() + ' 攻擊'"
+          :disabled="controls.disabled(slot)"
+          @click="controls.run(slot)" /><UiButton
+          icon="refresh"
+          icon-only
+          label="R 瞬移"
+          :disabled="controls.disabled('r')"
+          @click="controls.run('r')" /><UiButton
+          v-for="dir in battleDirections"
+          :key="dir.action"
+          :label="'向' + dir.caption + '移動'"
+          :caption="dir.caption"
+          :disabled="controls.disabled(dir.action)"
+          @click="controls.run(dir.action)" /></div></UiPanel
   ></Teleport>
   <!-- Background mode hides and inerts the lobby page, so the dialogs live on body. -->
   <Teleport to="body"

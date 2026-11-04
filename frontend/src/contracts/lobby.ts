@@ -1,3 +1,5 @@
+import { readPickupEffects, type PickupEffects } from './lobby-pickups';
+import { readArchetype, readLobbyArena, type ArenaArchetype, type LobbyArena } from './lobby-arena';
 import attackEffects from '../../../public/shared/attack-effects.json';
 import attackTiming from '../../../public/shared/attack-timing.json';
 import { validPassage, type Passage } from '../engines/scene-path.js';
@@ -38,6 +40,9 @@ export interface SceneCombatStatus {
   regenPerSecond: number;
 }
 export interface LobbyVisitor {
+  archetype?: ArenaArchetype | null;
+  hazardKind?: 'mud' | 'embers' | null;
+  pickupEffects?: PickupEffects;
   combatStatus?: SceneCombatStatus;
   severed?: boolean;
   immobileUntil?: number;
@@ -67,6 +72,7 @@ export interface LobbyVisitor {
   entrance: EntranceEffectId;
 }
 export interface LobbyAttackHit {
+  blocked?: boolean;
   aimX?: number;
   aimY?: number;
   phase?: string;
@@ -101,6 +107,7 @@ export interface LobbyAttack {
   until: number;
 }
 export interface LobbySnapshot {
+  arena?: LobbyArena | null;
   attacks: LobbyAttack[];
   background: { id: string; changedAt: number; nextChangeAt: number };
   barrages: BarrageEvent[];
@@ -197,6 +204,19 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       };
     }
     return {
+      ...(item.archetype !== undefined ? { archetype: readArchetype(item.archetype) } : {}),
+      ...(item.hazardKind !== undefined
+        ? {
+            hazardKind: (() => {
+              if (![null, 'mud', 'embers'].includes(item.hazardKind as null | 'mud' | 'embers'))
+                throw Error('陷阱狀態不正確。');
+              return item.hazardKind as null | 'mud' | 'embers';
+            })(),
+          }
+        : {}),
+      ...(item.pickupEffects !== undefined
+        ? { pickupEffects: readPickupEffects(item.pickupEffects) }
+        : {}),
       kda: {
         kills: counter(item.kda && record(item.kda).kills),
         deaths: counter(item.kda && record(item.kda).deaths),
@@ -319,6 +339,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
   )
     throw Error('大廳角色身分不一致。');
   return {
+    arena: readLobbyArena(row.arena),
     // Older lobby servers sent plain messages without the room event discriminator.
     barrages: readBarrages(
       array(row.barrages).map((value) => {
@@ -397,6 +418,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                           };
                         })()
                       : {}),
+                    ...(hit.blocked !== undefined ? { blocked: hit.blocked === true } : {}),
                     toId: text(hit.toId),
                     toX: Number(hit.toX),
                     toY: Number(hit.toY),

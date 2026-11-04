@@ -328,6 +328,24 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
     return false;
   }
+  const arenaPending = ref(false),
+    arenaStatus = ref('');
+  async function arenaCommand(body: Record<string, unknown>) {
+    if (arenaPending.value || !connected.value) return;
+    const epoch = generation,
+      account = identity.value;
+    arenaPending.value = true;
+    arenaStatus.value = '';
+    try {
+      const result = await request('/api/lobby/arena', body);
+      if (current(epoch, account)) consume(result);
+    } catch (error) {
+      if (current(epoch, account))
+        arenaStatus.value = error instanceof Error ? error.message : '對戰操作失敗';
+    } finally {
+      if (current(epoch, account)) arenaPending.value = false;
+    }
+  }
   async function warmExpressions() {
     if (!preloadAllowed()) return;
     await loadExpressions();
@@ -531,6 +549,8 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
   function reset() {
+    arenaPending.value = false;
+    arenaStatus.value = '';
     speeches.value = {};
     generation++;
     expressionRevision++;
@@ -628,6 +648,9 @@ export const useLobbyStore = defineStore('lobby', () => {
     },
   };
   return {
+    arenaCommand,
+    arenaPending,
+    arenaStatus,
     snapshot,
     speeches,
     showSpeech,

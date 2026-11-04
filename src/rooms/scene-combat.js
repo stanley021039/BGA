@@ -1,3 +1,5 @@
+const { rules: pickupRules } = require('./lobby-pickups');
+const { profile } = require('./archetypes');
 const { HttpError } = require('../http/errors');
 const rules = require('../../public/shared/scene-rules.json');
 const { passageTarget } = require('../../frontend/src/engines/scene-path.js');
@@ -13,12 +15,13 @@ function sceneDistance(from, to, aspectRatio) {
 }
 
 // Decorative scene combat has no connection to board-game scores or player lives.
-function createSceneCombat(random = Math.random, authorBonus = () => false) {
+function createSceneCombat(random = Math.random, authorBonus = () => false, policy = {}) {
   const contributions = new WeakMap();
   const stats = (actor) => (actor.kda ||= { kills: 0, deaths: 0, assists: 0 });
   const healthFactor = (actor) =>
     (actor.authorBonus ? rules.authorBonus.healthMultiplier : 1) *
-    (actor.guanyinActive ? rules.guanyinBonus.multiplier : 1);
+    (actor.guanyinActive ? rules.guanyinBonus.multiplier : 1) *
+    profile(actor).health;
   function reset(actor, time) {
     actor.lifeId = (actor.lifeId || 0) + 1;
     stats(actor);
@@ -40,6 +43,12 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     actor.drillDot = null;
     actor.dotPulse = null;
     actor.knockback = null;
+    actor.pickupSpeedAt =
+      actor.pickupSpeedUntil =
+      actor.pickupShieldUntil =
+      actor.pickupAttackUntil =
+        0;
+    actor.lastPickup = null;
     actor.regenAt = time;
     actor.lastHitAt = time;
   }
@@ -236,6 +245,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     return Math.round(reference / (actor.authorBonus ? 1 : rules.authorBonus.damageMultiplier));
   }
   function hit(from, to, time, effect, weight = 1, phase = '') {
+    if (policy.canHit && !policy.canHit(from, to, time, effect))
+      return { damage: 0, critical: false, blocked: true };
     alive(from);
     // A downed actor cannot award another kill, even through a repeated event.
     if (to.health === 0 || from === to) return { damage: 0, critical: false };
@@ -280,7 +291,12 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     }
     const damage = Math.round(
       incoming *
+        (profile(from).damage +
+          (from.pickupAttackBonus ??
+            (time < (from.pickupAttackUntil || 0) ? pickupRules.attackBonus : 0))) *
+        profile(to).defense *
         (1 - blockedPercent / 100) *
+        (time < (to.pickupShieldUntil || 0) ? 0.7 : 1) *
         (time < (to.excaliburUntil || 0) ? 1 - rules.excaliburGuard.reductionPercent / 100 : 1),
     );
     if (to.kind === 'fragment') {
@@ -298,6 +314,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     if (damage > 0 && from.id && from.id !== to.id) {
       helpers.set(from.id, { actor: from, at: time });
     }
+    policy.onDamage?.(from, to, time, Math.min(to.health, damage));
     to.health = Math.max(0, to.health - damage);
     to.lastHitAt = to.regenAt = time;
     if (!to.health) {
@@ -306,18 +323,46 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       for (const [id, entry] of helpers)
         if (id !== from.id && id !== to.id) stats(entry.actor).assists++;
       contributions.delete(to);
-      to.shieldUntil = 0;
-      to.shieldResidualUntil = 0;
-      to.guanyinUntil = 0;
-      to.excaliburUntil = 0;
-      to.regenBlockedUntil = 0;
-      to.fragment = null;
-      to.drillDot = null;
-      to.respawnAt = time + rules.respawnMs;
-      to.targetX = to.x;
-      to.targetY = to.y;
+      clearDeath(to, time);
     }
+    policy.onHit?.(from, to, time, damage);
     return { damage, critical };
+  }
+  function clearDeath(actor, time) {
+    actor.shieldUntil = 0;
+    actor.shieldResidualUntil = 0;
+    actor.guanyinUntil = 0;
+    actor.excaliburUntil = 0;
+    actor.regenBlockedUntil = 0;
+    actor.fragment = null;
+    actor.drillDot = null;
+    actor.pickupSpeedAt =
+      actor.pickupSpeedUntil =
+      actor.pickupShieldUntil =
+      actor.pickupAttackUntil =
+        0;
+    actor.lastPickup = null;
+    actor.respawnAt = time + rules.respawnMs;
+    actor.targetX = actor.x;
+    actor.targetY = actor.y;
+    actor.wallRoute = [];
+  }
+  function environmentDamage(actor, time, fraction) {
+    if (!actor.health) return;
+    const reduction = time < (actor.pickupShieldUntil || 0) ? 0.7 : 1;
+    const damage = Math.min(
+      actor.health,
+      Math.max(1, Math.round(actor.maxHealth * fraction * reduction * profile(actor).defense)),
+    );
+    policy.onEnvironmentDamage?.(actor, time, damage);
+    actor.health -= damage;
+    actor.dotPulse = { id: `terrain:${actor.lifeId}:${time}`, at: time, damage, critical: false };
+    actor.lastHitAt = actor.regenAt = time;
+    if (!actor.health) {
+      stats(actor).deaths++;
+      contributions.delete(actor);
+      clearDeath(actor, time);
+    }
   }
   function view(actor, includeStatus = false) {
     const time = actor.combatAt || 0;
@@ -382,6 +427,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     };
   }
   return {
+    reset,
+    environmentDamage,
     advance,
     alive,
     protect,

@@ -2,6 +2,10 @@
 
 版本管理從既有 `1.0.0` 基線開始；更早的功能與部署紀錄見 `docs/`，不追補未曾實際標記的發行版。
 
+## [3.13.0] - 2026-10-28
+
+- 新增大廳紅藍分隊、60 秒個人與團隊對戰、伺服器隨機不對稱實體牆與可容納兩人的 X 牆掩護、緩速／灼傷陷阱、四種角色類型、含增傷劍的隨機道具、開局 Q／E 配裝鎖定、傷害結算與獨立試玩教學
+
 ## [3.12.1] - 2026-10-27
 
 - Lobby attacks share one canvas and lower their detail with load or on slow devices, sparks use a cached glow, and the lobby is pushed over an event stream instead of polled every 500 ms (#322).

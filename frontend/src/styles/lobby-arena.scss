@@ -1,0 +1,173 @@
+.lobby-arena-content {
+  display: grid;
+  gap: var(--stitch-space-24);
+}
+.lobby-arena-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stitch-space-16);
+  margin-block: var(--stitch-space-16);
+}
+.lobby-arena-hud {
+  position: fixed;
+  z-index: 30;
+  left: var(--stitch-space-16);
+  bottom: var(--stitch-space-16);
+  max-width: min(440px, calc(100vw - var(--stitch-space-16) * 2));
+  max-height: 30dvh;
+  overflow: auto;
+}
+:root body[data-visual-theme] .lobby-arena-hud p {
+  margin: 0;
+  font-size: var(--stitch-text-hint);
+}
+.lobby-arena-hud .lobby-arena-actions {
+  margin-block-end: 0;
+}
+:root body[data-visual-theme].vue-lobby-arena-focus {
+  .game-carousel-section > .carousel-center,
+  .version-note {
+    display: none;
+  }
+  .vue-site-shell > :not(main),
+  .vue-lobby > :not(.version-note),
+  .site-header,
+  .room-media,
+  .vue-room-pings {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .vue-lobby {
+    pointer-events: none;
+  }
+  dialog {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .lobby-backdrop {
+    z-index: 1;
+  }
+  .lobby-arena-hud {
+    z-index: 1001;
+  }
+}
+.lobby-practice-stage {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+}
+.lobby-practice-actor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+@media (max-width: 600px) {
+  :root body[data-visual-theme].vue-lobby-arena-focus .lobby-arena-hud {
+    top: max(var(--stitch-space-16), env(safe-area-inset-top));
+  }
+  .lobby-arena-hud {
+    bottom: auto;
+    top: calc(76px + env(safe-area-inset-top));
+    max-width: min(280px, calc(100vw - var(--stitch-space-16) * 2));
+  }
+}
+.lobby-arena-results {
+  overflow: auto;
+  max-height: 45dvh;
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--stitch-text-hint);
+  }
+  th,
+  td {
+    text-align: right;
+    padding: var(--stitch-space-8);
+  }
+  th:first-child {
+    text-align: left;
+  }
+  tbody th {
+    font-weight: normal;
+  }
+}
+.lobby-battle-controls {
+  position: fixed;
+  bottom: var(--stitch-space-8);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1001;
+  max-width: calc(100vw - var(--stitch-space-16));
+}
+.lobby-battle-actions {
+  display: flex;
+  gap: var(--stitch-space-8);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+:root body[data-visual-theme].vue-lobby-battle {
+  .vue-site-shell > :not(main),
+  .vue-lobby > :not(.version-note),
+  .site-header,
+  .room-media,
+  .vue-room-pings,
+  .version-note {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .game-carousel-section > .carousel-center {
+    display: none;
+  }
+  .vue-lobby {
+    pointer-events: none;
+  }
+  .lobby-backdrop {
+    z-index: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  dialog {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .lobby-arena-hud {
+    top: var(--stitch-space-8);
+    bottom: auto;
+    left: var(--stitch-space-8);
+    max-height: 22dvh;
+    z-index: 1001;
+  }
+}
+.lobby-battle-controls {
+  width: min(440px, calc(100vw - var(--stitch-space-16)));
+}
+.lobby-battle-actions {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--stitch-space-4);
+}
+:root body[data-visual-theme].vue-lobby-battle .lobby-arena-hud {
+  max-height: 30dvh;
+}
+.lobby-arena-hud.is-battle .lobby-arena-actions {
+  margin-block: var(--stitch-space-8);
+}
+@media (max-width: 380px) {
+  .lobby-battle-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+:root body[data-visual-theme].vue-lobby-battle .lobby-avatar {
+  scale: 1;
+}
+:root body[data-visual-theme].vue-lobby-battle .lobby-avatar img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+@media (max-width: 500px) {
+  :root body[data-visual-theme].vue-lobby-battle .lobby-avatar img {
+    width: 35px;
+    height: 35px;
+  }
+}

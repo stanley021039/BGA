@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LobbyArena from './LobbyArena.vue';
 import MotionPolicy from '../../engines/motion-policy.js';
 
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -145,7 +146,7 @@ onBeforeUnmount(() => {
     >
     <GameCarousel v-model="selected" @create="open" @join="openJoin()"
       ><template #lobby-action
-        ><UiButton
+        ><LobbyArena /><UiButton
           icon="chat"
           caption="對話"
           label="對話"

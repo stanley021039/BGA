@@ -388,6 +388,7 @@ function initializeApp(config, dataLock, acquired) {
     (userId) => portraitUrl(userId),
     undefined,
     authorCombatBonus,
+    { attackLoadout: (userId) => require('./profiles/settings').getAttackSettings(db, userId) },
   );
   const roomSpace = createRoomSpace(undefined, undefined, (playerId, room) => {
     // Room seats use game-local IDs, never trust client-supplied account IDs.
@@ -1104,6 +1105,8 @@ function initializeApp(config, dataLock, acquired) {
       characterFor(db, user.id, defaults.characterId)
     );
   };
+  const lobbyPractice = require('./tutorials/lobby-arena').createLobbyPractice();
+  acquired.push(() => lobbyPractice.clear());
   const lobbyHandlers = createLobbyHandlers({
     attackLoadout: (user) => require('./profiles/settings').getAttackSettings(db, user.id),
     entranceAllowed: (user, id) =>
@@ -1523,6 +1526,14 @@ function initializeApp(config, dataLock, acquired) {
         }
         if (url.pathname === '/api/lobby' && req.method === 'GET')
           return send(lobbyChanged(lobbyHandlers.view(user, url.searchParams.get('entrance'))));
+        if (url.pathname === '/api/lobby/practice' && req.method === 'POST') {
+          limitRate(roomRate, 'lobby-practice:' + user.id, 120);
+          return send(lobbyPractice.command(user, data));
+        }
+        if (url.pathname === '/api/lobby/arena' && req.method === 'POST') {
+          limitRate(roomRate, 'lobby-arena:' + user.id, 90);
+          return send(lobbyChanged(lobbyHandlers.arena(user, data)));
+        }
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
           return send(lobbyChanged(lobbyHandlers.move(user, data)));
         if (url.pathname === '/api/lobby/attack' && req.method === 'POST') {

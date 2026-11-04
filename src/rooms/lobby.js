@@ -1,6 +1,11 @@
+const { profile } = require('./archetypes');
+const { createWalls, layoutCount } = require('./walls');
+const hazards = require('./hazards');
 const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
 const combatRules = require('../../public/shared/scene-rules.json');
 const { HttpError } = require('../http/errors');
+const { createLobbyPickups, rules: pickupRules } = require('./lobby-pickups');
+const { createLobbyArena, covers: legacyCovers } = require('./lobby-arena');
 const { createSceneCombat } = require('./scene-combat');
 const { createAttackTimeline } = require('./attack-timeline');
 const { randomBytes } = require('node:crypto');
@@ -34,9 +39,43 @@ function createLobby(
   portrait = (userId) => `/characters/${userId}`,
   random = Math.random,
   authorBonus = () => false,
+  arenaOptions = {},
 ) {
-  const combat = createSceneCombat(random, authorBonus);
-  const timeline = createAttackTimeline(combat);
+  let walls = null,
+    layoutId = 0;
+  const geometry = {
+    get covers() {
+      return walls?.covers || legacyCovers;
+    },
+  };
+  const arena = createLobbyArena(now, geometry, (visitors, players) => {
+    const choices = Array.from({ length: layoutCount - 1 }, (_, i) => i + 1).filter(
+      (i) => i !== layoutId,
+    );
+    layoutId =
+      choices[
+        Math.min(
+          choices.length - 1,
+          Math.floor(Math.max(0, Math.min(0.999999, random())) * choices.length),
+        )
+      ];
+    walls = createWalls(layoutId);
+    for (const p of players) {
+      const actor = visitors.get(p.id),
+        point = walls.safePoint(actor);
+      actor.x = actor.targetX = point.x;
+      actor.y = actor.targetY = point.y;
+      actor.wallRoute = [];
+      actor.moveId++;
+      actor.updatedAt = now();
+      const loadout = arenaOptions.attackLoadout?.(p.id);
+      actor.lockedAttackLoadout = loadout ? Object.freeze({ q: loadout.q, e: loadout.e }) : null;
+      p.loadout = actor.lockedAttackLoadout ? { ...actor.lockedAttackLoadout } : null;
+    }
+  });
+  const combat = createSceneCombat(random, authorBonus, arena);
+  const pickups = createLobbyPickups(now, random, arena, () => geometry.covers);
+  const timeline = createAttackTimeline(combat, (actors, time) => pickups.advance(actors, time));
   let background = { id: 'default', changedAt: now(), nextChangeAt: 0 };
   const visitors = new Map(),
     barrages = [],
@@ -44,6 +83,8 @@ function createLobby(
     receipts = new Map();
   function clean(time) {
     timeline.advance(attacks, visitors.values(), time, advance);
+    arena.finish(time, visitors);
+    pickups.advance(visitors.values(), time);
     for (const [id, visitor] of visitors)
       if (time - visitor.seenAt > PRESENCE_MS) visitors.delete(id);
     while (attacks.length && attacks[0].until < time) attacks.shift();
@@ -51,13 +92,90 @@ function createLobby(
     for (const [key, value] of receipts) if (time - value.at > 60000) receipts.delete(key);
   }
   function advance(visitor, time) {
+    if (!arena.active(visitor.id) || !walls) return advanceOrdinary(visitor, time);
+    const end = Math.min(time, arena.deadline(visitor.id));
+    while (visitor.updatedAt < end) {
+      const at = Math.min(end, visitor.updatedAt + 100),
+        teleportId = visitor.teleportId;
+      combat.advance(visitor, at);
+      if (!visitor.health) {
+        visitor.updatedAt = at;
+        continue;
+      }
+      const safe = walls.safePoint(visitor);
+      if (teleportId !== visitor.teleportId || safe.x !== visitor.x || safe.y !== visitor.y) {
+        visitor.x = visitor.targetX = safe.x;
+        visitor.y = visitor.targetY = safe.y;
+        visitor.wallRoute = [];
+      }
+      hazards.advance(visitor, at, combat.environmentDamage);
+      if (!visitor.health) {
+        visitor.updatedAt = at;
+        continue;
+      }
+      if (
+        Math.hypot(visitor.x - visitor.targetX, visitor.y - visitor.targetY) < 0.01 &&
+        visitor.wallRoute?.length
+      ) {
+        const next = visitor.wallRoute.shift();
+        visitor.targetX = next.x;
+        visitor.targetY = next.y;
+        visitor.moveId++;
+      }
+      const fromAt = Math.max(visitor.updatedAt, visitor.immobileUntil || 0),
+        start = { x: visitor.x, y: visitor.y };
+      const factor = hazards.speed(visitor) * profile(visitor).speed;
+      const boosted = Math.max(
+        0,
+        Math.min(at, visitor.pickupSpeedUntil || 0) - Math.max(fromAt, visitor.pickupSpeedAt || 0),
+      );
+      const elapsed =
+        ((Math.max(0, at - fromAt) + (pickupRules.speed - 1) * boosted) / 1000) * factor;
+      const dx = visitor.targetX - visitor.x,
+        dy = visitor.targetY - visitor.y,
+        duration = Math.hypot(dx / WALK_X_PER_SECOND, dy / WALK_Y_PER_SECOND),
+        ratio = duration ? Math.min(1, elapsed / duration) : 1;
+      const point = walls.clip(start, { x: start.x + dx * ratio, y: start.y + dy * ratio });
+      const shiftX = Math.floor(point.x / 100) * 100,
+        shiftY = Math.floor(point.y / 100) * 100;
+      visitor.x = point.x - shiftX;
+      visitor.y = point.y - shiftY;
+      visitor.targetX -= shiftX;
+      visitor.targetY -= shiftY;
+      if (shiftX || shiftY) visitor.wrapId = (visitor.wrapId || 0) + 1;
+      pickups.record(
+        visitor,
+        start,
+        visitor.updatedAt,
+        at,
+        !!(shiftX || shiftY) || teleportId !== visitor.teleportId,
+        {
+          distance:
+            Math.hypot(
+              (point.x - start.x) / WALK_X_PER_SECOND,
+              (point.y - start.y) / WALK_Y_PER_SECOND,
+            ) / factor,
+          start: Math.min(at, fromAt),
+          speedAt: visitor.pickupSpeedAt || 0,
+          speedUntil: visitor.pickupSpeedUntil || 0,
+        },
+      );
+      visitor.updatedAt = at;
+      combat.collect(visitor, shiftX || shiftY ? undefined : start);
+    }
+    visitor.updatedAt = Math.max(visitor.updatedAt, time);
+  }
+  function advanceOrdinary(visitor, time) {
+    const teleportId = visitor.teleportId;
     combat.advance(visitor, time);
     if (!visitor.health) return;
     const start = { x: visitor.x, y: visitor.y };
-    const elapsed = Math.max(
+    const fromAt = Math.max(visitor.updatedAt, visitor.immobileUntil || 0);
+    const boosted = Math.max(
       0,
-      (time - Math.max(visitor.updatedAt, visitor.immobileUntil || 0)) / 1000,
+      Math.min(time, visitor.pickupSpeedUntil || 0) - Math.max(fromAt, visitor.pickupSpeedAt || 0),
     );
+    const elapsed = Math.max(0, time - fromAt) / 1000 + ((pickupRules.speed - 1) * boosted) / 1000;
     const dx = visitor.targetX - visitor.x,
       dy = visitor.targetY - visitor.y;
     const duration = Math.hypot(dx / WALK_X_PER_SECOND, dy / WALK_Y_PER_SECOND);
@@ -71,6 +189,19 @@ function createLobby(
     visitor.targetX -= shiftX;
     visitor.targetY -= shiftY;
     if (shiftX || shiftY) visitor.wrapId = (visitor.wrapId || 0) + 1;
+    pickups.record(
+      visitor,
+      start,
+      visitor.updatedAt,
+      time,
+      !!(shiftX || shiftY) || teleportId !== visitor.teleportId,
+      {
+        distance: duration * ratio,
+        start: Math.min(time, fromAt),
+        speedAt: visitor.pickupSpeedAt || 0,
+        speedUntil: visitor.pickupSpeedUntil || 0,
+      },
+    );
     visitor.updatedAt = time;
     combat.collect(visitor, shiftX || shiftY ? undefined : start);
   }
@@ -98,6 +229,7 @@ function createLobby(
       };
       visitors.set(user.id, visitor);
     }
+    arena.attach(visitor);
     visitor.name = user.display_name;
     visitor.seenAt = time;
     if (ENTRANCE_EFFECTS.has(entrance)) visitor.entrance = entrance;
@@ -109,13 +241,22 @@ function createLobby(
     for (const visitor of visitors.values()) advance(visitor, time);
     return {
       selfId: user.id,
+      arena: {
+        ...arena.view(visitors),
+        ...pickups.view(),
+        layoutId,
+        hazards: walls ? hazards.zones : [],
+      },
       attacks: attacks.filter((event) => event.until > time),
       background: { ...background },
       barrages: barrages.filter((event) => time - event.at < 8000),
       visitors: [...visitors.values()].map((visitor) => ({
         ...combat.view(visitor, visitor.id === user.id),
+        ...pickups.effects(visitor, time),
         id: visitor.id,
         name: visitor.name,
+        archetype: visitor.archetype || null,
+        hazardKind: arena.active(visitor.id) ? visitor.hazardKind || null : null,
         x: visitor.x,
         y: visitor.y,
         targetX: visitor.targetX,
@@ -123,12 +264,7 @@ function createLobby(
         moveId: visitor.moveId,
         teleportId: visitor.teleportId,
         wrapId: visitor.wrapId || 0,
-        remainingMs: Math.ceil(
-          Math.hypot(
-            (visitor.targetX - visitor.x) / WALK_X_PER_SECOND,
-            (visitor.targetY - visitor.y) / WALK_Y_PER_SECOND,
-          ) * 1000,
-        ),
+        remainingMs: remainingMs(visitor, time),
         facing: visitor.facing,
         moving: Math.hypot(visitor.targetX - visitor.x, visitor.targetY - visitor.y) > 0.05,
         image: portrait(visitor.id),
@@ -136,6 +272,19 @@ function createLobby(
         entrance: visitor.entrance || 'classic',
       })),
     };
+  }
+  function remainingMs(visitor, time) {
+    const factor = arena.active(visitor.id) ? hazards.speed(visitor) * profile(visitor).speed : 1;
+    const duration = Math.hypot(
+      (visitor.targetX - visitor.x) / WALK_X_PER_SECOND / factor,
+      (visitor.targetY - visitor.y) / WALK_Y_PER_SECOND / factor,
+    );
+    const boosted = Math.max(0, (visitor.pickupSpeedUntil || 0) - time) / 1000;
+    return Math.ceil(
+      (duration <= boosted * pickupRules.speed
+        ? duration / pickupRules.speed
+        : duration - boosted * (pickupRules.speed - 1)) * 1000,
+    );
   }
   function move(user, input) {
     const step = input && (Object.hasOwn(input, 'dx') || Object.hasOwn(input, 'dy'));
@@ -162,8 +311,18 @@ function createLobby(
       time = now();
     advance(visitor, time);
     combat.canMove(visitor, time);
-    visitor.targetX = step ? visitor.x + input.dx * 5 : Math.max(MIN_X, Math.min(MAX_X, input.x));
-    visitor.targetY = step ? visitor.y + input.dy * 5 : Math.max(MIN_Y, Math.min(MAX_Y, input.y));
+    if (arena.active(visitor.id) && walls) {
+      const dest = step
+        ? { x: visitor.x + input.dx * 5, y: visitor.y + input.dy * 5 }
+        : { x: input.x, y: input.y };
+      visitor.wallRoute = step ? [walls.clip(visitor, dest)] : walls.route(visitor, dest);
+      const first = visitor.wallRoute.shift() || visitor;
+      visitor.targetX = first.x;
+      visitor.targetY = first.y;
+    } else {
+      visitor.targetX = step ? visitor.x + input.dx * 5 : Math.max(MIN_X, Math.min(MAX_X, input.x));
+      visitor.targetY = step ? visitor.y + input.dy * 5 : Math.max(MIN_Y, Math.min(MAX_Y, input.y));
+    }
     visitor.moveId += 1;
     if (visitor.targetX < visitor.x - 0.1) visitor.facing = 'left';
     if (visitor.targetX > visitor.x + 0.1) visitor.facing = 'right';
@@ -188,7 +347,8 @@ function createLobby(
     )
       throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
     const slot = input.slot || 'q',
-      effect = input.effect || 'barrage',
+      effect =
+        (arena.active(self.id) && self.lockedAttackLoadout?.[slot]) || input.effect || 'barrage',
       fingerprint = JSON.stringify([input.aspectRatio, slot, effect]);
     const key = 'attack:' + user.id + ':' + input.requestId,
       prior = receipts.get(key);
@@ -209,7 +369,9 @@ function createLobby(
     for (const visitor of visitors.values()) advance(visitor, time);
     const targets = selectAttackTargets(
       self,
-      combat.targets(visitors.values()),
+      combat
+        .targets(visitors.values())
+        .filter((actor) => arena.canPair(self.id, actor.ownerId || actor.id)),
       effect,
       input.aspectRatio,
     );
@@ -245,7 +407,11 @@ function createLobby(
         event,
         self,
         targets,
-        effect === 'bijuu_beam' ? combat.targets(visitors.values()) : targets,
+        effect === 'bijuu_beam'
+          ? combat
+              .targets(visitors.values())
+              .filter((actor) => arena.canPair(self.id, actor.ownerId || actor.id))
+          : targets,
       );
     attacks.push(event);
     if (attacks.length > 40) attacks.shift();
@@ -337,6 +503,12 @@ function createLobby(
     let x = zone[0] + random() * (zone[1] - zone[0]),
       y = zone[2] + random() * (zone[3] - zone[2]);
     if (Math.hypot(x - visitor.x, y - visitor.y) < 2) x = x + 3 <= zone[1] ? x + 3 : x - 3;
+    if (arena.active(visitor.id) && walls) {
+      const safe = walls.safePoint({ x, y });
+      x = safe.x;
+      y = safe.y;
+      visitor.wallRoute = [];
+    }
     visitor.x = visitor.targetX = x;
     visitor.y = visitor.targetY = y;
     visitor.updatedAt = now();
@@ -360,7 +532,14 @@ function createLobby(
     };
     return view(user);
   }
+  function arenaCommand(user, input) {
+    enter(user);
+    arena.view(visitors);
+    arena.command(user, input, visitors, combat.reset);
+    return view(user);
+  }
   return {
+    arena: arenaCommand,
     view,
     move,
     attack,

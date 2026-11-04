@@ -3,7 +3,7 @@ import MotionPolicy from '../../engines/motion-policy.js';
 import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
-import { sceneWalk } from '../../engines/scene-path.js';
+import { interpolateSceneVisitor } from '../../services/scene-interpolation';
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
@@ -14,6 +14,7 @@ import { apparate, entranceDuration } from './apparition';
 const NAME_LIMIT = 10;
 const props = defineProps<{
     visitor: LobbyVisitor;
+    team?: string;
     message?: BarrageEvent;
     self: boolean;
     reset: number;
@@ -183,12 +184,7 @@ watch(
     const tick = (time: number) => {
       moveFrame = 0;
       if (disposed || epoch !== revision || document.hidden || !props.connected) return;
-      const position = sceneWalk(
-        visitor,
-        { x: visitor.targetX, y: visitor.targetY },
-        time - started,
-        visitor.passage,
-      );
+      const position = interpolateSceneVisitor(visitor, time - started);
       left.value = wrap(position.x);
       top.value = wrap(position.y);
       if (hasSpeech.value) positionBubble();
@@ -311,9 +307,8 @@ window.addEventListener('resize', positionBubble);
       :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
       alt=""
       draggable="false"
-    /><SceneHealth v-if="visitor.maxHealth" :visitor="visitor" /><span
-      v-if="visitor.health !== 0"
-      >{{ shortName }}</span
+    /><SceneHealth v-if="visitor.maxHealth" :visitor="visitor" /><span v-if="visitor.health !== 0"
+      >{{ team ? (team === 'red' ? '紅隊 · ' : '藍隊 · ') : '' }}{{ shortName }}</span
     >
   </component>
 </template>

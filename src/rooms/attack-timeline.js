@@ -1,3 +1,4 @@
+const { rules: pickupRules } = require('./lobby-pickups');
 const timing = require('../../public/shared/attack-timing.json');
 const rules = require('../../public/shared/scene-rules.json');
 const { inAttackArea, selectBijuuDirections } = require('./attack-targets');
@@ -5,15 +6,22 @@ const { sceneDistance } = require('./scene-combat');
 
 // No per-projectile timers. Polls/commands advance this bounded scene clock.
 // Actor references remain private, never in serialized snapshots.
-function createAttackTimeline(combat) {
+function createAttackTimeline(combat, afterAdvance = () => {}) {
   const runtime = new WeakMap();
   function prepare(event, self, targets, actors = targets) {
     if (event.effect === 'bijuu_beam')
       event.rays = selectBijuuDirections(self, actors, event.aspectRatio);
     const source = {
       id: self.id,
+      combatEpoch: self.combatEpoch || 0,
+      matchId: self.matchId || null,
+      castId: event.id,
+      originX: event.fromX,
+      originY: event.fromY,
       health: 1,
       authorBonus: self.authorBonus,
+      archetype: self.archetype,
+      pickupAttackBonus: event.at < (self.pickupAttackUntil || 0) ? pickupRules.attackBonus : 0,
       guanyinUntil: self.guanyinUntil,
       kda: self.kda,
       ...(event.effect === 'gate_of_babylon'
@@ -109,6 +117,7 @@ function createAttackTimeline(combat) {
       job.done = true;
       if (advancedAt !== job.at) {
         for (const actor of bodies) moveActor(actor, job.at);
+        afterAdvance(bodies, job.at);
         advancedAt = job.at;
       }
       const map = new Map(combat.targets(bodies).map((actor) => [actor.id, actor]));
@@ -193,6 +202,10 @@ function createAttackTimeline(combat) {
         );
         hit.toX = actor.x;
         hit.toY = actor.y;
+        if (hit.blocked) {
+          hit.missed = true;
+          continue;
+        }
         if (event.effect !== 'dimension_cleave' || job.phase === 'finish')
           combat.applyEffect(
             state.source,
@@ -218,6 +231,7 @@ function createAttackTimeline(combat) {
       }
     }
     for (const actor of bodies) moveActor(actor, time);
+    afterAdvance(bodies, time);
   }
   return { prepare, advance };
 }
