@@ -259,8 +259,11 @@ onBeforeUnmount(() => {
                 chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'
               "
               >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
-            ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
-          ><slot name="scene-stats" /></div
+            ><UiButton
+              icon="next"
+              icon-only
+              label="下一款遊戲"
+              @click="select(index + 1)" /></div></div
       ></div>
       <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
     </div>

@@ -5,6 +5,11 @@
   gap: tokens.space(6);
   padding-block: tokens.space(6);
   min-width: 0;
+  .vue-lobby-stats {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    justify-self: end;
+  }
   .library-heading {
     margin: 0;
     gap: tokens.space(4);
@@ -449,11 +454,18 @@ body.lobby-self-hover {
       min-height: 0;
       padding: tokens.space(2) 0;
       grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-rows: 44px minmax(0, 1fr) var(--stitch-control-height);
+      grid-template-rows: minmax(var(--stitch-control-height), auto) minmax(0, 1fr) var(
+          --stitch-control-height
+        );
       gap: tokens.space(4);
     }
+    .vue-lobby .vue-lobby-stats {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: start;
+    }
     .vue-lobby .library-heading {
-      grid-column: 1 / -1;
+      grid-column: 1;
       grid-row: 1;
       min-height: 0;
       margin: 0;
@@ -603,7 +615,7 @@ body.lobby-self-hover {
 }
 @media (min-width: 960px) and (min-height: 560px) and (max-height: 650px) and (pointer: fine) {
   body.vue-lobby-document:not(.ui-large-text) .vue-lobby {
-    grid-template-rows: 28px minmax(0, 1fr) 44px;
+    grid-template-rows: minmax(28px, auto) minmax(0, 1fr) var(--stitch-control-height);
     gap: tokens.space(3);
     .library-heading h1 {
       @include tokens.type(h2);
