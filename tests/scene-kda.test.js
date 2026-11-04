@@ -52,7 +52,7 @@ test('lobby retry cannot increment KDA twice', () => {
   lobby.view(b);
   for (let i = 0; i < 6; i++) {
     now += 1600;
-    const input = { requestId: 'kda-retry-' + i, aspectRatio: 1, slot: 'q', effect: 'barrage' };
+    const input = { requestId: 'kda-retry-' + i, aspectRatio: 1, slot: 'q', effect: 'beam' };
     lobby.attack(a, input);
     lobby.attack(a, input);
     lobby.view(b);

@@ -1,0 +1,79 @@
+@use 'compact-header' as chrome;
+
+// Use the common room tracks. Only the document-height contract is local to
+// this new game; controls, panels, drawers and focus mode stay shared.
+:root body.vue-coc-document:has(.vue-room-shell) {
+  margin: 0;
+  .vue-game-grid {
+    min-block-size: max(30rem, calc(100dvh - 9rem));
+  }
+}
+@media (max-width: 1180px), (max-height: 639px), (pointer: coarse) {
+  :root body.vue-coc-document:has(.vue-room-shell) {
+    .vue-game-main {
+      overflow: auto;
+      scrollbar-gutter: stable;
+    }
+    .vue-room-waiting-template {
+      flex: 0 0 auto;
+      block-size: auto;
+      grid-template-rows: auto auto;
+    }
+    .vue-waiting-lower {
+      block-size: auto;
+      grid-auto-rows: auto;
+    }
+  }
+}
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root body.vue-coc-document:not(.ui-large-text):has(.vue-room-shell) {
+    .vue-game-document {
+      block-size: 100dvh;
+      padding: 0 var(--stitch-space-24) var(--stitch-space-8);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    @include chrome.desktop;
+    #coc-app {
+      min-block-size: 0;
+    }
+    .vue-game-workspace {
+      block-size: 100%;
+      min-block-size: 0;
+      gap: var(--stitch-space-12);
+    }
+    .vue-game-grid {
+      min-block-size: 0;
+    }
+    .vue-game-main,
+    .vue-game-side {
+      overflow: auto;
+      scrollbar-gutter: stable;
+      overscroll-behavior: contain;
+    }
+  }
+}
+
+// Reserve the same readable metadata slots while the host changes scenarios.
+:root body.vue-coc-document {
+  .vue-waiting-hero-copy > p {
+    min-block-size: 4lh;
+  }
+  .vue-waiting-summary > p:not(.vue-waiting-notice):not(.coc-module-credit) {
+    min-block-size: 5lh;
+  }
+  .vue-waiting-summary > .coc-module-credit {
+    min-block-size: 3lh;
+  }
+}
+@media (max-width: 1180px) {
+  :root body.vue-coc-document {
+    .vue-waiting-hero-copy > p,
+    .vue-waiting-summary > p:not(.vue-waiting-notice):not(.coc-module-credit) {
+      min-block-size: 11lh;
+    }
+    .vue-waiting-summary > .coc-module-credit {
+      min-block-size: 6lh;
+    }
+  }
+}

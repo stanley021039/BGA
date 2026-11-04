@@ -4,98 +4,112 @@
     "label": "連射／散射能量彈",
     "color": "#00f0ff",
     "description": "七色能量彈連射，彩色流光拖尾與著彈火花同步綻放。",
-    "achievementId": null
+    "achievementId": null,
+    "damageMultiplier": 0.8
   },
   {
     "id": "beam",
     "label": "超人力霸王十字光線",
     "color": "#7df4ff",
     "description": "蓄力十字手勢幾何電光、高能集束貫通射線、連續震顫衝擊。",
-    "achievementId": null
+    "achievementId": null,
+    "damageMultiplier": 1
   },
   {
     "id": "shield",
     "label": "六角形能量護盾",
     "color": "#00f0ff",
     "description": "六角能量護盾展開，先維持2秒完整減傷，再接3秒半幅減傷，重施只刷新時間。",
-    "achievementId": "gift-first-gift"
+    "achievementId": "gift-first-gift",
+    "damageMultiplier": 0
   },
   {
     "id": "chains",
     "label": "八方實體鎖鏈",
     "color": "#dce6f1",
     "description": "銀鋼鏈環從八方錯落收束，將目標鎖緊並迸出金屬火花。",
-    "achievementId": "majority-first-vote"
+    "achievementId": "majority-first-vote",
+    "damageMultiplier": 0.9
   },
   {
     "id": "sphere",
     "label": "熾天覆七重圓環",
     "color": "#f472b6",
     "description": "七重粉紫花瓣護盾，先維持2秒完整減傷，再接3秒半幅減傷，重施只刷新時間。",
-    "achievementId": "minimal-first-match"
+    "achievementId": "minimal-first-match",
+    "damageMultiplier": 0
   },
   {
     "id": "orbital",
     "label": "天降光柱",
     "color": "#ffd556",
     "description": "天基軌道幾何符文鎖定、超高能天頂垂直降臨光束、地面熔岩焦痕。",
-    "achievementId": "thunder-first-drive"
+    "achievementId": "thunder-first-drive",
+    "damageMultiplier": 0.9
   },
   {
     "id": "funnel",
     "label": "龍騎兵浮游砲",
     "color": "#00f0ff",
     "description": "六具裝甲浮游砲分離包圍目標，聚能交錯射擊後折返。",
-    "achievementId": "poker-first-hand"
+    "achievementId": "poker-first-hand",
+    "damageMultiplier": 0.9
   },
   {
     "id": "singularity",
     "label": "黑洞牽引",
     "color": "#a855f7",
     "description": "超重力奇點引力渦旋、吞噬全場星塵碎屑與假人、崩壞超新星爆發。",
-    "achievementId": "bluff-convincing"
+    "achievementId": "bluff-convincing",
+    "damageMultiplier": 0.9
   },
   {
     "id": "blade_aura",
     "label": "藍黑半月劍氣",
     "color": "#00d0ff",
     "description": "幽藍鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。",
-    "achievementId": "draw-first-correct"
+    "achievementId": "draw-first-correct",
+    "damageMultiplier": 1
   },
   {
     "id": "blade_aura_crimson",
     "label": "紅黑半月劍氣",
     "color": "#ff0f3f",
     "description": "暗紅鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。",
-    "achievementId": "draw-fastest-correct"
+    "achievementId": "draw-fastest-correct",
+    "damageMultiplier": 1
   },
   {
     "id": "chain_lightning",
     "label": "連鎖雷霆／天頂落雷",
     "color": "#00f0ff",
     "description": "九天折線電弧劈裂、高壓等離子電漿光芒、強烈震屏暴擊。",
-    "achievementId": "musicquiz-rescue"
+    "achievementId": "musicquiz-rescue",
+    "damageMultiplier": 0.8
   },
   {
     "id": "frost_spikes",
     "label": "寒冰結晶／極地霜刺",
     "color": "#7df4ff",
     "description": "錯落冰川破地，深藍晶面襯出白亮冰鋒、裂紋與側生碎晶。",
-    "achievementId": "telephone-first-match"
+    "achievementId": "telephone-first-match",
+    "damageMultiplier": 0.8
   },
   {
     "id": "arrow_volley",
     "label": "光輝天降箭雨",
     "color": "#ff5a24",
     "description": "橘紅焰尾箭雨密集落下，白熱箭鏃、箭身與箭羽清楚可辨。",
-    "achievementId": "minimal-three-shapes"
+    "achievementId": "minimal-three-shapes",
+    "damageMultiplier": 0.8
   },
   {
     "id": "flame_vortex",
     "label": "炎獄烈焰龍捲",
     "color": "#ff3366",
     "description": "一大三小烈焰龍捲錯落捲升，金紅火流環繞主風暴旋轉。",
-    "achievementId": "quacks-fifty-points"
+    "achievementId": "quacks-fifty-points",
+    "damageMultiplier": 0.8
   },
   {
     "id": "explosion",

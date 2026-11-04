@@ -108,6 +108,7 @@ onBeforeUnmount(close);
       class="vue-room-invite-panel"
     >
       <StatusSlot
+        persistent
         :message="invites.candidateLoading ? '正在取得線上朋友…' : invites.candidateMessage"
         :error="invites.candidateFailed"
       />

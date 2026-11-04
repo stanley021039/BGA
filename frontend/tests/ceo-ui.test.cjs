@@ -65,7 +65,7 @@ function fixture() {
   document.body.append(host);
   const app = vue.createApp(load(path.resolve(__dirname, '../src/pages/ceo/CeoScene.vue')).default);
   app.mount(host);
-  return { host, app, ceo, calls };
+  return { host, app, ceo, calls, engine, ps };
 }
 test('CEO scene buys stock with issuer group id and preserves final-round and turn guards', async () => {
   const f = fixture();
@@ -99,6 +99,45 @@ test('CEO scene keeps a restart mount target on interrupted game and displays no
     assert(f.host.querySelector('#ceo-restart-settings'));
     assert(f.host.textContent.includes('本局中止'));
     assert(!f.host.textContent.includes('公司市場'));
+  } finally {
+    f.app.unmount();
+    f.host.remove();
+  }
+});
+
+test('a legally finished CEO match exposes all individual and group score details with the provisional-deck warning', async () => {
+  const f = fixture();
+  try {
+    for (let step = 0; step < 500 && f.engine.phase === 'playing'; step++) {
+      const view = f.engine.view(f.ps[0].id),
+        game = view.game;
+      const actor = game.players.find((p) => p.id === game.turnId);
+      const slot = game.market.find((s) => s.card.assets + s.extraCost <= actor.cash);
+      f.engine.act(game.turnId, slot ? 'acquire' : 'dividend', {
+        roundId: view.roundId,
+        requestId: 'ui335-finish-' + step,
+        expectedRevision: game.revision,
+        ...(slot ? { companyId: slot.card.id } : {}),
+      });
+    }
+    assert.equal(f.engine.phase, 'finished');
+    const view = f.engine.view(f.ps[0].id);
+    f.ceo.state = view;
+    f.ceo.game = view.game;
+    f.ceo.canAct = false;
+    await vue.nextTick();
+    assert.match(f.host.textContent, /個人結算/);
+    assert.match(f.host.textContent, /集團結算/);
+    assert.match(f.host.textContent, /非原版/);
+    assert.equal(f.host.querySelectorAll('.ui-statistic').length, view.game.results.players.length);
+    assert(!f.host.textContent.includes('公司市場'));
+    for (const result of view.game.results.players) {
+      assert(f.host.textContent.includes(String(result.total)));
+      for (const stock of result.stock) assert(f.host.textContent.includes(`${stock.count} 股 ×`));
+      for (const company of result.companies)
+        assert(f.host.textContent.includes(`：${company.score} 分`));
+    }
+    assert(f.host.querySelector('#ceo-restart-settings'));
   } finally {
     f.app.unmount();
     f.host.remove();

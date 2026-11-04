@@ -100,6 +100,30 @@ function fixture(send = async () => true) {
     },
   };
 }
+test('R requires synchronized full energy while C remains an independent teleport', async () => {
+  const calls = [];
+  const f = fixture(async (action) => {
+    calls.push(action);
+    return true;
+  });
+  try {
+    assert.equal(await f.controls.run('r'), false);
+    assert.equal(await f.controls.run('c'), true);
+    f.state.snapshot.visitors[0].energy = 99;
+    assert.equal(f.controls.disabled('r'), true);
+    f.state.snapshot.visitors[0].energy = 100;
+    assert.equal(await f.controls.run('r'), true);
+    assert.deepEqual(calls, ['c', 'r']);
+    f.state.snapshot.visitors[0].energy = 0;
+    await f.advance(1600);
+    assert.equal(f.controls.disabled('r'), true);
+    f.state.snapshot.visitors[0].energy = 100;
+    assert.equal(f.controls.disabled('r'), false);
+  } finally {
+    f.dispose();
+  }
+});
+
 test('one pending request per slot, independent slots and server cooldown after success', async () => {
   const jobs = [],
     calls = [];
@@ -148,16 +172,16 @@ test('room change invalidates old response without clearing a new request lock',
   const jobs = [];
   const f = fixture(() => new Promise((resolve) => jobs.push(resolve)));
   try {
-    const old = f.controls.run('r');
+    const old = f.controls.run('c');
     f.state.context = 'room-b';
-    const current = f.controls.run('r');
+    const current = f.controls.run('c');
     jobs[0](true);
     await old;
-    assert.equal(f.controls.pending.r, true);
-    assert.equal(f.controls.seconds('r'), 0);
+    assert.equal(f.controls.pending.c, true);
+    assert.equal(f.controls.seconds('c'), 0);
     jobs[1](true);
     await current;
-    assert.equal(f.controls.seconds('r'), 1);
+    assert.equal(f.controls.seconds('c'), 1);
   } finally {
     f.dispose();
   }
@@ -176,7 +200,7 @@ test('hidden, dialogs, input, disconnected and knocked-out characters cannot act
     await f.controls.run('q');
     f.document.blocked = false;
     f.document.activeElement = new f.Element();
-    await f.controls.run('r');
+    await f.controls.run('c');
     f.document.activeElement = null;
     f.state.enabled = false;
     await f.controls.run('q');

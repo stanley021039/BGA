@@ -1,5 +1,5 @@
 'use strict';
-// Reconstruct the actual pre21 scaffold. Never discard actual currency or prizes.
+// Reconstruct the actual pre22 scaffold. Never discard actual currency or prizes.
 function dropEmptyGachaTables(db) {
   const tables = new Set(
     db
@@ -26,7 +26,7 @@ function dropEmptyGachaTables(db) {
 }
 function preGachaSchema(db) {
   dropEmptyGachaTables(db);
-  db.exec('PRAGMA user_version=20');
+  db.exec('PRAGMA user_version=21');
   return db;
 }
 module.exports = { dropEmptyGachaTables, preGachaSchema };

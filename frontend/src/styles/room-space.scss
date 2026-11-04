@@ -25,6 +25,10 @@
     .vue-room-side-panel[data-panel-side]
   ) {
     --room-panel-peek: 32px;
+    @media (max-width: 1180px) {
+      // Mobile content occupies the full width; only the handle may overlap it.
+      --room-panel-peek: 0px;
+    }
     --room-panel-travel: 280ms;
     box-sizing: border-box;
     min-width: 0;

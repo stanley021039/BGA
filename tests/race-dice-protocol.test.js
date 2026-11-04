@@ -160,7 +160,14 @@ test('server scheduler reveals human dice on time through a room transition', ()
   let now = s.r.diceCheck.readyAt - 1;
   const scope = {
     require: (name) =>
-      name === './transitions' ? require('../src/rooms/transitions') : { expireEmptyRooms() {} },
+      name === './transitions'
+        ? require('../src/rooms/transitions')
+        : {
+            expireEmptyRooms() {},
+            hasOnlineHuman() {
+              return true;
+            },
+          },
     module: { exports: {} },
     console,
     Date: { now: () => now },

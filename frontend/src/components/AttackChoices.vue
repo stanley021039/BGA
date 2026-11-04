@@ -2,7 +2,12 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { requestJson } from '../services/http';
 import { useSessionStore } from '../stores/session';
-import { attackEffects, useAttackLoadoutStore, type AttackSlot } from '../stores/attack-loadout';
+import {
+  attackEffects,
+  fitsAttackSlot,
+  useAttackLoadoutStore,
+  type AttackSlot,
+} from '../stores/attack-loadout';
 import AttackArtwork from './AttackArtwork.vue';
 import StatusSlot from './StatusSlot.vue';
 import UiButton from './UiButton.vue';
@@ -10,7 +15,7 @@ import UiChoiceCard from './UiChoiceCard.vue';
 import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
 withDefaults(defineProps<{ showCurrent?: boolean }>(), { showCurrent: false });
-const currentRevision = ref({ q: 0, e: 0 });
+const currentRevision = ref({ q: 0, e: 0, r: 0 });
 const store = useAttackLoadoutStore(),
   preview = ref('barrage'),
   revision = ref(0),
@@ -90,7 +95,7 @@ function play(id: string) {
       aria-label="目前攻擊特效預覽"
     >
       <UiPanel
-        v-for="slot in ['q', 'e'] as const"
+        v-for="slot in ['q', 'e', 'r'] as const"
         :key="slot"
         :title="slot.toUpperCase() + ' 鍵目前特效'"
         :description="
@@ -102,7 +107,7 @@ function play(id: string) {
         <div class="attack-preview" :aria-label="slot.toUpperCase() + ' 鍵目前特效預覽'">
           <AttackArtwork
             preview
-            v-if="store.ready"
+            v-if="store.ready && store.loadout[slot]"
             :effect="store.loadout[slot]"
             :play-key="currentRevision[slot]"
             :from="{ x: 25, y: 65 }"
@@ -112,22 +117,26 @@ function play(id: string) {
         <UiButton
           icon="play"
           :label="'重播 ' + slot.toUpperCase() + ' 鍵目前特效'"
-          :disabled="!store.ready"
+          :disabled="!store.ready || !store.loadout[slot]"
           @click="currentRevision[slot]++"
         />
       </UiPanel> </div
-    ><p>在場景按 Q、E 朝最近玩家施放，兩鍵各冷卻 1.6 秒；範圍技能可命中多人，不影響桌遊勝負。</p
+    ><p
+      >Q、E 配裝普通招式；R 配裝多人招式，滿 100 能量消耗整條施放；C 瞬移。普通命中 +10、受傷
+      +5、實際移動每秒 +1，多人施放者不靠該招命中回能。普通招式整套傷害：單段 100%、兩段 90%、三段
+      80%；多段每段命中均回能。不影響桌遊勝負。</p
     ><div class="attack-loadout"
       ><UiField
-        v-for="slot in ['q', 'e'] as const"
+        v-for="slot in ['q', 'e', 'r'] as const"
         :key="slot"
         control="select"
-        :label="slot.toUpperCase() + ' 鍵攻擊特效'"
+        :label="slot.toUpperCase() + (slot === 'r' ? ' 鍵多人招式' : ' 鍵普通招式')"
         :model-value="selection[slot]"
         :disabled="!store.ready || store.pending"
         @update:model-value="change(slot, $event)"
+        ><option v-if="slot === 'r'" value="">尚未配裝多人招式</option
         ><option
-          v-for="effect in attackEffects"
+          v-for="effect in attackEffects.filter((effect) => fitsAttackSlot(slot, effect.id))"
           :key="effect.id"
           :value="effect.id"
           :disabled="!allowed(effect.id)"

@@ -1,3 +1,4 @@
+const { dropEmptyCocTables } = require('./helpers/coc-legacy-schema.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs'),
@@ -460,6 +461,7 @@ test('schema16 label cannot smuggle current actor columns or future automation t
   const f = fixture(t);
   require('./helpers/pre-gacha-schema.cjs').dropEmptyGachaTables(f.db);
   dropEmptyCurveTables(f.db);
+  dropEmptyCocTables(f.db);
   f.db.exec('PRAGMA user_version=16');
   f.db.close();
   assert.throws(() => openDatabase(f.file), /older schema cannot contain market automation/);

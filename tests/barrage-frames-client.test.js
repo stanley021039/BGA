@@ -138,7 +138,8 @@ test('all header entry points load the same frame preference module and shared f
       html: fs.readFileSync(path.join(__dirname, '../frontend/pages', id, 'index.html'), 'utf8'),
     }))
     .filter((page) => page.html.includes('data-site-header'));
-  assert.equal(pages.length, 29); // Includes the lounge, CEO, Second Wind and gacha.
+  assert.equal(pages.length, 30); // Includes COC and gacha.
+  assert.ok(pages.some((page) => page.name === 'coc'));
   for (const { name, html } of pages) {
     assert.doesNotMatch(html, /src="\/shared\/[^"]+\.js/);
     assert.match(

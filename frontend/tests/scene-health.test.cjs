@@ -26,7 +26,23 @@ test('thin living HP bars track health without visible numbers; death and respaw
     withEngineImports({
       module: mod,
       exports: mod.exports,
-      require: (id) => (id === 'vue' ? vue : { default: '/tombstone.svg' }),
+      require: (id) =>
+        id === 'vue'
+          ? vue
+          : id === './SceneEnergy.vue'
+            ? {
+                default: vue.defineComponent({
+                  props: ['visitor'],
+                  setup: (props) => () =>
+                    vue.h('div', {
+                      class: 'scene-energy',
+                      role: 'progressbar',
+                      'aria-label': '多人招式能量',
+                      'aria-valuenow': props.visitor.energy,
+                    }),
+                }),
+              }
+            : { default: '/tombstone.svg' },
       performance: { now: () => clock },
       setInterval: (fn) => {
         timers.set(1, fn);
@@ -44,7 +60,8 @@ test('thin living HP bars track health without visible numbers; death and respaw
   });
   const host = document.createElement('div');
   document.body.append(host);
-  const app = vue.createApp({ render: () => vue.h(mod.exports.default, { visitor }) });
+  const state = vue.reactive({ visitor, self: false, connected: true });
+  const app = vue.createApp({ render: () => vue.h(mod.exports.default, state) });
   app.mount(host);
   try {
     assert.equal(host.querySelector('[role=progressbar]').getAttribute('aria-valuenow'), '12000');
@@ -74,6 +91,21 @@ test('thin living HP bars track health without visible numbers; death and respaw
     await vue.nextTick();
     assert.equal(host.textContent, '');
     assert.equal(timers.size, 0);
+    assert.equal(host.querySelector('.scene-energy'), null, 'peers do not show energy');
+    state.self = true;
+    visitor.energy = 40;
+    await vue.nextTick();
+    const energy = host.querySelector('.scene-energy');
+    assert.equal(energy.getAttribute('aria-valuenow'), '40');
+    assert.equal(energy.previousElementSibling.className, 'scene-health-bar');
+    assert.equal(host.textContent, '');
+    state.self = false;
+    await vue.nextTick();
+    assert.equal(host.querySelector('.scene-energy'), null);
+    state.self = true;
+    visitor.health = 0;
+    await vue.nextTick();
+    assert.equal(host.querySelector('.scene-energy'), null, 'no energy under a tombstone');
   } finally {
     app.unmount();
     host.remove();

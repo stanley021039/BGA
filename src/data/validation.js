@@ -1,3 +1,4 @@
+const { COC_TABLES } = require('../coc/schema');
 const { REWARD_TABLES } = require('../achievements/reward-schema');
 const { GACHA_TABLES } = require('../gacha/schema');
 const fs = require('node:fs');
@@ -120,7 +121,8 @@ function validateDatabase(file) {
       18: [...MARKET_AUTOMATION_TABLES, ...MARKET_CURVE_TABLES],
       19: ACHIEVEMENT_TABLES,
       20: REWARD_TABLES,
-      21: GACHA_TABLES,
+      21: COC_TABLES,
+      22: GACHA_TABLES,
     };
     for (const [version, names] of Object.entries(required))
       if (schemaVersion >= Number(version) && names.some((n) => !tables.includes(n)))
@@ -367,7 +369,7 @@ function validateDatabase(file) {
       blobDigests,
       accountsSha256: accountsDigest.digest('hex'),
       achievementsSha256,
-      ...(schemaVersion >= 21 ? { gachaSha256: gachaDigest.digest('hex') } : {}),
+      ...(schemaVersion >= 22 ? { gachaSha256: gachaDigest.digest('hex') } : {}),
       ...(marketImagesSha256 === undefined ? {} : { marketImagesSha256 }),
       music: tables.includes('music_tracks')
         ? db.prepare('SELECT id,size,mime,ext FROM music_tracks ORDER BY id').all()

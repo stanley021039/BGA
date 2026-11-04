@@ -1,5 +1,5 @@
 const { createRoomTransitions } = require('./transitions');
-const { expireEmptyRooms } = require('./lifecycle');
+const { expireEmptyRooms, hasOnlineHuman } = require('./lifecycle');
 const { runTestAIStep } = require('../ai');
 function advanceTimedPhase(room, transitions) {
   const now = Date.now();
@@ -53,15 +53,23 @@ function startRoomScheduler({
     emptyTimer.unref();
     timer = setInterval(() => {
       for (const [code, r] of rooms) {
-        if (Date.now() - Math.max(...r.players.map((p) => p.lastSeen)) > 86400000) {
-          rooms.delete(code);
-          onDelete(code);
+        if (r.type === 'coc') {
+          try {
+            r.cocTick?.();
+          } catch (error) {
+            console.error('COC presence update failed', error.code || 'COC_STORAGE');
+          }
           continue;
         }
         // Expired phases must advance before an AI attempts a now-illegal action.
         if (advanceTimedPhase(r, transitions)) continue;
         try {
-          if (r.type !== 'thunder' && runTestAIStep(r, { transitions, onDrawStroke })) continue;
+          if (
+            hasOnlineHuman(r) &&
+            r.type !== 'thunder' &&
+            runTestAIStep(r, { transitions, onDrawStroke })
+          )
+            continue;
         } catch (e) {
           console.error('Test AI action failed:', e);
         }

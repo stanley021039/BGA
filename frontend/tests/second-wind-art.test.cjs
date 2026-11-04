@@ -52,13 +52,14 @@ test('original roster and every Twist have verified compressed art with no missi
       [
         'weremouth-portrait.webp',
         'hero.webp',
+        'hero-384.webp',
         'twisty-twirl-800.webp',
         'twisty-twirl-1600.webp',
         'whirly-world-800.webp',
         'whirly-world-1600.webp',
       ],
     );
-  assert.equal(new Set(required).size, 91);
+  assert.equal(new Set(required).size, 92);
   assert.deepEqual(manifest.assets.map((a) => a.file).sort(), required.sort());
   assert.deepEqual(
     fs

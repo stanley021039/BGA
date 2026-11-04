@@ -38,7 +38,7 @@ function fund(store, db, user, coins = 2000, fragments = 1000) {
 }
 test('gacha schema enforces safe nonnegative balances and complete schema shape', (t) => {
   const { db, user, store } = fixture(t);
-  assert.equal(SCHEMA_VERSION, 21);
+  assert.equal(SCHEMA_VERSION, 22);
   for (const name of GACHA_TABLES)
     assert.ok(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name));
   store.wallet(user);
@@ -234,7 +234,7 @@ test('normal completed matches reward active humans once, preserve winners and e
   );
   assert.equal(store.wallet(user).coins, 75);
 });
-test('schema20 migration snapshots legacy ownership exactly once; later achievements do not grant rewards', (t) => {
+test('schema21 migration snapshots legacy ownership exactly once; later achievements do not grant rewards', (t) => {
   const dir = mkdtempSync(path.join(tmpdir(), 'bga-gacha-'));
   const file = path.join(dir, 'users.sqlite');
   let db = openDatabase(file);
@@ -246,6 +246,8 @@ test('schema20 migration snapshots legacy ownership exactly once; later achievem
     rmSync(target, { recursive: true, force: true });
   });
   const user = addUser(db, 'legacy');
+  db.prepare('INSERT INTO coc_receipts(user_id,request_id,scope,fingerprint,response_json,created_at) VALUES(?,?,?,?,?,?)').run(user, 'prior-coc-operation', 'character', 'unchanged', '{"ok":true}', '2026-10-01T00:00:00.000Z');
+  const priorCoc = db.prepare('SELECT * FROM coc_receipts').all();
   const old = catalog.find((i) => i.kind === 'attacks' && i.achievementIds.length);
   const later = catalog.find(
     (i) =>
@@ -254,12 +256,14 @@ test('schema20 migration snapshots legacy ownership exactly once; later achievem
       !i.achievementIds.includes(old.achievementIds[0]),
   );
   for (const name of GACHA_TABLES) db.exec('DROP TABLE ' + name);
-  db.exec('PRAGMA user_version=20');
+  db.exec('PRAGMA user_version=21');
   db.prepare(
     'INSERT INTO user_achievements(user_id,achievement_id,source_key,unlocked_at) VALUES(?,?,?,?)',
   ).run(user, old.achievementIds[0], 'old', '2026-10-01T00:00:00.000Z');
   db.close();
   db = openDatabase(file);
+  assert.deepEqual(db.prepare('SELECT * FROM coc_receipts').all(), priorCoc);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 22);
   assert.ok(Ownership.ownedIds(db, user, 'attacks').includes(old.id));
   db.prepare(
     'INSERT INTO user_achievements(user_id,achievement_id,source_key,unlocked_at) VALUES(?,?,?,?)',

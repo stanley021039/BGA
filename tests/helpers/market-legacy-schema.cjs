@@ -1,3 +1,4 @@
+const { dropEmptyCocTables } = require('./coc-legacy-schema.cjs');
 // Actual pre17 market definitions, independent of the current production SQL.
 // Tests must reconstruct the historical columns instead of merely relabeling a
 // current database and teaching the production validator to accept forged v16.
@@ -82,6 +83,7 @@ function legacyMarketSchema(db, { preserveAchievements = false } = {}) {
     )
       throw Error('Legacy fixture must not discard gacha settings');
     for (const table of gacha) if (tables.has(table)) db.exec('DROP TABLE ' + table);
+    dropEmptyCocTables(db);
     dropEmptyCurveTables(db);
     if (!preserveAchievements)
       for (const table of ['achievement_progress', 'processed_unit_events'])

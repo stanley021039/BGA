@@ -319,3 +319,18 @@ RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱
 `InvitationInbox` 保留原邀請收件匣四列結構；拒播說明與「啟用邀請音效」按鈕放在介紹列，沿用 `StatusSlot` 的 persistent warning及`UiButton`。入口可讀名稱指出點開可啟用；不自動打開視窗、搶焦點或取代加入／婉拒。長提示縮短以維持手機可讀性，`invitation-inbox.scss`只負責介紹內的間距及排版。
 
 聲音由邀請store的單一owner處理，畫面重繪／開關收件匣不觸發；播放與拒播狀態不阻擋邀請回覆。沿用個人效果音設定，詳細行為與驗證見[本批紀錄](INVITATION-SOUND-304-PROGRESS.md)。
+
+## 場景多人能量（#329，3.13.0候選，最新修訂）
+
+SceneHealth只在活著的本人HP條下渲染共用SceneEnergy，兩條同寬42px／高2px，能量使用Stitch info ink。他人角色不顯示能量；條本身沒有可見標籤、數字或說明，保留progressbar及連線可及性。SceneKda只保留K／D／A和增益圖示，移除HP數字列；房間與大廳共用LobbyVisitor。此修訂取代最初大廳HUD與RoomHeader能量條位置。手機操作共用Q／E普通、R多人、C瞬移；AttackChoices分類／所有權及玩法說明沿用。驗證與界線見[本批紀錄](specs/SCENE-ENERGY-329.md)。
+
+UiField 的 `labelHidden`（預設 false）供具可見欄／列標題的密集表格使用；標籤仍以 ui-sr-only 保留名稱及欄位關聯。COC 技能配點表採用此變體，一般表單維持可見標籤。
+
+
+## #335 計分與持續操作狀態
+
+`UiStatistic` 以 `label`、`value`、可選 `suffix` 呈現數據；使用 R6 的14px label、32px數據與tabular-nums，不在遊戲頁面自訂數字外觀。
+
+`UiNotice density="action"` 保留144px固定槽位（space-48 × 3），可用具名 `#actions` 放重試等操作；訊息長文於槽內捲動，動作保留44px一列。提供actions時使用div而不是p，避免互動按鈕落入無效段落。訊息隱藏時不掛載操作，不留下可聚焦的隱形按鈕。處理中、未確認與必要失敗使用persistent；一般短暫提示維持原預設。角色／隊伍姓名、原版圖片與完整能力維持可讀，不因圖片化隱藏必要文字。
+
+`UiBadge nowrap` 固定短標記不換行；`shape="circle"` 為32px圓形位置字母，保留預設膠囊。手機收合的共用RoomSidePanel完整移出視窗，只保留44px展開把手，避免邊框遮住主內容。

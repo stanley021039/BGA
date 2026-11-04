@@ -217,7 +217,7 @@ test('kicking bots or leaving the last human cleans up', (t) => {
   assert.equal(leavePlayer(r, h.human.id).deleted, true);
   const rooms = new Map([[r.code, r]]);
   h.human.lastSeen = 0;
-  expireEmptyRooms({ rooms, now: h.now() });
+  expireEmptyRooms({ rooms, now: h.now() + 3 * 60 * 60000 });
   assert.equal(rooms.size, 0);
 });
 test('future game adapters use the shared add and scheduler contract', (t) => {

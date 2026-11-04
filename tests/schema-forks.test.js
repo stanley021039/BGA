@@ -1,3 +1,4 @@
+const { dropEmptyCocTables } = require('./helpers/coc-legacy-schema.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
@@ -95,6 +96,7 @@ function historical(f, kind) {
     legacyMarketSchema(f.db, { preserveAchievements: true });
     f.db.exec('PRAGMA user_version=17');
   } else {
+    dropEmptyCocTables(f.db);
     f.db.exec('DROP TABLE achievement_progress; DROP TABLE processed_unit_events');
     if (kind === 'market17') dropEmptyCurveTables(f.db);
     f.db.exec('PRAGMA user_version=' + (kind === 'market17' ? 17 : 18));
@@ -115,7 +117,7 @@ for (const kind of ['achievement17', 'market17', 'market18'])
       const db = openDatabase(f.file);
       try {
         assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
-        assert.equal(SCHEMA_VERSION, 21);
+        assert.equal(SCHEMA_VERSION, 22);
         const after = rows(db);
         for (const name of Object.keys(before))
           assert.deepEqual(

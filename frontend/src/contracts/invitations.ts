@@ -63,6 +63,7 @@ export const gameTitles: Record<GameType, string> = {
   draw: '你畫我猜',
   telephone: '傳情畫意',
   trpg: '霧港跑團',
+  coc: '克蘇魯的呼喚',
   musicquiz: '猜歌挑戰',
   minimal: '極簡猜圖',
   bluff: '瞎掰王',

@@ -6,6 +6,7 @@ import { useAthleteStore } from '../../stores/second-wind';
 import { usePartyActionsStore } from '../../stores/party-actions';
 import { useRoomStore } from '../../stores/room';
 import UiPanel from '../../components/UiPanel.vue';
+import UiStatistic from '../../components/UiStatistic.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiBadge from '../../components/UiBadge.vue';
 import UiChoiceCard from '../../components/UiChoiceCard.vue';
@@ -14,7 +15,6 @@ import UiHeading from '../../components/UiHeading.vue';
 import UiList from '../../components/UiList.vue';
 import UiListRow from '../../components/UiListRow.vue';
 import AthleteArt from './AthleteArt.vue';
-import AthletePlayerAvatar from './AthletePlayerAvatar.vue';
 import AthleteTurnOrder from './AthleteTurnOrder.vue';
 import { athleteArt, trackArt, trackPoint } from './art';
 const athlete = useAthleteStore(),
@@ -25,12 +25,27 @@ const me = computed(() => athlete.state?.me || '');
 const cards = computed(() => Object.fromEntries(game.value.catalog.map((c) => [c.id, c])));
 const name = (id: string) => athlete.state?.players.find((p) => p.id === id)?.name || id;
 const cardName = (id: string) => cards.value[id]?.name || id;
-const ownerName = (id: string) =>
-  game.value.players
-    .filter((player) => game.value.teams[player]?.includes(id))
-    .map(name)
-    .join('、');
 const racersOpen = ref(false);
+const raceVisible = computed(() =>
+  ['racing', 'race-result', 'finished'].includes(game.value.phase),
+);
+const racersFor = (id: string) =>
+  raceVisible.value ? game.value.racers?.filter((r) => r.playerId === id) || [] : [];
+const phaseNotice = computed(() =>
+  rolloff.value
+    ? game.value.rolls?.[me.value]
+      ? '本人已擲骰，等待其他玩家。'
+      : '請擲骰決定先手順序。'
+    : picking.value
+      ? canPick.value
+        ? '輪到你招募角色。'
+        : `等待 ${name(game.value.turnId || '')} 招募角色。`
+      : choosing.value
+        ? game.value.selectedIds.includes(me.value)
+          ? '角色已鎖定；其他玩家的選角仍保密。'
+          : '選擇本場出賽角色，鎖定後本場不能更換。'
+        : '',
+);
 const twistDialog = ref<InstanceType<typeof UiDialog> | null>(null);
 // The server retains the preceding race's cards during secret selection.
 // Those cards must not mark the new race as already shown.
@@ -125,6 +140,17 @@ const eventText = eventBody;
 </script>
 <template>
   <div class="athlete-scene">
+    <UiNotice
+      :message="actions.notice"
+      :error="!!actions.notice && !actions.pending"
+      persistent
+      density="action"
+    >
+      <template #actions
+        ><UiButton v-if="actions.canRetry" label="重試同一操作" @click="actions.retrySame()"
+      /></template>
+    </UiNotice>
+    <UiNotice v-if="phaseNotice" :message="phaseNotice" persistent />
     <UiPanel title="積分與隊伍">
       <template #title-after
         ><UiHoverInfo title="四場名次積分" help-only
@@ -157,48 +183,60 @@ const eventText = eventBody;
           "
           @click="teamsOpen = !teamsOpen"
       /></template>
-      <div id="athlete-scores" v-show="teamsOpen" class="athlete-scores"
-        ><div v-for="id in game.players" :key="id" class="athlete-player-group"
-          ><div class="athlete-score-owner"
-            ><AthletePlayerAvatar :player-id="id" /><UiBadge
-              :label="`${game.scores?.[id] || 0} 分`"
-          /></div>
-          <div :id="'athlete-team-' + id" v-show="teamsOpen" class="athlete-team"
-            ><UiHoverInfo
+      <div id="athlete-scores" v-show="teamsOpen" class="athlete-scores">
+        <UiPanel
+          v-for="id in game.players"
+          :key="id"
+          class="athlete-player-group"
+          :title="name(id)"
+          :description="`備選跑者名冊（${game.teams[id]?.length || 0} 位）`"
+          :heading-level="3"
+          density="compact"
+        >
+          <template #title-after
+            ><UiBadge v-if="id === me" label="本人" tone="primary" nowrap
+          /></template>
+          <template #actions
+            ><UiStatistic label="積分" :value="game.scores?.[id] || 0" suffix="分"
+          /></template>
+          <div :id="'athlete-team-' + id" v-show="teamsOpen" class="athlete-team">
+            <UiHoverInfo
               v-for="racerId in game.teams[id] || []"
               :key="racerId"
               class="athlete-team-member"
               :title="cardName(racerId) + ' · ' + name(id)"
               :show-help="false"
               tabindex="0"
-              ><div>
-                <AthleteArt
+            >
+              <UiPanel tone="subtle" density="compact"
+                ><AthleteArt
                   :src="athleteArt(racerId)"
                   :alt="cardName(racerId)"
                   :width="96"
                   :height="70"
-                /> </div
-              ><template #info
+                /><span>{{ cardName(racerId) }}</span></UiPanel
+              >
+              <template #info
                 ><p>{{ cards[racerId]?.summary }}</p
                 ><p>{{ cards[racerId]?.notes }}</p></template
-              ></UiHoverInfo
-            ></div
+              >
+            </UiHoverInfo>
+          </div>
+          <p v-if="!game.teams[id]?.length">{{
+            picking || game.phase === 'draft-rolloff' ? '等待招募角色' : '全部角色已出賽'
+          }}</p>
+          <p v-for="racer in racersFor(id)" :key="racer.id"
+            >出賽：{{ cardName(racer.racerId) }} · {{ racer.position }} 格<span
+              v-if="racer.eliminated"
+            >
+              · 已淘汰</span
+            ><span v-else-if="racer.finished"> · 已完賽</span></p
           >
-          <p v-if="!game.teams[id]?.length">{{ picking ? '等待招募角色' : '全部角色已出賽' }}</p>
-          <span v-if="choosing">{{
-            game.selectedIds.includes(id) ? '已鎖定' : '選角中'
-          }}</span></div
-        ></div
-      >
-      <UiNotice
-        v-if="actions.notice || actions.canRetry"
-        :message="actions.notice"
-        :persistent="actions.canRetry"
-        density="compact"
-        ><UiButton v-if="actions.canRetry" label="重試同一操作" @click="actions.retrySame()"
-      /></UiNotice>
+          <UiBadge v-if="choosing" :label="game.selectedIds.includes(id) ? '已鎖定' : '選角中'" />
+        </UiPanel>
+      </div>
     </UiPanel>
-    <UiPanel v-if="game.racers?.length" title="本場角色與能力">
+    <UiPanel v-if="raceVisible && game.racers?.length" title="本場角色與能力">
       <template #actions
         ><UiButton
           :label="racersOpen ? '收合本場角色與能力' : '展開本場角色與能力'"
@@ -228,8 +266,10 @@ const eventText = eventBody;
                         : `${r.position} 格${r.tripped ? ' · 絆倒' : ''}`
                   "
                 /><p>{{ cards[r.racerId]?.summary }}</p
-                ><p v-if="r.copiedPowers.length"
-                  >額外能力：{{ r.copiedPowers.map(cardName).join('、') }}</p
+                ><div v-for="power in r.copiedPowers" :key="power"
+                  ><strong>額外能力：{{ cardName(power) }}</strong
+                  ><p>{{ cards[power]?.summary }}</p
+                  ><p>{{ cards[power]?.notes }}</p></div
                 ><p v-if="r.transformed">已變身 W.E.R.E.M.O.U.T.H.</p
                 ><p>{{ cards[r.racerId]?.notes }}</p></div
               ></div
@@ -247,9 +287,17 @@ const eventText = eventBody;
         ></template
       >
       <div class="athlete-rolloff"
-        ><div v-for="id in game.players" :key="id" class="athlete-roll-player">
-          <AthletePlayerAvatar :player-id="id" /><UiBadge
-            :label="game.rolls?.[id] ? String(game.rolls[id]) : '等待擲骰'"
+        ><UiPanel
+          v-for="id in game.players"
+          :key="id"
+          class="athlete-roll-player"
+          :title="name(id)"
+          :heading-level="3"
+          density="compact"
+          ><UiStatistic
+            :label="game.rolls?.[id] ? '擲骰結果' : '等待擲骰'"
+            :value="game.rolls?.[id] || '—'"
+            suffix="點"
           />
           <div class="athlete-roll-button"
             ><UiButton
@@ -258,7 +306,7 @@ const eventText = eventBody;
               label="擲骰"
               :disabled="!athlete.ready || !!game.rolls?.[me]"
               @click="athlete.act('roll')"
-          /></div> </div
+          /></div> </UiPanel
       ></div>
     </UiPanel>
     <UiPanel
@@ -274,35 +322,39 @@ const eventText = eventBody;
       <template v-if="picking" #title-after
         ><AthleteTurnOrder :players="turnPlayers" :active="game.turnId" snake
       /></template>
-      <div class="athlete-card-grid"
-        ><UiHoverInfo
+      <div class="athlete-card-grid">
+        <UiPanel
           v-for="id in offered"
           :key="id"
-          :title="cardName(id) + (ownerName(id) ? ' · ' + ownerName(id) : '')"
-          :disabled="!canPick"
-          :show-help="false"
-          ><UiChoiceCard
+          :title="cardName(id)"
+          :heading-level="3"
+          density="compact"
+          class="athlete-offer"
+        >
+          <UiChoiceCard
             :label="cardName(id)"
             :disabled="!canPick"
             readable-disabled
             image-only
             :selected="game.ownSelection === id"
             @click="pick(id)"
-            ><AthleteArt
+          >
+            <AthleteArt
               class="athlete-draft-art"
-              trim-card
               :src="athleteArt(id, 'card')"
               :alt="cardName(id) + ' 英文原版角色卡'"
               :width="272"
-              :height="380" /></UiChoiceCard
-          ><template #info
-            ><p>{{ cards[id]?.summary }}</p
-            ><p>{{ cards[id]?.notes }}</p></template
-          ></UiHoverInfo
-        ></div
-      >
+              :height="380"
+            />
+          </UiChoiceCard>
+          <p>{{ cards[id]?.summary }}</p>
+          <details
+            ><summary>完整能力說明</summary><p>{{ cards[id]?.notes }}</p></details
+          >
+        </UiPanel>
+      </div>
     </UiPanel>
-    <template v-if="game.racers?.length">
+    <template v-if="raceVisible && game.racers?.length">
       <UiPanel :title="game.trackId === 'twisty-twirl' ? '曲折賽道' : '漩渦賽道'">
         <template #title-after
           ><AthleteTurnOrder
@@ -320,24 +372,7 @@ const eventText = eventBody;
             "
             @click="twistDialog?.open()"
         /></template>
-        <div class="athlete-action-slot"
-          ><UiButton
-            v-if="game.phase === 'racing' && !game.pending"
-            variant="primary"
-            label="開始角色回合"
-            :disabled="!athlete.ready || game.turnId !== me"
-            @click="athlete.act('roll')" /><template v-if="game.pending"
-            ><p>{{ game.pending.title }}</p
-            ><div class="athlete-actions"
-              ><UiButton
-                v-for="option in game.pending.options"
-                :key="option.value"
-                :label="option.label"
-                :disabled="!athlete.ready || game.pending.playerId !== me"
-                @click="
-                  athlete.act('choice', { choiceId: game.pending.id, value: option.value })
-                " /></div></template
-        ></div>
+        <p>原版賽道可左右捲動；下方清單保留所有公開格位與角色。</p>
         <div class="athlete-track-scroll" tabindex="0" aria-label="原版賽道，可左右捲動">
           <div class="athlete-track">
             <AthleteArt
@@ -410,16 +445,11 @@ const eventText = eventBody;
                       :show-help="false"
                       tabindex="0"
                     >
-                      <div>
-                        <AthleteArt
-                          :class="{ 'athlete-tripped': r.tripped }"
-                          :src="athleteArt(r.transformed ? 'weremouth' : r.racerId)"
-                          :alt="cardName(r.racerId)"
-                          :width="96"
-                          :height="70"
-                          eager
-                        />
-                      </div>
+                      <UiBadge
+                        :label="String.fromCharCode(65 + game.players.indexOf(r.playerId))"
+                        shape="circle"
+                        tone="primary"
+                      />
                       <template #info
                         ><p>{{ cards[r.racerId]?.summary }}</p
                         ><p>{{ cards[r.racerId]?.notes }}</p></template
@@ -446,6 +476,24 @@ const eventText = eventBody;
             </div>
           </div>
         </div>
+        <UiList
+          as="ol"
+          class="athlete-position-list"
+          tabindex="0"
+          aria-label="0 至 30 格公開賽況，可左右捲動"
+        >
+          <UiListRow v-for="cell in board" :key="cell.position">
+            <div
+              ><strong
+                >{{ cell.position
+                }}{{ cell.position === 0 ? ' 起點' : cell.position === 30 ? ' 終點' : '' }}</strong
+              ><p v-for="r in cell.racers" :key="r.id"
+                >{{ name(r.playerId) }} · {{ cardName(r.racerId) }}{{ r.tripped ? ' · 絆倒' : ''
+                }}{{ r.finished ? ' · 完賽' : '' }}</p
+              ><p v-if="game.coins?.includes(cell.position)">金幣</p></div
+            >
+          </UiListRow>
+        </UiList>
         <div class="athlete-track-key"
           ><UiBadge :label="game.direction === -1 ? '逆向競速 ←' : '順向競速 →'" tone="info" />
         </div>
@@ -462,6 +510,38 @@ const eventText = eventBody;
         <p v-if="game.monster !== null && game.monster !== undefined"
           >W.E.R.E.M.O.U.T.H.：{{ game.monster }} 格</p
         >
+      </UiPanel>
+      <UiPanel
+        v-if="game.phase === 'racing'"
+        tone="raised"
+        :title="
+          game.pending
+            ? game.pending.playerId === me
+              ? '請選擇能力效果'
+              : '等待 ' + name(game.pending.playerId) + ' 選擇能力'
+            : game.turnId === me
+              ? '輪到您的行動！'
+              : '等待 ' + name(game.turnId || '') + ' 行動'
+        "
+      >
+        <div class="athlete-action-slot"
+          ><UiButton
+            v-if="game.phase === 'racing' && !game.pending"
+            variant="primary"
+            label="開始角色回合"
+            :disabled="!athlete.ready || game.turnId !== me"
+            @click="athlete.act('roll')" /><template v-if="game.pending"
+            ><p>{{ game.pending.title }}</p
+            ><div class="athlete-actions"
+              ><UiButton
+                v-for="option in game.pending.options"
+                :key="option.value"
+                :label="option.label"
+                :disabled="!athlete.ready || game.pending.playerId !== me"
+                @click="
+                  athlete.act('choice', { choiceId: game.pending.id, value: option.value })
+                " /></div></template
+        ></div>
       </UiPanel>
     </template>
     <UiPanel
@@ -536,7 +616,8 @@ const eventText = eventBody;
       >
     </UiDialog>
     <UiPanel title="賽況紀錄"
-      ><UiList class="athlete-events"
+      ><p v-if="!game.events.length">尚無賽況紀錄。</p
+      ><UiList v-else class="athlete-events"
         ><UiListRow v-for="event in [...game.events].reverse()" :key="event.id">{{
           eventText(event)
         }}</UiListRow></UiList
@@ -552,7 +633,7 @@ const eventText = eventBody;
 }
 .athlete-scores {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
   gap: var(--stitch-gap-controls);
 }
 .athlete-player-group,
@@ -586,11 +667,11 @@ const eventText = eventBody;
 }
 .athlete-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: var(--stitch-gap-controls);
 }
-.athlete-card-grid > .ui-hover-info {
-  width: min(100%, 12rem);
+.athlete-card-grid > .athlete-offer {
+  width: min(100%, 22rem);
   justify-self: center;
 }
 .athlete-actions {
@@ -599,23 +680,27 @@ const eventText = eventBody;
   gap: var(--stitch-gap-controls);
 }
 .athlete-action-slot {
-  min-height: 8rem;
+  min-height: calc(var(--stitch-space-48) * 2);
+  display: grid;
+  align-content: space-between;
+  gap: var(--stitch-gap-controls);
 }
 .athlete-draft-art {
-  max-width: 12rem;
+  max-width: 17rem;
   align-self: center;
 }
 .athlete-team {
   display: grid;
-  grid-template-columns: repeat(2, 5rem);
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--stitch-gap-label);
 }
 .athlete-team-member {
   display: grid;
   align-content: start;
-  width: 5rem;
+  width: 100%;
   overflow-wrap: anywhere;
-  font-size: var(--stitch-text-small);
+  font-size: var(--stitch-text-hint);
 }
 .athlete-track-scroll {
   max-width: 100%;
@@ -696,5 +781,45 @@ const eventText = eventBody;
   .athlete-card-grid {
     grid-template-columns: 1fr;
   }
+}
+.athlete-position-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(8rem, 1fr);
+  overflow-x: auto;
+}
+.athlete-offer {
+  display: grid;
+  gap: var(--stitch-gap-controls);
+  align-content: start;
+  justify-items: stretch;
+}
+.athlete-offer > .ui-choice-card {
+  justify-self: center;
+  width: min(100%, 17rem);
+}
+.athlete-team-member .athlete-art {
+  width: 4.5rem;
+  height: 4.5rem;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.athlete-team-member span {
+  overflow-wrap: anywhere;
+}
+.athlete-team-member .ui-panel {
+  display: grid;
+  gap: var(--stitch-space-8);
+  height: 100%;
+  box-sizing: border-box;
+}
+.athlete-racer-row {
+  align-items: start;
+}
+.athlete-player-group {
+  justify-items: stretch;
+}
+.athlete-scene p {
+  margin: 0;
 }
 </style>

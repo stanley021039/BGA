@@ -1,5 +1,6 @@
 const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
 const combatRules = require('../../public/shared/scene-rules.json');
+const energy = require('./scene-energy');
 const { HttpError } = require('../http/errors');
 const { createSceneCombat } = require('./scene-combat');
 const { createAttackTimeline } = require('./attack-timeline');
@@ -63,6 +64,7 @@ function createLobby(
       dy = visitor.targetY - visitor.y;
     const duration = Math.hypot(dx / WALK_X_PER_SECOND, dy / WALK_Y_PER_SECOND);
     const ratio = duration ? Math.min(1, elapsed / duration) : 1;
+    energy.walk(visitor, Math.min(elapsed, duration) * 1000);
     const rawX = visitor.x + dx * ratio,
       rawY = visitor.y + dy * ratio;
     const shiftX = Math.floor(rawX / 100) * 100,
@@ -183,7 +185,7 @@ function createLobby(
       !Number.isFinite(input.aspectRatio) ||
       input.aspectRatio < 0.2 ||
       input.aspectRatio > 5 ||
-      (input.slot !== undefined && !['q', 'e'].includes(input.slot)) ||
+      (input.slot !== undefined && !['q', 'e', 'r'].includes(input.slot)) ||
       (input.effect !== undefined && !ATTACK_EFFECTS.has(input.effect)) ||
       Object.keys(input).some((k) => !['requestId', 'aspectRatio', 'slot', 'effect'].includes(k))
     )
@@ -208,6 +210,7 @@ function createLobby(
         slot.toUpperCase() + ' 攻擊冷卻中，請稍候 1.6 秒',
       );
     for (const visitor of visitors.values()) advance(visitor, time);
+    energy.check(self, slot, effect);
     const targets = selectAttackTargets(
       self,
       combat.targets(visitors.values()),
@@ -224,6 +227,7 @@ function createLobby(
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '目前沒有其他玩家可以互動');
     combat.alive(self);
     combat.canCast(self, time);
+    energy.spend(self, slot);
     const defensive = target === self;
     const hit = defensive ? combat.protect(self, time) : { damage: 0, critical: false };
     self.lastAttacks ||= {};
