@@ -30,14 +30,14 @@ function setAttackSettings(db, userId, data) {
     !fitsSlot('e', data.e) ||
     (data.r !== undefined && data.r !== '' && !fitsSlot('r', data.r))
   )
-    throw new HttpError(400, 'INVALID_ATTACK_LOADOUT', 'Q、E 請選普通招式，R 請選多人招式');
+    throw new HttpError(400, 'INVALID_ATTACK_LOADOUT', 'Q、E 請選普通招式，R 請選大招');
   const owned = new Set(require('../achievements/attack-rewards').ownedAttacks(db, userId));
   const r = data.r === undefined ? getAttackSettings(db, userId).r : data.r;
   if (!owned.has(data.q) || !owned.has(data.e) || (r && !owned.has(r)))
     throw new HttpError(
       403,
       'ATTACK_REWARD_LOCKED',
-      '此攻擊特效尚未解鎖，請完成對應成就或兌換其他獎勵',
+      '此攻擊特效尚未解鎖，可透過抽卡、碎片兌換或兌換碼取得',
     );
   db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
     JSON.stringify({ ...savedProfile(db, userId), attackLoadout: { q: data.q, e: data.e, r } }),

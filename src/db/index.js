@@ -242,7 +242,9 @@ function validateFeatureSchema(db, version) {
         ';' +
         REWARD_SQL.join(';') +
         ';' +
-        GACHA_SQL.join(';') + ';' + COC_SQL.join(';'),
+        GACHA_SQL.join(';') +
+        ';' +
+        COC_SQL.join(';'),
     );
     for (const name of [
       ...(hasSound ? ['character_sounds'] : []),

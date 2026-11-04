@@ -59,6 +59,27 @@ test('Q/E loadout saves only after server acceptance and preserves the other slo
     f.close();
   }
 });
+
+test('both devour variants can equip only R without changing ordinary Q/E slots', async () => {
+  const calls = [];
+  const f = fixture(async (_route, options) => {
+    if (options?.body) calls.push(options.body);
+    return options?.body || { q: 'barrage', e: 'beam', r: '' };
+  });
+  try {
+    await f.store.load();
+    for (const effect of ['shaohua_devour', 'shaohua_devour_alt']) {
+      await f.store.choose('q', effect);
+      assert.equal(calls.length, effect.endsWith('_alt') ? 1 : 0);
+      await f.store.choose('r', effect);
+      assert.equal(f.store.loadout.r, effect);
+      assert.equal(f.store.loadout.q, 'barrage');
+      assert.equal(f.store.loadout.e, 'beam');
+    }
+  } finally {
+    f.close();
+  }
+});
 test('late responses cannot carry another account selections into the current loadout', async () => {
   const resolvers = [];
   const f = fixture(() => new Promise((done) => resolvers.push(done)));

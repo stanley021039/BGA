@@ -247,18 +247,24 @@ test('devour cannot finish a 1 HP player, even with author bonuses and shields; 
   f.combat.advance(victim, 3200);
   assert.ok(victim.health > 1);
 });
-test('tech single-target phases total one ordinary attack with no status effects', () => {
+test('tech single-target phases follow the ordinary combo budget with no status effects', () => {
   for (const kind of ['railgun', 'plasma_pulse', 'micro_missiles', 'photon_sniper'])
     for (const suffix of ['', '_alt']) {
       const f = fixture(kind + suffix),
         b = f.actors[1];
       f.advance(1700);
-      assert.equal(b.health, 1000000, kind + suffix);
+      const damage = {
+        railgun: 200000,
+        plasma_pulse: 180000,
+        micro_missiles: 140000,
+        photon_sniper: 200000,
+      }[kind];
+      assert.equal(b.health, 1200000 - damage, kind + suffix);
       assert.equal(b.sealedUntil, 0);
       assert.equal(b.immobileUntil, 0);
       assert.equal(
         f.event.hits.reduce((n, h) => n + h.damage, 0),
-        200000,
+        damage,
       );
       assert.equal(f.actors[2].health, 1200000);
     }

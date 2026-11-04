@@ -1399,7 +1399,7 @@ function initializeApp(config, dataLock, acquired) {
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '兌換需使用 POST');
           limitRate(roomRate, 'gacha:' + user.id, 30);
           return send(gachaStore.exchange(user.id, data));
-          }
+        }
         if (url.pathname.startsWith('/api/coc/')) {
           const expected = new URL(config.publicUrl || 'http://' + req.headers.host).origin;
           if (

@@ -6,7 +6,7 @@ const energy = require('../src/rooms/scene-energy');
 const effects = require('../public/shared/attack-effects.json');
 const timing = require('../public/shared/attack-timing.json');
 const ordinary = effects.filter(
-  (effect) => !effect.area && !['shield', 'sphere'].includes(effect.id),
+  (effect) => !effect.area && !effect.ultimate && !['shield', 'sphere'].includes(effect.id),
 );
 function fixture() {
   const combat = createSceneCombat(() => 0.5),
@@ -46,7 +46,7 @@ function fixture() {
   return { actors, cast };
 }
 test('ordinary combos trade direct damage for per-impact energy, including delayed salvos', () => {
-  const totals = { 1: 200000, 2: 180000, 3: 160000 };
+  const totals = { 1: 200000, 2: 180000, 3: 160000, 4: 140000 };
   for (const effect of ordinary) {
     const f = fixture(),
       hits = timing[effect.id].length;
@@ -55,8 +55,11 @@ test('ordinary combos trade direct damage for per-impact energy, including delay
     assert.equal(f.actors[1].energy, hits * 5, effect.id);
   }
 });
-test('a complete ordinary-combo charge plus one standard R stays within 10 percent per cast across hit counts', () => {
-  for (const effect of ordinary) {
+test('one to three-impact combos plus one standard R stay within 10 percent per cast', () => {
+  // Preserve the original #329 guarantee. Four-hit casts cap 120 energy at 100;
+  // their finite-cycle overflow is checked separately, and all 20 ordinary
+  // variants remain covered by the exact opposing-build budget below.
+  for (const effect of ordinary.filter((effect) => timing[effect.id].length <= 3)) {
     const f = fixture();
     let casts = 0,
       damage = 0;
@@ -65,13 +68,25 @@ test('a complete ordinary-combo charge plus one standard R stays within 10 perce
       casts++;
       assert.ok(casts <= 10, effect.id);
     }
-    assert.equal(casts, { 1: 10, 2: 5, 3: 4 }[timing[effect.id].length], effect.id);
+    assert.equal(casts, { 1: 10, 2: 5, 3: 4, 4: 3 }[timing[effect.id].length], effect.id);
     energy.check(f.actors[0], 'r', 'bijuu_beam');
     energy.spend(f.actors[0], 'r');
     const ultimate = f.cast('bijuu_beam');
     assert.equal(ultimate, 400000);
     assert.equal(f.actors[0].energy, 0, 'R must not fund another R');
     assert.ok(Math.abs((damage + ultimate) / casts - 240000) <= 24000, effect.id);
+  }
+});
+
+test('four-impact missiles preserve equal opposing-build value with a bounded full-cast charge overflow', () => {
+  for (const effect of ['micro_missiles', 'micro_missiles_alt']) {
+    const f = fixture();
+    const damage = f.cast(effect) + f.cast(effect) + f.cast(effect);
+    assert.equal(damage, 420000);
+    assert.equal(f.actors[0].energy, 100, '120 earned energy caps without banking overflow');
+    energy.spend(f.actors[0], 'r');
+    assert.equal(f.cast('bijuu_beam'), 400000);
+    assert.equal(f.actors[0].energy, 0);
   }
 });
 test('combo reduction composes with author, critical and shield multipliers exactly once', () => {
@@ -94,7 +109,8 @@ test('combo reduction composes with author, critical and shield multipliers exac
       damage += hit.damage;
     }
     assert.ok(
-      Math.abs(damage - { 1: 224250, 2: 201825, 3: 179400 }[timing[effect.id].length]) <= 2,
+      Math.abs(damage - { 1: 224250, 2: 201825, 3: 179400, 4: 156975 }[timing[effect.id].length]) <=
+        2,
       effect.id,
     );
   }

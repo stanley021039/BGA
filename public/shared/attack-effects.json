@@ -216,7 +216,8 @@
     "label": "大嘴少華・宅宅吞",
     "color": "#ffb858",
     "description": "以角色75%速度持續追蹤，留場越久頭越大；接觸咬合0.4秒後使對方剩1HP。",
-    "gachaOnly": true
+    "gachaOnly": true,
+    "ultimate": true
   },
   {
     "id": "shaohua_devour_alt",
@@ -224,7 +225,8 @@
     "color": "#b388ff",
     "description": "以角色75%速度持續追蹤，留場越久頭越大；接觸咬合0.4秒後使對方剩1HP。",
     "gachaOnly": true,
-    "variantOf": "shaohua_devour"
+    "variantOf": "shaohua_devour",
+    "ultimate": true
   },
   {
     "id": "reaper_seal",
@@ -269,7 +271,8 @@
     "label": "電漿脈衝砲",
     "color": "#80edaf",
     "description": "兩發磁環電漿各造成一半普通招式傷害。",
-    "gachaOnly": true
+    "gachaOnly": true,
+    "damageMultiplier": 0.9
   },
   {
     "id": "plasma_pulse_alt",
@@ -277,14 +280,16 @@
     "color": "#b388ff",
     "description": "兩發磁環電漿各造成一半普通招式傷害。",
     "gachaOnly": true,
-    "variantOf": "plasma_pulse"
+    "variantOf": "plasma_pulse",
+    "damageMultiplier": 0.9
   },
   {
     "id": "micro_missiles",
     "label": "微型飛彈齊射",
     "color": "#ffad54",
     "description": "四枚弧形導彈分段命中，同一目標共計一次普通傷害。",
-    "gachaOnly": true
+    "gachaOnly": true,
+    "damageMultiplier": 0.7
   },
   {
     "id": "micro_missiles_alt",
@@ -292,7 +297,8 @@
     "color": "#b388ff",
     "description": "四枚弧形導彈分段命中，同一目標共計一次普通傷害。",
     "gachaOnly": true,
-    "variantOf": "micro_missiles"
+    "variantOf": "micro_missiles",
+    "damageMultiplier": 0.7
   },
   {
     "id": "photon_sniper",

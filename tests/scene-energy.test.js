@@ -91,6 +91,60 @@ function fixture(kind) {
 }
 
 for (const kind of ['lobby', 'room']) {
+  for (const effect of ['shaohua_devour', 'shaohua_devour_alt']) {
+    test(`${kind}: ${effect} requires full R energy and never funds its own next cast`, () => {
+      const f = fixture(kind);
+      assert.throws(() => f.attack('q', effect), { code: 'INVALID_ATTACK_SLOT' });
+      assert.throws(() => f.attack('r', effect), { code: 'INSUFFICIENT_SCENE_ENERGY' });
+      f.charge();
+      f.attack('r', effect);
+      assert.equal(f.actor().energy, 0);
+      f.attack('r', effect);
+      assert.equal(f.actor().energy, 0);
+      f.tick(1600);
+      const event = f.view().attacks.find((event) => event.effect === effect);
+      assert.ok(event?.head);
+      assert.equal(event.hits.length, 1);
+      assert.equal(f.actor().energy, 0);
+      assert.throws(() => f.attack('r', effect, 'second-devour-001'), {
+        code: 'INSUFFICIENT_SCENE_ENERGY',
+      });
+    });
+  }
+  for (const effect of ['gate_of_heroes', 'gate_of_heroes_alt', 'reaper_seal', 'reaper_seal_alt']) {
+    test(`${kind}: ${effect} follows R energy, retry and flight/seal restrictions`, () => {
+      const f = fixture(kind);
+      const initialHp = f.actor().health;
+      assert.throws(() => f.attack('q', effect), { code: 'INVALID_ATTACK_SLOT' });
+      assert.throws(() => f.attack('r', effect), { code: 'INSUFFICIENT_SCENE_ENERGY' });
+      assert.equal(f.actor().health, initialHp);
+      f.charge();
+      const before = f.actor().health;
+      f.attack('r', effect);
+      assert.equal(f.actor().energy, 0);
+      const after = f.actor().health;
+      if (effect.startsWith('reaper')) assert.equal(after, before - Math.ceil(before * 0.2));
+      f.attack('r', effect);
+      assert.equal(f.actor().energy, 0);
+      assert.equal(f.actor().health, after, 'retry never repeats health cost');
+      if (effect.startsWith('gate')) {
+        assert.throws(() => f.attack('q', 'railgun', 'flight-blocked-001'), {
+          code: 'SCENE_FLYING',
+        });
+        f.tick(2100);
+      } else {
+        f.tick(2600);
+        const b = { id: 'b', display_name: 'b' };
+        const teleport = () =>
+          kind === 'lobby'
+            ? f.scene.teleport(b)
+            : f.scene.move(f.room, 'b', { action: 'teleport' });
+        assert.throws(teleport, { code: 'SCENE_SEALED' });
+        f.move('b', { x: 46, y: 50 });
+      }
+      assert.equal(f.actor().energy, 0, 'new R skills never recharge their caster on impact');
+    });
+  }
   test(`${kind}: walking accrues only until arrival; idle, repeats and teleport add no energy`, () => {
     const f = fixture(kind);
     const before = f.actor();

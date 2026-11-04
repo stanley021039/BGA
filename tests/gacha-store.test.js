@@ -48,6 +48,25 @@ test('gacha schema enforces safe nonnegative balances and complete schema shape'
   );
   assert.equal(db.prepare('PRAGMA foreign_key_check').all().length, 0);
 });
+
+test('previous devour Q/E selections migrate to R and cannot bypass its energy category', (t) => {
+  const { db, user } = fixture(t);
+  db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'legacy',?)").run(
+    user,
+    'attacks',
+    'shaohua_devour',
+    '2026-10-01T00:00:00.000Z',
+  );
+  db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+    JSON.stringify({ attackLoadout: { q: 'shaohua_devour', e: 'beam' } }),
+    user,
+  );
+  const { getAttackSettings, setAttackSettings } = require('../src/profiles/settings');
+  assert.deepEqual(getAttackSettings(db, user), { q: 'barrage', e: 'beam', r: 'shaohua_devour' });
+  assert.throws(() => setAttackSettings(db, user, { q: 'shaohua_devour', e: 'beam', r: '' }), {
+    code: 'INVALID_ATTACK_LOADOUT',
+  });
+});
 test('daily credit uses Taipei midnight, survives store recreation, and cannot double grant', (t) => {
   let time = Date.parse('2026-10-29T15:59:59.999Z');
   const { db, user, store } = fixture(t, { clock: () => time });
@@ -246,7 +265,16 @@ test('schema21 migration snapshots legacy ownership exactly once; later achievem
     rmSync(target, { recursive: true, force: true });
   });
   const user = addUser(db, 'legacy');
-  db.prepare('INSERT INTO coc_receipts(user_id,request_id,scope,fingerprint,response_json,created_at) VALUES(?,?,?,?,?,?)').run(user, 'prior-coc-operation', 'character', 'unchanged', '{"ok":true}', '2026-10-01T00:00:00.000Z');
+  db.prepare(
+    'INSERT INTO coc_receipts(user_id,request_id,scope,fingerprint,response_json,created_at) VALUES(?,?,?,?,?,?)',
+  ).run(
+    user,
+    'prior-coc-operation',
+    'character',
+    'unchanged',
+    '{"ok":true}',
+    '2026-10-01T00:00:00.000Z',
+  );
   const priorCoc = db.prepare('SELECT * FROM coc_receipts').all();
   const old = catalog.find((i) => i.kind === 'attacks' && i.achievementIds.length);
   const later = catalog.find(

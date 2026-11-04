@@ -401,13 +401,18 @@ test('persistent homing survives the real Vue contract past its decorative anima
     () => 0.5,
   );
   const users = ['a', 'b'].map((id) => ({ id, display_name: id }));
+  for (let i = 0; i < 25; i++) {
+    lobby.move(users[0], { x: i % 2 ? 10 : 90, y: 50 });
+    now += 6500;
+    users.forEach((user) => lobby.view(user));
+  }
   users.forEach((u, i) => lobby.move(u, { x: 20 + i * 40, y: 50 }));
   now += 10000;
   users.forEach((u) => lobby.view(u));
   const raw = {
     ...lobby.attack(users[0], {
       effect: 'shaohua_devour',
-      slot: 'q',
+      slot: 'r',
       aspectRatio: 1,
       requestId: 'late-homing-contract',
     }),

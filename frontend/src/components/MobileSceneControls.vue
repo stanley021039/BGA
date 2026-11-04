@@ -108,8 +108,8 @@ onBeforeUnmount(() => {
           <UiButton
             v-for="slot in ['q', 'e', 'r'] as const"
             :key="slot"
-            :label="`${slot === 'r' ? '多人招式 R' : '普通攻擊 ' + slot.toUpperCase()}：${effect(slot)}`"
-            :caption="slot === 'r' ? '多人 R' : '普通 ' + slot.toUpperCase()"
+            :label="`${slot === 'r' ? '大招 R' : '普通攻擊 ' + slot.toUpperCase()}：${effect(slot)}`"
+            :caption="slot === 'r' ? '大招 R' : '普通 ' + slot.toUpperCase()"
             :disabled="!loadout.ready || !loadout.loadout[slot] || controls.disabled(slot)"
             :pending="controls.pending[slot]"
             @click="controls.run(slot)"
