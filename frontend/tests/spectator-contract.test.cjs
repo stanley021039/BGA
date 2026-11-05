@@ -17,6 +17,7 @@ const types = {
   musicquiz: ['musicquiz', 'MusicQuizRoom'],
   minimal: ['minimal', 'MinimalRoom'],
   bluff: ['bluff', 'BluffRoom'],
+  decrypto: ['decrypto', 'DecryptoRoom'],
   quacks: ['quacks', 'QuacksRoom'],
   ceo: ['ceo-room', 'CeoRoom'],
   'second-wind': ['second-wind/room', 'SecondWindRoom'],
@@ -49,13 +50,13 @@ test('spectator reader accepts real waiting and started projections for every ro
   for (const [type, [file, key]] of Object.entries(types)) {
     const Type = require('../../src/games/' + file)[key],
       r = new Type('ABCDEF', type);
-    for (let i = 0; i < 3; i++) r.add('玩家' + i, true);
+    for (let i = 0; i < (type === 'decrypto' ? 4 : 3); i++) r.add('玩家' + i, true);
     for (const started of [false, true]) {
       if (started && type === 'lounge') continue;
       if (started) r.start();
       const v = readSpectatorSnapshot(spectatorView(r));
       assert.equal(v.type, type);
-      assert.equal(v.players.length, 3);
+      assert.equal(v.players.length, type === 'decrypto' ? 4 : 3);
       assert.equal(v.spectator, true);
     }
   }

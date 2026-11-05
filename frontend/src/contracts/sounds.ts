@@ -9,6 +9,8 @@ export interface GameSoundOwner {
 }
 declare global {
   interface Window {
-    GameSounds?: { create(): GameSoundOwner };
+    GameSounds?: {
+      create(options?: { now?: () => number; maxSeen?: number; maxGapMs?: number }): GameSoundOwner;
+    };
   }
 }

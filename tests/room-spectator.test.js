@@ -13,6 +13,7 @@ const classes = {
   musicquiz: require('../src/games/musicquiz').MusicQuizRoom,
   minimal: require('../src/games/minimal').MinimalRoom,
   bluff: require('../src/games/bluff').BluffRoom,
+  decrypto: require('../src/games/decrypto').DecryptoRoom,
   quacks: require('../src/games/quacks').QuacksRoom,
   ceo: require('../src/games/ceo-room').CeoRoom,
   'second-wind': require('../src/games/second-wind/room').SecondWindRoom,
@@ -21,7 +22,7 @@ const classes = {
 const SECRET = 'PRIVATE-CANARY-296';
 function make(type, start = false) {
   const room = new classes[type]('ABCDEF', type);
-  for (let i = 0; i < 3; i++) room.add('玩家' + i, true);
+  for (let i = 0; i < (type === 'decrypto' ? 4 : 3); i++) room.add('玩家' + i, true);
   if (start) room.start();
   return room;
 }
@@ -47,7 +48,7 @@ test('all room types have detached public projections without calling a seated v
         assert.equal(state.schema, 1);
         assert.equal(state.spectator, true);
         assert.equal(state.type, type);
-        assert.equal(state.players.length, 3);
+        assert.equal(state.players.length, type === 'decrypto' ? 4 : 3);
         assert.ok(state.players.every((p) => p.id.startsWith('observer-')));
         assert.equal(serialized.includes(SECRET), false);
         for (const p of room.players) {

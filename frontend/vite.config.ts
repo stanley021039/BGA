@@ -21,6 +21,7 @@ const documents: Plugin = {
             'minimal',
             'lounge',
             'bluff',
+            'decrypto',
             'telephone',
             'majority',
             'trpg',

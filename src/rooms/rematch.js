@@ -59,6 +59,7 @@ function returnToWaiting(room, actor) {
     if (!keep.has(key)) room[key] = fresh[key];
   }
   room.players = players;
+  if (room.type === 'decrypto') room.players.forEach((p) => room.assignTeam(p));
   if (room.type === 'majority')
     room.roundLimit =
       room.options.mode === 'cruel'

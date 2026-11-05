@@ -2,7 +2,8 @@ import sceneTombstone from '../assets/scene-tombstone.svg?no-inline';
 import type { GameType } from '../contracts/room';
 import { requestJson } from './http';
 import { record, strings } from './validation';
-import { preloadAllowed, warm } from './preload';
+import { preloadAllowed, warm, whenIdle } from './preload';
+import AudioSettings from '../engines/audio-settings.js';
 import athleteTrackPreview from '../assets/second-wind/twisty-twirl-1600.webp';
 
 // Art and sounds a game uses only once play starts, warmed while seats fill up.
@@ -52,9 +53,21 @@ const inGame: Partial<Record<GameType, readonly string[]>> = {
   ],
   majority: [sound('quacks-settlement-user.wav')],
 };
+const decryptoSounds = [
+  sound('quacks-buy.wav'),
+  sound('quacks-ruby.wav'),
+  sound('quacks-settlement.wav'),
+  sound('quacks-settlement-user.wav'),
+];
 
 export function warmGame(type: GameType): void {
   warm([sceneTombstone, ...(inGame[type] || [])]);
+  if (type === 'decrypto' && preloadAllowed())
+    whenIdle(() => {
+      const effects = AudioSettings?.get()?.effects;
+      if (effects?.enabled && effects.volume && !document.hidden)
+        warm(decryptoSounds, { idle: false });
+    });
 }
 
 // The room page of each game, so choosing a game card starts loading it.

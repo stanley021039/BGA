@@ -67,6 +67,7 @@ export const gameTitles: Record<GameType, string> = {
   musicquiz: '猜歌挑戰',
   minimal: '極簡猜圖',
   bluff: '瞎掰王',
+  decrypto: '截碼戰',
   quacks: '郎中闖江湖',
   ceo: '王牌執行長',
   'second-wind': '運動員 Second Wind',

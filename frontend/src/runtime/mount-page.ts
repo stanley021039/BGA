@@ -28,6 +28,7 @@ export function mountPage(
     'coc',
     'quacks',
     'bluff',
+    'decrypto',
     'telephone',
     'musicquiz',
     'minimal',

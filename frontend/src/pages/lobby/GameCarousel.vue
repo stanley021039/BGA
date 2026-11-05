@@ -4,6 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { gameCards } from './catalog';
 import { usePreferencesStore } from '../../stores/preferences';
 import UiButton from '../../components/UiButton.vue';
+import '../../styles/decrypto.scss';
 import loungeSmall from '../../assets/lounge/lounge-360.webp';
 import loungeLarge from '../../assets/lounge/lounge-720.webp';
 import quacksArt from '../../assets/quacks/game-quacks.svg';
@@ -209,7 +210,10 @@ onBeforeUnmount(() => {
           @focus="warmGamePage(card.id)"
         >
           <div class="tile-image"
+            ><div v-if="card.id === 'decrypto'" class="decrypto-cover" aria-hidden="true"
+              ><span>1 · 2 · 3 · 4</span><span>秘密通訊</span></div
             ><img
+              v-else
               :src="
                 card.art === 'construction'
                   ? constructionArt

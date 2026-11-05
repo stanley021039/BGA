@@ -37,7 +37,8 @@ let GameSounds;
   const quietCues = new Set(['shot', 'slam', 'nitro', 'skid']);
   function create({ now = () => Date.now(), maxSeen = 256, maxGapMs = 5000 } = {}) {
     maxSeen = Math.max(1, Math.min(1024, Number(maxSeen) || 256));
-    maxGapMs = Math.max(1, Math.min(5000, Number(maxGapMs) || 5000));
+    // Room streams can wait ten seconds between unchanged safety polls.
+    maxGapMs = Math.max(1, Math.min(15000, Number(maxGapMs) || 5000));
     let context = null,
       version = -1,
       lastAt = 0,
