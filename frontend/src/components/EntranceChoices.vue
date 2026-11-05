@@ -2,18 +2,19 @@
 import MotionPolicy from '../engines/motion-policy.js';
 
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { entranceEffectGroups } from '../services/effect-variants';
 import { requestJson } from '../services/http';
 import { sizedImage } from '../services/image-size';
 import { apparate } from '../pages/lobby/apparition';
 import {
   entranceEffect,
-  entranceEffects,
   entranceVariant,
   isFreeEntrance,
   setEntranceEffect,
   type EntranceEffectId,
 } from '../services/entrance-effects';
 import { usePreferencesStore } from '../stores/preferences';
+import EffectVariantGroup from './EffectVariantGroup.vue';
 import UiChoiceCard from './UiChoiceCard.vue';
 const prefs = usePreferencesStore();
 const unlocked = ref<string[]>([]);
@@ -32,66 +33,71 @@ onMounted(async () => {
     /* Server also verifies reward ownership. */
   }
 });
-const stages = new Map<EntranceEffectId, HTMLElement>(),
-  stops = new Map<EntranceEffectId, () => void>();
+const stages = new Map<string, HTMLElement>();
+let stop: (() => void) | undefined;
 const still = () =>
   prefs.motion?.enabled === false ||
   prefs.motion?.reduced === true ||
   !MotionPolicy?.allowsMotion();
-function play(id: EntranceEffectId) {
-  const stage = stages.get(id),
+function play(groupId: string, id: EntranceEffectId) {
+  const stage = stages.get(groupId),
     actor = stage?.querySelector<HTMLElement>('.entrance-preview-actor');
-  for (const stop of stops.values()) stop();
-  stops.clear();
+  stop?.();
+  stop = undefined;
   if (!stage || !actor || still()) return;
-  stops.set(id, apparate(actor, stage, id));
+  stop = apparate(actor, stage, id);
 }
-function choose(id: EntranceEffectId) {
-  if (!allowed(id)) {
-    play(id);
-    return;
-  }
-  setEntranceEffect(id);
-  play(id);
+function choose(groupId: string, id: EntranceEffectId) {
+  if (allowed(id)) setEntranceEffect(id);
+  play(groupId, id);
 }
-onBeforeUnmount(() => {
-  for (const stop of stops.values()) stop();
-});
+onBeforeUnmount(() => stop?.());
 </script>
 <template>
   <div class="entrance-grid" role="group" aria-label="可用進場特效">
-    <UiChoiceCard
-      v-for="effect in entranceEffects"
-      :key="effect.id"
-      class="entrance-choice"
-      :label="effect.label + (allowed(effect.id) ? '進場特效' : '進場特效預覽（未解鎖）')"
-      :selected="entranceEffect === effect.id"
-      @click="choose(effect.id)"
-      @pointerenter="(event: PointerEvent) => event.pointerType === 'mouse' && play(effect.id)"
-      @focus="play(effect.id)"
-      ><span
-        :ref="(node) => node && stages.set(effect.id, node as HTMLElement)"
-        class="entrance-stage"
-        aria-hidden="true"
-        ><span class="entrance-preview-actor"
-          ><img
-            :src="sizedImage('/assets/characters/traveler-neutral.png', 128)"
-            alt=""
-            draggable="false"
-          /><span>小雨</span></span
-        ></span
-      ><strong class="ui-choice-label">{{ effect.label }}</strong
-      ><span class="entrance-description">{{ effect.description }}</span
-      ><template #label></template
-      ><template #selection
-        ><span class="entrance-selection ui-choice-state">{{
-          !allowed(effect.id)
-            ? '🔒 ' + condition(effect.id)
-            : entranceEffect === effect.id
-              ? '✓ 使用中'
-              : '套用特效'
-        }}</span></template
-      ></UiChoiceCard
+    <EffectVariantGroup
+      v-for="group in entranceEffectGroups"
+      :key="group.original.id"
+      :original="group.original"
+      :versions="group.versions"
+      :preferred="[entranceEffect]"
+      :allowed="allowed"
+      @preview="play(group.original.id, $event)"
+      v-slot="{ effect }"
+      ><UiChoiceCard
+        class="entrance-choice"
+        :label="effect.label + (allowed(effect.id) ? '進場特效' : '進場特效預覽（未解鎖）')"
+        :selected="entranceEffect === effect.id"
+        @click="choose(group.original.id, effect.id)"
+        @pointerenter="
+          (event: PointerEvent) =>
+            event.pointerType === 'mouse' && play(group.original.id, effect.id)
+        "
+        @focus="play(group.original.id, effect.id)"
+        ><span
+          :ref="(node) => node && stages.set(group.original.id, node as HTMLElement)"
+          class="entrance-stage"
+          aria-hidden="true"
+          ><span class="entrance-preview-actor"
+            ><img
+              :src="sizedImage('/assets/characters/traveler-neutral.png', 128)"
+              alt=""
+              draggable="false"
+            /><span>小雨</span></span
+          ></span
+        ><template #label
+          ><strong class="ui-choice-label">{{ effect.label }}</strong
+          ><span class="entrance-description">{{ effect.description }}</span></template
+        ><template #selection
+          ><span class="entrance-selection ui-choice-state">{{
+            !allowed(effect.id)
+              ? '🔒 ' + condition(effect.id)
+              : entranceEffect === effect.id
+                ? '✓ 使用中'
+                : '套用特效'
+          }}</span></template
+        ></UiChoiceCard
+      ></EffectVariantGroup
     >
   </div>
 </template>
