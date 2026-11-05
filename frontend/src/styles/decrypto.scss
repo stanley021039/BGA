@@ -1,0 +1,164 @@
+.decrypto-scene {
+  display: grid;
+  gap: var(--stitch-gap-section);
+  min-width: 0;
+  width: 100%;
+}
+.decrypto-teams {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--stitch-gap-section);
+}
+.decrypto-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stitch-space-12);
+  min-height: 2.75rem;
+}
+.decrypto-keywords {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--stitch-space-8);
+  min-width: 0;
+}
+@media (min-width: 1100px) {
+  .decrypto-scene {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-areas: 'summary summary' 'flow flow' 'teams teams' 'secret action' 'history action' 'review review';
+    align-items: start;
+  }
+  .decrypto-scene > .decrypto-summary {
+    grid-area: summary;
+  }
+  .decrypto-scene[data-phase='waiting'] {
+    grid-template-areas: 'summary summary' 'teams teams' 'waiting waiting';
+  }
+  .decrypto-scoreboards {
+    grid-area: teams;
+  }
+  .decrypto-flow {
+    grid-area: flow;
+  }
+  .decrypto-secret {
+    grid-area: secret;
+  }
+  .decrypto-action {
+    grid-area: action;
+    min-height: 32rem;
+  }
+  .decrypto-history {
+    grid-area: history;
+  }
+  .decrypto-review {
+    grid-area: review;
+  }
+  .decrypto-waiting {
+    grid-area: waiting;
+  }
+}
+.decrypto-keywords > span {
+  overflow-wrap: anywhere;
+}
+.decrypto-flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--stitch-space-8);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.decrypto-flow .ui-stitch-badge {
+  width: 100%;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.decrypto-members,
+.decrypto-private-note,
+.decrypto-instruction {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.decrypto-instruction {
+  min-height: 2.75rem;
+}
+.decrypto-word-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 4rem;
+  gap: var(--stitch-space-8);
+}
+.decrypto-word-card strong {
+  font-size: var(--stitch-text-section);
+  font-weight: var(--stitch-weight-title);
+  overflow-wrap: anywhere;
+}
+.decrypto-keyword-group {
+  display: grid;
+  gap: var(--stitch-space-12);
+}
+.decrypto-notes-body {
+  min-height: 10rem;
+  max-height: 20rem;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.decrypto-code-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stitch-space-16);
+}
+.decrypto-code-card .decrypto-code {
+  font-size: var(--stitch-text-data);
+}
+.decrypto-form {
+  display: grid;
+  gap: var(--stitch-space-20);
+  min-width: 0;
+}
+.decrypto-digits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--stitch-space-16);
+}
+.decrypto-code {
+  font-size: var(--stitch-text-section);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.decrypto-review {
+  max-height: 20rem;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.decrypto-scene .ui-stitch-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stitch-space-8);
+  overflow-wrap: anywhere;
+}
+.decrypto-rules li {
+  margin-block: var(--stitch-space-12);
+}
+.decrypto-cover {
+  display: grid;
+  place-content: center;
+  height: 100%;
+  gap: var(--stitch-space-16);
+  font-size: var(--stitch-text-data);
+  font-weight: 700;
+}
+@media (max-width: 700px) {
+  .decrypto-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .decrypto-teams {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .decrypto-keywords {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

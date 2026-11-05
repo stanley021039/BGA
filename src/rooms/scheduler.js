@@ -85,6 +85,7 @@ function startRoomScheduler({
             'musicquiz',
             'minimal',
             'bluff',
+            'decrypto',
             'quacks',
             'ceo',
             'second-wind',

@@ -17,6 +17,7 @@ const classes = Object.fromEntries(
     ['musicquiz', 'musicquiz', 'MusicQuizRoom'],
     ['minimal', 'minimal', 'MinimalRoom'],
     ['bluff', 'bluff', 'BluffRoom'],
+    ['decrypto', 'decrypto', 'DecryptoRoom'],
     ['quacks', 'quacks', 'QuacksRoom'],
   ].map(([type, file, name]) => [type, require('../src/games/' + file)[name]]),
 );

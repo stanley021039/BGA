@@ -67,6 +67,7 @@ const { CocCampaignStore } = require('./coc/campaign-store');
 const { QuacksRoom } = require('./games/quacks');
 const { SecondWindRoom } = require('./games/second-wind/room');
 const { CeoRoom } = require('./games/ceo-room');
+const { DecryptoRoom } = require('./games/decrypto');
 const { BluffRoom } = require('./games/bluff');
 const { TelephoneRoom } = require('./games/telephone');
 const { MusicQuizRoom } = require('./games/musicquiz'),
@@ -457,7 +458,10 @@ function initializeApp(config, dataLock, acquired) {
       actionFeedback: require('./rooms/action-feedback').actionFeedback(room),
       type: room.type || 'poker',
       gameRevision: room.gameRevision || 0,
-      roomGames,
+      roomGames: roomGames.filter(
+        (game) =>
+          game.type !== 'decrypto' || (config.decryptoEnabled ?? config.frontendEnabled === true),
+      ),
       ...savedDrawResults,
       roomSpace: roomSpace.view(room, view.me, view.players, expressions),
       pingContext: runtime.pings.context(room),
@@ -978,6 +982,7 @@ function initializeApp(config, dataLock, acquired) {
     coc: CocRoom,
     quacks: QuacksRoom,
     bluff: BluffRoom,
+    decrypto: DecryptoRoom,
     telephone: TelephoneRoom,
     musicquiz: MusicQuizRoom,
     minimal: MinimalRoom,
@@ -1810,7 +1815,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|decrypto|lounge)$/.test(
               page || '',
             )
           )
@@ -2088,6 +2093,11 @@ function initializeApp(config, dataLock, acquired) {
             !(config.secondWindEnabled ?? config.frontendEnabled === true)
           )
             throw new HttpError(400, 'GAME_NOT_ENABLED', '運動員尚未啟用');
+          if (
+            data.type === 'decrypto' &&
+            !(config.decryptoEnabled ?? config.frontendEnabled === true)
+          )
+            throw new HttpError(400, 'GAME_NOT_ENABLED', '截碼戰需要啟用新版前端');
           if (data.type === 'ceo' && !(config.ceoEnabled ?? config.frontendEnabled === true))
             throw new HttpError(400, 'GAME_NOT_ENABLED', 'CEO 仍在開發，尚未開放建立房間');
           if (pendingAchievementUnits.size >= 4096)
@@ -2112,6 +2122,7 @@ function initializeApp(config, dataLock, acquired) {
               'musicquiz',
               'minimal',
               'bluff',
+              'decrypto',
               'quacks',
               'ceo',
               'second-wind',
@@ -2142,39 +2153,42 @@ function initializeApp(config, dataLock, acquired) {
             gift = data.type === 'gift',
             lounge = data.type === 'lounge';
           const room = new (
-            coc
-              ? CocRoom
-              : lounge
-                ? LoungeRoom
-                : secondWind
-                  ? SecondWindRoom
-                  : ceo
-                    ? CeoRoom
-                    : quacks
-                      ? QuacksRoom
-                      : bluff
-                        ? BluffRoom
-                        : musicquiz
-                          ? MusicQuizRoom
-                          : minimal
-                            ? MinimalRoom
-                            : telephone
-                              ? TelephoneRoom
-                              : trpg
-                                ? TrpgRoom
-                                : draw
-                                  ? DrawGuessRoom
-                                  : gift
-                                    ? GiftRoom
-                                    : majority
-                                      ? MajorityRoom
-                                      : thunder
-                                        ? ThunderRoom
-                                        : Room
+            data.type === 'decrypto'
+              ? DecryptoRoom
+              : coc
+                ? CocRoom
+                : lounge
+                  ? LoungeRoom
+                  : secondWind
+                    ? SecondWindRoom
+                    : ceo
+                      ? CeoRoom
+                      : quacks
+                        ? QuacksRoom
+                        : bluff
+                          ? BluffRoom
+                          : musicquiz
+                            ? MusicQuizRoom
+                            : minimal
+                              ? MinimalRoom
+                              : telephone
+                                ? TelephoneRoom
+                                : trpg
+                                  ? TrpgRoom
+                                  : draw
+                                    ? DrawGuessRoom
+                                    : gift
+                                      ? GiftRoom
+                                      : majority
+                                        ? MajorityRoom
+                                        : thunder
+                                          ? ThunderRoom
+                                          : Room
           )(
             code,
             String(
               data.roomName ||
+                (data.type === 'decrypto' ? '截碼戰好友局' : '') ||
                 (coc
                   ? '克蘇魯的呼喚'
                   : lounge
@@ -2375,6 +2389,11 @@ function initializeApp(config, dataLock, acquired) {
           );
         if (url.pathname === '/api/change-game') {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
+          if (
+            data.targetType === 'decrypto' &&
+            !(config.decryptoEnabled ?? config.frontendEnabled === true)
+          )
+            throw new HttpError(400, 'GAME_NOT_ENABLED', '截碼戰需要啟用新版前端');
           limitRate(roomRate, 'mutation:' + user.id, 120);
           const next = switchGame(room, p.id, data.targetType, roomClasses);
           if (next !== room) {
@@ -2968,6 +2987,7 @@ function initializeApp(config, dataLock, acquired) {
                   'musicquiz',
                   'minimal',
                   'bluff',
+                  'decrypto',
                   'quacks',
                   'ceo',
                   'second-wind',
@@ -3149,6 +3169,7 @@ function initializeApp(config, dataLock, acquired) {
         '/quacks.css': 'quacks.css',
         '/assets/game-sounds/bluff-reaction.mp3': 'assets/game-sounds/bluff-reaction.mp3',
         '/bluff': 'bluff.html',
+        '/decrypto': 'decrypto.html',
         '/musicquiz': 'musicquiz.html',
         '/minimal': 'minimal.html',
         '/lounge': 'lounge.html',
@@ -3226,7 +3247,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|decrypto|lounge)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -3351,6 +3372,13 @@ function initializeApp(config, dataLock, acquired) {
         res.writeHead(404);
         return res.end();
       }
+      if (
+        (url.pathname === '/decrypto' || roomPath?.[1] === 'decrypto') &&
+        (!frontend || config.decryptoEnabled === false)
+      ) {
+        res.writeHead(404);
+        return res.end();
+      }
       const file = roomPath ? roomPath[1] + '.html' : files[url.pathname];
       if (!file) {
         res.writeHead(404);
@@ -3380,6 +3408,7 @@ function initializeApp(config, dataLock, acquired) {
               file === 'minimal.html' ||
               file === 'lounge.html' ||
               file === 'bluff.html' ||
+              file === 'decrypto.html' ||
               file === 'quacks.html' ||
               file === 'ceo.html' ||
               file === 'second-wind.html'

@@ -13,6 +13,7 @@ const types = {
   musicquiz: ['musicquiz', 'MusicQuizRoom'],
   minimal: ['minimal', 'MinimalRoom'],
   bluff: ['bluff', 'BluffRoom'],
+  decrypto: ['decrypto', 'DecryptoRoom'],
   quacks: ['quacks', 'QuacksRoom'],
   ceo: ['ceo-room', 'CeoRoom'],
   'second-wind': ['second-wind/room', 'SecondWindRoom'],
@@ -83,7 +84,8 @@ function advance(room, step) {
 }
 function create(type) {
   const room = new classes[type]('ABCDEF', '合成觀戰測試');
-  for (let i = 0; i < (type === 'lounge' ? 1 : 3); i++) room.add('測試玩家' + i, true);
+  for (let i = 0; i < (type === 'lounge' ? 1 : type === 'decrypto' ? 4 : 3); i++)
+    room.add('測試玩家' + i, true);
   if (type === 'musicquiz') room.configure(room.host, { target: 3 });
   if (type === 'gift') room.configure(room.host, { target: 8 });
   if (type === 'majority') room.configure(room.host, { rounds: 3 });

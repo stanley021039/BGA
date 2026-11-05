@@ -99,6 +99,19 @@ function fixture({ pending = false, blocked = false } = {}) {
     },
   };
 }
+test('opt-in live window covers ten-second room polls and rejects longer gaps', () => {
+  const f = fixture();
+  const owner = f.window.GameSounds.create({ maxGapMs: 15000 });
+  assert.equal(owner.update(f.state()), false);
+  assert.equal(f.controller.update(f.state()), false);
+  f.tick(10000);
+  assert.equal(owner.update(f.state()), true);
+  assert.equal(f.controller.update(f.state()), false);
+  f.tick(15001);
+  assert.equal(owner.update(f.state('ABC123', 2)), false);
+  owner.destroy();
+});
+
 test('game cues have fixed source/length and ignore unknown URLs or prototype keys', () => {
   const f = fixture();
   f.api.set('effects', { enabled: true, volume: 0.4 });
