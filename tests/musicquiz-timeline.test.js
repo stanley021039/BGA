@@ -183,6 +183,71 @@ test('cold songs opt in and remain under 10%; AI songs, malformed sources and pa
   const rare = r.sequence.filter((s) => s.familiarity === 'obscure');
   assert.ok(rare.length / r.sequence.length <= 0.1);
 });
+
+test('buy publishes the purchased card to everyone, charges once on retry and preserves the current song', () => {
+  const { r, p } = setup();
+  const buyer = p[1],
+    current = r.current,
+    roundId = r.roundId;
+  const purchased = r.sequence[r.cursor];
+  buyer.tokens = 3;
+  const data = { roundId, requestId: randomUUID() };
+  r.act(buyer.id, 'buy', data);
+  const version = r.version;
+  r.act(buyer.id, 'buy', data);
+  assert.equal(r.version, version);
+  for (const viewer of p) {
+    const view = r.view(viewer.id),
+      actual = view.players.find((q) => q.id === buyer.id);
+    assert.equal(actual.tokens, 0);
+    assert.equal(actual.timeline.length, 2);
+    assert.ok(actual.timeline.some((c) => c.id === purchased.id));
+    const event = view.events.find((e) => e.kind === 'buy');
+    assert.ok(event.text.includes(buyer.name));
+    assert.ok(event.text.includes(purchased.title));
+    assert.ok(event.text.includes(String(purchased.year)));
+    assert.match(event.text, /3枚標記.*已加入音樂卡/);
+    assert.equal(view.song, null, 'the playing song stays private');
+  }
+  assert.equal(r.current, current);
+  assert.equal(r.roundId, roundId);
+  assert.equal(r.phase, 'pick');
+  act(r, r.dj(), 'listen');
+  assert.equal(r.phase, 'intro');
+});
+
+test('failed purchases are atomic and buying a winning card finishes without starting another song', () => {
+  const { r, p } = setup();
+  const before = JSON.stringify(r.view(p[0].id)),
+    cursor = r.cursor;
+  assert.throws(
+    () => act(r, p[0], 'buy'),
+    (e) => e.code === 'NOT_ENOUGH_TOKENS',
+  );
+  assert.equal(JSON.stringify(r.view(p[0].id)), before);
+  assert.equal(r.cursor, cursor);
+  p[0].tokens = 3;
+  const sequence = r.sequence;
+  r.sequence = r.sequence.slice(0, cursor);
+  assert.throws(
+    () => act(r, p[0], 'buy'),
+    (e) => e.code === 'DECK_EMPTY',
+  );
+  assert.equal(p[0].tokens, 3);
+  assert.equal(p[0].timeline.length, 1);
+  assert.equal(
+    r.events.some((e) => e.kind === 'buy'),
+    false,
+  );
+  r.sequence = sequence;
+  r.settings.target = 3;
+  r.addCard(p[0], r.sequence[r.cursor++]);
+  act(r, p[0], 'buy');
+  assert.equal(r.phase, 'finished');
+  assert.equal(p[0].tokens, 0);
+  assert.equal(p[0].timeline.length, 3);
+  assert.deepEqual(r.winner.names, [p[0].name]);
+});
 test('deck exhaustion ends match with collected cards, results survive, and departure interrupts cleanly', () => {
   const { r, p } = setup(1);
   r.sequence = r.sequence.slice(0, r.cursor);
