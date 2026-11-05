@@ -328,7 +328,7 @@ defineExpose({ openChat });
     ><div
       ref="stage"
       class="lobby-backdrop"
-      :data-background="background.selected"
+      :data-background="background.visible ? background.selected : 'default'"
       :class="{ 'is-self-hover': selfHover }"
       tabindex="0"
       aria-label="好友大廳：點擊空白處或用 WASD、方向鍵移動，點自己的角色發表情；C 瞬移，Q、E 普通招式，能量滿後按 R 施放多人招式"
@@ -337,8 +337,9 @@ defineExpose({ openChat });
       :aria-busy="!lobby.connected"
       ><LobbyAttackLayer
         :snapshot="lobby.snapshot"
-        :connected="lobby.connected" /><LobbyBackgroundArt :id="background.selected" /><div
-        class="lobby-visitors"
+        :connected="lobby.connected" /><LobbyBackgroundArt
+        v-if="background.visible"
+        :id="background.selected" /><div class="lobby-visitors"
         ><SceneFragments :visitors="lobby.snapshot?.visitors || []" /><LobbyVisitor
           v-for="visitor in lobby.snapshot?.visitors || []"
           :key="visitor.id"

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { lobbyBackgrounds, useLobbyBackgroundStore } from '../stores/lobby-background';
-import { ref } from 'vue';
+import { ref, useId } from 'vue';
 import { requestJson } from '../services/http';
 import '../styles/lobby-backgrounds.scss';
 import UiDialog from './UiDialog.vue';
 import UiIcon from './UiIcon.vue';
+import UiCheckbox from './UiCheckbox.vue';
 const background = useLobbyBackgroundStore();
+const visibilityNoteId = useId();
 const owned = ref(['default', 'castle']);
 const dialog = ref<InstanceType<typeof UiDialog> | null>(null);
 function open() {
@@ -20,6 +22,17 @@ function open() {
 </script>
 <template>
   <section class="vue-preference-group lobby-background-preference" aria-label="大廳背景設定">
+    <UiCheckbox
+      label="顯示大廳背景"
+      :model-value="background.visible"
+      :aria-describedby="visibilityNoteId"
+      @update:model-value="background.setVisible($event === true)"
+    />
+    <p :id="visibilityNoteId" role="status">{{
+      background.visibilityPersisted
+        ? '只影響此瀏覽器；關閉後保留角色與操作，不更改其他玩家的背景。'
+        : '瀏覽器無法保存此設定；本頁仍可切換，重新進入後可能恢復預設。'
+    }}</p>
     <button
       type="button"
       class="vue-preference-frame background-picker-trigger"
