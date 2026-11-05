@@ -159,12 +159,6 @@
       margin-top: auto;
     }
   }
-  .version-note {
-    margin: 0;
-    justify-self: end;
-    text-align: end;
-    max-inline-size: 100%;
-  }
 }
 body[data-visual-theme='playful'] .vue-lobby .game-library[data-card-carousel] {
   height: 550px;
@@ -592,13 +586,6 @@ body.lobby-self-hover {
       justify-content: flex-start;
       align-items: stretch;
       gap: tokens.space(2);
-    }
-    .vue-lobby .version-note {
-      grid-column: 1 / -1;
-      grid-row: 3;
-      align-self: center;
-      margin: 0;
-      @include tokens.type(p3);
     }
   }
 }

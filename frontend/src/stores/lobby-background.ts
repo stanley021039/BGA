@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { onScopeDispose, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { requestJson } from '../services/http';
 import { readLobbySnapshot } from '../contracts/lobby';
@@ -8,9 +8,38 @@ export const lobbyBackgrounds = backgrounds;
 
 export const useLobbyBackgroundStore = defineStore('lobby-background', () => {
   const selected = ref('default'),
+    visible = ref(true),
+    visibilityPersisted = ref(true),
     pending = ref(false),
     message = ref(''),
     nextChangeAt = ref(0);
+  // Local display is independent of the authoritative shared background.
+  const visibilityKey = 'bga-lobby-background-display-v1';
+  function readVisibility() {
+    try {
+      visible.value = localStorage.getItem(visibilityKey) !== 'off';
+      visibilityPersisted.value = true;
+    } catch {
+      visibilityPersisted.value = false;
+    }
+  }
+  readVisibility();
+  function setVisible(value: boolean) {
+    visible.value = value;
+    try {
+      localStorage.setItem(visibilityKey, value ? 'on' : 'off');
+      visibilityPersisted.value = true;
+    } catch {
+      visibilityPersisted.value = false;
+    }
+  }
+  function storage(event: StorageEvent) {
+    if (event.key === visibilityKey || event.key === null) readVisibility();
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', storage);
+    onScopeDispose(() => window.removeEventListener('storage', storage));
+  }
   let observedAt = 0;
   function receive(value: { id: string; changedAt: number; nextChangeAt: number }) {
     if (value.changedAt < observedAt) return;
@@ -42,5 +71,16 @@ export const useLobbyBackgroundStore = defineStore('lobby-background', () => {
       pending.value = false;
     }
   }
-  return { selected, pending, message, nextChangeAt, receive, refresh, select };
+  return {
+    selected,
+    visible,
+    visibilityPersisted,
+    setVisible,
+    pending,
+    message,
+    nextChangeAt,
+    receive,
+    refresh,
+    select,
+  };
 });
