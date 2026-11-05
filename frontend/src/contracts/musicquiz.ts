@@ -37,6 +37,7 @@ export interface MusicQuizSnapshot extends RoomSnapshot {
   round: number;
   roundId: string | null;
   roundLimit: number;
+  events: { id: number; kind: string; text: string }[];
   players: MusicPlayer[];
   interrupted: boolean;
   submitted: boolean;
@@ -133,6 +134,10 @@ export function readMusicQuizSnapshot(value: unknown): MusicQuizSnapshot {
     phase: room.phase as MusicQuizSnapshot['phase'],
     round: number(r.round),
     roundLimit: number(r.roundLimit),
+    events: array(r.events).map((v) => {
+      const event = record(v);
+      return { id: number(event.id), kind: text(event.kind), text: text(event.text) };
+    }),
     roundId: r.roundId === null ? null : text(r.roundId),
     interrupted: r.interrupted === true,
     submitted: r.submitted === true,

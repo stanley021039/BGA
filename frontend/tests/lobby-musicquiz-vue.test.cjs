@@ -37,6 +37,7 @@ function loader(mocks = {}) {
         setTimeout,
         clearTimeout,
         console,
+        Error,
         AbortController,
         DOMException,
         structuredClone,
@@ -49,6 +50,161 @@ function loader(mocks = {}) {
     return module.exports;
   };
 }
+
+function purchaseScene(room, actions) {
+  const filename = path.join(__dirname, '../src/pages/musicquiz/MusicQuizScene.vue');
+  const script = compileScript(parse(fs.readFileSync(filename, 'utf8')).descriptor, {
+    id: 'buy-regression',
+  }).content;
+  const module = { exports: {} };
+  const mocks = {
+    vue: { ...vue, onBeforeUnmount() {} },
+    '../../stores/room': { useRoomStore: () => room },
+    '../../stores/party-actions': { usePartyActionsStore: () => actions },
+    '../../stores/preferences': { usePreferencesStore: () => ({}) },
+    '../../composables/queued-save': loader({ vue })(
+      path.join(__dirname, '../src/composables/queued-save.ts'),
+    ),
+  };
+  vm.runInNewContext(
+    ts.transpileModule(script, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText,
+    withEngineImports({
+      module,
+      exports: module.exports,
+      require: (id) => mocks[id] || {},
+      setInterval: () => 1,
+      clearInterval() {},
+      console,
+    }),
+  );
+  return module.exports.default.setup({}, { expose() {}, emit() {} });
+}
+
+test('real buy command updates buyer and peer scenes; lost-response retry charges only once and old events do not replay', async () => {
+  const pinia = require('pinia'),
+    { MusicQuizRoom } = require('../../src/games/musicquiz');
+  const engine = new MusicQuizRoom(
+    'ABCDEF',
+    'buy',
+    () => 0,
+    () => 1000,
+  );
+  const players = [engine.add('DJ'), engine.add('買家')];
+  engine.start();
+  players[1].tokens = 3;
+  const read = loader()(
+    path.join(__dirname, '../src/contracts/musicquiz.ts'),
+  ).readMusicQuizSnapshot;
+  const rooms = players.map((p) =>
+    vue.reactive({
+      type: 'musicquiz',
+      code: engine.code,
+      scope: 1,
+      seat: {},
+      connected: true,
+      busy: false,
+      terminal: null,
+      settingsManager: false,
+      snapshot: read({ ...engine.view(p.id), serverNow: 1000 }),
+    }),
+  );
+  let lostResponse = true;
+  const requests = [];
+  const instances = [],
+    scopes = [],
+    scenes = [],
+    stores = [];
+  try {
+    for (let i = 0; i < rooms.length; i++) {
+      const room = rooms[i];
+      const instance = pinia.createPinia();
+      instances.push(instance);
+      pinia.setActivePinia(instance);
+      const load = loader({ vue, pinia, './room': { useRoomStore: () => room } });
+      const { ApiError } = load(path.join(__dirname, '../src/services/http.ts'));
+      room.request = async (_route, payload) => {
+        requests.push(structuredClone(payload));
+        try {
+          engine.act(players[i].id, payload.action, payload);
+        } catch (e) {
+          throw new ApiError(e.message, e.status || 409, e.code);
+        }
+        if (lostResponse) {
+          lostResponse = false;
+          throw new ApiError('購買結果尚未確認', 503);
+        }
+        return engine.view(players[i].id);
+      };
+      room.accept = (value) => {
+        room.snapshot = read({ ...value, serverNow: 1000 });
+        return true;
+      };
+      const actions = load(
+        path.join(__dirname, '../src/stores/party-actions.ts'),
+      ).usePartyActionsStore();
+      stores.push(actions);
+      const scope = vue.effectScope();
+      scopes.push(scope);
+      scenes.push(scope.run(() => purchaseScene(room, actions)));
+    }
+    assert.equal(await stores[1].command('buy'), false);
+    await vue.nextTick();
+    assert.equal(scenes[1].purchaseNotice.value, '', 'HTTP error alone never means success');
+    assert.match(stores[1].notice, /尚未確認/);
+    assert.equal(stores[1].canRetry, true);
+    rooms[0].accept(engine.view(players[0].id));
+    await vue.nextTick();
+    assert.match(scenes[0].purchaseNotice.value, /買家花3枚標記買入/);
+    assert.equal(await stores[1].retrySame(), true);
+    await vue.nextTick();
+    assert.deepEqual(requests[0], requests[1]);
+    assert.equal(players[1].tokens, 0);
+    assert.equal(players[1].timeline.length, 2);
+    assert.equal(stores[1].notice, '');
+    assert.equal(scenes[1].purchaseNotice.value, scenes[0].purchaseNotice.value);
+    const purchased = players[1].timeline.find(
+      (c) => c.id === engine.sequence[engine.cursor - 1].id,
+    );
+    assert.ok(scenes[1].purchaseNotice.value.includes(purchased.title));
+    assert.ok(scenes[1].purchaseNotice.value.includes(String(purchased.year)));
+    for (const room of rooms) {
+      const buyer = room.snapshot.players.find((p) => p.id === players[1].id);
+      assert.equal(buyer.tokens, 0);
+      assert.equal(buyer.timeline.length, 2);
+    }
+    const freshScope = vue.effectScope();
+    scopes.push(freshScope);
+    const refreshed = freshScope.run(() => purchaseScene(rooms[1], stores[1]));
+    assert.equal(refreshed.purchaseNotice.value, '', 'reloading does not announce history');
+    assert.equal(await stores[1].command('buy'), false);
+    await vue.nextTick();
+    assert.match(stores[1].notice, /需要3枚標記/);
+    assert.equal(stores[1].canRetry, false);
+    assert.equal(scenes[1].purchaseNotice.value, '', 'failed new purchase clears earlier success');
+    // A coalesced SSE update must announce both purchases, rather than only the last one.
+    for (const player of players) {
+      player.tokens = 3;
+      engine.act(player.id, 'buy', {
+        roundId: engine.roundId,
+        requestId: require('node:crypto').randomUUID(),
+      });
+    }
+    for (let i = 0; i < rooms.length; i++) rooms[i].accept(engine.view(players[i].id));
+    await vue.nextTick();
+    for (const scene of scenes) {
+      assert.match(scene.purchaseNotice.value, /DJ花3枚標記買入/);
+      assert.match(scene.purchaseNotice.value, /買家花3枚標記買入/);
+      assert.equal(scene.purchaseNotice.value.split('\n').length, 2);
+    }
+    assert.equal(await stores[0].command('listen'), true);
+    assert.equal(engine.phase, 'intro');
+  } finally {
+    scopes.forEach((s) => s.stop());
+    instances.forEach(pinia.disposePinia);
+  }
+});
 test('actual lobby messages survive the Vue contract, including older servers without kind', () => {
   const { createLobby } = require('../../src/rooms/lobby'),
     lobby = createLobby(() => 1000),
