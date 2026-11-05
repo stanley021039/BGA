@@ -1,5 +1,5 @@
 .stitch-vfx[data-entrance='stitch-purple'] {
-  filter: brightness(0.8) saturate(0.85);
+  filter: brightness(0.8) saturate(0.85) var(--entrance-palette,);
   [style*='hollow-singularity-core'] {
     opacity: 0.8;
   }

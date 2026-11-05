@@ -1,3 +1,4 @@
+const { attackKind } = require('./attack-kind');
 const timing = require('../../public/shared/attack-timing.json');
 const rules = require('../../public/shared/scene-rules.json');
 const { inAttackArea, selectBijuuDirections } = require('./attack-targets');
@@ -10,7 +11,8 @@ function createAttackTimeline(combat) {
   const runtime = new WeakMap();
   const homingByCaster = new WeakMap();
   function prepare(event, self, targets, actors = targets) {
-    if (event.effect === 'bijuu_beam')
+    const effect = attackKind(event.effect);
+    if (effect === 'bijuu_beam')
       event.rays = selectBijuuDirections(self, actors, event.aspectRatio);
     const source = {
       energyActor: self,
@@ -20,9 +22,7 @@ function createAttackTimeline(combat) {
       authorBonus: self.authorBonus,
       guanyinUntil: self.guanyinUntil,
       kda: self.kda,
-      ...(event.effect === 'gate_of_babylon'
-        ? { comboDamage: combat.rollBabylonDamage(self) }
-        : {}),
+      ...(effect === 'gate_of_babylon' ? { comboDamage: combat.rollBabylonDamage(self) } : {}),
     };
     const special = prepareSpecial(event, self, targets[0], source);
     if (special) {
@@ -39,14 +39,14 @@ function createAttackTimeline(combat) {
     }
     const jobs = [];
     event.hits = [];
-    for (const [delay, weight, phase] of timing[event.effect]) {
+    for (const [delay, weight, phase] of timing[effect]) {
       if (phase.startsWith('burn')) {
         jobs.push({ at: event.at + delay, phase, weight, burn: true, done: false });
         continue;
       }
       for (const actor of targets.slice(0, rules.maximumAreaTargets)) {
         const delayMs =
-          event.effect === 'solar_phoenix'
+          effect === 'solar_phoenix'
             ? Math.round(
                 700 +
                   3400 *
@@ -75,9 +75,9 @@ function createAttackTimeline(combat) {
           delayMs,
           pending: true,
         };
-        if (event.effect === 'bijuu_beam') {
+        if (effect === 'bijuu_beam') {
           const ray = event.rays.find((ray) =>
-            inAttackArea(self, ray, actor, event.effect, event.aspectRatio, {
+            inAttackArea(self, ray, actor, effect, event.aspectRatio, {
               shape: 'rectangle',
               width: 7,
               range: rules.areaAttackRange,
@@ -98,7 +98,7 @@ function createAttackTimeline(combat) {
         });
       }
     }
-    if (event.effect === 'explosion')
+    if (effect === 'explosion')
       jobs.push({
         at: event.at + rules.explosionRecovery.delayMs,
         actor: self,
@@ -124,6 +124,7 @@ function createAttackTimeline(combat) {
     due.sort((a, b) => a.job.at - b.job.at);
     let advancedAt;
     for (const { event, state, job } of due) {
+      const effect = attackKind(event.effect);
       job.done = true;
       if (advancedAt !== job.at) {
         for (const actor of bodies) moveActor(actor, job.at);
@@ -159,7 +160,7 @@ function createAttackTimeline(combat) {
                 actor.ownerId !== event.fromId &&
                 (included.has(actor.id) || included.size < rules.maximumAreaTargets) &&
                 actor.health > 0 &&
-                inAttackArea(origin, aim, actor, event.effect, event.aspectRatio, {
+                inAttackArea(origin, aim, actor, effect, event.aspectRatio, {
                   shape: 'rectangle',
                   width: 10,
                   range: passed,
@@ -195,9 +196,9 @@ function createAttackTimeline(combat) {
             origin,
             aim,
             actor,
-            event.effect,
+            effect,
             event.aspectRatio,
-            event.effect === 'bijuu_beam'
+            effect === 'bijuu_beam'
               ? {
                   shape: 'rectangle',
                   width: 7,
@@ -209,18 +210,15 @@ function createAttackTimeline(combat) {
           hit.missed = true;
           continue;
         }
-        Object.assign(
-          hit,
-          combat.hit(state.source, actor, job.at, event.effect, job.weight, job.phase),
-        );
+        Object.assign(hit, combat.hit(state.source, actor, job.at, effect, job.weight, job.phase));
         hit.toX = actor.x;
         hit.toY = actor.y;
-        if (event.effect !== 'dimension_cleave' || job.phase === 'finish')
+        if (effect !== 'dimension_cleave' || job.phase === 'finish')
           combat.applyEffect(
             state.source,
             actor,
             job.at,
-            event.effect,
+            effect,
             origin,
             event.aspectRatio,
             job.phase,

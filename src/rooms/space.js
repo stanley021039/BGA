@@ -1,4 +1,5 @@
-const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
+const { attackKind } = require('./attack-kind');
+const { selectAttackTargets } = require('./attack-targets');
 const combatRules = require('../../public/shared/scene-rules.json');
 const energy = require('./scene-energy');
 const { versionedAsset } = require('../http/asset-version');
@@ -279,7 +280,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
         event,
         self,
         targets,
-        effect === 'bijuu_beam' ? combat.targets(positions.values()) : targets,
+        attackKind(effect) === 'bijuu_beam' ? combat.targets(positions.values()) : targets,
       );
     events.push(event);
     attacks.set(room, events.slice(-40));

@@ -4,9 +4,12 @@ const { createSceneCombat } = require('../src/rooms/scene-combat');
 const { createAttackTimeline } = require('../src/rooms/attack-timeline');
 const energy = require('../src/rooms/scene-energy');
 const effects = require('../public/shared/attack-effects.json');
+const { attackKind } = require('../src/rooms/attack-kind');
 const timing = require('../public/shared/attack-timing.json');
+const schedule = (id) => timing[attackKind(id)];
 const ordinary = effects.filter(
-  (effect) => !effect.area && !effect.ultimate && !['shield', 'sphere'].includes(effect.id),
+  (effect) =>
+    !effect.area && !effect.ultimate && !['shield', 'sphere'].includes(attackKind(effect.id)),
 );
 function fixture() {
   const combat = createSceneCombat(() => 0.5),
@@ -32,7 +35,7 @@ function fixture() {
       aspectRatio: 1,
     };
     timeline.prepare(event, actors[0], [actors[1]]);
-    const finish = at + Math.max(...timing[effect].map(([delay]) => delay));
+    const finish = at + Math.max(...schedule(effect).map(([delay]) => delay));
     timeline.advance([event], actors, finish, (actor, time) => combat.advance(actor, time));
     const damage = event.hits.reduce((sum, hit) => sum + hit.damage, 0);
     timeline.advance([event], actors, finish, (actor, time) => combat.advance(actor, time));
@@ -49,7 +52,7 @@ test('ordinary combos trade direct damage for per-impact energy, including delay
   const totals = { 1: 200000, 2: 180000, 3: 160000, 4: 140000 };
   for (const effect of ordinary) {
     const f = fixture(),
-      hits = timing[effect.id].length;
+      hits = schedule(effect.id).length;
     assert.equal(f.cast(effect.id), totals[hits], effect.id);
     assert.equal(f.actors[0].energy, hits * 10, effect.id);
     assert.equal(f.actors[1].energy, hits * 5, effect.id);
@@ -57,9 +60,9 @@ test('ordinary combos trade direct damage for per-impact energy, including delay
 });
 test('one to three-impact combos plus one standard R stay within 10 percent per cast', () => {
   // Preserve the original #329 guarantee. Four-hit casts cap 120 energy at 100;
-  // their finite-cycle overflow is checked separately, and all 20 ordinary
+  // their finite-cycle overflow is checked separately, and all ordinary
   // variants remain covered by the exact opposing-build budget below.
-  for (const effect of ordinary.filter((effect) => timing[effect.id].length <= 3)) {
+  for (const effect of ordinary.filter((effect) => schedule(effect.id).length <= 3)) {
     const f = fixture();
     let casts = 0,
       damage = 0;
@@ -68,7 +71,7 @@ test('one to three-impact combos plus one standard R stay within 10 percent per 
       casts++;
       assert.ok(casts <= 10, effect.id);
     }
-    assert.equal(casts, { 1: 10, 2: 5, 3: 4, 4: 3 }[timing[effect.id].length], effect.id);
+    assert.equal(casts, { 1: 10, 2: 5, 3: 4, 4: 3 }[schedule(effect.id).length], effect.id);
     energy.check(f.actors[0], 'r', 'bijuu_beam');
     energy.spend(f.actors[0], 'r');
     const ultimate = f.cast('bijuu_beam');
@@ -102,15 +105,16 @@ test('combo reduction composes with author, critical and shield multipliers exac
     combat.advance(b, 0);
     combat.protect(b, 0);
     let damage = 0;
-    for (const [, weight, phase] of timing[effect.id]) {
+    for (const [, weight, phase] of schedule(effect.id)) {
       values = [0.5, 0, 0.5];
       const hit = combat.hit(a, b, 100, effect.id, weight, phase);
       assert.equal(hit.critical, true);
       damage += hit.damage;
     }
     assert.ok(
-      Math.abs(damage - { 1: 224250, 2: 201825, 3: 179400, 4: 156975 }[timing[effect.id].length]) <=
-        2,
+      Math.abs(
+        damage - { 1: 224250, 2: 201825, 3: 179400, 4: 156975 }[schedule(effect.id).length],
+      ) <= 2,
       effect.id,
     );
   }
@@ -150,7 +154,7 @@ test('single, two and three-hit builds have equal damage plus energy value when 
           event.hits.reduce((n, hit) => n + hit.damage, 0) + (400000 * actors[i].energy) / 100,
       );
       assert.ok(Math.abs(budgets[0] - budgets[1]) <= 2, `${left.id} vs ${right.id}: ${budgets}`);
-      assert.equal(actors[0].energy, timing[left.id].length * 10 + timing[right.id].length * 5);
-      assert.equal(actors[1].energy, timing[right.id].length * 10 + timing[left.id].length * 5);
+      assert.equal(actors[0].energy, schedule(left.id).length * 10 + schedule(right.id).length * 5);
+      assert.equal(actors[1].energy, schedule(right.id).length * 10 + schedule(left.id).length * 5);
     }
 });

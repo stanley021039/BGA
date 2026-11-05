@@ -15,6 +15,12 @@ const source = fs
   .replace(/^import .*attack-area.js';\n/m, '')
   .replace(/^import .*attack-revision.js';\n/m, '')
   .replace(/^import attackEffects .*attack-effects.json';\n/m, '')
+  .replace(/^import .*attack-variants.js';\n/m, () =>
+    fs
+      .readFileSync(path.join(__dirname, '../src/services/attack-variants.js'), 'utf8')
+      .replace(/^import .*\n/m, 'const definitions = attackEffects;\n')
+      .replace(/^export /gm, ''),
+  )
   .replace(/^import attackTiming .*attack-timing.json';\n/m, '')
   .replace(/^export function /gm, 'function ');
 const lifetime = fs
@@ -32,11 +38,11 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
     clock = 0,
     nextTimer = 0;
   const timers = new Map();
-  const gradient = {
+  const gradient = () => ({
     addColorStop(_p, c) {
       colors.push(c);
     },
-  };
+  });
   const context = new Proxy(
     {
       setTransform() {},
@@ -55,10 +61,10 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
         return { width: 250 };
       },
       createRadialGradient() {
-        return gradient;
+        return gradient();
       },
       createLinearGradient() {
-        return gradient;
+        return gradient();
       },
       arc(x, y, r) {
         arcs.push({ x, y, r });
@@ -161,9 +167,9 @@ test('rainbow barrage paints multiple distinct authored shot colours', () => {
 test('every current offensive renderer waits for both authoritative settlement and its arrival clock', () => {
   const timing = require('../../public/shared/attack-timing.json');
   for (const effect of require('../../public/shared/attack-effects.json').filter(
-    (e) => !['shield', 'sphere'].includes(e.id),
+    (e) => !['shield', 'sphere'].includes(e.variantOf || e.id),
   )) {
-    const [delayMs, , phase] = timing[effect.id][0];
+    const [delayMs, , phase] = (timing[effect.id] || timing[effect.variantOf])[0];
     const hit = {
       toId: 'victim',
       x: 640,

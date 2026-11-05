@@ -19,7 +19,11 @@ function ownedAttacks(db, userId) {
   return effects
     .filter(
       (e) =>
-        (!e.achievementId && !e.gachaOnly) || all || ids.has(e.achievementId) || starter.has(e.id),
+        !('paletteHue' in e) &&
+        ((!e.achievementId && !e.gachaOnly) ||
+          all ||
+          ids.has(e.achievementId) ||
+          starter.has(e.id)),
     )
     .map((e) => e.id);
 }

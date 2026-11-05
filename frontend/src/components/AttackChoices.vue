@@ -188,9 +188,9 @@ function play(id: string) {
           ><span class="attack-effect-detail">{{
             allowed(effect.id) ? '已解鎖・預覽' : '未解鎖・預覽'
           }}</span
-          ><span v-if="!allowed(effect.id)" class="attack-effect-detail"
-            >抽卡、碎片兌換或兌換碼解鎖</span
-          ></template
+          ><span v-if="!allowed(effect.id)" class="attack-effect-detail">{{
+            'paletteHue' in effect ? '抽卡或碎片兌換解鎖' : '抽卡、碎片兌換或兌換碼解鎖'
+          }}</span></template
         ><template #selection
           ><span class="ui-choice-state" aria-hidden="true">{{
             preview === effect.id ? '✓ 正在預覽' : ''

@@ -30,7 +30,7 @@ test('defensive artwork targets its caster even in an otherwise empty lobby', ()
 
 test('both crescent variants are separate selectable persistent artwork IDs', () => {
   const effects = require('../public/shared/attack-effects.json');
-  assert.equal(effects.length, 37);
+  assert.equal(effects.filter((effect) => !('paletteHue' in effect)).length, 37);
   assert.equal(new Set(effects.map((e) => e.id)).size, effects.length);
   assert.ok(!effects.some((e) => e.id === 'flame_kick'));
   assert.equal(effects.find((e) => e.id === 'blade_aura').label, '藍黑半月劍氣');

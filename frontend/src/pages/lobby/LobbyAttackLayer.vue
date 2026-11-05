@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isDefensiveAttack } from '../../services/attack-variants.js';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { LobbyAttack, LobbySnapshot } from '../../contracts/lobby';
 import { usePreferencesStore } from '../../stores/preferences';
@@ -178,11 +179,8 @@ onBeforeUnmount(() => {
         :key="event.id"
         class="attack-static-hit"
         :style="{
-          left: (['shield', 'sphere'].includes(event.effect) ? event.fromX : event.toX) + '%',
-          top:
-            'calc(' +
-            (['shield', 'sphere'].includes(event.effect) ? event.fromY : event.toY) +
-            '% - 42px)',
+          left: (isDefensiveAttack(event.effect) ? event.fromX : event.toX) + '%',
+          top: 'calc(' + (isDefensiveAttack(event.effect) ? event.fromY : event.toY) + '% - 42px)',
           borderColor: attackColor(event.effect),
         }"
       ></span>

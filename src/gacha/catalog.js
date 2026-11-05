@@ -1,6 +1,7 @@
 'use strict';
 const overrides = require('../../public/shared/gacha-rarities.json');
 const definitions = new Map(require('../achievements/catalog').definitions.map((d) => [d.id, d]));
+const { variants: entranceVariants } = require('../../public/shared/entrance-palette.json');
 const tiers = Object.freeze({
   common: { label: '普通', weight: 100, duplicateFragments: 1, exchangeCost: 20 },
   rare: { label: '稀有', weight: 20, duplicateFragments: 5, exchangeCost: 100 },
@@ -20,7 +21,7 @@ const intro = (id) =>
     ? 'common'
     : 'rare';
 const items = [];
-function add(kind, id, label, rarity, achievementIds = [], legacy = true) {
+function add(kind, id, label, rarity, achievementIds = [], legacy = true, gachaExclusive = false) {
   const key = kind + ':' + id;
   rarity = overrides[key] || rarity;
   if (!Object.hasOwn(tiers, rarity)) throw Error('Invalid gacha rarity: ' + key);
@@ -39,13 +40,13 @@ function add(kind, id, label, rarity, achievementIds = [], legacy = true) {
       rarityLabel: tiers[rarity].label,
       // A new skill must not be retroactively granted by an old achievement.
       legacy,
+      gachaExclusive,
       achievementIds: achievementIds.filter(Boolean),
     }),
   );
 }
-for (const e of require('../../public/shared/attack-effects.json').filter(
-  (e) => e.achievementId || e.gachaOnly,
-))
+const attacks = require('../../public/shared/attack-effects.json');
+for (const e of attacks.filter((e) => !('paletteHue' in e) && (e.achievementId || e.gachaOnly)))
   add(
     'attacks',
     e.id,
@@ -60,6 +61,16 @@ for (const e of require('../../public/shared/attack-effects.json').filter(
   );
 for (const e of require('../../public/shared/entrance-requirements.json'))
   add('entrances', e.id, e.label, intro(e.achievementId), [e.achievementId]);
+for (const [kind, variants] of [
+  ['attacks', attacks.filter((e) => 'paletteHue' in e)],
+  ['entrances', entranceVariants],
+]) {
+  const parentRarities = new Map(
+    items.filter((item) => item.kind === kind).map((item) => [item.id, item.rarity]),
+  );
+  for (const e of variants)
+    add(kind, e.id, e.label, parentRarities.get(e.variantOf) || 'common', [], false, true);
+}
 for (const e of require('../../public/shared/lobby-backgrounds.json').filter(
   (e) => e.achievementId,
 ))

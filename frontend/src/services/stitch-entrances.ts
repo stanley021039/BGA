@@ -13,12 +13,14 @@ export function playStitchEntrance(
   layer: HTMLElement,
   cx: number,
   feet: number,
+  palette?: string,
 ): () => void {
   const effect = effects.find((effect) => effect.id === id);
   if (!effect) return () => {};
   const node = document.createElement('div');
   node.className = 'lobby-fx stitch-vfx';
   node.dataset.entrance = id;
+  if (palette) node.style.setProperty('--entrance-palette', palette);
   if (id === 'stitch-purple') node.classList.add('stitch-purple-v2');
   node.setAttribute('aria-hidden', 'true');
   Object.assign(node.style, {

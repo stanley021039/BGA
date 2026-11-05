@@ -1,0 +1,258 @@
+{
+  "starters": [
+    {
+      "id": "classic",
+      "label": "經典現影",
+      "description": "煙霧漩渦收束後爆出一圈光環。"
+    },
+    {
+      "id": "smoke",
+      "label": "黑煙漩渦",
+      "description": "紫黑色漩渦捲緊、啪一聲現身。"
+    },
+    {
+      "id": "sparks",
+      "label": "金色魔杖火花",
+      "description": "金色火花聚成光球，從光裡浮現。"
+    },
+    {
+      "id": "ink",
+      "label": "墨水潑濺",
+      "description": "墨水潑地長成剪影，再染回原色。"
+    },
+    {
+      "id": "runes",
+      "label": "地面魔法陣",
+      "description": "符文陣畫出光柱，角色在光中成形。"
+    },
+    {
+      "id": "rift",
+      "label": "時空裂縫",
+      "description": "空中撕開發光裂縫，角色走出來。"
+    },
+    {
+      "id": "particles",
+      "label": "粒子組合",
+      "description": "粒子飛來由腳到頭拼出角色。"
+    }
+  ],
+  "variants": [
+    {
+      "id": "classic-alt",
+      "label": "經典現影（翡翠異色）",
+      "description": "以翡翠配色重現原版的進場動畫。",
+      "variantOf": "classic",
+      "paletteHue": 154
+    },
+    {
+      "id": "smoke-alt",
+      "label": "黑煙漩渦（赤銅異色）",
+      "description": "以赤銅配色重現原版的進場動畫。",
+      "variantOf": "smoke",
+      "paletteHue": 20
+    },
+    {
+      "id": "sparks-alt",
+      "label": "金色魔杖火花（銀藍異色）",
+      "description": "以銀藍配色重現原版的進場動畫。",
+      "variantOf": "sparks",
+      "paletteHue": 209
+    },
+    {
+      "id": "ink-alt",
+      "label": "墨水潑濺（深靛異色）",
+      "description": "以深靛配色重現原版的進場動畫。",
+      "variantOf": "ink",
+      "paletteHue": 238
+    },
+    {
+      "id": "runes-alt",
+      "label": "地面魔法陣（紫晶異色）",
+      "description": "以紫晶配色重現原版的進場動畫。",
+      "variantOf": "runes",
+      "paletteHue": 275
+    },
+    {
+      "id": "rift-alt",
+      "label": "時空裂縫（琥珀異色）",
+      "description": "以琥珀配色重現原版的進場動畫。",
+      "variantOf": "rift",
+      "paletteHue": 39
+    },
+    {
+      "id": "particles-alt",
+      "label": "粒子組合（翡翠異色）",
+      "description": "以翡翠配色重現原版的進場動畫。",
+      "variantOf": "particles",
+      "paletteHue": 153
+    },
+    {
+      "id": "stitch-senbonzakura-alt",
+      "label": "千本櫻景嚴（金葉異色）",
+      "description": "以金葉配色重現原版的進場動畫。",
+      "variantOf": "stitch-senbonzakura",
+      "paletteHue": 44
+    },
+    {
+      "id": "stitch-hyorinmaru-alt",
+      "label": "大紅蓮冰輪丸（緋霜異色）",
+      "description": "以緋霜配色重現原版的進場動畫。",
+      "variantOf": "stitch-hyorinmaru",
+      "paletteHue": 334
+    },
+    {
+      "id": "stitch-minazuki-alt",
+      "label": "皆盡（霧藍異色）",
+      "description": "以霧藍配色重現原版的進場動畫。",
+      "variantOf": "stitch-minazuki",
+      "paletteHue": 211
+    },
+    {
+      "id": "stitch-zanka-alt",
+      "label": "殘火太刀（蒼焰異色）",
+      "description": "以蒼焰配色重現原版的進場動畫。",
+      "variantOf": "stitch-zanka",
+      "paletteHue": 201
+    },
+    {
+      "id": "stitch-gilgamesh-alt",
+      "label": "王之財寶（翠玉異色）",
+      "description": "以翠玉配色重現原版的進場動畫。",
+      "variantOf": "stitch-gilgamesh",
+      "paletteHue": 152
+    },
+    {
+      "id": "stitch-purple-alt",
+      "label": "虛式「茈」（赤焰異色）",
+      "description": "以赤焰配色重現原版的進場動畫。",
+      "variantOf": "stitch-purple",
+      "paletteHue": 19
+    },
+    {
+      "id": "stitch-blue-eyes-alt",
+      "label": "青眼白龍（琥珀異色）",
+      "description": "以琥珀配色重現原版的進場動畫。",
+      "variantOf": "stitch-blue-eyes",
+      "paletteHue": 37
+    },
+    {
+      "id": "stitch-black-coffin-alt",
+      "label": "破道之九十·黑棺（幽青異色）",
+      "description": "以幽青配色重現原版的進場動畫。",
+      "variantOf": "stitch-black-coffin",
+      "paletteHue": 174
+    },
+    {
+      "id": "stitch-grail-mud-alt",
+      "label": "聖杯之泥（紫泥異色）",
+      "description": "以紫泥配色重現原版的進場動畫。",
+      "variantOf": "stitch-grail-mud",
+      "paletteHue": 278
+    },
+    {
+      "id": "stitch-stand-fists-alt",
+      "label": "替身 · 近身狂拳（海藍異色）",
+      "description": "以海藍配色重現原版的進場動畫。",
+      "variantOf": "stitch-stand-fists",
+      "paletteHue": 205
+    },
+    {
+      "id": "stitch-stand-time-alt",
+      "label": "替身 · 時之領域（赤銅異色）",
+      "description": "以赤銅配色重現原版的進場動畫。",
+      "variantOf": "stitch-stand-time",
+      "paletteHue": 19
+    },
+    {
+      "id": "stitch-stand-emerald-alt",
+      "label": "替身 · 翠綠連彈（熔金異色）",
+      "description": "以熔金配色重現原版的進場動畫。",
+      "variantOf": "stitch-stand-emerald",
+      "paletteHue": 45
+    },
+    {
+      "id": "stitch-ulquiorra-alt",
+      "label": "黑翼大魔 · 歸刃（緋紅異色）",
+      "description": "以緋紅配色重現原版的進場動畫。",
+      "variantOf": "stitch-ulquiorra",
+      "paletteHue": 348
+    },
+    {
+      "id": "stitch-saiyan-alt",
+      "label": "超級賽亞人（紫電異色）",
+      "description": "以紫電配色重現原版的進場動畫。",
+      "variantOf": "stitch-saiyan",
+      "paletteHue": 272
+    },
+    {
+      "id": "stitch-lightning-alt",
+      "label": "天罰閃電（碧雷異色）",
+      "description": "以碧雷配色重現原版的進場動畫。",
+      "variantOf": "stitch-lightning",
+      "paletteHue": 162
+    },
+    {
+      "id": "stitch-exodia-alt",
+      "label": "黑暗大法師（冰藍異色）",
+      "description": "以冰藍配色重現原版的進場動畫。",
+      "variantOf": "stitch-exodia",
+      "paletteHue": 197
+    },
+    {
+      "id": "stitch-water-breathing-alt",
+      "label": "水之呼吸（夕紅異色）",
+      "description": "以夕紅配色重現原版的進場動畫。",
+      "variantOf": "stitch-water-breathing",
+      "paletteHue": 348
+    },
+    {
+      "id": "stitch-explosion-alt",
+      "label": "爆裂魔法（蒼炎異色）",
+      "description": "以蒼炎配色重現原版的進場動畫。",
+      "variantOf": "stitch-explosion",
+      "paletteHue": 206
+    },
+    {
+      "id": "stitch-starburst-alt",
+      "label": "星爆氣流斬（紫星異色）",
+      "description": "以紫星配色重現原版的進場動畫。",
+      "variantOf": "stitch-starburst",
+      "paletteHue": 281
+    },
+    {
+      "id": "stitch-black-moon-alt",
+      "label": "月牙天沖 · 黑月（銀青異色）",
+      "description": "以銀青配色重現原版的進場動畫。",
+      "variantOf": "stitch-black-moon",
+      "paletteHue": 175
+    },
+    {
+      "id": "stitch-pup-parade-alt",
+      "label": "萌犬相伴（藍紫異色）",
+      "description": "以藍紫配色重現原版的進場動畫。",
+      "variantOf": "stitch-pup-parade",
+      "paletteHue": 242
+    },
+    {
+      "id": "stitch-gentle-kitty-alt",
+      "label": "靈貓隨行（玫紅異色）",
+      "description": "以玫紅配色重現原版的進場動畫。",
+      "variantOf": "stitch-gentle-kitty",
+      "paletteHue": 330
+    },
+    {
+      "id": "stitch-chibaku-tensei-alt",
+      "label": "地爆天星（碧光異色）",
+      "description": "以碧光配色重現原版的進場動畫。",
+      "variantOf": "stitch-chibaku-tensei",
+      "paletteHue": 164
+    },
+    {
+      "id": "stitch-bungee-gum-alt",
+      "label": "伸縮自在的愛（薄荷異色）",
+      "description": "以薄荷配色重現原版的進場動畫。",
+      "variantOf": "stitch-bungee-gum",
+      "paletteHue": 151
+    }
+  ]
+}

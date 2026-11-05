@@ -7,6 +7,7 @@ import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
 import { createStitchAttack } from './attack-stitch.js';
 import { createNewAttack } from './attack-new.js';
 import combatRules from '../../../public/shared/scene-rules.json';
+import { attackVariant, attackPalette } from './attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
 // Full detail for one attack on its own canvas; a shared stage lowers these by load.
 const FULL_DETAIL = { density: 1, glow: 1 };
@@ -39,7 +40,14 @@ function glowSprite(color) {
 }
 // One attack drawn into a context owned by the caller: draw(now) paints a frame
 // (without clearing) and returns false once the attack has finished.
-export function createAttackScene(ctx, options) {
+export function createAttackScene(context, options) {
+  const variant = attackVariant(options.effect);
+  const palette = variant && attackPalette(context, variant.paletteHue);
+  const ctx = palette?.ctx ?? context;
+  if (variant) {
+    const base = attackEffects.find((effect) => effect.id === variant.variantOf);
+    options = { ...options, effect: base.id, color: base.color };
+  }
   const fx = options.fx || FULL_DETAIL;
   // Previews use the same phase schedule; real scenes only show server-settled hits.
   if (options.preview && !options.readHits && !['shield', 'sphere'].includes(options.effect)) {
@@ -1076,7 +1084,7 @@ export function createAttackScene(ctx, options) {
       pt.alpha -= pt.decay;
 
       ctx.globalAlpha = Math.max(0, pt.alpha);
-      const sprite = glowSprite(pt.color);
+      const sprite = glowSprite(palette ? palette.color(pt.color) : pt.color);
       if (sprite) {
         const reach = pt.size * 3;
         ctx.drawImage(sprite, pt.x - reach, pt.y - reach, reach * 2, reach * 2);
@@ -1101,19 +1109,19 @@ export function createAttackScene(ctx, options) {
       ft.vy += 0.14;
       ft.alpha -= 0.02;
 
-      ctx.save();
-      ctx.font = `bold ${Math.floor(18 * ft.scale)}px 'Space Grotesk', sans-serif`;
-      ctx.fillStyle = ft.color;
-      ctx.shadowColor = ft.color;
-      ctx.shadowBlur = 12;
-      ctx.globalAlpha = Math.max(0, ft.alpha);
-      const textWidth = ctx.measureText(ft.text)?.width || 0;
-      ctx.fillText(
+      context.save();
+      context.font = `bold ${Math.floor(18 * ft.scale)}px 'Space Grotesk', sans-serif`;
+      context.fillStyle = ft.color;
+      context.shadowColor = ft.color;
+      context.shadowBlur = 12;
+      context.globalAlpha = Math.max(0, ft.alpha);
+      const textWidth = context.measureText(ft.text)?.width || 0;
+      context.fillText(
         ft.text,
         Math.max(10, Math.min(width - textWidth - 10, ft.x)),
         Math.max(28, Math.min(height - 12, ft.y)),
       );
-      ctx.restore();
+      context.restore();
 
       if (ft.alpha <= 0) floatingTexts.splice(i, 1);
     }

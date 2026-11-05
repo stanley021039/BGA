@@ -1,6 +1,8 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
+const { attackKind } = require('../src/rooms/attack-kind');
+const { fitsSlot } = require('../src/rooms/scene-energy');
 const { createAttackTimeline } = require('../src/rooms/attack-timeline');
 const { selectAttackTargets } = require('../src/rooms/attack-targets');
 const definitions = require('../public/shared/attack-effects.json');
@@ -49,7 +51,13 @@ test('every current offensive attack has a bounded authoritative arrival, no eag
     f.advance(first);
     assert.equal(f.points[1].health, health);
   }
-  assert.deepEqual(Object.keys(timing).sort(), definitions.map((e) => e.id).sort());
+  assert.deepEqual(
+    Object.keys(timing).sort(),
+    definitions
+      .filter((e) => !('paletteHue' in e))
+      .map((e) => e.id)
+      .sort(),
+  );
 });
 test('Babylon/Ea has a double-strength second stage; the two dragoon salvos share the balanced combo total', () => {
   for (const [effect, first, last, total] of [
@@ -127,4 +135,36 @@ test('leaving the frozen ray before impact misses, and an old second stage canno
   g.points[1].respawnAt = 0;
   g.advance(3880);
   assert.equal(g.points[1].health, 1200000);
+});
+
+test('new attack palettes use identical slots, targets, timing and hits as their originals', () => {
+  const actors = [
+    { id: 'a', x: 20, y: 50, health: 1 },
+    { id: 'b', x: 40, y: 50, health: 1 },
+  ];
+  const snapshot = ({ effect, ...event }) => event;
+  for (const { id, variantOf } of definitions.filter((e) => 'paletteHue' in e)) {
+    assert.equal(attackKind(id), variantOf);
+    for (const slot of ['q', 'e', 'r'])
+      assert.equal(fitsSlot(slot, id), fitsSlot(slot, variantOf), id);
+    assert.deepEqual(
+      selectAttackTargets(actors[0], actors, id, 1),
+      selectAttackTargets(actors[0], actors, variantOf, 1),
+      id,
+    );
+    if (['shield', 'sphere'].includes(variantOf)) continue;
+    const original = fixture(variantOf),
+      alternate = fixture(id);
+    assert.deepEqual(snapshot(alternate.event), snapshot(original.event), id);
+    for (const time of [600, 1300, 2400, 4400, 7400]) {
+      original.advance(time);
+      alternate.advance(time);
+      assert.deepEqual(snapshot(alternate.event), snapshot(original.event), id);
+      assert.deepEqual(
+        alternate.points.map((a) => a.health),
+        original.points.map((a) => a.health),
+        id,
+      );
+    }
+  }
 });

@@ -193,7 +193,10 @@ test('existing reward codes and starter grants stay owned without granting achie
     JSON.stringify({ achievementRewardCodes: { other: '2026-10-29T00:00:00.000Z' } }),
     user,
   );
-  assert.equal(store.owned(user).attacks.size, poolItems('attacks').length);
+  assert.equal(
+    store.owned(user).attacks.size,
+    poolItems('attacks').filter((item) => !item.gachaExclusive).length,
+  );
   assert.equal(store.owned(user).frames.size, 0);
   const item = catalog.find((i) => i.kind === 'entrances');
   db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
@@ -303,4 +306,61 @@ test('schema21 migration snapshots legacy ownership exactly once; later achievem
   require('../src/gacha/legacy').snapshotLegacyRewards(db);
   assert.ok(!Ownership.ownedIds(db, user, 'attacks').includes(later.id));
   assert.equal(db.prepare('PRAGMA foreign_key_check').all().length, 0);
+});
+
+test('every new palette is an independent draw and exchange reward with the original rarity', (t) => {
+  const { starters, variants } = require('../public/shared/entrance-palette.json');
+  const entrances = require('../public/shared/entrance-requirements.json');
+  const attacks = require('../public/shared/attack-effects.json');
+  const palettes = attacks.filter((e) => 'paletteHue' in e);
+  assert.equal(palettes.length, 21);
+  assert.equal(variants.length, 31);
+  assert.deepEqual(
+    new Set(variants.map((e) => e.variantOf)),
+    new Set([...starters, ...entrances].map((e) => e.id)),
+  );
+  const covered = new Set(attacks.map((e) => e.variantOf).filter(Boolean));
+  assert.ok(
+    attacks.every(
+      (e) =>
+        covered.has(e.id) || e.variantOf || ['blade_aura', 'blade_aura_crimson'].includes(e.id),
+    ),
+  );
+  for (const [kind, entries] of [
+    ['attacks', palettes],
+    ['entrances', variants],
+  ]) {
+    const items = poolItems(kind);
+    for (const e of entries) {
+      const item = items.find((item) => item.id === e.id);
+      const parent = items.find((item) => item.id === e.variantOf);
+      assert.equal(item.rarity, parent?.rarity || 'common');
+      assert.deepEqual(item.achievementIds, []);
+      assert.equal(item.legacy, false);
+      assert.equal(item.gachaExclusive, true);
+    }
+  }
+  const attack = poolItems('attacks').find((item) => item.id === 'shield_alt');
+  const entrance = poolItems('entrances').find((item) => item.id === 'classic-alt');
+  const pick = poolItems('attacks')
+    .slice(0, poolItems('attacks').indexOf(attack))
+    .reduce((total, item) => total + item.weight, 0);
+  const { db, store, user, other } = fixture(t, { choose: () => pick });
+  fund(store, db, user);
+  assert.equal(
+    store.draw(user, { pool: 'attacks', count: 1, requestId: randomUUID() }).results[0].id,
+    attack.id,
+  );
+  assert.ok(store.owned(user).attacks.has(attack.id));
+  assert.ok(!store.owned(user).attacks.has('shield'));
+  assert.ok(!store.owned(user).entrances.has(entrance.id));
+  store.exchange(user, { key: entrance.key, requestId: randomUUID() });
+  assert.ok(store.owned(user).entrances.has(entrance.id));
+  assert.ok(!store.owned(other).attacks.has(attack.id));
+  assert.ok(!store.owned(other).entrances.has(entrance.id));
+  const { setAttackSettings, getAttackSettings } = require('../src/profiles/settings');
+  const loadout = { q: attack.id, e: 'beam', r: '' };
+  assert.throws(() => setAttackSettings(db, other, loadout));
+  setAttackSettings(db, user, loadout);
+  assert.deepEqual(getAttackSettings(db, user), loadout);
 });

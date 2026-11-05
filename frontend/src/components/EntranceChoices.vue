@@ -8,6 +8,8 @@ import { apparate } from '../pages/lobby/apparition';
 import {
   entranceEffect,
   entranceEffects,
+  entranceVariant,
+  isFreeEntrance,
   setEntranceEffect,
   type EntranceEffectId,
 } from '../services/entrance-effects';
@@ -15,8 +17,9 @@ import { usePreferencesStore } from '../stores/preferences';
 import UiChoiceCard from './UiChoiceCard.vue';
 const prefs = usePreferencesStore();
 const unlocked = ref<string[]>([]);
-const allowed = (id: string) => !id.startsWith('stitch-') || unlocked.value.includes(id);
-const condition = (_id: string) => '抽卡、碎片兌換或兌換碼解鎖';
+const allowed = (id: string) => isFreeEntrance(id) || unlocked.value.includes(id);
+const condition = (id: string) =>
+  entranceVariant(id) ? '抽卡或碎片兌換解鎖' : '抽卡、碎片兌換或兌換碼解鎖';
 onMounted(async () => {
   try {
     const data = (await requestJson('/api/achievements')) as {
@@ -61,12 +64,10 @@ onBeforeUnmount(() => {
       v-for="effect in entranceEffects"
       :key="effect.id"
       class="entrance-choice"
-      :label="effect.label"
-      :aria-label="effect.label + '進場特效'"
+      :label="effect.label + (allowed(effect.id) ? '進場特效' : '進場特效預覽（未解鎖）')"
       :selected="entranceEffect === effect.id"
-      :unavailable="!allowed(effect.id)"
       @click="choose(effect.id)"
-      @mouseenter="play(effect.id)"
+      @pointerenter="(event: PointerEvent) => event.pointerType === 'mouse' && play(effect.id)"
       @focus="play(effect.id)"
       ><span
         :ref="(node) => node && stages.set(effect.id, node as HTMLElement)"

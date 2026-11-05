@@ -1,4 +1,4 @@
-import type { EntranceEffectId } from '../../services/entrance-effects';
+import { entranceVariant, type EntranceEffectId } from '../../services/entrance-effects';
 import { playEntranceBody } from '../../services/entrance-body';
 import {
   acquireEffectContext,
@@ -17,6 +17,7 @@ type Effect = (scene: Scene) => () => void;
 interface Scene {
   anchor: HTMLElement;
   layer: HTMLElement;
+  palette?: string;
   img: HTMLImageElement | null;
   /** Image centre and feet, in layer coordinates. */
   cx: number;
@@ -41,6 +42,7 @@ function element(scene: Scene, className: string, left: number, top: number) {
   node.className = 'lobby-fx ' + className;
   node.style.left = left + 'px';
   node.style.top = top + 'px';
+  if (scene.palette) node.style.setProperty('--entrance-palette', scene.palette);
   node.setAttribute('aria-hidden', 'true');
   scene.layer.append(node);
   return node;
@@ -53,6 +55,7 @@ function canvas(scene: Scene, size: number) {
   node.style.width = node.style.height = size + 'px';
   node.style.left = scene.cx - size / 2 + 'px';
   node.style.top = scene.cy - size / 2 + 'px';
+  if (scene.palette) node.style.setProperty('--entrance-palette', scene.palette);
   node.setAttribute('aria-hidden', 'true');
   scene.layer.append(node);
   return { node, scale };
@@ -336,7 +339,8 @@ const effects: Record<EntranceEffectId, Effect> = {
   ...Object.fromEntries(
     stitchEntrances.map((effect) => [
       effect.id,
-      (scene: Scene) => playStitchEntrance(effect.id, scene.layer, scene.cx, scene.feet),
+      (scene: Scene) =>
+        playStitchEntrance(effect.id, scene.layer, scene.cx, scene.feet, scene.palette),
     ]),
   ),
   classic,
@@ -355,12 +359,19 @@ export function apparate(
   kind: EntranceEffectId = 'classic',
 ): () => void {
   if (!motionAllowed() || activeEntrances.size >= MAX_ENTRANCES) return () => {};
+  const variant = entranceVariant(kind);
+  const base = variant?.variantOf ?? kind;
   const img = anchor.querySelector('img'),
     origin = layer.getBoundingClientRect(),
     box = (img || anchor).getBoundingClientRect(),
     scene: Scene = {
       anchor,
       layer,
+      palette:
+        variant &&
+        'grayscale(1) contrast(.82) sepia(1) saturate(3) hue-rotate(' +
+          (variant.paletteHue - 43) +
+          'deg)',
       img,
       cx: box.left - origin.left + box.width / 2,
       cy: box.top - origin.top + box.height / 2,
@@ -368,13 +379,14 @@ export function apparate(
       width: box.width,
       height: box.height,
     };
-  anchor.dataset.entrance = kind;
+  anchor.dataset.entrance = base;
   anchor.classList.add('is-apparating');
-  const cancel = (effects[kind] || classic)(scene);
-  const cancelBody = playEntranceBody(anchor, img, kind, DURATION[kind] || DURATION.classic);
+  const cancel = (effects[base] || classic)(scene);
+  const duration = entranceDuration(kind);
+  const cancelBody = playEntranceBody(anchor, img, base, duration);
   let done = false,
     releaseMotion = () => {};
-  const timer = setTimeout(finish, DURATION[kind] || DURATION.classic);
+  const timer = setTimeout(finish, duration);
   activeEntrances.add(finish);
   releaseMotion = watchMotionCancellation(finish);
   function finish() {
@@ -390,4 +402,5 @@ export function apparate(
   }
   return finish;
 }
-export const entranceDuration = (kind: EntranceEffectId) => DURATION[kind] || DURATION.classic;
+export const entranceDuration = (kind: EntranceEffectId) =>
+  DURATION[entranceVariant(kind)?.variantOf ?? kind] || DURATION.classic;
