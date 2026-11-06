@@ -15,35 +15,62 @@ const gradientMethods = new Set([
 ]);
 const colorProperties = new Set(['strokeStyle', 'fillStyle', 'shadowColor']);
 
-// Recolor each paint, including gradient stops, on the existing shared canvas.
-// Isolated per cast so an overlapping original keeps its own colors.
-export function attackPalette(context, hue) {
+function readPaint(value) {
+  const hsl = /^hsla?\(([-\d.]+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*([\d.]+))?\)$/.exec(value);
+  if (hsl)
+    return {
+      hue: Number(hsl[1]),
+      saturation: Number(hsl[2]),
+      light: Number(hsl[3]),
+      alpha: hsl[4] ?? 1,
+    };
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value);
+  const rgba = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(value);
+  if (!hex && !rgba) return;
+  const [red, green, blue] = hex
+    ? hex[1]
+        .match(hex[1].length === 3 ? /./g : /../g)
+        .map((part) => parseInt(part.length === 1 ? part + part : part, 16))
+    : rgba.slice(1, 4).map(Number);
+  const max = Math.max(red, green, blue),
+    min = Math.min(red, green, blue);
+  const chroma = max - min,
+    light = (max + min) / 5.1;
+  const hue = !chroma
+    ? 0
+    : max === red
+      ? (green - blue) / chroma
+      : max === green
+        ? (blue - red) / chroma + 2
+        : (red - green) / chroma + 4;
+  const saturation = chroma ? (100 * chroma) / (255 - Math.abs(max + min - 255)) : 0;
+  return { hue: hue * 60, saturation, light, alpha: rgba?.[4] ?? 1 };
+}
+
+// Rotate the main hue and carry the original accents along with it. Keep the
+// alpha and lightness of each paint so the glow, core and outline still read.
+export function attackPalette(context, hue, baseColor) {
+  const shift = hue - (readPaint(baseColor)?.hue ?? hue);
   const cache = new Map();
   function color(value) {
     if (typeof value !== 'string') return value;
     if (cache.has(value)) return cache.get(value);
-    const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value);
-    const rgba = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(value);
-    const hsl = /^hsla?\(([\d.]+),\s*[\d.]+%,\s*([\d.]+)%(?:,\s*([\d.]+))?\)$/.exec(value);
-    let light,
-      alpha = 1;
-    if (hex || rgba) {
-      const channels = hex
-        ? hex[1]
-            .match(hex[1].length === 3 ? /./g : /../g)
-            .map((part) => parseInt(part.length === 1 ? part + part : part, 16))
-        : rgba.slice(1, 4).map(Number);
-      light = (Math.min(...channels) + Math.max(...channels)) / 5.1;
-      alpha = rgba?.[4] ?? 1;
-    } else if (hsl) {
-      light = Number(hsl[2]);
-      alpha = hsl[3] ?? 1;
+    const paint = readPaint(value);
+    let tinted = value;
+    if (paint && paint.light > 3 && paint.light < 98) {
+      const targetHue = paint.saturation >= 15 ? paint.hue + shift : hue;
+      const saturation = Math.round(Math.max(30, paint.saturation * 0.92));
+      tinted =
+        'hsla(' +
+        Math.round(((targetHue % 360) + 360) % 360) +
+        ', ' +
+        saturation +
+        '%, ' +
+        Math.round(paint.light) +
+        '%, ' +
+        paint.alpha +
+        ')';
     }
-    // Keep the white cores and deep outlines. Give neutral midtones a visible tint.
-    const tinted =
-      light === undefined || light <= 3 || light >= 98
-        ? value
-        : 'hsla(' + hue + ', 78%, ' + Math.round(light) + '%, ' + alpha + ')';
     if (cache.size >= 256) cache.clear();
     cache.set(value, tinted);
     return tinted;

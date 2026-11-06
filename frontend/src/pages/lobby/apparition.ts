@@ -18,6 +18,7 @@ interface Scene {
   anchor: HTMLElement;
   layer: HTMLElement;
   palette?: string;
+  variantId?: string;
   img: HTMLImageElement | null;
   /** Image centre and feet, in layer coordinates. */
   cx: number;
@@ -340,7 +341,14 @@ const effects: Record<EntranceEffectId, Effect> = {
     stitchEntrances.map((effect) => [
       effect.id,
       (scene: Scene) =>
-        playStitchEntrance(effect.id, scene.layer, scene.cx, scene.feet, scene.palette),
+        playStitchEntrance(
+          effect.id,
+          scene.layer,
+          scene.cx,
+          scene.feet,
+          scene.palette,
+          scene.variantId,
+        ),
     ]),
   ),
   classic,
@@ -351,6 +359,16 @@ const effects: Record<EntranceEffectId, Effect> = {
   rift,
   particles,
 };
+
+function entrancePalette(variant: NonNullable<ReturnType<typeof entranceVariant>>) {
+  if (variant.sourceHue !== undefined)
+    return 'hue-rotate(' + (variant.paletteHue - variant.sourceHue) + 'deg) saturate(1.15)';
+  return (
+    'grayscale(1) contrast(.82) sepia(1) saturate(3) hue-rotate(' +
+    (variant.paletteHue - 43) +
+    'deg)'
+  );
+}
 
 /** Plays `kind` around `anchor` inside `layer`; returns a cancel function. */
 export function apparate(
@@ -367,11 +385,8 @@ export function apparate(
     scene: Scene = {
       anchor,
       layer,
-      palette:
-        variant &&
-        'grayscale(1) contrast(.82) sepia(1) saturate(3) hue-rotate(' +
-          (variant.paletteHue - 43) +
-          'deg)',
+      variantId: variant?.id,
+      palette: variant && entrancePalette(variant),
       img,
       cx: box.left - origin.left + box.width / 2,
       cy: box.top - origin.top + box.height / 2,

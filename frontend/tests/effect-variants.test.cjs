@@ -40,5 +40,7 @@ test('all effect versions appear once beside their original, including the older
     }
   }
   const crescent = attackGroups.find((group) => group.original.id === 'blade_aura');
+  assert.equal(crescent.original.label, '半月劍氣');
+  assert.equal(crescent.original.color, '#00d0ff');
   assert.equal(crescent.versions[1].id, 'blade_aura_crimson');
 });

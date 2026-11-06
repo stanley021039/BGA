@@ -42,12 +42,10 @@ function glowSprite(color) {
 // (without clearing) and returns false once the attack has finished.
 export function createAttackScene(context, options) {
   const variant = attackVariant(options.effect);
-  const palette = variant && attackPalette(context, variant.paletteHue);
+  const base = variant && attackEffects.find((effect) => effect.id === variant.variantOf);
+  const palette = base && attackPalette(context, variant.paletteHue, base.color);
   const ctx = palette?.ctx ?? context;
-  if (variant) {
-    const base = attackEffects.find((effect) => effect.id === variant.variantOf);
-    options = { ...options, effect: base.id, color: base.color };
-  }
+  if (base) options = { ...options, effect: base.id, color: base.color };
   const fx = options.fx || FULL_DETAIL;
   // Previews use the same phase schedule; real scenes only show server-settled hits.
   if (options.preview && !options.readHits && !['shield', 'sphere'].includes(options.effect)) {
@@ -979,8 +977,9 @@ export function createAttackScene(context, options) {
             if (step === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
           }
-          ctx.strokeStyle = strand % 2 ? p.color1 : p.color2;
-          ctx.shadowColor = ctx.strokeStyle;
+          const strandColor = strand % 2 ? p.color1 : p.color2;
+          ctx.strokeStyle = strandColor;
+          ctx.shadowColor = strandColor;
           ctx.shadowBlur = 18;
           ctx.lineWidth = 5 + (strand % 2) * 2;
           ctx.stroke();

@@ -33,7 +33,9 @@ test('both crescent variants are separate selectable persistent artwork IDs', ()
   assert.equal(effects.filter((effect) => !('paletteHue' in effect)).length, 37);
   assert.equal(new Set(effects.map((e) => e.id)).size, effects.length);
   assert.ok(!effects.some((e) => e.id === 'flame_kick'));
-  assert.equal(effects.find((e) => e.id === 'blade_aura').label, '藍黑半月劍氣');
+  const original = effects.find((e) => e.id === 'blade_aura');
+  assert.equal(original.label, '半月劍氣');
+  assert.equal(original.color, '#00d0ff');
   assert.equal(effects.find((e) => e.id === 'blade_aura_crimson').label, '紅黑半月劍氣');
 });
 

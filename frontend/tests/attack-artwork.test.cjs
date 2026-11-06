@@ -164,6 +164,18 @@ test('rainbow barrage paints multiple distinct authored shot colours', () => {
     assert.ok(r.colors.includes(c), c);
 });
 
+test('rose barrage retains seven projectile hues and a rose main accent', () => {
+  const { colors } = run('barrage_alt', '#fa4298');
+  const hues = new Set(
+    colors.flatMap((color) => {
+      const paint = /^hsla\((\d+), \d+%, \d+%, 1\)$/.exec(color);
+      return paint ? [Number(paint[1])] : [];
+    }),
+  );
+  assert.ok(hues.has(332));
+  assert.ok(hues.size >= 7);
+});
+
 test('every current offensive renderer waits for both authoritative settlement and its arrival clock', () => {
   const timing = require('../../public/shared/attack-timing.json');
   for (const effect of require('../../public/shared/attack-effects.json').filter(

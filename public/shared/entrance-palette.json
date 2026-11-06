@@ -42,14 +42,16 @@
       "label": "經典現影（翡翠異色）",
       "description": "以翡翠配色重現原版的進場動畫。",
       "variantOf": "classic",
-      "paletteHue": 154
+      "paletteHue": 154,
+      "sourceHue": 250
     },
     {
       "id": "smoke-alt",
       "label": "黑煙漩渦（赤銅異色）",
       "description": "以赤銅配色重現原版的進場動畫。",
       "variantOf": "smoke",
-      "paletteHue": 20
+      "paletteHue": 20,
+      "sourceHue": 255
     },
     {
       "id": "sparks-alt",
@@ -84,7 +86,8 @@
       "label": "粒子組合（翡翠異色）",
       "description": "以翡翠配色重現原版的進場動畫。",
       "variantOf": "particles",
-      "paletteHue": 153
+      "paletteHue": 153,
+      "sourceHue": 28
     },
     {
       "id": "stitch-senbonzakura-alt",
@@ -112,7 +115,8 @@
       "label": "殘火太刀（蒼焰異色）",
       "description": "以蒼焰配色重現原版的進場動畫。",
       "variantOf": "stitch-zanka",
-      "paletteHue": 201
+      "paletteHue": 201,
+      "sourceHue": 26
     },
     {
       "id": "stitch-gilgamesh-alt",
@@ -124,7 +128,7 @@
     {
       "id": "stitch-purple-alt",
       "label": "虛式「茈」（赤焰異色）",
-      "description": "以赤焰配色重現原版的進場動畫。",
+      "description": "深赤焰與亮赤焰交會，暗紅外圈收束成白熱焰芯。",
       "variantOf": "stitch-purple",
       "paletteHue": 19
     },
@@ -154,7 +158,8 @@
       "label": "替身 · 近身狂拳（海藍異色）",
       "description": "以海藍配色重現原版的進場動畫。",
       "variantOf": "stitch-stand-fists",
-      "paletteHue": 205
+      "paletteHue": 205,
+      "sourceHue": 276
     },
     {
       "id": "stitch-stand-time-alt",
@@ -168,7 +173,8 @@
       "label": "替身 · 翠綠連彈（熔金異色）",
       "description": "以熔金配色重現原版的進場動畫。",
       "variantOf": "stitch-stand-emerald",
-      "paletteHue": 45
+      "paletteHue": 45,
+      "sourceHue": 157
     },
     {
       "id": "stitch-ulquiorra-alt",
@@ -189,14 +195,16 @@
       "label": "天罰閃電（碧雷異色）",
       "description": "以碧雷配色重現原版的進場動畫。",
       "variantOf": "stitch-lightning",
-      "paletteHue": 162
+      "paletteHue": 162,
+      "sourceHue": 202
     },
     {
       "id": "stitch-exodia-alt",
       "label": "黑暗大法師（冰藍異色）",
       "description": "以冰藍配色重現原版的進場動畫。",
       "variantOf": "stitch-exodia",
-      "paletteHue": 197
+      "paletteHue": 197,
+      "sourceHue": 41
     },
     {
       "id": "stitch-water-breathing-alt",
@@ -210,14 +218,16 @@
       "label": "爆裂魔法（蒼炎異色）",
       "description": "以蒼炎配色重現原版的進場動畫。",
       "variantOf": "stitch-explosion",
-      "paletteHue": 206
+      "paletteHue": 206,
+      "sourceHue": 24
     },
     {
       "id": "stitch-starburst-alt",
       "label": "星爆氣流斬（紫星異色）",
       "description": "以紫星配色重現原版的進場動畫。",
       "variantOf": "stitch-starburst",
-      "paletteHue": 281
+      "paletteHue": 281,
+      "sourceHue": 171
     },
     {
       "id": "stitch-black-moon-alt",
@@ -238,7 +248,8 @@
       "label": "靈貓隨行（玫紅異色）",
       "description": "以玫紅配色重現原版的進場動畫。",
       "variantOf": "stitch-gentle-kitty",
-      "paletteHue": 330
+      "paletteHue": 330,
+      "sourceHue": 22
     },
     {
       "id": "stitch-chibaku-tensei-alt",
