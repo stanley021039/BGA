@@ -43,9 +43,12 @@ function glowSprite(color) {
 export function createAttackScene(context, options) {
   const variant = attackVariant(options.effect);
   const base = variant && attackEffects.find((effect) => effect.id === variant.variantOf);
-  const palette = base && attackPalette(context, variant.paletteHue, base.color);
+  // The rose barrage draws its own light and dark shots on the shared canvas.
+  const roseBarrage = variant?.id === 'barrage_alt';
+  const palette = base && !roseBarrage && attackPalette(context, variant.paletteHue, base.color);
   const ctx = palette?.ctx ?? context;
-  if (base) options = { ...options, effect: base.id, color: base.color };
+  if (base)
+    options = { ...options, effect: base.id, color: roseBarrage ? variant.color : base.color };
   const fx = options.fx || FULL_DETAIL;
   // Previews use the same phase schedule; real scenes only show server-settled hits.
   if (options.preview && !options.readHits && !['shield', 'sphere'].includes(options.effect)) {
@@ -592,7 +595,7 @@ export function createAttackScene(context, options) {
       { ...options, area, label: definition?.label, range: combatRules.areaAttackRange },
       areaImpact,
     ) ||
-    createRevisionAttack(ctx, options, () => {
+    createRevisionAttack(ctx, roseBarrage ? { ...options, effect: variant.id } : options, () => {
       triggerShockwave(to.x, to.y, 105, options.color, 4);
       spawnImpactSparks(to.x, to.y, 22, options.color);
       spawnDamageText(to.x, to.y, 1, options.critical === true);

@@ -158,22 +158,19 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
   assert.equal(timers.size, 0);
   return { colors, arcs, lines, transforms, texts, positions, rotations };
 }
-test('rainbow barrage paints multiple distinct authored shot colours', () => {
-  const r = run('barrage', '#00f0ff');
-  for (const c of ['#00f0ff', '#ff2a5f', '#ffea00', '#a855f7', '#10b981', '#ff007f', '#ff8800'])
-    assert.ok(r.colors.includes(c), c);
+test('original barrage paints seven bright shots with white highlights', () => {
+  const { colors } = run('barrage', '#63f5ff');
+  for (const color of ['#63f5ff', '#ff819c', '#fff16a', '#c99aff', '#69f2b5', '#ff8cd8', '#ffc17c'])
+    assert.ok(colors.includes(color), color);
+  assert.ok(colors.includes('#ffffff'));
 });
 
-test('rose barrage retains seven projectile hues and a rose main accent', () => {
+test('rose barrage keeps a rose palette with darker shots and lighter rings', () => {
   const { colors } = run('barrage_alt', '#fa4298');
-  const hues = new Set(
-    colors.flatMap((color) => {
-      const paint = /^hsla\((\d+), \d+%, \d+%, 1\)$/.exec(color);
-      return paint ? [Number(paint[1])] : [];
-    }),
-  );
-  assert.ok(hues.has(332));
-  assert.ok(hues.size >= 7);
+  for (const color of ['#ed4190', '#ff79b4', '#e62e78', '#ff569c', '#983058', '#742150', '#713769'])
+    assert.ok(colors.includes(color), color);
+  for (const color of ['#e086aa', '#c976a8', '#cf8fc9']) assert.ok(colors.includes(color), color);
+  assert.ok(!colors.includes('#63f5ff'));
 });
 
 test('red-and-black cross beam paints a dark core and a red outer beam', () => {

@@ -2,6 +2,25 @@
  * Workbench dummy/grid removed; retains prior detailed phoenix/fists via composition.
  * Fixed side-column overlap and target centring; avatar knockback belongs to scene-knockback.
  * Pure bounded drawing; no network, DOM, timer, animation loop or invented damage. */
+const BRIGHT_BARRAGE = [
+  ['#63f5ff'],
+  ['#ff819c'],
+  ['#fff16a'],
+  ['#c99aff'],
+  ['#69f2b5'],
+  ['#ff8cd8'],
+  ['#ffc17c'],
+];
+const ROSE_BARRAGE = [
+  ['#ed4190'],
+  ['#983058', '#e086aa'],
+  ['#ff79b4'],
+  ['#742150', '#c976a8'],
+  ['#e62e78'],
+  ['#713769', '#cf8fc9'],
+  ['#ff569c'],
+];
+
 export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle = 0) {
   p = Math.max(0, Math.min(1, p));
   ctx.save();
@@ -334,11 +353,12 @@ export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle
   /* ----------------------------------------------------------------------
          7. BARRAGE (Pellet Core + Toroid Rings + Cross Impacts)
          ---------------------------------------------------------------------- */
-  else if (kind === 'barrage') {
+  else if (kind === 'barrage' || kind === 'barrage_alt') {
     const pelletCount = 18;
-    const palette = ['#00f0ff', '#ff2a5f', '#ffea00', '#a855f7', '#10b981', '#ff007f', '#ff8800'];
+    const rose = kind === 'barrage_alt';
+    const palette = rose ? ROSE_BARRAGE : BRIGHT_BARRAGE;
     for (let b = 0; b < pelletCount; b++) {
-      const shotColor = palette[b % palette.length];
+      const [shotColor, ringColor = shotColor] = palette[b % palette.length];
       const bp = (p * 2.8 + b / pelletCount) % 1;
       const bx = bp * targetX;
       const by = Math.sin(b * 1.5 + p * 8) * 80 * Math.sin(bp * Math.PI);
@@ -347,7 +367,7 @@ export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle
       ctx.translate(bx, by);
 
       // Dual Spiral Tail
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+      ctx.strokeStyle = rose ? 'rgba(236, 56, 142, 0.4)' : 'rgba(105, 245, 255, 0.55)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -365,8 +385,15 @@ export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle
       ctx.arc(0, 0, 6, 0, Math.PI * 2);
       ctx.fill();
 
+      if (!rose) {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       // Toroid High Energy Ring
-      ctx.strokeStyle = shotColor;
+      ctx.strokeStyle = ringColor;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.ellipse(0, 0, 14, 4, 0.4, 0, Math.PI * 2);
@@ -752,7 +779,7 @@ export function drawScreenRift(ctx, p, width, height) {
 }
 
 export function createRevisionAttack(ctx, options, onImpact) {
-  if (!['barrage', 'orbital'].includes(options.effect)) return null;
+  if (!['barrage', 'barrage_alt', 'orbital'].includes(options.effect)) return null;
   const { from, to, width, height } = options;
   const dx = to.x - from.x,
     dy = to.y - from.y,

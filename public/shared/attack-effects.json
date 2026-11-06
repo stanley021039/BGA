@@ -2,8 +2,8 @@
   {
     "id": "barrage",
     "label": "連射／散射能量彈",
-    "color": "#00f0ff",
-    "description": "七色能量彈連射，彩色流光拖尾與著彈火花同步綻放。",
+    "color": "#63f5ff",
+    "description": "七種亮彩能量彈連射，彩色流光拖尾與著彈火花同步綻放。",
     "achievementId": null,
     "damageMultiplier": 0.8
   },
@@ -342,7 +342,7 @@
     "id": "barrage_alt",
     "label": "連射／散射能量彈（玫紅異色）",
     "color": "#fa4298",
-    "description": "異色特效，招式效果與原版相同。七色能量彈連射，彩色流光拖尾與著彈火花同步綻放。",
+    "description": "亮玫紅與深莓紫能量彈交錯連射，拖尾與著彈火花呈現深淺層次。",
     "gachaOnly": true,
     "variantOf": "barrage",
     "paletteHue": 332,
