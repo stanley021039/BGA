@@ -4,22 +4,23 @@
  * Pure bounded drawing; no network, DOM, timer, animation loop or invented damage. */
 const BRIGHT_BARRAGE = [
   ['#63f5ff'],
+  ['#e3edf5', '#9eb2c9'],
   ['#ff819c'],
-  ['#fff16a'],
+  ['#95acbf', '#d5e8f5'],
   ['#c99aff'],
+  ['#e9cb90', '#fff0bf'],
   ['#69f2b5'],
-  ['#ff8cd8'],
-  ['#ffc17c'],
 ];
 const ROSE_BARRAGE = [
   ['#ed4190'],
-  ['#983058', '#e086aa'],
+  ['#535b66', '#aeb7c5'],
   ['#ff79b4'],
   ['#742150', '#c976a8'],
   ['#e62e78'],
-  ['#713769', '#cf8fc9'],
+  ['#70462f', '#c4946f'],
   ['#ff569c'],
 ];
+const BARRAGE_SHOT_SCALES = [1, 0.72, 1.28];
 
 export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle = 0) {
   p = Math.max(0, Math.min(1, p));
@@ -359,12 +360,14 @@ export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle
     const palette = rose ? ROSE_BARRAGE : BRIGHT_BARRAGE;
     for (let b = 0; b < pelletCount; b++) {
       const [shotColor, ringColor = shotColor] = palette[b % palette.length];
+      const shotScale = BARRAGE_SHOT_SCALES[b % BARRAGE_SHOT_SCALES.length];
       const bp = (p * 2.8 + b / pelletCount) % 1;
       const bx = bp * targetX;
       const by = Math.sin(b * 1.5 + p * 8) * 80 * Math.sin(bp * Math.PI);
 
       ctx.save();
       ctx.translate(bx, by);
+      ctx.scale(shotScale, shotScale);
 
       // Dual Spiral Tail
       ctx.strokeStyle = rose ? 'rgba(236, 56, 142, 0.4)' : 'rgba(105, 245, 255, 0.55)';

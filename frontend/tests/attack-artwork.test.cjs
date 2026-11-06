@@ -31,6 +31,7 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
     arcs = [],
     lines = [],
     transforms = [],
+    scales = [],
     texts = [],
     positions = [],
     rotations = [];
@@ -48,6 +49,9 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
       setTransform() {},
       translate(x, y) {
         transforms.push({ x, y });
+      },
+      scale(x, y) {
+        scales.push([x, y]);
       },
       rotate(angle) {
         rotations.push(angle);
@@ -156,21 +160,37 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
   stop();
   assert.equal(callback, null);
   assert.equal(timers.size, 0);
-  return { colors, arcs, lines, transforms, texts, positions, rotations };
+  return { colors, arcs, lines, transforms, scales, texts, positions, rotations };
 }
-test('original barrage paints seven bright shots with white highlights', () => {
+test('original barrage mixes bright colors and metallic shots with white highlights', () => {
   const { colors } = run('barrage', '#63f5ff');
-  for (const color of ['#63f5ff', '#ff819c', '#fff16a', '#c99aff', '#69f2b5', '#ff8cd8', '#ffc17c'])
+  for (const color of ['#63f5ff', '#ff819c', '#c99aff', '#69f2b5', '#e3edf5', '#95acbf', '#e9cb90'])
     assert.ok(colors.includes(color), color);
+  for (const color of ['#9eb2c9', '#d5e8f5', '#fff0bf']) assert.ok(colors.includes(color), color);
   assert.ok(colors.includes('#ffffff'));
 });
 
-test('rose barrage keeps a rose palette with darker shots and lighter rings', () => {
+test('rose barrage mixes rose, iron-gray, and coffee shots with lighter rings', () => {
   const { colors } = run('barrage_alt', '#fa4298');
-  for (const color of ['#ed4190', '#ff79b4', '#e62e78', '#ff569c', '#983058', '#742150', '#713769'])
+  for (const color of ['#ed4190', '#ff79b4', '#e62e78', '#ff569c', '#535b66', '#742150', '#70462f'])
     assert.ok(colors.includes(color), color);
-  for (const color of ['#e086aa', '#c976a8', '#cf8fc9']) assert.ok(colors.includes(color), color);
+  for (const color of ['#aeb7c5', '#c976a8', '#c4946f']) assert.ok(colors.includes(color), color);
   assert.ok(!colors.includes('#63f5ff'));
+});
+
+test('both barrages paint small, medium, and large shots on successive frames', () => {
+  for (const [effect, color] of [
+    ['barrage', '#63f5ff'],
+    ['barrage_alt', '#fa4298'],
+  ]) {
+    const { scales } = run(effect, color, 2);
+    for (const size of [0.72, 1, 1.28]) {
+      assert.ok(
+        scales.filter(([x, y]) => x === size && y === size).length >= 12,
+        `${effect} ${size}`,
+      );
+    }
+  }
 });
 
 test('red-and-black cross beam paints a dark core and a red outer beam', () => {
