@@ -1,7 +1,30 @@
 .stitch-vfx[data-entrance='stitch-purple'] {
-  filter: brightness(0.8) saturate(0.85);
+  filter: brightness(0.8) saturate(0.85) var(--entrance-palette,);
   [style*='hollow-singularity-core'] {
     opacity: 0.8;
+  }
+}
+// Keep the two streams in the red-flame family with distinct luminance.
+.stitch-vfx[data-entrance-variant='stitch-purple-alt'] {
+  [style*='hollow-red-spiral'] > .blur-sm {
+    --tw-brightness: brightness(0.55) contrast(1.2);
+  }
+  [style*='hollow-red-spiral'] > .border-2 {
+    opacity: 0.55;
+  }
+  [style*='hollow-red-spiral'] > .bg-white {
+    background-color: var(--stitch-artwork-swatch-ef4444);
+  }
+  [style*='hollow-blue-spiral'] > .blur-sm {
+    --tw-brightness: brightness(1.5);
+  }
+  [style*='hollow-singularity-core'] > .bg-black {
+    background: radial-gradient(
+      circle,
+      var(--stitch-artwork-swatch-ffffff),
+      var(--stitch-artwork-swatch-ef4444) 36%,
+      var(--stitch-artwork-swatch-000000) 76%
+    );
   }
 }
 .stitch-vfx[data-entrance='stitch-blue-eyes'] [style*='stitch-dragon-roar'] {

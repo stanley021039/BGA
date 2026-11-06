@@ -12,6 +12,7 @@ export const gameTypes = [
   'musicquiz',
   'minimal',
   'bluff',
+  'decrypto',
   'quacks',
   'ceo',
   'second-wind',
@@ -231,7 +232,9 @@ export function leaveEffect(snapshot: RoomSnapshot): string {
   const setup = ['waiting', 'finished', 'showdown'].includes(snapshot.phase);
   if (snapshot.type === 'trpg' && !setup)
     return '離席會移除自己的未結算行動；領隊離席時移交領隊，其他玩家可繼續。已揭曉的結果保留。離開後返回遊戲大廳。';
-  return ['telephone', 'musicquiz', 'minimal', 'bluff', 'quacks'].includes(snapshot.type) && !setup
+  return ['telephone', 'musicquiz', 'minimal', 'bluff', 'decrypto', 'quacks'].includes(
+    snapshot.type,
+  ) && !setup
     ? '離席會中止本場遊戲，保留已完成內容。離開後返回遊戲大廳。'
     : snapshot.type === 'draw' && !setup
       ? '畫者離席會揭曉本輪；人數不足時本場結束。離開後返回遊戲大廳。'
@@ -243,7 +246,7 @@ export function kickEffect(snapshot: RoomSnapshot): string {
     return '尚未結算的答案與預備題目將移除；人數不足時會提前結束本局。';
   if (snapshot.type === 'gift') return '玩家的未揭曉禮物與喜好將移除；人數不足時本局提前結束。';
   if (snapshot.type === 'draw') return '畫者離開會揭曉本輪；人數不足時本局提前結束。';
-  if (['telephone', 'musicquiz', 'minimal', 'bluff', 'quacks'].includes(snapshot.type))
+  if (['telephone', 'musicquiz', 'minimal', 'bluff', 'decrypto', 'quacks'].includes(snapshot.type))
     return '玩家離席會中止本場遊戲，保留已完成內容。';
   if (snapshot.type === 'trpg')
     return '玩家的未結算行動將移除；領隊離席時移交領隊，其他玩家可繼續。已揭曉的結果保留。';

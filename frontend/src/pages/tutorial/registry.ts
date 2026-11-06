@@ -8,6 +8,7 @@ import { readDrawSnapshot } from '../../contracts/drawing';
 import { readCocSnapshot } from '../../contracts/coc';
 import { readTrpgSnapshot } from '../../contracts/trpg';
 import { readQuacksSnapshot } from '../../contracts/quacks';
+import { readDecryptoSnapshot } from '../../contracts/decrypto';
 import { readBluffSnapshot } from '../../contracts/bluff';
 import { readTelephoneSnapshot } from '../../contracts/telephone';
 import { readMusicQuizSnapshot } from '../../contracts/musicquiz';
@@ -33,6 +34,17 @@ export const lessons: Record<TutorialType, Lesson> = {
     ],
     reader: readCocSnapshot,
     scene: defineAsyncComponent(() => import('../coc/CocTable.vue')),
+  },
+  decrypto: {
+    title: '截碼戰',
+    goal: '兩隊傳遞三位密碼，觀察線索、猜碼與揭曉。',
+    points: [
+      '自己的四個關鍵詞只給隊友看，出題者再看到本輪密碼。',
+      '出題者填三條語意線索；隊友猜碼，第二輪起對手也能截碼。',
+      '完整一輪後才判定勝負：兩次截碼成功獲勝、兩次隊內猜錯落敗；最多八輪再比較淨分與猜關鍵詞。',
+    ],
+    reader: readDecryptoSnapshot,
+    scene: defineAsyncComponent(() => import('../decrypto/DecryptoScene.vue')),
   },
   poker: {
     title: '德州撲克',

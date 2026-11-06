@@ -1,6 +1,8 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
+const { attackKind } = require('../src/rooms/attack-kind');
+const { fitsSlot } = require('../src/rooms/scene-energy');
 const { createAttackTimeline } = require('../src/rooms/attack-timeline');
 const { selectAttackTargets } = require('../src/rooms/attack-targets');
 const definitions = require('../public/shared/attack-effects.json');
@@ -12,8 +14,9 @@ function fixture(
     { id: 'b', x: 40, y: 50 },
     { id: 'c', x: 50, y: 50 },
   ],
+  random = () => 0.5,
 ) {
-  const combat = createSceneCombat(() => 0.5),
+  const combat = createSceneCombat(random),
     timeline = createAttackTimeline(combat);
   points.forEach((a) => combat.advance(a, 0));
   const event = {
@@ -32,7 +35,7 @@ function fixture(
   timeline.prepare(event, points[0], targets);
   const advance = (t) =>
     timeline.advance([event], points, t, (actor, time) => combat.advance(actor, time));
-  return { points, event, advance };
+  return { points, event, advance, fastUpdates: (t) => timeline.needsFastUpdates([event], t) };
 }
 test('every current offensive attack has a bounded authoritative arrival, no eager damage, and no duplicate settlement', () => {
   for (const definition of definitions.filter(
@@ -49,7 +52,13 @@ test('every current offensive attack has a bounded authoritative arrival, no eag
     f.advance(first);
     assert.equal(f.points[1].health, health);
   }
-  assert.deepEqual(Object.keys(timing).sort(), definitions.map((e) => e.id).sort());
+  assert.deepEqual(
+    Object.keys(timing).sort(),
+    definitions
+      .filter((e) => !('paletteHue' in e))
+      .map((e) => e.id)
+      .sort(),
+  );
 });
 test('Babylon/Ea has a double-strength second stage; the two dragoon salvos share the balanced combo total', () => {
   for (const [effect, first, last, total] of [
@@ -127,4 +136,74 @@ test('leaving the frozen ray before impact misses, and an old second stage canno
   g.points[1].respawnAt = 0;
   g.advance(3880);
   assert.equal(g.points[1].health, 1200000);
+});
+
+test('new attack palettes use identical slots, targets, timing and settlement as their originals', () => {
+  const actors = [
+    { id: 'a', x: 20, y: 50, health: 1 },
+    { id: 'b', x: 40, y: 50, health: 1 },
+  ];
+  const snapshot = ({ effect, ...event }) => event;
+  const random = () => 0.1;
+  for (const { id, variantOf } of definitions.filter((e) => 'paletteHue' in e)) {
+    assert.equal(attackKind(id), variantOf);
+    for (const slot of ['q', 'e', 'r'])
+      assert.equal(fitsSlot(slot, id), fitsSlot(slot, variantOf), id);
+    assert.deepEqual(
+      selectAttackTargets(actors[0], actors, id, 1),
+      selectAttackTargets(actors[0], actors, variantOf, 1),
+      id,
+    );
+    if (['shield', 'sphere'].includes(variantOf)) continue;
+    const original = fixture(variantOf, undefined, random),
+      alternate = fixture(id, undefined, random);
+    assert.deepEqual(snapshot(alternate.event), snapshot(original.event), id);
+    for (const time of [600, 1300, 2400, 4400, 7400]) {
+      original.advance(time);
+      alternate.advance(time);
+      assert.deepEqual(snapshot(alternate.event), snapshot(original.event), id);
+      assert.deepEqual(alternate.points, original.points, id);
+      assert.equal(alternate.fastUpdates(time), original.fastUpdates(time), id);
+    }
+  }
+});
+
+test('black hole pulls only on a landed final hit and leaves ongoing movement available', () => {
+  const hit = fixture('singularity');
+  const victim = hit.points[1];
+  victim.targetX = 48;
+  victim.targetY = 50;
+  hit.advance(850);
+  assert.equal(victim.x, 40);
+  hit.advance(1250);
+  assert.equal(victim.x, 35);
+  assert.equal(victim.targetX, 48);
+  assert.equal(victim.immobileUntil, 0);
+  hit.advance(1250);
+  assert.equal(victim.x, 35);
+
+  const dodged = fixture('singularity');
+  dodged.advance(850);
+  dodged.points[1].x = 80;
+  dodged.advance(1250);
+  assert.equal(dodged.event.hits.at(-1).missed, true);
+  assert.equal(dodged.points[1].x, 80);
+});
+
+test('missile casts cap attacker energy after three real hits, including an earlier miss', () => {
+  for (const effect of ['micro_missiles', 'micro_missiles_alt']) {
+    const full = fixture(effect);
+    full.advance(1600);
+    assert.equal(full.points[0].energy, 30);
+    assert.equal(full.points[1].energy, 20);
+
+    const partial = fixture(effect);
+    partial.points[1].x = 80;
+    partial.advance(850);
+    partial.points[1].x = 40;
+    partial.advance(1600);
+    assert.equal(partial.event.hits[0].missed, true);
+    assert.equal(partial.points[0].energy, 30);
+    assert.equal(partial.points[1].energy, 15);
+  }
 });

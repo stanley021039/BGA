@@ -1,4 +1,5 @@
 import attackEffects from '../../../public/shared/attack-effects.json';
+import { attackArtworkKind } from '../services/attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
 import { validPassage, type Passage } from '../engines/scene-path.js';
 import backgrounds from '../../../public/shared/lobby-backgrounds.json';
@@ -33,20 +34,28 @@ export interface SceneCombatStatus {
   guanyin: boolean;
   excalibur: boolean;
   shield: 'none' | 'full' | 'residual';
+  guardEnergy?: number;
   regenerating: boolean;
   regenWaitMs: number;
   regenBlockedMs?: number;
   sealedMs?: number;
+  teleportBlockedMs?: number;
+  ordinaryDotMs?: number;
   regenPerSecond: number;
 }
 export interface LobbyVisitor {
   heroFlightUntil?: number;
   sealedUntil?: number;
+  teleportBlockedUntil?: number;
   energy?: number;
   energyMaximum?: number;
   combatStatus?: SceneCombatStatus;
   severed?: boolean;
   immobileUntil?: number;
+  guardFullMs?: number;
+  guardMs?: number;
+  slowMs?: number;
+  hasteMs?: number;
   knockback?: {
     id: string;
     fromX: number;
@@ -125,6 +134,7 @@ export interface AttackHead {
   biteAt: number;
   finished: boolean;
   cancelled: boolean;
+  exploded?: boolean;
 }
 export interface LobbySnapshot {
   attacks: LobbyAttack[];
@@ -232,6 +242,10 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         assists: counter(item.kda && record(item.kda).assists),
       },
       immobileUntil: finite(item.immobileUntil) ? item.immobileUntil : 0,
+      guardFullMs: Math.min(5000, counter(item.guardFullMs)),
+      guardMs: Math.min(5000, counter(item.guardMs)),
+      slowMs: counter(item.slowMs),
+      hasteMs: counter(item.hasteMs),
       severed: item.severed === true,
       fragment: (() => {
         if (!item.fragment) return null;
@@ -322,10 +336,13 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           guanyin: status.guanyin === true,
           excalibur: status.excalibur === true,
           shield: status.shield as SceneCombatStatus['shield'],
+          guardEnergy: counter(status.guardEnergy),
           regenerating: status.regenerating === true,
           regenWaitMs: status.regenWaitMs,
           regenBlockedMs: Number(status.regenBlockedMs || 0),
           sealedMs: Number(status.sealedMs || 0),
+          teleportBlockedMs: Math.min(1000, counter(status.teleportBlockedMs)),
+          ordinaryDotMs: Math.min(2000, counter(status.ordinaryDotMs)),
           regenPerSecond: Number(status.regenPerSecond),
         };
       })(),
@@ -334,6 +351,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       health: finite(item.health) ? item.health : undefined,
       heroFlightUntil: finite(item.heroFlightUntil) ? item.heroFlightUntil : 0,
       sealedUntil: finite(item.sealedUntil) ? item.sealedUntil : 0,
+      teleportBlockedUntil: finite(item.teleportBlockedUntil) ? item.teleportBlockedUntil : 0,
       maxHealth: finite(item.maxHealth) ? item.maxHealth : undefined,
       respawnAt: finite(item.respawnAt) ? item.respawnAt : undefined,
       id: text(item.id),
@@ -374,6 +392,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       .slice(-40)
       .map((value) => {
         const a = record(value);
+        const kind = attackArtworkKind(text(a.effect));
         if (
           !['id', 'fromId', 'toId', 'fromName', 'toName'].every((k) => text(a[k])) ||
           ![a.fromX, a.fromY, a.toX, a.toY].every(coordinate) ||
@@ -410,13 +429,14 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                     biteAt: Number(h.biteAt),
                     finished: h.finished,
                     cancelled: h.cancelled,
+                    exploded: h.exploded === true,
                   },
                 };
               })()
             : {}),
           ...(a.rays !== undefined
             ? (() => {
-                if (a.effect !== 'bijuu_beam' || !Array.isArray(a.rays) || a.rays.length !== 3)
+                if (kind !== 'bijuu_beam' || !Array.isArray(a.rays) || a.rays.length !== 3)
                   throw Error('尾獸玉射線資料格式不正確。');
                 return {
                   rays: a.rays.map((value) => {
@@ -430,7 +450,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             : {}),
           ...(a.hits !== undefined
             ? (() => {
-                const stages = attackTiming[a.effect as keyof typeof attackTiming] || [];
+                const stages = attackTiming[kind as keyof typeof attackTiming] || [];
                 if (
                   !Array.isArray(a.hits) ||
                   a.hits.length > Math.min(160, Math.max(1, stages.length) * 32)

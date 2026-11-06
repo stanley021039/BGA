@@ -131,6 +131,11 @@ const GAMES = [
   'lounge',
 ];
 test('open rooms of every game survive an app restart and keep playing', async (t) => {
+  // Hold Date while creating/comparing many real rooms. Under parallel load a
+  // bot used to advance an earlier room before its snapshot was persisted,
+  // making the exact phase assertion race against the scheduler. Real IO and
+  // timers still run; advance this clock during the continuation check below.
+  t.mock.timers.enable({ apis: ['Date'], now: Date.now() });
   const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'bga-room-persist-'));
   let server = null;
   // Close the running app before removing its data directory.
@@ -226,7 +231,12 @@ test('open rooms of every game survive an app restart and keep playing', async (
     );
   }
   // Bots keep playing after the restart, through the restored scheduler.
-  await new Promise((resolve) => setTimeout(resolve, 2500));
+  const advancingClock = setInterval(() => t.mock.timers.tick(500), 100);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+  } finally {
+    clearInterval(advancingClock);
+  }
   let advanced = 0;
   for (const [type, { code, state }] of before) {
     if (state.diceCheck) continue;

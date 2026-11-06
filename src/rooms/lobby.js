@@ -1,9 +1,11 @@
-const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
+const { attackKind } = require('./attack-kind');
+const { selectAttackTargets } = require('./attack-targets');
 const combatRules = require('../../public/shared/scene-rules.json');
 const energy = require('./scene-energy');
 const { HttpError } = require('../http/errors');
 const { createSceneCombat } = require('./scene-combat');
 const { createAttackTimeline } = require('./attack-timeline');
+const { sceneWalkWithSpeed } = require('../../frontend/src/engines/scene-path.js');
 const { randomBytes } = require('node:crypto');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
@@ -12,17 +14,12 @@ const MIN_X = 6,
   MAX_X = 94,
   MIN_Y = 12,
   MAX_Y = 97;
-// Entrance effects a visitor may pick (frontend services/entrance-effects.ts).
-const ENTRANCE_EFFECTS = new Set([
-  'classic',
-  'smoke',
-  'sparks',
-  'ink',
-  'runes',
-  'rift',
-  'particles',
-  ...require('../../public/shared/entrance-requirements.json').map((effect) => effect.id),
-]);
+const { starters, variants } = require('../../public/shared/entrance-palette.json');
+const ENTRANCE_EFFECTS = new Set(
+  [...starters, ...require('../../public/shared/entrance-requirements.json'), ...variants].map(
+    (effect) => effect.id,
+  ),
+);
 const PRESENCE_MS = 15000,
   EMOTE_MS = 5000,
   MAX_VISITORS = 80;
@@ -56,17 +53,22 @@ function createLobby(
     combat.advance(visitor, time);
     if (!visitor.health) return;
     const start = { x: visitor.x, y: visitor.y };
-    const elapsed = Math.max(
-      0,
-      (time - Math.max(visitor.updatedAt, visitor.immobileUntil || 0)) / 1000,
+    const walkFrom = Math.max(visitor.updatedAt, visitor.immobileUntil || 0);
+    const {
+      x: rawX,
+      y: rawY,
+      walkedMs,
+    } = sceneWalkWithSpeed(
+      visitor,
+      { x: visitor.targetX, y: visitor.targetY },
+      Math.max(0, time - walkFrom),
+      null,
+      {
+        slowMs: Math.max(0, (visitor.slowUntil || 0) - walkFrom),
+        hasteMs: Math.max(0, (visitor.hasteUntil || 0) - walkFrom),
+      },
     );
-    const dx = visitor.targetX - visitor.x,
-      dy = visitor.targetY - visitor.y;
-    const duration = Math.hypot(dx / WALK_X_PER_SECOND, dy / WALK_Y_PER_SECOND);
-    const ratio = duration ? Math.min(1, elapsed / duration) : 1;
-    energy.walk(visitor, Math.min(elapsed, duration) * 1000);
-    const rawX = visitor.x + dx * ratio,
-      rawY = visitor.y + dy * ratio;
+    energy.walk(visitor, walkedMs);
     const shiftX = Math.floor(rawX / 100) * 100,
       shiftY = Math.floor(rawY / 100) * 100;
     visitor.x = rawX - shiftX;
@@ -229,7 +231,7 @@ function createLobby(
     combat.canCast(self, time);
     energy.spend(self, slot);
     const defensive = target === self;
-    const hit = defensive ? combat.protect(self, time) : { damage: 0, critical: false };
+    const hit = defensive ? combat.protect(self, time, effect) : { damage: 0, critical: false };
     self.lastAttacks ||= {};
     self.lastAttacks[slot] = time;
     const event = {
@@ -255,7 +257,7 @@ function createLobby(
         event,
         self,
         targets,
-        effect === 'bijuu_beam' ? combat.targets(visitors.values()) : targets,
+        attackKind(effect) === 'bijuu_beam' ? combat.targets(visitors.values()) : targets,
       );
     if (event.head)
       for (let i = attacks.length - 1; i >= 0; i--)
@@ -339,8 +341,7 @@ function createLobby(
   function teleport(user, entrance) {
     const visitor = enter(user, entrance);
     combat.advance(visitor, now());
-    combat.canMove(visitor, now());
-    combat.canCast(visitor, now());
+    combat.canTeleport(visitor, now());
     // Open gutters and the lower floor keep arrivals clear of the game carousel.
     const zones = [
       [6, 18, 45, 76],

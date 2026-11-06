@@ -156,3 +156,27 @@ for (const effect of ['shield', 'sphere'])
       assert.equal(space.view(room, 'a').attacks.at(-1).damage, author ? 155000 : 165000);
     });
   }
+
+test('both shields, hero landing and Excalibur publish their visual lifetime to other players', () => {
+  const combat = createSceneCombat(() => 0.5);
+  for (const [effect, full, total] of [
+    ['shield', 2000, 4000],
+    ['sphere', 2000, 5000],
+    ['gate_of_heroes', 2000, 5000],
+    ['excalibur', 4100, 4100],
+  ]) {
+    const actor = { health: undefined, x: 0, y: 0 };
+    combat.advance(actor, 100);
+    if (effect === 'shield' || effect === 'sphere') combat.protect(actor, 100, effect);
+    else combat.cast(actor, effect, 100);
+    const view = combat.view(actor);
+    assert.equal(view.guardFullMs, full, effect);
+    assert.equal(view.guardMs, total, effect);
+    assert.equal(view.combatStatus, undefined, effect);
+    combat.advance(actor, 100 + full);
+    assert.equal(combat.view(actor).guardFullMs, 0, effect);
+    assert.equal(combat.view(actor).guardMs, total - full, effect);
+    combat.advance(actor, 100 + total);
+    assert.equal(combat.view(actor).guardMs, 0, effect);
+  }
+});

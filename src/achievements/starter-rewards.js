@@ -26,7 +26,7 @@ function catalog() {
   return {
     entrances: require('./entrance-rewards').rewards,
     attacks: require('../../public/shared/attack-effects.json').filter(
-      (r) => r.achievementId || r.gachaOnly,
+      (r) => !('paletteHue' in r) && (r.achievementId || r.gachaOnly),
     ),
     frames,
     media: frames,

@@ -417,8 +417,12 @@ class MusicQuizRoom extends PartyRoom {
         if (p.tokens < 3) fail('NOT_ENOUGH_TOKENS', '需要3枚標記');
         if (this.cursor >= this.sequence.length) fail('DECK_EMPTY', '已無可購買歌曲');
         p.tokens -= 3;
-        this.addCard(p, this.sequence[this.cursor++]);
-        this.event('buy', p.name + '買歌');
+        const purchased = this.sequence[this.cursor++];
+        this.addCard(p, purchased);
+        this.event(
+          'buy',
+          `${p.name}花3枚標記買入〈${purchased.title}〉（${purchased.year}），已加入音樂卡。`,
+        );
         if (p.timeline.length >= this.settings.target) this.finishTimeline();
       } else if (action === 'next') {
         if (this.phase !== 'reveal') fail('INVALID_PHASE', '先完成本輪');

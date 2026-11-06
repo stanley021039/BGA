@@ -4,6 +4,7 @@ const { DrawGuessRoom } = require('../src/games/draw-guess');
 const { validateWord } = require('../src/games/draw-guess-store');
 const { MajorityRoom } = require('../src/games/majority');
 const { TelephoneRoom } = require('../src/games/telephone');
+const { DecryptoRoom } = require('../src/games/decrypto');
 const { completeTelephoneTopics } = require('./helpers/telephone.cjs');
 const { addTestBot } = require('../src/ai');
 const { startRoomScheduler } = require('../src/rooms/scheduler');
@@ -72,6 +73,40 @@ function schedulerHarness(t, RoomClass = DrawGuessRoom, title = '手機') {
     },
   };
 }
+
+test('Decrypto scheduler waits for human clues and guesses without applying poker timeout actions', (t) => {
+  const h = schedulerHarness(t, DecryptoRoom),
+    r = h.room;
+  addTestBot(r);
+  addTestBot(r);
+  r.start();
+  for (let i = 0; i < 20; i++) h.tick();
+  assert.equal(r.phase, 'clues');
+  assert.equal(r.clues[0], null);
+  assert.ok(r.clues[1], 'the opponent AI still submits its clues');
+  assert.equal(r.deadline, null);
+  assert.deepEqual(h.errors, []);
+  assert.equal(
+    h.records.some((operation) => operation.source === 'timeout'),
+    false,
+  );
+  const s = r.view(h.human.id);
+  r.act(h.human.id, 'clues', {
+    roundId: s.roundId,
+    requestId: require('node:crypto').randomUUID(),
+    clues: ['甲方聯想', '乙方聯想', '丙方聯想'],
+  });
+  for (let i = 0; i < 20; i++) h.tick();
+  assert.equal(r.phase, 'reveal', 'the designated AI teammate decodes');
+  const revealed = r.results.length;
+  for (let i = 0; i < 20; i++) h.tick();
+  assert.equal(r.results.length, revealed, 'the human host must advance the reveal');
+  assert.deepEqual(h.errors, []);
+  assert.equal(
+    h.records.some((operation) => operation.source === 'timeout'),
+    false,
+  );
+});
 
 test('scheduler reveals an unfinished AI drawing at the deadline before attempting another stroke', (t) => {
   const h = schedulerHarness(t),

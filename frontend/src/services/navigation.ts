@@ -9,6 +9,7 @@ const gameRoutes = [
   'musicquiz',
   'minimal',
   'bluff',
+  'decrypto',
   'quacks',
   'lounge',
   'brainwave',
@@ -31,6 +32,7 @@ const documents = new Set([
   '/gifts',
   '/admin',
   '/rules',
+  '/decrypto',
   '/credits',
 ]);
 

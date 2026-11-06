@@ -82,3 +82,14 @@ test('room state and interpolation share the portal, preserve four-edge wrap, va
     { code: 'INVALID_MOVEMENT' },
   );
 });
+
+test('speed intervals give frost priority and count only the real time until arrival', () => {
+  const { sceneWalkWithSpeed } = require('../frontend/src/engines/scene-path.js');
+  const from = { x: 20, y: 20 };
+  const end = sceneWalkWithSpeed(from, { x: 80, y: 20 }, 1000, null, { slowMs: 200, hasteMs: 700 });
+  assert.ok(Math.abs(end.x - 32.42) < 1e-8);
+  assert.equal(end.walkedMs, 1000);
+  const arrived = sceneWalkWithSpeed(from, { x: 26, y: 20 }, 2000, null, { slowMs: 1000 });
+  assert.equal(arrived.x, 26);
+  assert.equal(arrived.walkedMs, 625);
+});

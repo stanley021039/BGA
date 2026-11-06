@@ -4,6 +4,7 @@
   position: absolute;
   pointer-events: none;
   z-index: 200;
+  filter: var(--entrance-palette, none);
 }
 .lobby-fx-canvas.is-fallback {
   border-radius: 50%;
@@ -89,7 +90,7 @@
   margin: -230px 0 0 -45px;
   border-radius: 45px 45px 8px 8px;
   background: linear-gradient(to top, #ffd678c0, #ffeeb000);
-  filter: blur(2px);
+  filter: blur(2px) var(--entrance-palette,);
   transform-origin: 50% 100%;
   animation: entrance-column 1.3s ease-out forwards;
 }

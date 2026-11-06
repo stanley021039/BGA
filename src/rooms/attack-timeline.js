@@ -1,8 +1,17 @@
+const { attackKind } = require('./attack-kind');
 const timing = require('../../public/shared/attack-timing.json');
 const rules = require('../../public/shared/scene-rules.json');
 const { inAttackArea, selectBijuuDirections } = require('./attack-targets');
 const { sceneDistance } = require('./scene-combat');
-const { prepareSpecial, advanceSpecial, queueHomingSteps } = require('./special-attacks');
+const {
+  prepareSpecial,
+  advanceSpecial,
+  queueHomingSteps,
+  failHoming,
+} = require('./special-attacks');
+
+// Include a final room update after the effect expires.
+const statusSettleMs = 500;
 
 // No per-projectile timers. Polls/commands advance this bounded scene clock.
 // Actor references remain private, never in serialized snapshots.
@@ -10,27 +19,29 @@ function createAttackTimeline(combat) {
   const runtime = new WeakMap();
   const homingByCaster = new WeakMap();
   function prepare(event, self, targets, actors = targets) {
-    if (event.effect === 'bijuu_beam')
+    const effect = attackKind(event.effect);
+    if (effect === 'bijuu_beam')
       event.rays = selectBijuuDirections(self, actors, event.aspectRatio);
     const source = {
       energyActor: self,
       energyLifeId: self.lifeId,
+      ...(effect === 'micro_missiles'
+        ? { ordinaryEnergyRemaining: rules.energy.missileCastCap }
+        : {}),
       id: self.id,
       health: 1,
       authorBonus: self.authorBonus,
       guanyinUntil: self.guanyinUntil,
       kda: self.kda,
-      ...(event.effect === 'gate_of_babylon'
-        ? { comboDamage: combat.rollBabylonDamage(self) }
-        : {}),
+      ...(effect === 'gate_of_babylon' ? { comboDamage: combat.rollBabylonDamage(self) } : {}),
     };
     const special = prepareSpecial(event, self, targets[0], source);
     if (special) {
       if (event.head) {
         const previous = homingByCaster.get(self);
         if (previous?.head && !previous.head.finished && !previous.head.cancelled) {
-          previous.head.cancelled = true;
-          previous.until = event.at + 400;
+          const previousLife = runtime.get(previous)?.special.lifeId;
+          failHoming(previous, previousLife === self.lifeId ? self : null, event.at);
         }
         homingByCaster.set(self, event);
       }
@@ -39,14 +50,14 @@ function createAttackTimeline(combat) {
     }
     const jobs = [];
     event.hits = [];
-    for (const [delay, weight, phase] of timing[event.effect]) {
+    for (const [delay, weight, phase] of timing[effect]) {
       if (phase.startsWith('burn')) {
         jobs.push({ at: event.at + delay, phase, weight, burn: true, done: false });
         continue;
       }
       for (const actor of targets.slice(0, rules.maximumAreaTargets)) {
         const delayMs =
-          event.effect === 'solar_phoenix'
+          effect === 'solar_phoenix'
             ? Math.round(
                 700 +
                   3400 *
@@ -75,9 +86,9 @@ function createAttackTimeline(combat) {
           delayMs,
           pending: true,
         };
-        if (event.effect === 'bijuu_beam') {
+        if (effect === 'bijuu_beam') {
           const ray = event.rays.find((ray) =>
-            inAttackArea(self, ray, actor, event.effect, event.aspectRatio, {
+            inAttackArea(self, ray, actor, effect, event.aspectRatio, {
               shape: 'rectangle',
               width: 7,
               range: rules.areaAttackRange,
@@ -98,7 +109,7 @@ function createAttackTimeline(combat) {
         });
       }
     }
-    if (event.effect === 'explosion')
+    if (effect === 'explosion')
       jobs.push({
         at: event.at + rules.explosionRecovery.delayMs,
         actor: self,
@@ -106,7 +117,17 @@ function createAttackTimeline(combat) {
         recovery: true,
         done: false,
       });
-    runtime.set(event, { source, jobs });
+    const lastJob = jobs.at(-1);
+    const movement =
+      lastJob &&
+      (effect === 'frost_spikes' || effect === 'blade_aura' || effect === 'blade_aura_crimson')
+        ? {
+            frost: effect === 'frost_spikes',
+            applied: false,
+            updateUntil: lastJob.at + Math.max(rules.frost.durationMs, rules.bladeHaste.durationMs),
+          }
+        : null;
+    runtime.set(event, { source, jobs, movement });
     event.damage = 0;
     event.critical = false;
     event.until = event.at + 4400;
@@ -124,6 +145,7 @@ function createAttackTimeline(combat) {
     due.sort((a, b) => a.job.at - b.job.at);
     let advancedAt;
     for (const { event, state, job } of due) {
+      const effect = attackKind(event.effect);
       job.done = true;
       if (advancedAt !== job.at) {
         for (const actor of bodies) moveActor(actor, job.at);
@@ -159,7 +181,7 @@ function createAttackTimeline(combat) {
                 actor.ownerId !== event.fromId &&
                 (included.has(actor.id) || included.size < rules.maximumAreaTargets) &&
                 actor.health > 0 &&
-                inAttackArea(origin, aim, actor, event.effect, event.aspectRatio, {
+                inAttackArea(origin, aim, actor, effect, event.aspectRatio, {
                   shape: 'rectangle',
                   width: 10,
                   range: passed,
@@ -195,9 +217,9 @@ function createAttackTimeline(combat) {
             origin,
             aim,
             actor,
-            event.effect,
+            effect,
             event.aspectRatio,
-            event.effect === 'bijuu_beam'
+            effect === 'bijuu_beam'
               ? {
                   shape: 'rectangle',
                   width: 7,
@@ -209,21 +231,36 @@ function createAttackTimeline(combat) {
           hit.missed = true;
           continue;
         }
-        Object.assign(
-          hit,
-          combat.hit(state.source, actor, job.at, event.effect, job.weight, job.phase),
-        );
+        Object.assign(hit, combat.hit(state.source, actor, job.at, effect, job.weight, job.phase));
+        const movement = state.movement;
+        if (movement && !movement.applied && hit.damage > 0 && actor.kind !== 'fragment') {
+          movement.applied = true;
+          movement.updateUntil =
+            job.at + (movement.frost ? rules.frost.durationMs : rules.bladeHaste.durationMs);
+          if (movement.frost) {
+            if (actor.health > 0 && (actor.slowUntil || 0) <= job.at)
+              actor.slowUntil = job.at + rules.frost.durationMs;
+          } else {
+            const owner = state.source.energyActor;
+            if (owner.health > 0 && owner.lifeId === state.source.energyLifeId)
+              owner.hasteUntil = job.at + rules.bladeHaste.durationMs;
+          }
+        }
         hit.toX = actor.x;
         hit.toY = actor.y;
-        if (event.effect !== 'dimension_cleave' || job.phase === 'finish')
+        const firstContact =
+          !state.firstContact && hit.damage > 0 && actor.health > 0 && actor.kind !== 'fragment';
+        if (firstContact) state.firstContact = true;
+        if (effect !== 'dimension_cleave' || job.phase === 'finish')
           combat.applyEffect(
             state.source,
             actor,
             job.at,
-            event.effect,
+            effect,
             origin,
             event.aspectRatio,
             job.phase,
+            firstContact,
           );
         if (
           job.burn &&
@@ -241,6 +278,27 @@ function createAttackTimeline(combat) {
     }
     for (const actor of bodies) moveActor(actor, time);
   }
-  return { prepare, advance };
+  function needsFastUpdates(events, time) {
+    return events.some((event) => {
+      const effect = attackKind(event.effect);
+      if (effect === 'singularity')
+        return time <= event.at + timing.singularity.at(-1)[0] + statusSettleMs;
+      if (
+        [
+          'giant_orange_cat',
+          'chains',
+          'bijuu_beam',
+          'orbital',
+          'arrow_volley',
+          'flame_vortex',
+          'shaohua_devour',
+        ].includes(effect)
+      )
+        return time <= event.until + statusSettleMs;
+      const movement = runtime.get(event)?.movement;
+      return movement && movement.updateUntil + statusSettleMs >= time;
+    });
+  }
+  return { prepare, advance, needsFastUpdates };
 }
 module.exports = { createAttackTimeline };

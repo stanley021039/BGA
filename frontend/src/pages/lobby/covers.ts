@@ -50,4 +50,4 @@ export const lobbyCovers = {
   market: responsiveCover(market360, market680),
   lounge: responsiveCover(lounge360, lounge680),
   coc: responsiveCover(coc360, coc680),
-} satisfies Record<LobbyCardId, ReturnType<typeof responsiveCover>>;
+} satisfies Record<Exclude<LobbyCardId, 'decrypto'>, ReturnType<typeof responsiveCover>>;

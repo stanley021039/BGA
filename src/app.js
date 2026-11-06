@@ -67,6 +67,7 @@ const { CocCampaignStore } = require('./coc/campaign-store');
 const { QuacksRoom } = require('./games/quacks');
 const { SecondWindRoom } = require('./games/second-wind/room');
 const { CeoRoom } = require('./games/ceo-room');
+const { DecryptoRoom } = require('./games/decrypto');
 const { BluffRoom } = require('./games/bluff');
 const { TelephoneRoom } = require('./games/telephone');
 const { MusicQuizRoom } = require('./games/musicquiz'),
@@ -458,7 +459,11 @@ function initializeApp(config, dataLock, acquired) {
       actionFeedback: require('./rooms/action-feedback').actionFeedback(room),
       type: room.type || 'poker',
       gameRevision: room.gameRevision || 0,
-      roomGames: frontend ? roomGames : roomGames.filter((game) => game.type !== 'brainwave'),
+      roomGames: roomGames.filter((game) => {
+        if (game.type === 'decrypto')
+          return config.decryptoEnabled ?? config.frontendEnabled === true;
+        return game.type !== 'brainwave' || !!frontend;
+      }),
       ...savedDrawResults,
       roomSpace: roomSpace.view(room, view.me, view.players, expressions),
       pingContext: runtime.pings.context(room),
@@ -979,6 +984,7 @@ function initializeApp(config, dataLock, acquired) {
     coc: CocRoom,
     quacks: QuacksRoom,
     bluff: BluffRoom,
+    decrypto: DecryptoRoom,
     telephone: TelephoneRoom,
     musicquiz: MusicQuizRoom,
     minimal: MinimalRoom,
@@ -1108,6 +1114,7 @@ function initializeApp(config, dataLock, acquired) {
   // Pushes room views to seated players as soon as they change (#232).
   const stateStream = createStateStream({
     project: (room, playerId) => withSocial(room, room.view(playerId)),
+    shouldFastSweep: roomSpace.needsFastUpdates,
     valid: (entry) =>
       !!auth.sessionFrom(entry.req) &&
       rooms.get(entry.room.code) === entry.room &&
@@ -1158,13 +1165,15 @@ function initializeApp(config, dataLock, acquired) {
       characterFor(db, user.id, defaults.characterId)
     );
   };
+  const freeEntrances = new Set(
+    require('../public/shared/entrance-palette.json').starters.map((e) => e.id),
+  );
+  const entranceAllowed = (user, id) =>
+    freeEntrances.has(id) ||
+    require('./achievements/bonus-rewards').owned(achievementStore, user.id).entrances.includes(id);
   const lobbyHandlers = createLobbyHandlers({
     attackLoadout: (user) => require('./profiles/settings').getAttackSettings(db, user.id),
-    entranceAllowed: (user, id) =>
-      ['classic', 'smoke', 'sparks', 'ink', 'runes', 'rift', 'particles'].includes(id) ||
-      require('./achievements/bonus-rewards')
-        .owned(achievementStore, user.id)
-        .entrances.includes(id),
+    entranceAllowed,
     backgroundAllowed: (user, id) =>
       require('./achievements/bonus-rewards')
         .owned(achievementStore, user.id)
@@ -1813,7 +1822,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge|brainwave|drama-bar)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|decrypto|lounge|brainwave|drama-bar)$/.test(
               page || '',
             )
           )
@@ -2091,6 +2100,11 @@ function initializeApp(config, dataLock, acquired) {
             !(config.secondWindEnabled ?? config.frontendEnabled === true)
           )
             throw new HttpError(400, 'GAME_NOT_ENABLED', '運動員尚未啟用');
+          if (
+            data.type === 'decrypto' &&
+            !(config.decryptoEnabled ?? config.frontendEnabled === true)
+          )
+            throw new HttpError(400, 'GAME_NOT_ENABLED', '截碼戰需要啟用新版前端');
           if (data.type === 'ceo' && !(config.ceoEnabled ?? config.frontendEnabled === true))
             throw new HttpError(400, 'GAME_NOT_ENABLED', 'CEO 仍在開發，尚未開放建立房間');
           if (pendingAchievementUnits.size >= 4096)
@@ -2115,6 +2129,7 @@ function initializeApp(config, dataLock, acquired) {
               'musicquiz',
               'minimal',
               'bluff',
+              'decrypto',
               'quacks',
               'ceo',
               'second-wind',
@@ -2150,7 +2165,7 @@ function initializeApp(config, dataLock, acquired) {
           if (voiceParty && !frontend)
             throw new HttpError(400, 'GAME_NOT_ENABLED', '此遊戲需要新版遊戲介面');
           const room = new (
-            (voiceParty && roomClasses[data.type]) ||
+            ((voiceParty || data.type === 'decrypto') && roomClasses[data.type]) ||
             (coc
               ? CocRoom
               : lounge
@@ -2184,6 +2199,7 @@ function initializeApp(config, dataLock, acquired) {
             code,
             String(
               data.roomName ||
+                (data.type === 'decrypto' ? '截碼戰好友局' : '') ||
                 (voiceParty
                   ? data.type === 'brainwave'
                     ? '電波畫家好友局'
@@ -2394,6 +2410,11 @@ function initializeApp(config, dataLock, acquired) {
           );
         if (url.pathname === '/api/change-game') {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
+          if (
+            data.targetType === 'decrypto' &&
+            !(config.decryptoEnabled ?? config.frontendEnabled === true)
+          )
+            throw new HttpError(400, 'GAME_NOT_ENABLED', '截碼戰需要啟用新版前端');
           limitRate(roomRate, 'mutation:' + user.id, 120);
           if (data.targetType === 'brainwave' && !frontend)
             throw new HttpError(400, 'GAME_NOT_ENABLED', '此遊戲需要新版遊戲介面');
@@ -2429,15 +2450,7 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/room-space') {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
           limitRate(roomRate, 'room-space:' + user.id, 360);
-          const entrance =
-            ['classic', 'smoke', 'sparks', 'ink', 'runes', 'rift', 'particles'].includes(
-              data.entrance,
-            ) ||
-            require('./achievements/bonus-rewards')
-              .owned(achievementStore, user.id)
-              .entrances.includes(data.entrance)
-              ? data.entrance
-              : 'classic';
+          const entrance = entranceAllowed(user, data.entrance) ? data.entrance : 'classic';
           roomSpace.move(
             room,
             p.id,
@@ -2990,6 +3003,7 @@ function initializeApp(config, dataLock, acquired) {
                   'musicquiz',
                   'minimal',
                   'bluff',
+                  'decrypto',
                   'quacks',
                   'ceo',
                   'second-wind',
@@ -3173,6 +3187,7 @@ function initializeApp(config, dataLock, acquired) {
         '/quacks.css': 'quacks.css',
         '/assets/game-sounds/bluff-reaction.mp3': 'assets/game-sounds/bluff-reaction.mp3',
         '/bluff': 'bluff.html',
+        '/decrypto': 'decrypto.html',
         '/musicquiz': 'musicquiz.html',
         '/minimal': 'minimal.html',
         '/lounge': 'lounge.html',
@@ -3252,7 +3267,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge|brainwave|drama-bar)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|decrypto|lounge|brainwave|drama-bar)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -3377,6 +3392,13 @@ function initializeApp(config, dataLock, acquired) {
         res.writeHead(404);
         return res.end();
       }
+      if (
+        (url.pathname === '/decrypto' || roomPath?.[1] === 'decrypto') &&
+        (!frontend || config.decryptoEnabled === false)
+      ) {
+        res.writeHead(404);
+        return res.end();
+      }
       const file = roomPath ? roomPath[1] + '.html' : files[url.pathname];
       if (!file) {
         res.writeHead(404);
@@ -3408,6 +3430,7 @@ function initializeApp(config, dataLock, acquired) {
               file === 'brainwave.html' ||
               file === 'drama-bar.html' ||
               file === 'bluff.html' ||
+              file === 'decrypto.html' ||
               file === 'quacks.html' ||
               file === 'ceo.html' ||
               file === 'second-wind.html'

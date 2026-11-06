@@ -5,6 +5,7 @@ import { lobbyCards as gameCards } from './catalog';
 import { usePreferencesStore } from '../../stores/preferences';
 import UiButton from '../../components/UiButton.vue';
 import { lobbyCovers } from './covers';
+import '../../styles/decrypto.scss';
 const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
@@ -191,8 +192,13 @@ onBeforeUnmount(() => {
           @focus="warmGamePage(card.id)"
         >
           <div class="tile-image"
+            ><div
+              v-if="visible(i) && card.id === 'decrypto'"
+              class="decrypto-cover"
+              aria-hidden="true"
+              ><span>1 · 2 · 3 · 4</span><span>秘密通訊</span></div
             ><img
-              v-if="visible(i)"
+              v-else-if="visible(i) && card.id !== 'decrypto'"
               :src="lobbyCovers[card.id].src"
               :srcset="lobbyCovers[card.id].srcset"
               sizes="(min-width: 1181px) and (min-height: 640px) and (pointer: fine) 300px, (max-width: 371px) calc(100vw - 32px), 340px"
@@ -227,8 +233,11 @@ onBeforeUnmount(() => {
                 chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'
               "
               >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
-            ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
-          ><slot name="scene-stats" /></div
+            ><UiButton
+              icon="next"
+              icon-only
+              label="下一款遊戲"
+              @click="select(index + 1)" /></div></div
       ></div>
       <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
     </div>

@@ -13,6 +13,7 @@ const roomGames = [
   ['minimal', '極簡畫家', 3, 8],
   ['brainwave', '電波畫家', 3, 8],
   ['bluff', '瞎掰王', 3, 9],
+  ['decrypto', '截碼戰', 4, 8],
   ['quacks', '郎中闖江湖', 2, 8],
 ].map(([type, name, min, max]) => Object.freeze({ type, name, min, max }));
 
@@ -49,6 +50,7 @@ function switchGame(room, actor, target, classes, drawMode) {
       if (Object.hasOwn(player, key)) fresh[key] = player[key];
   }
   next.host = room.host;
+  if (next.type === 'decrypto') next.players.forEach((p) => next.assignTeam(p));
   if (room.managerIds)
     Object.defineProperty(next, 'managerIds', {
       value: new Set(room.managerIds),

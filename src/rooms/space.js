@@ -1,4 +1,5 @@
-const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
+const { attackKind } = require('./attack-kind');
+const { selectAttackTargets } = require('./attack-targets');
 const combatRules = require('../../public/shared/scene-rules.json');
 const energy = require('./scene-energy');
 const { versionedAsset } = require('../http/asset-version');
@@ -8,6 +9,7 @@ const { createSceneCombat } = require('./scene-combat');
 const { createAttackTimeline } = require('./attack-timeline');
 const {
   sceneWalk,
+  sceneWalkWithSpeed,
   passageTarget,
   validPassage,
 } = require('../../frontend/src/engines/scene-path.js');
@@ -24,22 +26,20 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     combat.advance(position, time);
     if (!position.health) return;
     const start = { x: position.x, y: position.y };
-    const elapsedMs = Math.max(0, time - Math.max(position.at, position.immobileUntil || 0));
-    const remainingMs = sceneWalk(
-      position,
-      { x: position.targetX, y: position.targetY },
-      0,
-      position.passage,
-    ).remainingMs;
+    const walkFrom = Math.max(position.at, position.immobileUntil || 0);
     let wrapped = false;
-    const step = sceneWalk(
+    const step = sceneWalkWithSpeed(
       position,
       { x: position.targetX, y: position.targetY },
-      Math.max(0, time - Math.max(position.at, position.immobileUntil || 0)),
+      Math.max(0, time - walkFrom),
       position.passage,
+      {
+        slowMs: Math.max(0, (position.slowUntil || 0) - walkFrom),
+        hasteMs: Math.max(0, (position.hasteUntil || 0) - walkFrom),
+      },
     );
     position.x = step.x;
-    energy.walk(position, Math.min(elapsedMs, remainingMs));
+    energy.walk(position, step.walkedMs);
     position.y = step.y;
     if (step.crossed) position.wrapId = (position.wrapId || 0) + 1;
     for (const axis of ['x', 'y']) {
@@ -201,8 +201,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       return;
     }
     if (input.action === 'teleport') {
-      combat.canMove(self, time);
-      combat.canCast(self, time);
+      combat.canTeleport(self, time);
       if (self.teleportedAt !== undefined && time - self.teleportedAt < 1000)
         throw new HttpError(429, 'TELEPORT_COOLDOWN', '瞬移冷卻中');
       self.teleportedAt = time;
@@ -251,7 +250,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     const toId = target.id;
     const defensive = target === self;
     energy.spend(self, input.slot);
-    const hit = defensive ? combat.protect(self, time) : { damage: 0, critical: false };
+    const hit = defensive ? combat.protect(self, time, effect) : { damage: 0, critical: false };
     const events = (attacks.get(room) || []).filter(
       (e) =>
         e.until > time && !(e.head && e.fromId === playerId && effect.startsWith('shaohua_devour')),
@@ -279,7 +278,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
         event,
         self,
         targets,
-        effect === 'bijuu_beam' ? combat.targets(positions.values()) : targets,
+        attackKind(effect) === 'bijuu_beam' ? combat.targets(positions.values()) : targets,
       );
     events.push(event);
     attacks.set(room, events.slice(-40));
@@ -293,6 +292,10 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       registry.delete(previous);
     }
   }
-  return { view, move, rebind };
+  function needsFastUpdates(room) {
+    const events = attacks.get(room);
+    return !!events && timeline.needsFastUpdates(events, now());
+  }
+  return { view, move, rebind, needsFastUpdates };
 }
 module.exports = { createRoomSpace };

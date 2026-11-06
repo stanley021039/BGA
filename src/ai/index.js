@@ -39,6 +39,7 @@ function botSupport(room) {
         'musicquiz',
         'minimal',
         'bluff',
+        'decrypto',
         'quacks',
         'ceo',
         'second-wind',
@@ -62,6 +63,7 @@ function addTestBot(room) {
         'musicquiz',
         'minimal',
         'bluff',
+        'decrypto',
         'quacks',
         'ceo',
         'second-wind',
@@ -217,6 +219,7 @@ registerTestAI('quacks', {
     return null;
   },
 });
+registerTestAI('decrypto', require('./decrypto'));
 registerTestAI('bluff', {
   maxPlayers: 9,
   plan(room, p) {

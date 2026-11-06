@@ -22,6 +22,7 @@ function rejoinPlayer(room, playerId, name) {
       'musicquiz',
       'minimal',
       'bluff',
+      'decrypto',
       'quacks',
       'ceo',
       'second-wind',
@@ -44,6 +45,7 @@ function rejoinPlayer(room, playerId, name) {
     musicquiz: 8,
     minimal: 8,
     bluff: 9,
+    decrypto: 8,
     quacks: 8,
     ceo: 6,
     'second-wind': 6,
@@ -61,6 +63,7 @@ function rejoinPlayer(room, playerId, name) {
   player.bot = false;
   player.name = name.slice(0, 16);
   player.lastSeen = Date.now();
+  if (room.type === 'decrypto') room.assignTeam(player);
   if (['draw', 'majority'].includes(room.type))
     player.waitingForNextRound = room.phase !== 'waiting';
   if (room.event) room.event('join', player.name + ' 重新加入房間');

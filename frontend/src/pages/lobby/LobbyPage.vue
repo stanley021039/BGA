@@ -148,6 +148,9 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <div ref="scene" class="vue-lobby">
+    <div class="vue-lobby-stats">
+      <SceneKda :value="self?.kda" :self="self" :connected="lobby.connected" />
+    </div>
     <div class="vue-lobby-floor" aria-hidden="true"></div>
     <div class="library-heading"
       ><div
@@ -181,11 +184,7 @@ onBeforeUnmount(() => {
             :message="feedback"
             :error="!!lobby.entryStatus" /></div
       ></template>
-      <template #scene-stats
-        ><SceneKda :value="self?.kda" :self="self" :connected="lobby.connected"
-      /></template>
     </GameCarousel>
-    <p class="version-note"><a href="/credits">素材來源與授權</a></p>
     <LobbyBackdrop ref="backdrop" /><StatusSlot
       :message="lobby.attackStatus"
       :error="!!lobby.attackStatus"

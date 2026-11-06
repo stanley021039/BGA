@@ -157,5 +157,10 @@
     "id": "second-wind",
     "document": "second-wind.html",
     "route": "/second-wind"
+  },
+  {
+    "id": "decrypto",
+    "document": "decrypto.html",
+    "route": "/decrypto"
   }
 ]

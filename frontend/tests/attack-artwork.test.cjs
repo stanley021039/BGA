@@ -15,6 +15,12 @@ const source = fs
   .replace(/^import .*attack-area.js';\n/m, '')
   .replace(/^import .*attack-revision.js';\n/m, '')
   .replace(/^import attackEffects .*attack-effects.json';\n/m, '')
+  .replace(/^import .*attack-variants.js';\n/m, () =>
+    fs
+      .readFileSync(path.join(__dirname, '../src/services/attack-variants.js'), 'utf8')
+      .replace(/^import .*\n/m, 'const definitions = attackEffects;\n')
+      .replace(/^export /gm, ''),
+  )
   .replace(/^import attackTiming .*attack-timing.json';\n/m, '')
   .replace(/^export function /gm, 'function ');
 const lifetime = fs
@@ -25,6 +31,7 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
     arcs = [],
     lines = [],
     transforms = [],
+    scales = [],
     texts = [],
     positions = [],
     rotations = [];
@@ -32,16 +39,19 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
     clock = 0,
     nextTimer = 0;
   const timers = new Map();
-  const gradient = {
+  const gradient = () => ({
     addColorStop(_p, c) {
       colors.push(c);
     },
-  };
+  });
   const context = new Proxy(
     {
       setTransform() {},
       translate(x, y) {
         transforms.push({ x, y });
+      },
+      scale(x, y) {
+        scales.push([x, y]);
       },
       rotate(angle) {
         rotations.push(angle);
@@ -55,10 +65,10 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
         return { width: 250 };
       },
       createRadialGradient() {
-        return gradient;
+        return gradient();
       },
       createLinearGradient() {
-        return gradient;
+        return gradient();
       },
       arc(x, y, r) {
         arcs.push({ x, y, r });
@@ -150,20 +160,52 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
   stop();
   assert.equal(callback, null);
   assert.equal(timers.size, 0);
-  return { colors, arcs, lines, transforms, texts, positions, rotations };
+  return { colors, arcs, lines, transforms, scales, texts, positions, rotations };
 }
-test('rainbow barrage paints multiple distinct authored shot colours', () => {
-  const r = run('barrage', '#00f0ff');
-  for (const c of ['#00f0ff', '#ff2a5f', '#ffea00', '#a855f7', '#10b981', '#ff007f', '#ff8800'])
-    assert.ok(r.colors.includes(c), c);
+test('original barrage mixes bright colors and metallic shots with white highlights', () => {
+  const { colors } = run('barrage', '#63f5ff');
+  for (const color of ['#63f5ff', '#ff819c', '#c99aff', '#69f2b5', '#e3edf5', '#95acbf', '#e9cb90'])
+    assert.ok(colors.includes(color), color);
+  for (const color of ['#9eb2c9', '#d5e8f5', '#fff0bf']) assert.ok(colors.includes(color), color);
+  assert.ok(colors.includes('#ffffff'));
+});
+
+test('rose barrage mixes rose, iron-gray, and coffee shots with lighter rings', () => {
+  const { colors } = run('barrage_alt', '#fa4298');
+  for (const color of ['#ed4190', '#ff79b4', '#e62e78', '#ff569c', '#535b66', '#742150', '#70462f'])
+    assert.ok(colors.includes(color), color);
+  for (const color of ['#aeb7c5', '#c976a8', '#c4946f']) assert.ok(colors.includes(color), color);
+  assert.ok(!colors.includes('#63f5ff'));
+});
+
+test('both barrages paint small, medium, and large shots on successive frames', () => {
+  for (const [effect, color] of [
+    ['barrage', '#63f5ff'],
+    ['barrage_alt', '#fa4298'],
+  ]) {
+    const { scales } = run(effect, color, 2);
+    for (const size of [0.72, 1, 1.28]) {
+      assert.ok(
+        scales.filter(([x, y]) => x === size && y === size).length >= 12,
+        `${effect} ${size}`,
+      );
+    }
+  }
+});
+
+test('red-and-black cross beam paints a dark core and a red outer beam', () => {
+  const { colors } = run('beam_alt', '#fa294a');
+  assert.ok(colors.includes('#080204'));
+  assert.ok(colors.includes('#fa294a'));
+  assert.ok(colors.includes('#ff546a'));
 });
 
 test('every current offensive renderer waits for both authoritative settlement and its arrival clock', () => {
   const timing = require('../../public/shared/attack-timing.json');
   for (const effect of require('../../public/shared/attack-effects.json').filter(
-    (e) => !['shield', 'sphere'].includes(e.id),
+    (e) => !['shield', 'sphere'].includes(e.variantOf || e.id),
   )) {
-    const [delayMs, , phase] = timing[effect.id][0];
+    const [delayMs, , phase] = (timing[effect.id] || timing[effect.variantOf])[0];
     const hit = {
       toId: 'victim',
       x: 640,

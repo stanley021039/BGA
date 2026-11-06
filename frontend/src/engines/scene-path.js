@@ -1,3 +1,5 @@
+import rules from '../../../public/shared/scene-rules.json' with { type: 'json' };
+
 // One movement clock for the server and avatar interpolation. The covered part
 // of a segment costs no walking time: enter one edge and appear at the other.
 export function validPassage(box) {
@@ -76,4 +78,25 @@ export function sceneWalk(from, target, elapsedMs, box = null) {
     remainingMs: Math.max(0, remainingMs - Math.max(0, elapsedMs)),
     crossed,
   };
+}
+
+export function sceneWalkWithSpeed(from, target, elapsedMs, box, { slowMs = 0, hasteMs = 0 }) {
+  const slowed = Math.min(elapsedMs, slowMs);
+  const hasted = Math.max(0, Math.min(elapsedMs, hasteMs) - slowed);
+  const slowFactor = rules.frost.speedMultiplier;
+  const hasteFactor = rules.bladeHaste.speedMultiplier;
+  const slowDistance = slowed * slowFactor;
+  const hasteDistance = hasted * hasteFactor;
+  const effective = slowDistance + hasteDistance + (elapsedMs - slowed - hasted);
+  const step = sceneWalk(from, target, effective, box);
+  if (step.remainingMs > 0) return { ...step, walkedMs: elapsedMs };
+
+  // The destination may be reached inside either speed interval. Energy counts
+  // real time spent walking, excluding both idle time and the portal jump.
+  const distance = sceneWalk(from, target, 0, box).remainingMs;
+  const walkedMs =
+    Math.min(distance, slowDistance) / slowFactor +
+    Math.min(Math.max(0, distance - slowDistance), hasteDistance) / hasteFactor +
+    Math.max(0, distance - slowDistance - hasteDistance);
+  return { ...step, walkedMs: Math.min(elapsedMs, walkedMs) };
 }

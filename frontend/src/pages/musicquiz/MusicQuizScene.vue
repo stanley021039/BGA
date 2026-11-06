@@ -34,6 +34,35 @@ const room = useRoomStore(),
   custom = ref(''),
   error = ref(''),
   dirty = ref(false);
+const purchaseNotice = ref(''),
+  purchaseKey = ref(0);
+watch(s, (next, previous) => {
+  if (next.code !== previous.code || next.me !== previous.me || next.roundId !== previous.roundId) {
+    purchaseNotice.value = '';
+    return;
+  }
+  // Only server-confirmed new events count; mounting/reconnecting must not replay old purchases.
+  const purchases = (next.events || []).filter(
+    (event) => event.kind === 'buy' && event.id > (previous.version ?? 0),
+  );
+  if (purchases.length) {
+    purchaseNotice.value = purchases.map((event) => event.text).join('\n');
+    purchaseKey.value = purchases[purchases.length - 1]!.id;
+  }
+});
+watch(
+  () => room.scope,
+  () => {
+    purchaseNotice.value = '';
+  },
+);
+watch(
+  () => actions.pending,
+  (pending) => {
+    if (pending) purchaseNotice.value = '';
+  },
+  { flush: 'sync' },
+);
 watch(dirty, (value) => emit('dirty', value));
 const settingsSave = useQueuedSave<void>({
   allowed: () => setup.value && room.settingsManager && !room.terminal,
@@ -492,11 +521,16 @@ const canSlot = (i: number) =>
         !!settingsSave.error.value ||
         !!error
       "
-      :message="settingsSave.error.value || actions.notice || error"
-      :error="!!settingsSave.error.value || !!actions.notice" /><UiButton
-      v-if="actions.canRetry"
-      label="重試同一操作"
-      @click="actions.retrySame()"
+      :message="settingsSave.error.value || actions.notice || error || purchaseNotice"
+      :notice-key="purchaseKey"
+      :tone="
+        !settingsSave.error.value && !actions.notice && !error && purchaseNotice
+          ? 'success'
+          : undefined
+      "
+      :error="
+        !!settingsSave.error.value || (!!actions.notice && !actions.pending) || !!error
+      " /><UiButton v-if="actions.canRetry" label="重試同一操作" @click="actions.retrySame()"
   /></section>
   <section v-if="s.phase !== 'waiting'" class="vue-game-panel"
     ><h2>大家的音樂卡</h2
