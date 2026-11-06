@@ -1,3 +1,4 @@
+import { pokerCues, useRoomEventSounds } from '../composables/room-event-sounds';
 import AudioSettings from '../engines/audio-settings.js';
 import { computed, onScopeDispose, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
@@ -21,6 +22,7 @@ export const usePokerStore = defineStore('poker', () => {
       Math.min((state.value?.currentBet || 0) + (state.value?.minRaise || 20), maximum.value),
     ),
     tiers = computed(() => pokerContributionTiers(state.value?.players || []));
+  useRoomEventSounds(room, state, pokerCues);
   const pending = ref(false),
     failed = ref(false),
     notice = ref(''),

@@ -1,5 +1,6 @@
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
+import { trpgCues, useRoomEventSounds } from '../composables/room-event-sounds';
 import { useRoomStore } from './room';
 import { ApiError } from '../services/http';
 import type { TrpgSnapshot, TrpgStance } from '../contracts/trpg';
@@ -19,6 +20,7 @@ export const useTrpgStore = defineStore('trpg', () => {
     leader = computed(() => state.value?.players.find((p) => p.id === state.value?.leaderId)),
     isLeader = computed(() => !!state.value && state.value.me === state.value.leaderId),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase));
+  useRoomEventSounds(room, state, trpgCues);
   const context = computed(() =>
       state.value && room.seat && !room.terminal
         ? `${room.scope}:${state.value.sceneId || 'waiting'}:${state.value.phase}:${state.value.leaderId || ''}`

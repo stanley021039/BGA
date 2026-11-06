@@ -1,3 +1,4 @@
+import { bluffCues, useRoomEventSounds } from '../composables/room-event-sounds';
 import AudioSettings from '../engines/audio-settings.js';
 import GameSounds from '../engines/game-sounds.js';
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue';
@@ -11,6 +12,7 @@ export const useBluffStore = defineStore('bluff', () => {
     state = computed(() => room.snapshot as BluffSnapshot | null),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
     editable = computed(() => room.settingsManager && setup.value && !room.terminal);
+  useRoomEventSounds(room, state, bluffCues);
   const draft = reactive({ levels: [1, 2, 3], roleSeconds: 30 }),
     canonical = ref(''),
     key = () =>

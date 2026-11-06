@@ -1,3 +1,4 @@
+import { useDrawingPartySounds } from '../composables/drawing-party-sounds';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useRoomStore } from './room';
@@ -23,6 +24,7 @@ export const useTelephoneStore = defineStore('telephone', () => {
     ),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
     settingsEditable = computed(() => room.settingsManager && setup.value && !room.terminal);
+  useDrawingPartySounds(room);
   const sources = ref<string[]>([]),
     drawingSeconds = ref<60 | 90 | 120>(90),
     textSeconds = ref<60 | 90 | 120>(90),

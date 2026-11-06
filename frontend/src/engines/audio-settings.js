@@ -294,9 +294,9 @@ let AudioSettings;
           : null;
       const clip = playClip(cue[0], cue[1], {
         onError: options.onError,
-        onStop: () => {
+        onStop: (item) => {
           release?.();
-          options.onStop?.();
+          options.onStop?.(item);
         },
         game: kind !== 'invitation',
         maxStartDelayMs:
