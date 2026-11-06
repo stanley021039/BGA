@@ -232,8 +232,8 @@ test('real draw, music and room-state SSE connections drain on close with no rem
   }
   assert.equal(
     live.size,
-    6,
-    'two scheduler intervals, one interval per draw and music stream, and the room-state sweep and heartbeat; external automation is disabled',
+    7,
+    'two scheduler intervals, one per draw and music stream, and three room-state timers (normal sweep, skill sweep, heartbeat)',
   );
   await f.app.close();
   assert.equal(live.size, 0);
