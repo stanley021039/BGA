@@ -137,7 +137,7 @@ onBeforeUnmount(() => {
         :sizes="artwork.sizes"
     /></figure>
     <footer class="auth-credits" aria-label="網站製作團隊">
-      <p>powered by</p>
+      <p>製作團隊</p>
       <div class="auth-credit-list">
         <a href="https://github.com/stanley021039"
           ><span>stanley021039</span

@@ -225,8 +225,9 @@ onMounted(() => {
             :heading="waiting ? '' : '房間設定'"
             :in-stage="!!settingsTarget"
             :waiting="waiting"
+            :start-id="waiting ? 'room-waiting-start-' + type : undefined"
           >
-            <slot name="settings" /><p v-if="!room.gameManager">等待房主或管理者開始。</p>
+            <slot name="settings" />
             <template v-if="waiting && $slots['waiting-before-start']" #before-start
               ><slot name="waiting-before-start"
             /></template>
@@ -239,7 +240,7 @@ onMounted(() => {
                 :pending="room.busy"
                 :disabled="!setup || (!finished && !canStart)"
                 @click="finished ? room.command('rematch', {}) : emit('start')"
-              /><span v-else>由房主或管理者開始遊戲</span></template
+              /><span v-else>等待房主或管理者開始</span></template
             >
           </GameSettingsPanel>
         </Teleport>

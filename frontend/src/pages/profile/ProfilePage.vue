@@ -460,9 +460,8 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <div class="page-heading profile-heading">
-    <div class="kicker">YOUR LOOK / YOUR SEAT</div>
     <UiHeading :level="1" kind="page">我的角色</UiHeading>
-    <p>選用內建角色、好友分享的作品，或親手畫一張。</p>
+    <p>選用內建或好友分享的角色，也可自己畫。</p>
   </div>
   <div class="profile-load-slot" role="status">
     <span v-if="profile.loading">正在載入角色圖庫…</span>
@@ -603,7 +602,7 @@ onBeforeUnmount(() => {
                 icon="upload"
                 label="上傳音效"
                 :pending="soundPending"
-              /><p>最多 10 秒、10 MB；超過 10 秒請先縮短。可用格式依瀏覽器支援。</p></form
+              /><p>上限 10 秒、10 MB。可用格式依瀏覽器而定。</p></form
             ><StatusSlot
               id="expression-sound-status"
               :message="soundMessage"

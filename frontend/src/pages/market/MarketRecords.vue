@@ -44,7 +44,7 @@ const numeric = (n: number) =>
           ><strong>{{
             round.result ? (round.vote ? marketPoints(round.result.points || 0) : '0') + ' 分' : '—'
           }}</strong></article
-        ><p v-if="!market.state.rounds.length">有交易日後，預測與結果會顯示於此。</p></div
+        ><p v-if="!market.state.rounds.length">尚無交易日紀錄。</p></div
       ><details
         ><summary>我的積分異動紀錄</summary
         ><div class="vue-market-ledger"

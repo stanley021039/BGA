@@ -90,7 +90,7 @@ onBeforeUnmount(clearFile);
 <template>
   <div class="library-intro"
     ><span class="eyebrow">MADE BY FRIENDS</span><h1>把你想送的禮物，<br />放進大家的題庫。</h1
-    ><p>寫下禮物名稱，圖片可以不放。投稿後，新的遊戲輪次就有機會抽到它。</p></div
+    ><p>圖片選填。投稿後，新輪次有機會抽到這份禮物。</p></div
   >
   <div class="library-layout resource-workspace">
     <section

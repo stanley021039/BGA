@@ -110,14 +110,17 @@ function status(player: RoomPlayer) {
       ><strong>{{ player.score }}</strong
       ><span>分數</span
       ><span>寶石 {{ state?.recipes.find((p) => p.id === player.id)?.rubies || 0 }}</span></template
-    ><QuacksScene v-if="state" ref="scene" @books-opened="booksReady = true" /><section
-      v-else
-      class="vue-game-panel"
-      ><h1>正在讀取郎中房間…</h1></section
+    ><QuacksScene
+      v-if="state"
+      ref="scene"
+      :books-ready="booksReady"
+      @books-opened="booksReady = true"
+    /><section v-else class="vue-game-panel"><h1>正在讀取郎中房間…</h1></section
     ><template #waiting-before-start
       ><UiButton
         variant="secondary"
         icon="book"
+        id="quacks-waiting-books"
         label="搭配本局藥材書"
         @click="scene?.open('books')"
     /></template>

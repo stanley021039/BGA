@@ -548,6 +548,7 @@ onBeforeUnmount(() => {
             class="vue-draw-settings-panel"
             ><p v-if="pendingMode">請先選擇畫畫玩法，之後這裡會顯示對應的設定。</p>
             <DrawSettings v-else ref="settings" :snapshot="state" /><UiButton
+              :id="state.phase === 'waiting' ? 'room-waiting-start-draw' : undefined"
               variant="primary"
               v-if="room.gameManager && !pendingMode"
               :icon="state.phase === 'finished' ? 'replay' : 'play'"

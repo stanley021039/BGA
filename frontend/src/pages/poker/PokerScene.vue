@@ -43,6 +43,9 @@ const turnHint = computed(() =>
     ><RoomWaitingTemplate
       v-if="state.phase === 'waiting'"
       type="poker"
+      :quick-action="
+        room.gameManager ? { href: '#room-waiting-start-poker', label: '前往開局' } : undefined
+      "
       title="德州撲克"
       hero-title="好牌已備，等你入座。"
       description="2–8 人一起玩。跟注、加注，或把這一手全部押上。"

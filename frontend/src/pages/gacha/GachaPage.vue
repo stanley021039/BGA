@@ -358,11 +358,7 @@ const newCount = computed(() =>
             <p v-if="!filtered.length">目前沒有符合條件的外觀。</p>
           </UiPanel>
         </template>
-        <UiPanel
-          v-else-if="tab === 'odds'"
-          title="獎池與規則"
-          description="普通／稀有／傳說為本機候選分級，正式分級待驗收確認。"
-        >
+        <UiPanel v-else-if="tab === 'odds'" title="獎池與規則">
           <p
             >每個獎項相對權重為
             100／20／2，這些數字不是百分比。綜合池直接合併所有獎項權重，不先抽類別；十連沒有保底。</p
@@ -379,7 +375,7 @@ const newCount = computed(() =>
               >
               <template #actions
                 ><span
-                  >本機 {{ ((item.weight / (poolInfo?.totalWeight || 1)) * 100).toFixed(3) }}%</span
+                  >約 {{ ((item.weight / (poolInfo?.totalWeight || 1)) * 100).toFixed(3) }}%</span
                 ></template
               >
             </UiListRow></UiList

@@ -248,7 +248,7 @@ onMounted(() => void store.load());
             >選項 {{ ['A', 'B', 'C'][index - 1]
             }}<input v-model="question.options[index - 1]" required maxlength="60" /></label
         ></div>
-        <p class="small">不設定標準答案。新增的題目會保存於主機，所有朋友都能挑選或隨機抽到。</p>
+        <p class="small">題目無標準答案，好友可挑選或隨機抽到。</p>
       </fieldset>
     </form>
     <UiButton

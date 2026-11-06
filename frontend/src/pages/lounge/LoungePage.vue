@@ -39,11 +39,8 @@ function status(player: RoomPlayer) {
           }}</p></div
         ></div
       ></section
-    ><template #help
-      ><p>場外休憩區沒有遊戲流程，最多 10 人。</p
-      ><p
-        >影片會顯示在房間中央；從聊天室的「媒體」點播、調整進度。播放控制由房主或管理者操作，背景可從上方功能列更換。</p
-      ></template
+    ><template #help>
+      ><p>房主或管理者可在聊天室的「媒體」點播及調整進度。背景可從上方功能列更換。</p></template
     >
   </GameRoomPage>
 </template>

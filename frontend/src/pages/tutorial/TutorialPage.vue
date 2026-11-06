@@ -302,7 +302,7 @@ onBeforeUnmount(() => {
     <header class="vue-tutorial-header"
       ><div
         ><UiHeading :level="1" kind="page">{{ lesson.title }} · 試玩教學</UiHeading
-        ><p>獨立練習桌 · 教學暫停計時 · 不計成就與正式分數</p></div
+        ><p>練習不計時，也不計成就或正式分數。</p></div
       ><UiLink :href="exitHref" label="離開教學"
     /></header>
     <UiPanel v-if="!current" title="選擇練習方式" :description="lesson.goal">
@@ -321,8 +321,8 @@ onBeforeUnmount(() => {
       /></div>
       <p>{{
         type === 'coc'
-          ? '手動模式使用正式遊戲的調查與檢定操作；也可逐步示範。自動模式會完成一次基本流程，隨時可暫停。'
-          : '手動模式使用原本遊戲的操作；教學夥伴的步驟可以逐步觀看。自動模式會示範一輪主要流程，隨時可暫停。'
+          ? '手動可練習調查、檢定或逐步觀看。自動示範可隨時暫停。'
+          : '手動可親自操作或逐步觀看。自動示範可隨時暫停。'
       }}</p>
       <div v-if="type === 'draw'" class="vue-tutorial-modes">
         <UiLink href="/draw?learn=1&amp;mode=oracle" label="塗鴉神諭試玩教學" />
@@ -341,7 +341,7 @@ onBeforeUnmount(() => {
     />
     <UiNotice
       v-if="type === 'coc'"
-      message="COC 獨立教學：沿用實際規則引擎；主持文字為教學示範，不連接 AI、不使用 API 額度。只有一位教學調查者，不加入 AI 隊友。"
+      message="單人教學沿用正式規則。主持文字是範例，不使用 AI 或 API 額度。"
       persistent
     />
     <UiNotice

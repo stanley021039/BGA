@@ -153,10 +153,7 @@ onBeforeUnmount(() => {
     </div>
     <div class="vue-lobby-floor" aria-hidden="true"></div>
     <div class="library-heading"
-      ><div
-        ><div class="kicker">YOUR TABLE. YOUR PEOPLE.</div><h1>今晚，玩哪一桌？</h1
-        ><p>選個遊戲，開好房間，等朋友入座。</p></div
-      ></div
+      ><div><h1>今晚，玩哪一桌？</h1><p>選個遊戲，開好房間，等朋友入座。</p></div></div
     >
     <GameCarousel v-model="selected" @create="open" @join="openJoin()"
       ><template #lobby-action
@@ -210,9 +207,8 @@ onBeforeUnmount(() => {
             :aria-busy="lobby.roomsLoading"
             tabindex="0"
             aria-label="目前房間"
-            ><p v-if="!lobby.rooms.length">{{
-              lobby.roomsStatus || '目前還沒有房間。選擇上方遊戲，開一桌邀請朋友吧！'
-            }}</p
+            ><p v-if="!lobby.rooms.length && !lobby.roomsLoading && !lobby.roomsStatus">
+              還沒有房間。選一款遊戲開桌吧！ </p
             ><article v-for="room in lobby.rooms" :key="room.code" class="vue-lobby-room"
               ><div
                 ><span>{{ roomGameTitle(room) }}</span
@@ -319,7 +315,7 @@ onBeforeUnmount(() => {
           class="vue-lobby-room-browser"
           aria-label="目前的場外房間"
           ><header
-            ><h3>目前的場外房間</h3
+            ><h3>場外房間</h3
             ><div class="vue-lobby-room-tools"
               ><span>{{ lounges.length }} 間房間</span
               ><UiButton
@@ -334,7 +330,7 @@ onBeforeUnmount(() => {
             tabindex="0"
             aria-label="目前的場外房間"
             ><p v-if="!lounges.length">{{
-              lobby.roomsStatus || '目前沒有場外房間，開一間邀朋友一起看吧！'
+              lobby.roomsLoading ? '更新中…' : lobby.roomsStatus || '還沒有場外房間。'
             }}</p
             ><article v-for="room in lounges" :key="room.code" class="vue-lobby-room"
               ><div
