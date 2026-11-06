@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
+import DrawingModePicker from '../../components/DrawingModePicker.vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useTelephoneStore } from '../../stores/telephone';
 import { useRoomStore } from '../../stores/room';
@@ -9,6 +10,7 @@ import TelephoneCanvas from '../../components/TelephoneCanvas.vue';
 import DrawingToolbar from '../../components/DrawingToolbar.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiHeading from '../../components/UiHeading.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 
@@ -131,7 +133,8 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     hero-description="先各自想一個主題，交給下一位畫圖，再交替猜詞與作畫。只看上一棒，最後由房主逐頁揭曉故事演變。"
     art="/assets/stitch/telephone-waiting.svg"
     :facts="waitingFacts"
-  />
+    ><template #mode-picker><DrawingModePicker /></template
+  ></RoomWaitingTemplate>
   <section
     v-else
     class="vue-game-panel vue-telephone-stage"
@@ -153,8 +156,11 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         <span class="vue-telephone-private">{{
           prompting ? '為你的故事出題' : drawing ? '你的專屬秘密題目' : '接到上一棒傳遞簿'
         }}</span>
-        <h1 id="telephoneHeading">{{
-          prompting ? '先想一個主題' : drawing ? state.task.previous.text : '只看上一張圖，猜一句話'
+        <UiHeading v-if="drawing" id="telephoneHeading" :level="1" kind="prompt">{{
+          state.task.previous.text
+        }}</UiHeading>
+        <h1 v-else id="telephoneHeading">{{
+          prompting ? '先想一個主題' : '只看上一張圖，猜一句話'
         }}</h1>
         <span class="vue-telephone-private-note">{{
           prompting

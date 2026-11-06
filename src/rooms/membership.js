@@ -25,6 +25,8 @@ function rejoinPlayer(room, playerId, name) {
       'quacks',
       'ceo',
       'second-wind',
+      'brainwave',
+      'drama-bar',
     ].includes(room.type) &&
     !['waiting', 'finished'].includes(room.phase)
   )
@@ -46,6 +48,8 @@ function rejoinPlayer(room, playerId, name) {
     ceo: 6,
     'second-wind': 6,
     lounge: 10,
+    brainwave: 8,
+    'drama-bar': 8,
   };
   if (
     room.players.filter((p) => !p.kicked).length >=

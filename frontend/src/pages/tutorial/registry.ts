@@ -14,7 +14,7 @@ import { readMusicQuizSnapshot } from '../../contracts/musicquiz';
 import { readMinimalSnapshot } from '../../contracts/minimal';
 import { readCeoSnapshot } from '../../contracts/ceo';
 import { readAthleteSnapshot } from '../../contracts/second-wind';
-export type TutorialType = Exclude<GameType, 'lounge'>;
+export type TutorialType = Exclude<GameType, 'lounge' | 'brainwave' | 'drama-bar'>;
 interface Lesson {
   title: string;
   goal: string;

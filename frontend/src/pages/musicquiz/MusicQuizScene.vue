@@ -9,6 +9,7 @@ import { usePreferencesStore } from '../../stores/preferences';
 import { useQueuedSave } from '../../composables/queued-save';
 import type { MusicQuizSnapshot } from '../../contracts/musicquiz';
 import UiButton from '../../components/UiButton.vue';
+import UiHeading from '../../components/UiHeading.vue';
 import UiCheckbox from '../../components/UiCheckbox.vue';
 import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
@@ -338,11 +339,11 @@ const canSlot = (i: number) =>
         ><span>{{ me ? '你是本輪 DJ' : '本輪 DJ' }}</span
         ><strong>{{ dj?.name || '等待 DJ' }}</strong></div
       ><aside class="mq-phase-guide" role="status" aria-live="polite"
-        ><strong>{{
+        ><UiHeading>{{
           preparing
             ? '準備下一環節 · ' + Math.max(1, Math.ceil((enteredAt + 3000 - now) / 1000)) + '秒'
-            : '玩法提示'
-        }}</strong
+            : '本階段指示'
+        }}</UiHeading
         ><p>{{ phaseGuide }}</p></aside
       ><section
         v-if="s.playback"

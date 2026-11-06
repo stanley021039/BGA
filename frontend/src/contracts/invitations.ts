@@ -71,4 +71,6 @@ export const gameTitles: Record<GameType, string> = {
   ceo: '王牌執行長',
   'second-wind': '運動員 Second Wind',
   lounge: '場外休憩區',
+  brainwave: '電波畫家',
+  'drama-bar': '戲精酒吧',
 };

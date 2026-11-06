@@ -11,11 +11,15 @@ const gameRoutes = [
   'bluff',
   'quacks',
   'lounge',
+  'brainwave',
+  'drama-bar',
 ];
 const room = new RegExp(`^/(?:${gameRoutes.join('|')})/[A-Fa-f0-9]{6}/?$`);
 const documents = new Set([
   '/',
   '/market',
+  '/brainwave',
+  '/drama-bar',
   '/profile',
   '/settings',
   '/collection',

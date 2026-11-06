@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
+import DrawingModePicker from '../../components/DrawingModePicker.vue';
 import MinimalRules from './MinimalRules.vue';
 const art = new URL('./minimal-waiting.svg', import.meta.url).href;
 </script>
@@ -16,6 +17,7 @@ const art = new URL('./minimal-waiting.svg', import.meta.url).href;
       { label: '猜圖順序', value: '少筆畫 → 多筆畫' },
     ]"
     notice="朋友集結中"
+    ><template #mode-picker><DrawingModePicker /></template
     ><template #settings
       ><p>本遊戲使用固定規則，無需調整。</p
       ><details><summary>一分鐘學會極簡畫家</summary><MinimalRules /></details></template

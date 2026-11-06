@@ -30,7 +30,7 @@ function load(file, cache = new Map()) {
 const { lessons, tutorialType } = load(
   path.resolve(__dirname, '../src/pages/tutorial/registry.ts'),
 );
-test('every lobby game has a typed tutorial, a discoverable learn URL and a server adapter', () => {
+test('every lobby game links to its interactive tutorial or its rules page', () => {
   const { gameCards } = load(path.resolve(__dirname, '../src/pages/lobby/catalog.ts'));
   assert.deepEqual(new Set(Object.keys(lessons)), new Set(types));
   for (const card of gameCards) {
@@ -40,6 +40,11 @@ test('every lobby game has a typed tutorial, a discoverable learn URL and a serv
     }
     if (card.id === 'market') {
       assert.equal(card.guide, '/market?learn=1');
+      continue;
+    }
+    if (card.id === 'brainwave' || card.id === 'drama-bar') {
+      assert.equal(card.guide, '/' + card.id + '?rules=1');
+      assert.equal(tutorialType('/' + card.id), null);
       continue;
     }
     const type = card.id === 'race' ? 'thunder' : card.id;

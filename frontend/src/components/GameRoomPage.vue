@@ -46,8 +46,16 @@ const props = withDefaults(
     // Without a match, the phase row is dropped and notices float over the main area (#277).
     phaseRow?: boolean;
     watchable?: boolean;
+    tutorial?: boolean;
   }>(),
-  { showMetrics: true, scoreLabel: '分', phaseRow: true, panelsOpen: true, watchable: true },
+  {
+    showMetrics: true,
+    scoreLabel: '分',
+    phaseRow: true,
+    panelsOpen: true,
+    watchable: true,
+    tutorial: true,
+  },
 );
 const emit = defineEmits<{ start: [] }>(),
   page = useRoomPage(props.type, props.reader, props.pollMs),
@@ -104,6 +112,7 @@ watch(
   { immediate: true },
 );
 onMounted(() => {
+  if (!props.tutorial && new URLSearchParams(location.search).has('rules')) void help.value?.open();
   if (new URLSearchParams(location.search).has('learn')) void help.value?.open();
 });
 </script>
@@ -140,6 +149,7 @@ onMounted(() => {
             icon="play"
             label="以觀戰身分觀看這一桌"
           /><UiLink
+            v-if="tutorial"
             :href="'/' + gamePath(type) + '?learn=1'"
             label="試玩教學"
             icon="play"
@@ -160,6 +170,7 @@ onMounted(() => {
     ><RoomHeader :title="title" :focused="focused" @integrated="headerIntegrated = $event"
       ><template v-if="$slots.toolbar" #game-actions><slot name="toolbar" /></template
       ><UiLink
+        v-if="tutorial"
         :href="'/' + gamePath(type) + '?learn=1&amp;from=game&amp;room=' + room.code"
         label="試玩教學"
         icon="play"

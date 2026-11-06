@@ -50,7 +50,7 @@
     min-block-size: 0;
     overflow-wrap: anywhere;
   }
-  h1 {
+  h1:not(.ui-heading) {
     font-size: 24px;
     line-height: 1.4;
     font-weight: 700;
@@ -597,7 +597,7 @@
       min-block-size: 104px;
       overflow: visible;
     }
-    h1 {
+    h1:not(.ui-heading) {
       font-size: 20px;
     }
     .vue-room-countdown {

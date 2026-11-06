@@ -6,6 +6,7 @@ import UiHeading from './UiHeading.vue';
 withDefaults(
   defineProps<{
     title?: string;
+    titleLabel?: string;
     description?: string;
     note?: string;
     as?: 'section' | 'div' | 'article' | 'aside';
@@ -33,15 +34,20 @@ const headingId = useId();
         ><div v-if="$slots['title-before'] || $slots['title-after']" class="ui-panel-title-content">
           <slot name="title-before" /><UiHeading
             :level="headingLevel"
-            kind="section"
+            :kind="titleLabel ? 'prompt' : 'section'"
+            :label="titleLabel"
             :id="headingId"
             >{{ title }}</UiHeading
           ><div v-if="$slots['title-after']" class="ui-panel-title-extra"
             ><slot name="title-after"
           /></div> </div
-        ><UiHeading v-else :level="headingLevel" kind="section" :id="headingId">{{
-          title
-        }}</UiHeading
+        ><UiHeading
+          v-else
+          :level="headingLevel"
+          :kind="titleLabel ? 'prompt' : 'section'"
+          :label="titleLabel"
+          :id="headingId"
+          >{{ title }}</UiHeading
         ><p v-if="description" class="ui-panel-description">{{ description }}</p></div
       ><span v-if="note" class="ui-panel-note">{{ note }}</span
       ><slot name="actions"

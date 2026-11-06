@@ -61,6 +61,7 @@ function load(file) {
         if (id === 'vue') return vue;
         if (id === 'pinia') return pinia;
         if (id.endsWith('.scss')) return {};
+        if (id.endsWith('UiIcon.vue')) return { default: empty };
         if (id.endsWith('UiButton.vue')) return { default: button };
         if (id.endsWith('StatusSlot.vue')) return { default: empty };
         if (id.startsWith('.')) {
@@ -196,6 +197,53 @@ test('#220 background control restores UI and prior inert state on Esc, button a
     assert.equal(nav.inert, false);
     assert.equal(header.inert, true);
     if (exit !== 'unmount') app.unmount();
+    host.remove();
+  }
+});
+
+test('choosing a drawing mode immediately sends one change and restores the room mode on failure', async () => {
+  const owner = pinia.createPinia();
+  pinia.setActivePinia(owner);
+  const room = load('stores/room.ts').useRoomStore();
+  room.seat = { code: 'ABCDEF', type: 'draw' };
+  room.type = 'draw';
+  room.snapshot = { ...snapshot('host'), me: 'host' };
+  let settle;
+  const requests = [];
+  room.command = (route, payload) => {
+    requests.push([route, { ...payload }]);
+    return new Promise((resolve) => (settle = resolve));
+  };
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = vue.createApp(load('components/DrawingModePicker.vue').default);
+  app.use(owner);
+  app.mount(host);
+  try {
+    const select = host.querySelector('select');
+    // Vue restores a single selection via selectedIndex, which Linkedom does not reflect.
+    Object.defineProperty(select, 'selectedIndex', {
+      get: () => [...select.options].findIndex((option) => option.selected),
+      set: (index) => {
+        for (const option of select.options) option.removeAttribute('selected');
+        select.options[index]?.setAttribute('selected', '');
+      },
+    });
+    assert.equal(host.querySelector('button'), null);
+    assert.match(select.querySelector('[value="classic"]').textContent, /你畫我猜/);
+    select.querySelector('[value="telephone"]').selected = true;
+    select.dispatchEvent(new window.Event('change', { bubbles: true }));
+    await vue.nextTick();
+    assert.deepEqual(requests, [['change-game', { targetType: 'telephone' }]]);
+    assert.equal(select.disabled, true);
+    room.message = '切換失敗';
+    settle(false);
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(select.disabled, false);
+    assert.equal(select.value, 'classic');
+    assert.equal(host.querySelector('[role="alert"]').textContent, '切換失敗');
+  } finally {
+    app.unmount();
     host.remove();
   }
 });

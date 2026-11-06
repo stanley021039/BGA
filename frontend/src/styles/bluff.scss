@@ -417,12 +417,14 @@
       padding-inline-start: 16px;
       border-inline-start: 1px solid var(--stitch-line);
     }
-    small {
-      padding-inline-start: 16px;
-      border-inline-start: 1px solid var(--stitch-line);
-      color: var(--stitch-muted);
-      font-size: 13px;
-      line-height: 1.5;
+    .vue-bluff-topic-hint {
+      padding-inline-start: var(--stitch-space-16);
+      border-inline-start: var(--stitch-border);
+      color: var(--stitch-ink);
+      font-size: var(--stitch-text-body);
+      font-weight: var(--stitch-weight-title);
+      line-height: var(--stitch-line-height-body);
+      overflow-wrap: anywhere;
     }
   }
   .vue-bluff-avatar {
@@ -946,7 +948,7 @@
         padding: 0;
         border: 0;
       }
-      small {
+      .vue-bluff-topic-hint {
         grid-column: 1 / -1;
         padding: 0;
         border: 0;

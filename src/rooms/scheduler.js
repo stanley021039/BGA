@@ -22,6 +22,8 @@ function advanceTimedPhase(room, transitions) {
     due = room.phase === 'drawing' && room.deadline != null && now >= room.deadline;
   if (room.type === 'majority')
     due = room.phase === 'answering' && room.deadline != null && now >= room.deadline;
+  if (['brainwave', 'drama-bar'].includes(room.type))
+    due = room.deadline != null && now >= room.deadline;
   if (room.type === 'draw') {
     const artist = room.player(room.presenterId);
     due =
@@ -89,6 +91,8 @@ function startRoomScheduler({
             'ceo',
             'second-wind',
             'lounge',
+            'brainwave',
+            'drama-bar',
           ].includes(r.type)
         )
           continue;

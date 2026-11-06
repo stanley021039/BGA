@@ -14,6 +14,8 @@ const limits = {
   ceo: 6,
   'second-wind': 6,
   lounge: 10,
+  brainwave: 8,
+  'drama-bar': 8,
 };
 
 function listRooms(rooms, seats, kickedUsers, userId) {
@@ -34,6 +36,8 @@ function listRooms(rooms, seats, kickedUsers, userId) {
         'ceo',
         'second-wind',
         'lounge',
+        'brainwave',
+        'drama-bar',
       ].includes(type)
         ? room.activePlayers().length
         : room.players.length;
@@ -47,7 +51,7 @@ function listRooms(rooms, seats, kickedUsers, userId) {
         (seated ||
           (playerCount < (type === 'quacks' ? room.max : limits[type]) &&
             (type === 'poker' ||
-              type === 'draw' ||
+              (type === 'draw' && !room.phase.startsWith('oracle-')) ||
               room.phase === 'waiting' ||
               ([
                 'gift',
@@ -59,12 +63,17 @@ function listRooms(rooms, seats, kickedUsers, userId) {
                 'quacks',
                 'ceo',
                 'second-wind',
+                'brainwave',
+                'drama-bar',
               ].includes(type) &&
                 room.phase === 'finished'))));
       return {
         code: room.code,
         name: room.name,
         type,
+        ...(type === 'draw' && ['oracle', 'unselected'].includes(room.options?.playMode)
+          ? { playMode: room.options.playMode }
+          : {}),
         phase: room.phase,
         playerCount,
         maxPlayers: type === 'quacks' ? room.max : limits[type],

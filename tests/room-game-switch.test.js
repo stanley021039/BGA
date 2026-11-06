@@ -16,6 +16,7 @@ const classes = Object.fromEntries(
     ['telephone', 'telephone', 'TelephoneRoom'],
     ['musicquiz', 'musicquiz', 'MusicQuizRoom'],
     ['minimal', 'minimal', 'MinimalRoom'],
+    ['brainwave', 'voice-party', 'BrainwaveRoom'],
     ['bluff', 'bluff', 'BluffRoom'],
     ['quacks', 'quacks', 'QuacksRoom'],
   ].map(([type, file, name]) => [type, require('../src/games/' + file)[name]]),
@@ -119,4 +120,31 @@ test('explicit registry rebinding keeps playback, queue and request ledger; code
       media.roomInstanceId,
     );
   }
+});
+
+test('the drawing lobby needs a host selection and draw variants invalidate old game commands', () => {
+  const room = new classes.draw('ABCDEF', 'friends');
+  const host = room.add('host');
+  const guest = room.add('guest');
+  room.options.playMode = 'unselected';
+  assert.throws(() => room.start(), { code: 'DRAW_MODE_REQUIRED' });
+  assert.throws(() => room.configure(host.id, { seconds: 60 }), { code: 'DRAW_MODE_REQUIRED' });
+  assert.throws(() => switchGame(room, guest.id, 'draw', classes, 'oracle'), { code: 'HOST_ONLY' });
+  assert.throws(() => switchGame(room, host.id, 'minimal', classes, 'oracle'), {
+    code: 'INVALID_DRAW_MODE',
+  });
+  const classic = switchGame(room, host.id, 'draw', classes, 'classic');
+  assert.equal(classic.options.playMode, 'classic');
+  assert.equal(classic.gameRevision, 1);
+  classic.configure(host.id, { seconds: 60 });
+  const oracle = switchGame(classic, host.id, 'draw', classes, 'oracle');
+  assert.equal(oracle.options.playMode, 'oracle');
+  assert.equal(oracle.options.seconds, 60);
+  assert.equal(oracle.gameRevision, 2);
+  assert.equal(oracle.view(guest.id).me, guest.id);
+  assert.throws(() => assertGameContext(oracle, { gameType: 'draw', gameRevision: 1 }, true), {
+    code: 'ROOM_GAME_CHANGED',
+  });
+  oracle.start();
+  assert.equal(oracle.phase, 'oracle-drawing');
 });

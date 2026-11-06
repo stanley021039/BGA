@@ -13,6 +13,8 @@ export const drawingTopics = [
 ] as const;
 export interface DrawSettingsDraft {
   topics: string[];
+  playMode?: 'classic' | 'oracle';
+  oracleDifficulty?: 'easy' | 'hard';
   seconds: number;
   mode: 'legacy' | 'rounds' | 'score';
   rounds: number | string;
@@ -33,6 +35,10 @@ export function readDrawSettings(value: unknown): DrawSettingsDraft {
   const mode = ending.value == null ? 'legacy' : ending.mode === 'score' ? 'score' : 'rounds';
   return {
     topics,
+    ...(row.playMode === 'classic' || row.playMode === 'oracle' ? { playMode: row.playMode } : {}),
+    ...(row.oracleDifficulty === 'easy' || row.oracleDifficulty === 'hard'
+      ? { oracleDifficulty: row.oracleDifficulty }
+      : {}),
     seconds: typeof row.seconds === 'number' ? row.seconds : 90,
     mode,
     rounds: mode === 'rounds' && typeof ending.value === 'number' ? ending.value : 8,
@@ -40,7 +46,10 @@ export function readDrawSettings(value: unknown): DrawSettingsDraft {
   };
 }
 export function drawSettingsKey(value: DrawSettingsDraft): string {
+  if (value.playMode === 'oracle')
+    return JSON.stringify(['oracle', value.oracleDifficulty || 'easy']);
   return JSON.stringify([
+    value.playMode || 'classic',
     drawingTopics.filter(([id]) => value.topics.includes(id)).map(([id]) => id),
     value.seconds,
     value.mode,
@@ -48,10 +57,13 @@ export function drawSettingsKey(value: DrawSettingsDraft): string {
   ]);
 }
 export function drawSettingsPayload(value: DrawSettingsDraft): Record<string, unknown> {
+  if (value.playMode === 'oracle')
+    return { playMode: 'oracle', oracleDifficulty: value.oracleDifficulty || 'easy' };
+  const mode = value.playMode ? { playMode: value.playMode } : {};
   const topics = drawingTopics.filter(([id]) => value.topics.includes(id)).map(([id]) => id);
   if (!topics.length) throw Error('請至少選擇一個題目類別。');
   if (![60, 90, 120].includes(value.seconds)) throw Error('作畫時間請選 60、90 或 120 秒。');
-  if (value.mode === 'legacy') return { seconds: value.seconds, topics };
+  if (value.mode === 'legacy') return { ...mode, seconds: value.seconds, topics };
   const number = Number(value[value.mode]),
     min = value.mode === 'score' ? 10 : 1,
     max = value.mode === 'score' ? 1000 : 64;
@@ -59,5 +71,5 @@ export function drawSettingsPayload(value: DrawSettingsDraft): Record<string, un
     throw Error(
       value.mode === 'score' ? '目標分數需為 10–1000 的整數。' : '固定總題數需為 1–64 的整數。',
     );
-  return { seconds: value.seconds, topics, ending: { mode: value.mode, value: number } };
+  return { ...mode, seconds: value.seconds, topics, ending: { mode: value.mode, value: number } };
 }

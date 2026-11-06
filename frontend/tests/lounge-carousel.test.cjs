@@ -28,6 +28,14 @@ test('lounge participates in real carousel keyboard selection and cyclic navigat
     {},
   );
   assert.equal(catalog.gameCards.filter((c) => c.id === 'lounge').length, 1);
+  assert.equal(catalog.lobbyCards.find((c) => c.id === 'draw').title, '畫畫天堂');
+  assert.deepEqual(
+    Array.from(
+      catalog.lobbyCards.filter((c) => catalog.isDrawingGame(c.id)),
+      (c) => c.id,
+    ),
+    ['draw'],
+  );
   const prefs = { motion: { enabled: false } },
     props = vue.reactive({ modelValue: 'thunder' }),
     events = [];
@@ -67,8 +75,8 @@ test('lounge participates in real carousel keyboard selection and cyclic navigat
     assert.equal(state.visible(state.index.value), true);
     assert.equal(state.cardStyle(state.index.value)['--slot'], 0);
     assert.equal(prevented, 1);
-    await state.select(catalog.gameCards.length);
-    assert.equal(props.modelValue, catalog.gameCards[0].id);
+    await state.select(catalog.lobbyCards.length);
+    assert.equal(props.modelValue, catalog.lobbyCards[0].id);
     await state.select(-1);
     assert.equal(props.modelValue, 'lounge');
     assert.equal(events.filter((e) => e[1] === 'lounge').length, 2);

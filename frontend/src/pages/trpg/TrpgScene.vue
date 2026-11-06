@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue';
 import { useTrpgStore } from '../../stores/trpg';
 import { useRoomStore } from '../../stores/room';
 import UiButton from '../../components/UiButton.vue';
+import UiHeading from '../../components/UiHeading.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import TrpgResult from './TrpgResult.vue';
 const trpg = useTrpgStore(),
@@ -82,7 +83,15 @@ function input(event: Event) {
           '每個角色都能選任何解法。可獨自試玩，也能邀朋友或加入腳本夥伴，一起把失落的鐘聲帶回霧港。'
         }}</p>
         <section v-if="state.phase === 'planning'" class="vue-trpg-approach-help"
-          ><h3>{{ trpg.isLeader ? '你的解法' : '領隊決定解法' }}</h3
+          ><UiHeading
+            :level="3"
+            v-if="trpg.isLeader && trpg.currentApproach"
+            kind="prompt"
+            label="你選擇的解法"
+            >{{ trpg.currentApproach.name }}</UiHeading
+          ><UiHeading :level="3" v-else>{{
+            trpg.isLeader ? '請選擇解法' : '領隊決定解法'
+          }}</UiHeading
           ><template v-if="trpg.isLeader && trpg.currentApproach"
             ><p>{{ trpg.currentApproach.description }}</p
             ><dl

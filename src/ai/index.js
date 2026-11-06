@@ -42,6 +42,8 @@ function botSupport(room) {
         'quacks',
         'ceo',
         'second-wind',
+        'brainwave',
+        'drama-bar',
       ].includes(type) ||
         ['waiting', 'finished'].includes(room.phase)),
     maxPlayers: type === 'quacks' ? room.max : adapter.maxPlayers,
@@ -63,6 +65,8 @@ function addTestBot(room) {
         'quacks',
         'ceo',
         'second-wind',
+        'brainwave',
+        'drama-bar',
       ].includes(room.type) && !['waiting', 'finished'].includes(room.phase)
         ? '本局已開始，請等待下一局再加入 AI'
         : '房間已滿',
@@ -406,10 +410,57 @@ registerTestAI('gift', {
     return null;
   },
 });
+for (const [type, guessPhase, options] of [
+  ['brainwave', 'drawing', 5],
+  ['drama-bar', 'guessing', 6],
+]) {
+  registerTestAI(type, {
+    maxPlayers: 8,
+    plan(room, player) {
+      const view = room.view(player.id);
+      const input = { roundId: view.roundId, requestId: randomUUID() };
+      const leading = view.actorId === player.id;
+      if (leading && view.phase === 'prepare') return action(player.id, 'ready', input);
+      if (leading && view.phase === 'performing') return action(player.id, 'performed', input);
+      if (!leading && view.phase === guessPhase && !view.myGuesses.length)
+        return action(player.id, 'guess', { ...input, option: room.rng(options) });
+      if (type === 'brainwave' && view.phase === 'drawing' && !view.board.length)
+        return action(player.id, 'shape', {
+          ...input,
+          shape: { kind: 'ellipse', x1: 0.2, y1: 0.25, x2: 0.7, y2: 0.75 },
+        });
+      if (view.phase === 'reveal' && view.host === player.id)
+        return action(player.id, 'next', input);
+      return null;
+    },
+  });
+}
+
 registerTestAI('draw', {
   maxPlayers: 8,
   plan(room, p, cache) {
     const s = room.view(p.id);
+    if (s.options.playMode === 'oracle') {
+      const oracle = s.oracle;
+      if (!oracle) return null;
+      const input = { roundId: oracle.roundId, requestId: randomUUID() };
+      if (s.phase === 'oracle-drawing' && !oracle.board.submitted) {
+        if (!oracle.board.marks.length) {
+          const index = room.rng(oracle.board.paths.length);
+          return action(p.id, 'oracle-trace', { ...input, trace: [{ index, from: 0, to: 100 }] });
+        }
+        return action(p.id, 'oracle-submit', input);
+      }
+      if (oracle.turnId === p.id) {
+        const possible = oracle.terms.filter((term) => !term.eliminated);
+        return action(p.id, 'oracle-eliminate', {
+          ...input,
+          termId: possible[room.rng(possible.length)].id,
+        });
+      }
+      if (s.phase === 'oracle-reveal' && s.host) return action(p.id, 'oracle-next', input);
+      return null;
+    }
     if (s.phase === 'choosing' && s.presenterId === p.id) {
       const options = s.candidates.filter(hasSketch),
         candidates = options.length ? options : s.candidates;

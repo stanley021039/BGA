@@ -72,6 +72,7 @@ const { TelephoneRoom } = require('./games/telephone');
 const { MusicQuizRoom } = require('./games/musicquiz'),
   { MinimalRoom } = require('./games/minimal'),
   { LoungeRoom } = require('./games/lounge');
+const { BrainwaveRoom, DramaBarRoom } = require('./games/voice-party');
 const { GiftStore } = require('./games/gift-store'),
   { GIFTS, CATEGORIES } = require('./games/gift-catalog');
 const {
@@ -457,7 +458,7 @@ function initializeApp(config, dataLock, acquired) {
       actionFeedback: require('./rooms/action-feedback').actionFeedback(room),
       type: room.type || 'poker',
       gameRevision: room.gameRevision || 0,
-      roomGames,
+      roomGames: frontend ? roomGames : roomGames.filter((game) => game.type !== 'brainwave'),
       ...savedDrawResults,
       roomSpace: roomSpace.view(room, view.me, view.players, expressions),
       pingContext: runtime.pings.context(room),
@@ -983,6 +984,8 @@ function initializeApp(config, dataLock, acquired) {
     minimal: MinimalRoom,
     draw: DrawGuessRoom,
     lounge: LoungeRoom,
+    brainwave: BrainwaveRoom,
+    'drama-bar': DramaBarRoom,
   };
   const tutorials = require('./tutorials/runtime').createTutorials();
   acquired.push(() => tutorials.clear());
@@ -1810,7 +1813,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge|brainwave|drama-bar)$/.test(
               page || '',
             )
           )
@@ -2116,6 +2119,8 @@ function initializeApp(config, dataLock, acquired) {
               'ceo',
               'second-wind',
               'lounge',
+              'brainwave',
+              'drama-bar',
             ].includes(data.type)
           )
             throw new HttpError(400, 'INVALID_GAME', '不支援的遊戲');
@@ -2141,8 +2146,12 @@ function initializeApp(config, dataLock, acquired) {
             majority = data.type === 'majority',
             gift = data.type === 'gift',
             lounge = data.type === 'lounge';
+          const voiceParty = ['brainwave', 'drama-bar'].includes(data.type);
+          if (voiceParty && !frontend)
+            throw new HttpError(400, 'GAME_NOT_ENABLED', '此遊戲需要新版遊戲介面');
           const room = new (
-            coc
+            (voiceParty && roomClasses[data.type]) ||
+            (coc
               ? CocRoom
               : lounge
                 ? LoungeRoom
@@ -2170,40 +2179,46 @@ function initializeApp(config, dataLock, acquired) {
                                       ? MajorityRoom
                                       : thunder
                                         ? ThunderRoom
-                                        : Room
+                                        : Room)
           )(
             code,
             String(
               data.roomName ||
-                (coc
-                  ? '克蘇魯的呼喚'
-                  : lounge
-                    ? '場外休憩區'
-                    : secondWind
-                      ? '運動員 Second Wind'
-                      : ceo
-                        ? '王牌執行長好友局'
-                        : quacks
-                          ? '郎中闖江湖好友局'
-                          : bluff
-                            ? '瞎掰王好友局'
-                            : musicquiz
-                              ? '猜歌挑戰好友局'
-                              : minimal
-                                ? '極簡畫家好友局'
-                                : telephone
-                                  ? '傳情畫意好友局'
-                                  : trpg
-                                    ? '霧港鐘聲冒險隊'
-                                    : draw
-                                      ? '你畫我猜好友局'
-                                      : gift
-                                        ? '送禮達人好友局'
-                                        : majority
-                                          ? '同頻俱樂部'
-                                          : thunder
-                                            ? '末路狂飆好友局'
-                                            : '深夜好友局'),
+                (voiceParty
+                  ? data.type === 'brainwave'
+                    ? '電波畫家好友局'
+                    : '戲精酒吧好友局'
+                  : coc
+                    ? '克蘇魯的呼喚'
+                    : lounge
+                      ? '場外休憩區'
+                      : secondWind
+                        ? '運動員 Second Wind'
+                        : ceo
+                          ? '王牌執行長好友局'
+                          : quacks
+                            ? '郎中闖江湖好友局'
+                            : bluff
+                              ? '瞎掰王好友局'
+                              : musicquiz
+                                ? '猜歌挑戰好友局'
+                                : minimal
+                                  ? '極簡畫家好友局'
+                                  : telephone
+                                    ? '傳情畫意好友局'
+                                    : trpg
+                                      ? '霧港鐘聲冒險隊'
+                                      : draw
+                                        ? data.drawingLobby === true
+                                          ? '畫畫天堂好友局'
+                                          : '你畫我猜好友局'
+                                        : gift
+                                          ? '送禮達人好友局'
+                                          : majority
+                                            ? '同頻俱樂部'
+                                            : thunder
+                                              ? '末路狂飆好友局'
+                                              : '深夜好友局'),
             ).slice(0, 24),
           );
           equipRoomProviders(room);
@@ -2221,6 +2236,7 @@ function initializeApp(config, dataLock, acquired) {
               throw new HttpError(400, 'INVALID_DRAW_SECONDS', '作畫時間請選 60、90 或 120 秒');
             if (data.seconds !== undefined) room.options.seconds = data.seconds;
             room.options.ending = readEnding(data.ending);
+            if (data.drawingLobby === true) room.options.playMode = 'unselected';
             if (data.topics !== undefined)
               room.options.topics = DRAW_CATEGORIES.filter((topic) => data.topics.includes(topic));
             else if (data.topic !== undefined) {
@@ -2238,7 +2254,10 @@ function initializeApp(config, dataLock, acquired) {
             () => {
               const player = room.add(user.display_name);
               player.name = user.display_name;
-              if (quacks || secondWind) room.configure(player.id, data);
+              if (quacks || secondWind || (data.type === 'drama-bar' && data.cycles !== undefined))
+                room.configure(player.id, data);
+              if (draw && data.drawingLobby !== true && data.playMode !== undefined)
+                room.configure(player.id, { ...data, seconds: room.options.seconds });
               return player;
             },
           );
@@ -2376,7 +2395,9 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/change-game') {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
           limitRate(roomRate, 'mutation:' + user.id, 120);
-          const next = switchGame(room, p.id, data.targetType, roomClasses);
+          if (data.targetType === 'brainwave' && !frontend)
+            throw new HttpError(400, 'GAME_NOT_ENABLED', '此遊戲需要新版遊戲介面');
+          const next = switchGame(room, p.id, data.targetType, roomClasses, data.targetDrawMode);
           if (next !== room) {
             equipRoomProviders(next);
             attachAchievementHooks(next);
@@ -2938,6 +2959,7 @@ function initializeApp(config, dataLock, acquired) {
                   'bluff',
                   'quacks',
                   'second-wind',
+                  'drama-bar',
                 ].includes(room.type)
               )
                 throw Error('此遊戲沒有此設定');
@@ -2972,6 +2994,8 @@ function initializeApp(config, dataLock, acquired) {
                   'ceo',
                   'second-wind',
                   'lounge',
+                  'brainwave',
+                  'drama-bar',
                 ].includes(room.type) ||
                 !['waiting', 'showdown'].includes(room.phase) ||
                 p.stack > 0
@@ -3152,6 +3176,8 @@ function initializeApp(config, dataLock, acquired) {
         '/musicquiz': 'musicquiz.html',
         '/minimal': 'minimal.html',
         '/lounge': 'lounge.html',
+        '/brainwave': 'brainwave.html',
+        '/drama-bar': 'drama-bar.html',
         '/telephone': 'telephone.html',
         '/trpg': 'trpg.html',
         '/coc': 'coc.html',
@@ -3226,7 +3252,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge|brainwave|drama-bar)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -3379,6 +3405,8 @@ function initializeApp(config, dataLock, acquired) {
               file === 'musicquiz.html' ||
               file === 'minimal.html' ||
               file === 'lounge.html' ||
+              file === 'brainwave.html' ||
+              file === 'drama-bar.html' ||
               file === 'bluff.html' ||
               file === 'quacks.html' ||
               file === 'ceo.html' ||

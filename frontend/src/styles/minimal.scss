@@ -66,7 +66,14 @@
       max-block-size: 62px;
       overflow: auto;
     }
-    h1 {
+    &[data-private] {
+      block-size: auto;
+      > div:first-child {
+        max-block-size: none;
+        overflow: visible;
+      }
+    }
+    h1:not(.ui-heading) {
       margin: 0;
       font-size: 20px;
       line-height: 1.5;
@@ -605,8 +612,8 @@
       min-block-size: 182px;
       gap: 8px;
       padding: 12px;
-      h1 {
-        font-size: 20px;
+      &[data-private] {
+        grid-template-rows: auto 84px;
       }
       .vue-minimal-task-meta {
         inline-size: 100%;

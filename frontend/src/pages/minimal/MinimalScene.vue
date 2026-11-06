@@ -8,6 +8,7 @@ import GeometryCanvas from '../../components/GeometryCanvas.vue';
 import DrawingToolButton from '../../components/DrawingToolButton.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiHeading from '../../components/UiHeading.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import MinimalWaiting from './MinimalWaiting.vue';
@@ -107,11 +108,17 @@ onBeforeUnmount(() => {
       class="vue-minimal-task-header"
       :data-private="state.phase === 'drawing' && !guesser ? '' : undefined"
       ><div>
-        <h1 id="minimalHeading">{{
+        <UiHeading
+          v-if="state.phase === 'drawing' && !guesser"
+          id="minimalHeading"
+          :level="1"
+          kind="prompt"
+          label="你的秘密題目"
+          >{{ state.prompt }}</UiHeading
+        >
+        <h1 v-else id="minimalHeading">{{
           state.phase === 'drawing'
-            ? guesser
-              ? '畫家正在作畫'
-              : '秘密題目：' + state.prompt
+            ? '畫家正在作畫'
             : state.phase === 'guessing'
               ? state.currentDrawing?.name + ' · ' + state.currentDrawing?.count + ' 筆'
               : state.phase === 'reveal'

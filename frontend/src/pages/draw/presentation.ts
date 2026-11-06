@@ -6,12 +6,16 @@ export const drawPhases = {
   drawing: '畫圖與猜題',
   reveal: '答案揭曉',
   finished: '本局結束',
+  'oracle-drawing': '塗鴉神諭 · 同時描線',
+  'oracle-guessing': '塗鴉神諭 · 輪流淘汰',
+  'oracle-reveal': '塗鴉神諭 · 本輪揭曉',
 } as const;
 export function drawPlayerStatus(
   player: RoomPlayer,
   state: DrawSnapshot,
   disconnected = false,
 ): string {
+  if (state.phase.startsWith('oracle-')) return player.online ? '合作隊員' : '暫時離線';
   const didNotPlay =
     ['reveal', 'finished'].includes(state.phase) &&
     player.id !== state.presenterId &&

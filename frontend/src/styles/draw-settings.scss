@@ -24,6 +24,9 @@
   overflow: auto;
   scrollbar-gutter: stable;
 }
+.vue-draw-settings-content:has(.vue-draw-oracle-settings) > fieldset {
+  display: none;
+}
 .vue-draw-settings fieldset {
   min-inline-size: 0;
   margin: 0 0 tokens.space(4);

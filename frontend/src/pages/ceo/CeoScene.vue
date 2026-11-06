@@ -50,12 +50,12 @@ function held(playerId: string, groupId: string) {
     </UiPanel>
     <template v-else>
       <UiPanel v-if="game.phase === 'playing'" title="經營動態" density="compact">
+        <UiHeading :level="3">{{
+          game.turnId === ceo.state?.me ? '輪到你行動' : `等待 ${name(game.turnId)} 行動`
+        }}</UiHeading>
         <div class="ceo-status">
-          <UiBadge :tone="ceo.canAct ? 'primary' : 'neutral'">{{
-            game.turnId === ceo.state?.me ? '輪到你行動' : `等待 ${name(game.turnId)}`
-          }}</UiBadge>
           <span>第 {{ game.round }} 輪</span
-          ><span v-if="ceo.me">我的現金 {{ ceo.me.cash }} 元</span>
+          ><strong v-if="ceo.me">我的現金 {{ ceo.me.cash }} 元</strong>
           <strong v-if="game.countdown === 1">最後一輪 · 禁止買股</strong>
           <span v-else-if="game.countdown === 2">倒數兩輪</span>
           <span v-else-if="game.endingTriggered">本輪結束後，再進行兩輪</span>

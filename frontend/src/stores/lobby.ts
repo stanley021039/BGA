@@ -483,7 +483,7 @@ export const useLobbyStore = defineStore('lobby', () => {
             type: options.type,
             roomName: options.roomName.trim().slice(0, 24),
             ...(options.type === 'draw'
-              ? { seconds: 60, ending: { mode: 'rounds', value: 8 } }
+              ? { drawingLobby: true, seconds: 60, ending: { mode: 'rounds', value: 8 } }
               : {}),
           };
     try {

@@ -1,28 +1,10 @@
 <script setup lang="ts">
 import { warmGamePage } from '../../services/game-assets';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
-import { gameCards } from './catalog';
+import { lobbyCards as gameCards } from './catalog';
 import { usePreferencesStore } from '../../stores/preferences';
 import UiButton from '../../components/UiButton.vue';
-import loungeSmall from '../../assets/lounge/lounge-360.webp';
-import loungeLarge from '../../assets/lounge/lounge-720.webp';
-import quacksArt from '../../assets/quacks/game-quacks.svg';
-import minimalArt from '../minimal/minimal-waiting.svg';
-import constructionArt from '../../assets/lobby/construction-800.webp?no-inline';
-import constructionThumb from '../../assets/lobby/construction-400.webp?no-inline';
-// Written out in full so the build can add each file's content version (#316).
-const gameArt: Record<string, string> = {
-  bluff: '/assets/playful/game-bluff.svg',
-  draw: '/assets/playful/game-draw.svg',
-  gift: '/assets/playful/game-gift.svg',
-  majority: '/assets/playful/game-majority.svg',
-  market: '/assets/playful/game-market.svg',
-  musicquiz: '/assets/playful/game-musicquiz.svg',
-  poker: '/assets/playful/game-poker.svg',
-  telephone: '/assets/playful/game-telephone.svg',
-  thunder: '/assets/playful/game-thunder.svg',
-  trpg: '/assets/playful/game-trpg.svg',
-};
+import { lobbyCovers } from './covers';
 const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
@@ -210,27 +192,13 @@ onBeforeUnmount(() => {
         >
           <div class="tile-image"
             ><img
-              :src="
-                card.art === 'construction'
-                  ? constructionArt
-                  : card.id === 'lounge'
-                    ? loungeSmall
-                    : card.id === 'quacks'
-                      ? quacksArt
-                      : card.id === 'minimal'
-                        ? minimalArt
-                        : gameArt[card.art] || '/assets/playful/game-' + card.art + '.svg'
-              "
-              :srcset="
-                card.art === 'construction'
-                  ? constructionThumb + ' 400w, ' + constructionArt + ' 800w'
-                  : card.id === 'lounge'
-                    ? loungeSmall + ' 360w, ' + loungeLarge + ' 720w'
-                    : undefined
-              "
-              sizes="(max-width: 650px) calc(100vw - 32px), 300px"
+              v-if="visible(i)"
+              :src="lobbyCovers[card.id].src"
+              :srcset="lobbyCovers[card.id].srcset"
+              sizes="(min-width: 1181px) and (min-height: 640px) and (pointer: fine) 300px, (max-width: 371px) calc(100vw - 32px), 340px"
+              :loading="i === index ? 'eager' : 'lazy'"
               decoding="async"
-              :alt="card.art === 'construction' ? '施工中' : ''"
+              alt=""
               draggable="false" /></div
           ><div class="tile-body"
             ><div class="kicker">{{ card.english }}</div

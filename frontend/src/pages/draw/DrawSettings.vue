@@ -11,6 +11,7 @@ import type { DrawSettingsDraft } from '../../contracts/draw-settings';
 import { useRoomStore } from '../../stores/room';
 import { useQueuedSave } from '../../composables/queued-save';
 import UiButton from '../../components/UiButton.vue';
+import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import '../../styles/draw-settings.scss';
 const props = defineProps<{ snapshot: DrawSnapshot }>();
@@ -44,7 +45,7 @@ watch(
     const adopt = canonical.value === null || !editable.value || (!pending.value && !dirty.value);
     canonical.value = key;
     syncing = true;
-    if (adopt) Object.assign(draft, value);
+    if (adopt) Object.assign(draft, { playMode: undefined, oracleDifficulty: undefined, ...value });
     else if (draft.mode === 'legacy' && value.mode !== 'legacy') {
       draft.mode = value.mode;
       draft.rounds = value.rounds;
@@ -97,6 +98,20 @@ defineExpose({
       }}</p></header
     >
     <div class="vue-draw-settings-content">
+      <div v-if="draft.playMode === 'oracle'" class="vue-draw-oracle-settings">
+        <UiField
+          label="神諭題庫難度"
+          control="select"
+          :model-value="draft.oracleDifficulty || 'easy'"
+          :options="[
+            { value: 'easy', label: '簡單' },
+            { value: 'hard', label: '困難' },
+          ]"
+          :disabled="!editable"
+          @update:model-value="draft.oracleDifficulty = $event === 'hard' ? 'hard' : 'easy'"
+        />
+        <p>沿虛線描圖，輪流淘汰沒人畫的詞。2–8 人合作，共四輪。</p>
+      </div>
       <fieldset :disabled="!editable">
         <legend>題目類別</legend>
         <div class="vue-draw-topic-actions"

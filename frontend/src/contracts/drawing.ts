@@ -51,7 +51,15 @@ export interface DrawGuess {
 }
 export interface DrawSnapshot extends RoomSnapshot {
   type: 'draw';
-  phase: 'waiting' | 'choosing' | 'drawing' | 'reveal' | 'finished';
+  phase:
+    | 'waiting'
+    | 'choosing'
+    | 'drawing'
+    | 'reveal'
+    | 'finished'
+    | 'oracle-drawing'
+    | 'oracle-guessing'
+    | 'oracle-reveal';
   round: number;
   roundLimit: number;
   presenterId: string | null;
@@ -92,7 +100,16 @@ export function readDrawSnapshot(value: unknown): DrawSnapshot {
   const room = readRoomSnapshot(value);
   if (
     room.type !== 'draw' ||
-    !['waiting', 'choosing', 'drawing', 'reveal', 'finished'].includes(room.phase)
+    ![
+      'waiting',
+      'choosing',
+      'drawing',
+      'reveal',
+      'finished',
+      'oracle-drawing',
+      'oracle-guessing',
+      'oracle-reveal',
+    ].includes(room.phase)
   )
     throw Error('這不是你畫我猜房間');
   const options = record(room.options);
