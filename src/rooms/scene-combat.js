@@ -39,6 +39,11 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     actor.respawnAt = 0;
     actor.shieldUntil = 0;
     actor.shieldResidualUntil = 0;
+    actor.guardEnergyReady = false;
+    actor.guardEnergy = null;
+    actor.slowUntil = 0;
+    actor.teleportBlockedUntil = 0;
+    actor.hasteUntil = 0;
     actor.immobileUntil = 0;
     actor.heroFlightUntil = 0;
     actor.sealedUntil = 0;
@@ -46,6 +51,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     actor.fragment = null;
     actor.severed = false;
     actor.drillDot = null;
+    actor.ordinaryDot = null;
     actor.dotPulse = null;
     actor.knockback = null;
     actor.regenAt = time;
@@ -61,15 +67,19 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       actor.authorBonus = entitled;
       reset(actor, time);
     }
-    const dot = actor.drillDot;
-    while (dot && actor.health > 0 && dot.remaining > 0 && dot.nextAt <= time) {
+    while (actor.health > 0) {
+      const { drillDot, ordinaryDot } = actor;
+      const ordinary = (ordinaryDot?.nextAt ?? Infinity) < (drillDot?.nextAt ?? Infinity);
+      const dot = ordinary ? ordinaryDot : drillDot;
+      if (!dot || dot.nextAt > time) break;
       const at = dot.nextAt;
-      dot.nextAt += 1000;
-      dot.remaining--;
-      const result = hit(dot.from, actor, at, 'giga_drill', 0.1);
+      dot.nextAt += ordinary ? rules.ordinaryDot.intervalMs : 1000;
+      if (--dot.remaining === 0) actor[ordinary ? 'ordinaryDot' : 'drillDot'] = null;
+      const result = ordinary
+        ? hit(dot.from, actor, at, dot.effect, rules.ordinaryDot.damageWeight, 'ordinary-dot')
+        : hit(dot.from, actor, at, 'giga_drill', 0.1);
       actor.dotPulse = { id: `${actor.lifeId}:${at}`, at, ...result };
     }
-    if (dot && (!dot.remaining || !actor.health)) actor.drillDot = null;
     collect(actor);
     if (actor.respawnAt && time >= actor.respawnAt) {
       const oldX = actor.x;
@@ -124,10 +134,14 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
   function alive(actor) {
     if (actor.health === 0) throw new HttpError(409, 'SCENE_RESPAWNING', '正在重生，請稍候');
   }
-  function protect(actor, time) {
+  function protect(actor, time, effect) {
     alive(actor);
+    const kind = attackKind(effect);
     actor.shieldUntil = time + rules.shield.durationMs;
-    actor.shieldResidualUntil = actor.shieldUntil + rules.shield.residualDurationMs;
+    actor.guardEnergyReady = kind === 'shield' || kind === 'sphere';
+    actor.shieldResidualUntil =
+      actor.shieldUntil +
+      (kind === 'shield' ? rules.shield.guardResidualDurationMs : rules.shield.residualDurationMs);
     return { damage: 0, critical: false };
   }
   function cast(actor, effect, time) {
@@ -174,6 +188,12 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     if (time < (actor.sealedUntil || 0))
       throw new HttpError(409, 'SCENE_SEALED', '封印中暫時無法攻擊或瞬移');
   }
+  function canTeleport(actor, time) {
+    canMove(actor, time);
+    canCast(actor, time);
+    if (time < (actor.teleportBlockedUntil || 0))
+      throw new HttpError(409, 'SCENE_TELEPORT_BLOCKED', '光柱封鎖中，暫時無法瞬移');
+  }
   function collect(actor, from) {
     const part = actor.fragment;
     if (!part || !actor.health) return;
@@ -195,7 +215,16 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       actor.severed = false;
     }
   }
-  function applyEffect(from, actor, time, effect, origin, aspect = 1, phase = '') {
+  function applyEffect(
+    from,
+    actor,
+    time,
+    effect,
+    origin,
+    aspect = 1,
+    phase = '',
+    firstContact = false,
+  ) {
     effect = attackKind(effect);
     if (!actor.health || actor.kind === 'fragment') return;
     if (effect === 'reaper_seal')
@@ -211,14 +240,44 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
         vertical: true,
       };
     }
-    if (effect === 'bijuu_beam' && random() < rules.bijuuImmobilize.chance)
-      freeze(actor, time, rules.bijuuImmobilize.durationMs);
+    if (effect === 'bijuu_beam' || (firstContact && effect === 'chains')) {
+      const config = effect === 'chains' ? rules.chains : rules.bijuuImmobilize;
+      if (random() < (config.immobilizeChance ?? config.chance))
+        freeze(actor, time, config.immobilizeMs ?? config.durationMs);
+      if (random() < config.slowChance)
+        actor.slowUntil = Math.max(
+          actor.slowUntil || 0,
+          Math.max(time, actor.immobileUntil || 0) + rules.frost.durationMs,
+        );
+    }
+    if (firstContact && effect === 'orbital' && random() < rules.orbitalTeleportBlock.chance)
+      actor.teleportBlockedUntil = Math.max(
+        actor.teleportBlockedUntil || 0,
+        time + rules.orbitalTeleportBlock.durationMs,
+      );
+    if (
+      firstContact &&
+      (effect === 'arrow_volley' || effect === 'flame_vortex') &&
+      random() < rules.ordinaryDot.chance
+    )
+      actor.ordinaryDot = {
+        from,
+        effect,
+        nextAt: time + rules.ordinaryDot.intervalMs,
+        remaining: rules.ordinaryDot.ticks,
+      };
     if (effect === 'solar_phoenix' && phase.startsWith('burn'))
       actor.regenBlockedUntil = Math.max(
         actor.regenBlockedUntil || 0,
         time + rules.phoenixHealingBlockMs,
       );
-    if (effect === 'giant_orange_cat') freeze(actor, time);
+    if (effect === 'giant_orange_cat') {
+      freeze(actor, time, rules.orangeCat.immobilizeMs);
+      actor.slowUntil = Math.max(
+        actor.slowUntil || 0,
+        actor.immobileUntil + rules.orangeCat.slowMs,
+      );
+    }
     if (effect === 'dimension_cleave' && !actor.severed) {
       const angle = random() * Math.PI * 2;
       let point = {
@@ -247,6 +306,31 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
         health: Math.round(actor.maxHealth / 2),
         aspect,
       };
+    }
+    if (effect === 'singularity' && phase === 'finish') {
+      const distance = sceneDistance(actor, origin, aspect);
+      if (distance > 0) {
+        const fraction = Math.min(1, rules.singularityPull / distance);
+        const point = passageTarget(
+          actor,
+          {
+            x: actor.x + (origin.x - actor.x) * fraction,
+            y: actor.y + (origin.y - actor.y) * fraction,
+          },
+          actor.passage,
+        );
+        // A short pull should never send the target through the central panel.
+        if (sceneDistance(actor, point, aspect) <= rules.singularityPull + 1e-8) {
+          const stationary = actor.x === actor.targetX && actor.y === actor.targetY;
+          actor.x = point.x;
+          actor.y = point.y;
+          if (stationary) {
+            actor.targetX = actor.x;
+            actor.targetY = actor.y;
+          }
+          actor.moveId = (actor.moveId || 0) + 1;
+        }
+      }
     }
     if (effect === 'giga_drill') {
       const dx = (actor.x - origin.x) * aspect,
@@ -290,7 +374,10 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       ? (from.comboDamage ?? rollBabylonDamage(from))
       : minimum +
         Math.floor(random() * ((rules.damage.max - rules.damage.min) * rules.unitScale + 1));
-    const critical = effect !== 'shaohua_devour' && random() < rules.damage.criticalChance;
+    const critical =
+      effect !== 'shaohua_devour' &&
+      phase !== 'ordinary-dot' &&
+      random() < rules.damage.criticalChance;
     // A whole-cast budget preserves the requested author range. Integer partitions
     // sum exactly; Ea takes two thirds, the four weapon salvos share one third.
     const weapons = Math.round(base / 3);
@@ -347,7 +434,20 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     if (damage > 0 && from.id && from.id !== to.id) {
       helpers.set(from.id, { actor: from, at: time });
     }
-    energy.hit(from, to, effect, damage);
+    if (phase !== 'ordinary-dot') energy.hit(from, to, effect, damage);
+    if (
+      to.guardEnergyReady &&
+      time < to.shieldUntil &&
+      blockedPercent > 0 &&
+      damage > 0 &&
+      damage < incoming &&
+      effect !== 'shaohua_devour'
+    ) {
+      to.guardEnergyReady = false;
+      const before = to.energy || 0;
+      energy.gain(to, rules.shield.guardEnergy);
+      to.guardEnergy = { at: time, amount: to.energy - before };
+    }
     to.health = Math.max(0, to.health - damage);
     to.lastHitAt = to.regenAt = time;
     if (!to.health) {
@@ -358,6 +458,11 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       contributions.delete(to);
       to.shieldUntil = 0;
       to.shieldResidualUntil = 0;
+      to.guardEnergyReady = false;
+      to.guardEnergy = null;
+      to.slowUntil = 0;
+      to.teleportBlockedUntil = 0;
+      to.hasteUntil = 0;
       to.guanyinUntil = 0;
       to.excaliburUntil = 0;
       to.heroFlightUntil = 0;
@@ -365,6 +470,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       to.regenBlockedUntil = 0;
       to.fragment = null;
       to.drillDot = null;
+      to.ordinaryDot = null;
       to.respawnAt = time + rules.respawnMs;
       to.targetX = to.x;
       to.targetY = to.y;
@@ -375,11 +481,19 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     const time = actor.combatAt || 0;
     const living = actor.health > 0;
     const guanyin = living && time < (actor.guanyinUntil || 0);
+    const guardFullUntil = Math.max(actor.shieldUntil || 0, actor.excaliburUntil || 0);
+    const guardUntil = Math.max(guardFullUntil, actor.shieldResidualUntil || 0);
     return {
       ...(includeStatus
         ? {
             combatStatus: {
               authorBonus: !!actor.authorBonus,
+              guardEnergy:
+                living &&
+                actor.guardEnergy &&
+                time < actor.guardEnergy.at + rules.shield.guardNoticeMs
+                  ? actor.guardEnergy.amount
+                  : 0,
               guanyin,
               excalibur: living && time < (actor.excaliburUntil || 0),
               shield:
@@ -402,6 +516,16 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
                 : 0,
               regenBlockedMs: living ? Math.max(0, (actor.regenBlockedUntil || 0) - time) : 0,
               sealedMs: living ? Math.max(0, (actor.sealedUntil || 0) - time) : 0,
+              teleportBlockedMs: living ? Math.max(0, (actor.teleportBlockedUntil || 0) - time) : 0,
+              ordinaryDotMs:
+                living && actor.ordinaryDot
+                  ? Math.max(
+                      0,
+                      actor.ordinaryDot.nextAt +
+                        (actor.ordinaryDot.remaining - 1) * rules.ordinaryDot.intervalMs -
+                        time,
+                    )
+                  : 0,
               regenPerSecond: Math.round(
                 rules.regeneration.perSecond *
                   rules.unitScale *
@@ -418,6 +542,14 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       respawnAt: actor.respawnAt,
       kda: { ...stats(actor) },
       immobileUntil: actor.immobileUntil || 0,
+      guardFullMs: living ? Math.max(0, guardFullUntil - time) : 0,
+      guardMs: living ? Math.max(0, guardUntil - time) : 0,
+      slowMs:
+        living && time >= (actor.immobileUntil || 0)
+          ? Math.max(0, (actor.slowUntil || 0) - time)
+          : 0,
+      teleportBlockedUntil: actor.teleportBlockedUntil || 0,
+      hasteMs: living ? Math.max(0, (actor.hasteUntil || 0) - time) : 0,
       heroFlightUntil: actor.heroFlightUntil || 0,
       sealedUntil: actor.sealedUntil || 0,
       knockback:
@@ -447,6 +579,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     freeze,
     canMove,
     canCast,
+    canTeleport,
     applyEffect,
     targets,
     collect,

@@ -17,7 +17,10 @@ const prefs = usePreferencesStore(),
   still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 const heads = computed(() =>
   (props.snapshot?.attacks || []).filter(
-    (e) => e.head && !e.head.cancelled && (still.value || !active.value.some((a) => a.id === e.id)),
+    (e) =>
+      e.head &&
+      (!e.head.cancelled || e.head.exploded) &&
+      (still.value || !active.value.some((a) => a.id === e.id)),
   ),
 );
 const seen = new Set<string>(),
@@ -159,7 +162,12 @@ onBeforeUnmount(() => {
         top: 'calc(' + event.head!.y + '% - 42px)',
         '--head-growth': homingScale(event.head!.at),
       }"
-      ><img
+    >
+      <svg v-if="event.head!.exploded" class="tracking-burst" viewBox="0 0 64 64">
+        <path d="M32 2l6 18 17-8-7 17 14 6-18 6 6 16-17-8-9 13-4-18-17 2 11-14L4 18l18 3z" />
+      </svg>
+      <img
+        v-else
         class="tracking-head"
         alt=""
         decoding="async"
@@ -218,6 +226,14 @@ onBeforeUnmount(() => {
   height: auto;
   object-fit: contain;
   transform: scale(var(--head-growth));
+}
+.tracking-burst {
+  display: block;
+  width: 100%;
+  fill: var(--stitch-danger-bg);
+  stroke: var(--stitch-danger-ink);
+  stroke-width: 3;
+  stroke-linejoin: round;
 }
 .tracking-entity.is-biting {
   width: clamp(72px, 11vw, 190px);

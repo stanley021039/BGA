@@ -3,7 +3,7 @@ import MotionPolicy from '../../engines/motion-policy.js';
 import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
-import { sceneWalk } from '../../engines/scene-path.js';
+import { sceneWalkWithSpeed } from '../../engines/scene-path.js';
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
@@ -49,6 +49,46 @@ let disposed = false,
   observer: ResizeObserver | null = null,
   stopArrival: (() => void) | null = null;
 let stopKnockback: (() => void) | null = null;
+const guard = ref<'full' | 'residual' | null>(null);
+const guardSweep = ref<SVGGElement | null>(null);
+let guardTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  [() => props.visitor, () => props.connected],
+  ([visitor, connected], _, onCleanup) => {
+    const remaining = visitor.guardMs || 0;
+    const full = Math.min(visitor.guardFullMs || 0, remaining);
+    if (!connected || !visitor.health || remaining <= 0) {
+      guard.value = null;
+      return;
+    }
+    const started = performance.now();
+    const refresh = () => {
+      const elapsed = performance.now() - started;
+      guard.value = elapsed < full ? 'full' : elapsed < remaining ? 'residual' : null;
+      if (guard.value)
+        guardTimer = setTimeout(
+          refresh,
+          Math.ceil((guard.value === 'full' ? full : remaining) - elapsed),
+        );
+    };
+    onCleanup(() => clearTimeout(guardTimer));
+    refresh();
+  },
+  { immediate: true },
+);
+watch(guardSweep, (sweep, _, onCleanup) => {
+  if (!sweep || still.value) return;
+  const animation = MotionPolicy?.animate(
+    sweep,
+    [
+      { transform: 'rotate(0deg)', opacity: 0 },
+      { opacity: 1, offset: 0.18 },
+      { transform: 'rotate(145deg)', opacity: 0 },
+    ],
+    { duration: 620, easing: 'ease-out' },
+  );
+  if (animation) onCleanup(() => animation.cancel());
+});
 watch(
   () => props.visitor.knockback?.id,
   async (id) => {
@@ -183,11 +223,12 @@ watch(
     const tick = (time: number) => {
       moveFrame = 0;
       if (disposed || epoch !== revision || document.hidden || !props.connected) return;
-      const position = sceneWalk(
+      const position = sceneWalkWithSpeed(
         visitor,
         { x: visitor.targetX, y: visitor.targetY },
         time - started,
         visitor.passage,
+        visitor,
       );
       left.value = wrap(position.x);
       top.value = wrap(position.y);
@@ -305,13 +346,38 @@ window.addEventListener('resize', positionBubble);
       aria-hidden="true"
       >{{ visitor.dotPulse.damage.toLocaleString() }}</div
     >
-    <img
-      v-show="visitor.health !== 0"
-      :src="sizedImage(visitor.emote?.image || visitor.image, 256)"
-      :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
-      alt=""
-      draggable="false"
-    /><SceneHealth
+    <div v-show="visitor.health !== 0" class="scene-avatar-portrait">
+      <img
+        :src="sizedImage(visitor.emote?.image || visitor.image, 256)"
+        :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
+        alt=""
+        draggable="false"
+      />
+      <svg
+        v-if="guard"
+        class="scene-avatar-guard"
+        :data-guard-phase="guard"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <circle class="guard-rim" cx="50" cy="50" r="44" />
+        <g v-if="guard === 'full'" fill="none">
+          <path class="guard-trace" d="M17 40 L30 20 H70 L83 40 V60 L70 80 H30 L17 60 Z" />
+          <path
+            class="guard-arcs"
+            d="M10 26 A47 47 0 0 1 41 4 M59 4 A47 47 0 0 1 90 26
+               M90 74 A47 47 0 0 1 59 96 M41 96 A47 47 0 0 1 10 74"
+          />
+          <path class="guard-nodes" d="M4 45 L8 50 L4 55 L0 50 Z M96 45 L100 50 L96 55 L92 50 Z" />
+          <g ref="guardSweep" class="guard-sweep">
+            <path d="M50 6 A44 44 0 0 1 91 34" />
+            <circle cx="91" cy="34" r="1.5" />
+          </g>
+        </g>
+      </svg>
+    </div>
+    <SceneHealth
       v-if="visitor.maxHealth"
       :visitor="visitor"
       :self="self"
@@ -320,6 +386,59 @@ window.addEventListener('resize', positionBubble);
   </component>
 </template>
 <style scoped>
+.scene-avatar-portrait {
+  position: relative;
+  line-height: 0;
+}
+.scene-avatar-guard {
+  position: absolute;
+  inset: -8% auto auto -14%;
+  width: 128%;
+  height: 116%;
+  overflow: visible;
+  pointer-events: none;
+  color: var(--stitch-info-ink);
+}
+.guard-rim {
+  fill: var(--stitch-info-bg);
+  fill-opacity: 0.16;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+.guard-trace {
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.guard-arcs,
+.guard-nodes {
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px var(--stitch-info-line));
+}
+.guard-nodes {
+  fill: var(--stitch-surface);
+  stroke-width: 1.5;
+}
+.guard-sweep {
+  opacity: 0;
+  transform-origin: center;
+}
+.guard-sweep path {
+  stroke: color-mix(in srgb, currentColor 45%, var(--stitch-surface));
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+.guard-sweep circle {
+  fill: var(--stitch-surface);
+}
+.scene-avatar-guard[data-guard-phase='residual'] .guard-rim {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  opacity: 0.65;
+}
 .scene-dot-number {
   position: absolute;
   bottom: 100%;

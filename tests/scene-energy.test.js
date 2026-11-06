@@ -5,6 +5,25 @@ const { createRoomSpace } = require('../src/rooms/space');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
 const energy = require('../src/rooms/scene-energy');
 
+test('hex shield has shorter residual protection; neither shield grants bonus in that phase', () => {
+  const combat = createSceneCombat(() => 0.5);
+  const attacker = { id: 'attacker' };
+  const hex = { id: 'hex' };
+  const sphere = { id: 'sphere' };
+  for (const actor of [attacker, hex, sphere]) combat.advance(actor, 0);
+  combat.protect(hex, 0, 'shield');
+  combat.protect(sphere, 0, 'sphere');
+  for (const actor of [hex, sphere]) {
+    combat.advance(actor, 2000);
+    combat.hit(attacker, actor, 2000, 'beam');
+    assert.equal(actor.energy, 5);
+    assert.equal(combat.view(actor, true).combatStatus.guardEnergy, 0);
+  }
+  for (const actor of [hex, sphere]) combat.advance(actor, 4000);
+  assert.equal(combat.view(hex, true).combatStatus.shield, 'none');
+  assert.equal(combat.view(sphere, true).combatStatus.shield, 'residual');
+});
+
 test('energy counts actual fractional walking time, caps at 100, and never banks overflow', () => {
   const actor = { health: 1 };
   energy.walk(actor, 999);
@@ -66,10 +85,13 @@ function fixture(kind) {
           position,
         )
       : scene.move(room, id, position);
-  const attack = (slot, effect, requestId = 'energy-request-0001') =>
+  const attack = (slot, effect, requestId = 'energy-request-0001', id = 'a') =>
     kind === 'lobby'
-      ? scene.attack(users[0], { slot, effect, requestId, aspectRatio: 1 })
-      : scene.move(room, 'a', { action: 'attack', slot, requestId, aspectRatio: 1 }, effect);
+      ? scene.attack(
+          users.find((user) => user.id === id),
+          { slot, effect, requestId, aspectRatio: 1 },
+        )
+      : scene.move(room, id, { action: 'attack', slot, requestId, aspectRatio: 1 }, effect);
   const tick = (ms) => {
     now += ms;
     view();
@@ -91,6 +113,52 @@ function fixture(kind) {
 }
 
 for (const kind of ['lobby', 'room']) {
+  for (const shield of ['shield', 'sphere'])
+    test(kind + ': ' + shield + ' grants bonus once and only during full protection', () => {
+      const f = fixture(kind);
+      f.move('a', { x: 40, y: 50 });
+      f.move('b', { x: 45, y: 50 });
+      f.tick(6500);
+      const baseline = f.actor('b').energy;
+      f.attack('q', shield, 'shield-request-001', 'b');
+      f.attack('q', 'barrage');
+      f.tick(1200);
+      const b = f.view('b').visitors.find((v) => v.id === 'b');
+      assert.equal(b.energy - baseline, 20);
+      assert.equal(b.combatStatus.guardEnergy, 5);
+      assert.equal(f.actor('b').combatStatus, undefined);
+      f.attack('q', shield, 'shield-request-001', 'b');
+      f.tick(800);
+      f.attack('q', 'barrage', 'barrage-request-002');
+      f.tick(1200);
+      assert.equal(f.actor('b').energy - baseline, 35);
+      assert.equal(f.view('b').visitors.find((v) => v.id === 'b').combatStatus.guardEnergy, 0);
+    });
+  test(kind + ': frost slows movement once and a blade hit speeds up the caster', () => {
+    const f = fixture(kind);
+    f.move('a', { x: 40, y: 50 });
+    f.move('b', { x: 45, y: 50 });
+    f.tick(6500);
+    f.attack('q', 'frost_spikes');
+    f.tick(400);
+    assert.equal(f.actor('b').slowMs, 1000);
+    f.move('b', { x: 80, y: 50 });
+    f.tick(600);
+    assert.equal(f.actor('b').slowMs, 400, 'later hits do not refresh the timer');
+    assert.ok(Math.abs(f.actor('b').x - 50.76) < 1e-6);
+    f.tick(900);
+    assert.equal(f.actor('b').slowMs, 0);
+    assert.ok(Math.abs(f.actor('b').x - 60.6) < 1e-6);
+    f.attack('e', 'blade_aura_crimson', 'blade-request-001');
+    f.tick(650);
+    assert.equal(f.actor().hasteMs, 800);
+    assert.equal(f.view('b').visitors.find((v) => v.id === 'a').hasteMs, 800);
+    f.move('a', { x: 70, y: 50 });
+    f.tick(1000);
+    assert.equal(f.actor().hasteMs, 0);
+    assert.ok(Math.abs(f.actor().x - 53.44) < 1e-6);
+  });
+
   for (const effect of ['shaohua_devour', 'shaohua_devour_alt']) {
     test(`${kind}: ${effect} requires full R energy and never funds its own next cast`, () => {
       const f = fixture(kind);

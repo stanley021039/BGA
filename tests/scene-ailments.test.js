@@ -35,10 +35,10 @@ function fixture(effect) {
     advance: (time) => timeline.advance([event], actors, time, (a, t) => combat.advance(a, t)),
   };
 }
-test('bijuu rolls independently at real impact with an exclusive 20% boundary, exactly one second, without re-rolling on repeat', () => {
+test('bijuu rolls independently at real impact with exclusive 30% root and 20% slow boundaries, without re-rolling on repeat', () => {
   const f = fixture('bijuu_beam'),
     [, b, c] = f.actors;
-  f.rolls([0.5, 0.9, 0.199999, 0.5, 0.9, 0.2]);
+  f.rolls([0.5, 0.9, 0.299999, 0.199999, 0.5, 0.9, 0.3, 0.2]);
   f.advance(2459);
   assert.equal(b.immobileUntil, 0);
   assert.equal(c.immobileUntil, 0);
@@ -50,6 +50,10 @@ test('bijuu rolls independently at real impact with an exclusive 20% boundary, e
   f.advance(2460);
   assert.equal(b.immobileUntil, 3460);
   assert.doesNotThrow(() => f.combat.canMove(b, 3460));
+  assert.equal(f.combat.view(b).slowMs, 0);
+  f.advance(3460);
+  assert.equal(f.combat.view(b).slowMs, 1000);
+  assert.equal(f.combat.view(c).slowMs, 0);
 });
 test('dodging bijuu cannot apply its immobilization and old hits cannot freeze a new life', () => {
   const f = fixture('bijuu_beam'),
@@ -170,5 +174,68 @@ test('lobby and shared rooms enforce successful bijuu movement and teleport lock
     );
     now += 1000;
     assert.doesNotThrow(() => move(b, { x: 60, y: 60 }));
+  }
+});
+
+test('orange cat immobilizes for one second before its one-second slow', () => {
+  const f = fixture('giant_orange_cat');
+  const [, target] = f.actors;
+  f.advance(2570);
+  assert.throws(() => f.combat.canMove(target, 3569), { code: 'SCENE_IMMOBILIZED' });
+  f.advance(3569);
+  assert.equal(f.combat.view(target).slowMs, 0);
+  f.advance(3570);
+  assert.doesNotThrow(() => f.combat.canMove(target, 3570));
+  assert.equal(f.combat.view(target).slowMs, 1000);
+  f.advance(4569);
+  assert.equal(f.combat.view(target).slowMs, 1);
+  f.advance(4570);
+  assert.equal(f.combat.view(target).slowMs, 0);
+});
+
+test('chains can proc slow without root and only roll once per cast', () => {
+  const f = fixture('chains');
+  const [, target] = f.actors;
+  f.rolls([0.5, 0.9, 0.2, 0.299999, 0.5, 0.9, 0, 0]);
+  f.advance(420);
+  assert.equal(target.immobileUntil, 0);
+  assert.equal(f.combat.view(target).slowMs, 1000);
+  f.advance(1000);
+  assert.equal(target.immobileUntil, 0);
+  assert.equal(f.combat.view(target).slowMs, 420);
+});
+
+test('orbital can block only teleport for one second without rerolling on its second hit', () => {
+  const f = fixture('orbital');
+  const [, target] = f.actors;
+  f.rolls([0.5, 0.9, 0.299999, 0.5, 0.9, 0]);
+  f.advance(1000);
+  assert.throws(() => f.combat.canTeleport(target, 1999), { code: 'SCENE_TELEPORT_BLOCKED' });
+  assert.doesNotThrow(() => f.combat.canMove(target, 1500));
+  assert.doesNotThrow(() => f.combat.canCast(target, 1500));
+  f.advance(1400);
+  assert.equal(target.teleportBlockedUntil, 2000);
+  assert.doesNotThrow(() => f.combat.canTeleport(target, 2000));
+});
+
+test('arrow and vortex roll once and deal two energy-neutral ticks on success', () => {
+  for (const [effect, first] of [
+    ['arrow_volley', 900],
+    ['flame_vortex', 400],
+  ]) {
+    const f = fixture(effect);
+    const [source, target] = f.actors;
+    f.actors.splice(2);
+    const before = target.health;
+    f.rolls([0.5, 0.9, 0.299999]);
+    f.advance(first + 2000);
+    assert.equal(f.event.hits.filter((hit) => hit.damage > 0).length, 3);
+    assert.equal(source.energy, 30);
+    assert.equal(target.energy, 15);
+    const directDamage = f.event.hits.reduce((sum, hit) => sum + hit.damage, 0);
+    assert.equal(target.health, before - directDamage - 34560);
+    assert.equal(target.ordinaryDot, null);
+    f.advance(first + 2500);
+    assert.equal(target.health, before - directDamage - 34560);
   }
 });

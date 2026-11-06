@@ -28,6 +28,7 @@ function createStateStream({
   onAlive = () => {},
   onHeartbeat = () => {},
   sweepMs = 1000,
+  shouldFastSweep,
   heartbeatMs = 15000,
   roomLimit = 64,
   userLimit = 3,
@@ -96,18 +97,31 @@ function createStateStream({
   }
   // Timers run only while someone is connected.
   let sweep = null,
+    fastSweep = null,
     heartbeat = null;
   function startTimers() {
     if (sweep) return;
     sweep = setInterval(sweepRooms, sweepMs);
     sweep.unref();
+    if (shouldFastSweep) {
+      fastSweep = setInterval(sweepFastRooms, 250);
+      fastSweep.unref();
+    }
     heartbeat = setInterval(beat, heartbeatMs);
     heartbeat.unref();
   }
   function stopTimers() {
     clearInterval(sweep);
+    clearInterval(fastSweep);
     clearInterval(heartbeat);
-    sweep = heartbeat = null;
+    sweep = fastSweep = heartbeat = null;
+  }
+  function sweepFastRooms() {
+    for (const set of rooms.values()) {
+      const room = set.values().next().value?.room;
+      if (room && shouldFastSweep(room))
+        for (const entry of [...set]) if (entry.room === room) send(entry);
+    }
   }
   function sweepRooms() {
     for (const set of [...rooms.values()]) {

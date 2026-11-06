@@ -3,6 +3,7 @@
  * No demo controls, network, timer, animation loop or invented damage. */
 'use strict';
 import { homingScale } from './attack-homing.js';
+import rules from '../../../public/shared/scene-rules.json' with { type: 'json' };
 const TAU = Math.PI * 2;
 const clamp = (n) => Math.max(0, Math.min(1, n));
 const mix = (a, b, p) => a + (b - a) * p;
@@ -101,6 +102,29 @@ function alive(t, max = 4200) {
 function drawShaohua(c, o, t) {
   if (!alive(t) || typeof o.readHead !== 'function') return;
   const h = o.readHead();
+  if (h?.exploded) {
+    const p = (t - h.at) / rules.shaohua.burstMs;
+    if (p < 0 || p >= 1) return;
+    const col = color(o, 'shaohua');
+    const scale = o.scale || 1;
+    const spread = 1 - (1 - p) ** 2;
+    c.save();
+    c.translate(h.x, h.y);
+    c.scale(scale, scale);
+    c.globalAlpha = 1 - p;
+    glow(c, 0, 0, 35 + spread * 82, col);
+    c.lineWidth = 5 * (1 - p) + 1;
+    circle(c, 0, 0, 20 + spread * 112, null, col);
+    circle(c, 0, 0, 10 + spread * 76, null, col);
+    for (let k = 0; k < 14; k++) {
+      const a = (k * TAU) / 14;
+      const r = 16 + spread * (74 + (k % 3) * 15);
+      const tail = r - 23 * (1 - p);
+      line(c, Math.cos(a) * tail, Math.sin(a) * tail, Math.cos(a) * r, Math.sin(a) * r, col, 4);
+    }
+    c.restore();
+    return;
+  }
   if (!h || h.cancelled) return;
   const biting = h.contactAt > 0 && t >= h.contactAt;
   const img = o.images?.[biting ? 'open' : 'closed'];

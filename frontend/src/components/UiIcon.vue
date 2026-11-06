@@ -66,6 +66,9 @@ const allowed = new Set([
   'regen-up',
   'healing',
   'shield',
+  'frost',
+  'scene-damage',
+  'haste',
   'timer',
 ]);
 declare global {

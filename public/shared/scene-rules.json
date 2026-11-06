@@ -2,9 +2,14 @@
   "energy": {
     "maximum": 100,
     "ordinaryHit": 10,
+    "missileCastCap": 30,
     "receivedHit": 5,
     "movementPerSecond": 1
   },
+  "frost": { "durationMs": 1000, "speedMultiplier": 0.8 },
+  "singularityPull": 5,
+  "orangeCat": { "immobilizeMs": 1000, "slowMs": 1000 },
+  "bladeHaste": { "durationMs": 800, "speedMultiplier": 1.15 },
   "health": {
     "base": 120,
     "min": 110,
@@ -27,6 +32,9 @@
   "unitScale": 10000,
   "shield": {
     "durationMs": 2000,
+    "guardEnergy": 5,
+    "guardResidualDurationMs": 2000,
+    "guardNoticeMs": 1800,
     "minimumPercent": 30,
     "maximumPercent": 40,
     "authorMinimumPercent": 40,
@@ -41,9 +49,13 @@
   },
   "attackCooldownMs": 1600,
   "maximumAreaTargets": 32,
+  "chains": { "immobilizeChance": 0.2, "immobilizeMs": 1000, "slowChance": 0.3 },
+  "ordinaryDot": { "chance": 0.3, "ticks": 2, "intervalMs": 1000, "damageWeight": 0.1 },
+  "orbitalTeleportBlock": { "chance": 0.3, "durationMs": 1000 },
   "bijuuImmobilize": {
-    "chance": 0.2,
-    "durationMs": 1000
+    "chance": 0.3,
+    "durationMs": 1000,
+    "slowChance": 0.2
   },
   "phoenixHealingBlockMs": 5000,
   "babylon": {
@@ -73,7 +85,8 @@
     "durationMs": 2000
   },
   "shaohua": {
-    "catchUpMs": 4000,
+    "lifetimeMs": 3000,
+    "burstMs": 850,
     "biteMs": 400,
     "speedMultiplier": 0.75,
     "contactRadius": 3,
