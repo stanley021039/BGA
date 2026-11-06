@@ -171,6 +171,7 @@ watch(
         epoch: sounds.epoch(),
       });
     const own = value.guesses.find((guess) => guess.correct && guess.id === value.me);
+    let ownCorrect = false;
     if (own) {
       const age = value.serverNow - own.at,
         fresh =
@@ -183,11 +184,20 @@ watch(
           value.guessedIds.includes(value.me) &&
           age >= 0 &&
           age <= 5000;
+      ownCorrect = fresh;
       sounds?.play('correct', `draw:correct:${value.canvasEpoch}:${value.me}`, {
         live: live && fresh,
         epoch: sounds.epoch(),
       });
     }
+    if (
+      active &&
+      previous?.canvasEpoch === value.canvasEpoch &&
+      previous.phase !== value.phase &&
+      (value.phase === 'finished' || (value.phase === 'reveal' && value.result)) &&
+      !ownCorrect
+    )
+      sounds?.play('reveal', `draw:${value.phase}:${value.canvasEpoch}`, { live });
     tick();
   },
   { flush: 'sync' },

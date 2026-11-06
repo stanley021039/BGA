@@ -1,6 +1,7 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useMinimalCountdownSounds } from '../composables/minimal-countdown-sounds';
+import { useDrawingPartySounds } from '../composables/drawing-party-sounds';
 import { useRoomStore } from './room';
 import { usePartyActionsStore } from './party-actions';
 import { readMinimalShapes, type MinimalShape, type MinimalSnapshot } from '../contracts/minimal';
@@ -24,6 +25,7 @@ export const useMinimalStore = defineStore('minimal', () => {
     storageNotice = ref(''),
     now = ref(Date.now()),
     foreground = ref(!document.hidden);
+  useDrawingPartySounds(room);
   useMinimalCountdownSounds(room, state, now);
   const context = computed(() =>
     state.value?.roundId && room.seat && !room.terminal

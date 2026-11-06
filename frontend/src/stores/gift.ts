@@ -1,3 +1,4 @@
+import { giftDeliveryCue } from '../composables/room-event-sounds';
 import GameSounds from '../engines/game-sounds.js';
 import { computed, onScopeDispose, reactive, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
@@ -186,8 +187,8 @@ export const useGiftStore = defineStore('gift', () => {
             : action === 'accept'
               ? '已確認收禮。'
               : '下一輪已開始。';
-      if (['give', 'wish'].includes(action))
-        sounds?.play('confirm', `gift-confirm:${scope}:${s.round}:${action}`, {
+      if (['give', 'wish'].includes(action) && state.value?.phase === 'choosing')
+        sounds?.play('confirm', `gift-confirm:${scope}:${s.version}:${action}`, {
           live: !document.hidden && room.connected,
         });
     }
@@ -212,21 +213,41 @@ export const useGiftStore = defineStore('gift', () => {
       if (scope === room.scope) refreshing.value = false;
     }
   }
-  const sounds: GameSoundOwner | undefined = GameSounds?.create();
-  let previous: GiftSnapshot | null = null;
-  watch(state, (s) => {
-    if (!s) return;
-    const live = sounds?.update(s, { connected: room.connected && !document.hidden });
-    if (
-      previous &&
-      live &&
-      previous.round === s.round &&
-      previous.phase === 'delivering' &&
-      ['reveal', 'finished'].includes(s.phase)
-    )
-      sounds?.play('reveal', 'gift-result:' + s.round + ':' + s.version, { live: true });
-    previous = s;
-  });
+  const sounds: GameSoundOwner | undefined = GameSounds?.create({ maxGapMs: 15000 });
+  watch([() => room.connected, () => room.scope], () => sounds?.disconnect(), { flush: 'sync' });
+  // Unchanged safety polls confirm the connection without replacing the snapshot.
+  watch(
+    () => room.lastReceivedAt,
+    () => {
+      const current = state.value;
+      if (current && room.connected) sounds?.update(current, { connected: true });
+    },
+    { flush: 'sync' },
+  );
+  watch(
+    state,
+    (s, previous) => {
+      if (!s || !room.connected) {
+        sounds?.disconnect();
+        return;
+      }
+      const live = sounds?.update(s, { connected: true });
+      if (!previous || !live) return;
+      const arrival = giftDeliveryCue(s, previous);
+      if (arrival) {
+        sounds?.stop();
+        sounds?.play(arrival.cue, arrival.key, { live });
+      } else if (
+        previous.round === s.round &&
+        previous.phase === 'delivering' &&
+        ['reveal', 'finished'].includes(s.phase)
+      ) {
+        sounds?.stop();
+        sounds?.play('reveal', 'gift-result:' + s.round + ':' + s.version, { live });
+      }
+    },
+    { immediate: true, flush: 'sync' },
+  );
   function visibility() {
     if (document.hidden) sounds?.disconnect();
   }

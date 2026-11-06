@@ -1,3 +1,4 @@
+import { majorityCues, useRoomEventSounds } from '../composables/room-event-sounds';
 import AudioSettings from '../engines/audio-settings.js';
 import { defineStore } from 'pinia';
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue';
@@ -12,6 +13,7 @@ export const useMajorityStore = defineStore('majority', () => {
     state = computed(() => room.snapshot as MajoritySnapshot | null),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
     editable = computed(() => room.settingsManager && setup.value && !room.terminal);
+  useRoomEventSounds(room, state, majorityCues);
   const settings = reactive<MajorityOptions>({
       mode: 'majority',
       rounds: 10,
@@ -253,7 +255,12 @@ export const useMajorityStore = defineStore('majority', () => {
             score: '已確認計分。',
           } as Record<string, string>
         )[action] || '操作已完成。';
-      if (action === 'answer' && room.connected && !document.hidden) {
+      if (
+        action === 'answer' &&
+        state.value?.phase === 'answering' &&
+        room.connected &&
+        !document.hidden
+      ) {
         AudioSettings?.stopEffect(sound);
         sound = AudioSettings?.playEffect?.('confirm');
       }
