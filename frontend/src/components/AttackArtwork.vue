@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { usePreferencesStore } from '../stores/preferences';
+import { isDefensiveAttack } from '../services/attack-variants.js';
 import { playAttackArtwork } from '../services/attack-artwork';
 import { warmNewSkillAssets } from '../services/game-assets';
 import { attackColor, attackOptions } from '../services/attack-placement';
@@ -23,9 +24,7 @@ const prefs = usePreferencesStore(),
   stage = ref<HTMLElement | null>(null);
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 const color = computed(() => attackColor(props.effect));
-const target = computed(() =>
-  ['shield', 'sphere'].includes(props.effect) ? props.from : props.to,
-);
+const target = computed(() => (isDefensiveAttack(props.effect) ? props.from : props.to));
 let cleanup: (() => void) | null = null,
   revision = 0,
   mounted = false;

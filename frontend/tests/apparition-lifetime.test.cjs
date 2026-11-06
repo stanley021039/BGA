@@ -63,7 +63,14 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
           }
         : name.includes('entrance-body')
           ? { playEntranceBody: sandbox.playEntranceBody }
-          : {};
+          : name.endsWith('/entrance-effects')
+            ? {
+                entranceVariant: (id) =>
+                  id === 'stitch-imported-alt'
+                    ? { variantOf: 'stitch-imported', paletteHue: 170 }
+                    : undefined,
+              }
+            : {};
   vm.runInContext(
     fs
       .readFileSync(path.join(__dirname, '../src/services/entrance-body.js'), 'utf8')
@@ -72,7 +79,7 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
   );
   vm.runInContext(code, sandbox);
   const anchors = [];
-  const play = () => {
+  const play = (id = 'stitch-imported') => {
     const classes = new Set();
     const anchor = {
       dataset: {},
@@ -96,10 +103,10 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
     return sandbox.exports.apparate(
       anchor,
       { getBoundingClientRect: () => ({ left: 0, top: 0 }) },
-      'stitch-imported',
+      id,
     );
   };
-  for (let i = 0; i < 7; i++) play();
+  for (let i = 0; i < 7; i++) play(i % 2 ? 'stitch-imported-alt' : 'stitch-imported');
   assert.equal(started, 6);
   assert.equal(timers.size, 6);
   allowed = false;

@@ -1161,13 +1161,15 @@ function initializeApp(config, dataLock, acquired) {
       characterFor(db, user.id, defaults.characterId)
     );
   };
+  const freeEntrances = new Set(
+    require('../public/shared/entrance-palette.json').starters.map((e) => e.id),
+  );
+  const entranceAllowed = (user, id) =>
+    freeEntrances.has(id) ||
+    require('./achievements/bonus-rewards').owned(achievementStore, user.id).entrances.includes(id);
   const lobbyHandlers = createLobbyHandlers({
     attackLoadout: (user) => require('./profiles/settings').getAttackSettings(db, user.id),
-    entranceAllowed: (user, id) =>
-      ['classic', 'smoke', 'sparks', 'ink', 'runes', 'rift', 'particles'].includes(id) ||
-      require('./achievements/bonus-rewards')
-        .owned(achievementStore, user.id)
-        .entrances.includes(id),
+    entranceAllowed,
     backgroundAllowed: (user, id) =>
       require('./achievements/bonus-rewards')
         .owned(achievementStore, user.id)
@@ -2428,15 +2430,7 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/room-space') {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
           limitRate(roomRate, 'room-space:' + user.id, 360);
-          const entrance =
-            ['classic', 'smoke', 'sparks', 'ink', 'runes', 'rift', 'particles'].includes(
-              data.entrance,
-            ) ||
-            require('./achievements/bonus-rewards')
-              .owned(achievementStore, user.id)
-              .entrances.includes(data.entrance)
-              ? data.entrance
-              : 'classic';
+          const entrance = entranceAllowed(user, data.entrance) ? data.entrance : 'classic';
           roomSpace.move(
             room,
             p.id,

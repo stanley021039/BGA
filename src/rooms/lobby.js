@@ -1,4 +1,5 @@
-const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
+const { attackKind } = require('./attack-kind');
+const { selectAttackTargets } = require('./attack-targets');
 const combatRules = require('../../public/shared/scene-rules.json');
 const energy = require('./scene-energy');
 const { HttpError } = require('../http/errors');
@@ -13,17 +14,12 @@ const MIN_X = 6,
   MAX_X = 94,
   MIN_Y = 12,
   MAX_Y = 97;
-// Entrance effects a visitor may pick (frontend services/entrance-effects.ts).
-const ENTRANCE_EFFECTS = new Set([
-  'classic',
-  'smoke',
-  'sparks',
-  'ink',
-  'runes',
-  'rift',
-  'particles',
-  ...require('../../public/shared/entrance-requirements.json').map((effect) => effect.id),
-]);
+const { starters, variants } = require('../../public/shared/entrance-palette.json');
+const ENTRANCE_EFFECTS = new Set(
+  [...starters, ...require('../../public/shared/entrance-requirements.json'), ...variants].map(
+    (effect) => effect.id,
+  ),
+);
 const PRESENCE_MS = 15000,
   EMOTE_MS = 5000,
   MAX_VISITORS = 80;
@@ -261,7 +257,7 @@ function createLobby(
         event,
         self,
         targets,
-        effect === 'bijuu_beam' ? combat.targets(visitors.values()) : targets,
+        attackKind(effect) === 'bijuu_beam' ? combat.targets(visitors.values()) : targets,
       );
     if (event.head)
       for (let i = attacks.length - 1; i >= 0; i--)

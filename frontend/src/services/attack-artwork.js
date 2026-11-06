@@ -7,6 +7,7 @@ import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
 import { createStitchAttack } from './attack-stitch.js';
 import { createNewAttack } from './attack-new.js';
 import combatRules from '../../../public/shared/scene-rules.json';
+import { attackVariant, attackPalette } from './attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
 // Full detail for one attack on its own canvas; a shared stage lowers these by load.
 const FULL_DETAIL = { density: 1, glow: 1 };
@@ -39,7 +40,15 @@ function glowSprite(color) {
 }
 // One attack drawn into a context owned by the caller: draw(now) paints a frame
 // (without clearing) and returns false once the attack has finished.
-export function createAttackScene(ctx, options) {
+export function createAttackScene(context, options) {
+  const variant = attackVariant(options.effect);
+  const base = variant && attackEffects.find((effect) => effect.id === variant.variantOf);
+  // The rose barrage draws its own light and dark shots on the shared canvas.
+  const roseBarrage = variant?.id === 'barrage_alt';
+  const palette = base && !roseBarrage && attackPalette(context, variant.paletteHue, base.color);
+  const ctx = palette?.ctx ?? context;
+  if (base)
+    options = { ...options, effect: base.id, color: roseBarrage ? variant.color : base.color };
   const fx = options.fx || FULL_DETAIL;
   // Previews use the same phase schedule; real scenes only show server-settled hits.
   if (options.preview && !options.readHits && !['shield', 'sphere'].includes(options.effect)) {
@@ -586,7 +595,7 @@ export function createAttackScene(ctx, options) {
       { ...options, area, label: definition?.label, range: combatRules.areaAttackRange },
       areaImpact,
     ) ||
-    createRevisionAttack(ctx, options, () => {
+    createRevisionAttack(ctx, roseBarrage ? { ...options, effect: variant.id } : options, () => {
       triggerShockwave(to.x, to.y, 105, options.color, 4);
       spawnImpactSparks(to.x, to.y, 22, options.color);
       spawnDamageText(to.x, to.y, 1, options.critical === true);
@@ -757,6 +766,7 @@ export function createAttackScene(ctx, options) {
         }
       } else if (p.type === 'specium_beam') {
         const progress = 1 - p.life / p.maxLife;
+        const redBeam = variant?.id === 'beam_alt' ? variant : null;
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.strokeStyle = '#ffffff';
@@ -771,20 +781,22 @@ export function createAttackScene(ctx, options) {
         ctx.lineTo(0, 38);
         ctx.stroke();
         ctx.restore();
-        ctx.strokeStyle = p.color;
+        if (redBeam) context.strokeStyle = redBeam.color;
+        else ctx.strokeStyle = p.color;
         ctx.lineWidth = 26 * Math.sin(progress * Math.PI);
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(p.targetX, p.targetY);
         ctx.stroke();
 
-        // Core hot-white line
-        ctx.strokeStyle = '#ffffff';
+        // The red-and-black version has a dark core framed by the outer beam.
+        ctx.strokeStyle = redBeam ? '#080204' : '#ffffff';
         ctx.lineWidth = 8 * Math.sin(progress * Math.PI);
         ctx.stroke();
 
         // Double spiral electric overlay
-        ctx.strokeStyle = '#7df4ff';
+        if (redBeam) context.strokeStyle = '#ff546a';
+        else ctx.strokeStyle = '#7df4ff';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
         const beamDist = Math.hypot(p.targetX - p.x, p.targetY - p.y);
@@ -971,8 +983,9 @@ export function createAttackScene(ctx, options) {
             if (step === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
           }
-          ctx.strokeStyle = strand % 2 ? p.color1 : p.color2;
-          ctx.shadowColor = ctx.strokeStyle;
+          const strandColor = strand % 2 ? p.color1 : p.color2;
+          ctx.strokeStyle = strandColor;
+          ctx.shadowColor = strandColor;
           ctx.shadowBlur = 18;
           ctx.lineWidth = 5 + (strand % 2) * 2;
           ctx.stroke();
@@ -1076,7 +1089,7 @@ export function createAttackScene(ctx, options) {
       pt.alpha -= pt.decay;
 
       ctx.globalAlpha = Math.max(0, pt.alpha);
-      const sprite = glowSprite(pt.color);
+      const sprite = glowSprite(palette ? palette.color(pt.color) : pt.color);
       if (sprite) {
         const reach = pt.size * 3;
         ctx.drawImage(sprite, pt.x - reach, pt.y - reach, reach * 2, reach * 2);
@@ -1101,19 +1114,19 @@ export function createAttackScene(ctx, options) {
       ft.vy += 0.14;
       ft.alpha -= 0.02;
 
-      ctx.save();
-      ctx.font = `bold ${Math.floor(18 * ft.scale)}px 'Space Grotesk', sans-serif`;
-      ctx.fillStyle = ft.color;
-      ctx.shadowColor = ft.color;
-      ctx.shadowBlur = 12;
-      ctx.globalAlpha = Math.max(0, ft.alpha);
-      const textWidth = ctx.measureText(ft.text)?.width || 0;
-      ctx.fillText(
+      context.save();
+      context.font = `bold ${Math.floor(18 * ft.scale)}px 'Space Grotesk', sans-serif`;
+      context.fillStyle = ft.color;
+      context.shadowColor = ft.color;
+      context.shadowBlur = 12;
+      context.globalAlpha = Math.max(0, ft.alpha);
+      const textWidth = context.measureText(ft.text)?.width || 0;
+      context.fillText(
         ft.text,
         Math.max(10, Math.min(width - textWidth - 10, ft.x)),
         Math.max(28, Math.min(height - 12, ft.y)),
       );
-      ctx.restore();
+      context.restore();
 
       if (ft.alpha <= 0) floatingTexts.splice(i, 1);
     }

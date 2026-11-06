@@ -34,14 +34,15 @@ function ownedIds(db, userId, kind, saved = appearance(db, userId)) {
   const group = codeGroups[kind],
     codes = saved.achievementRewardCodes || {};
   if (validAt(codes[group]) || validAt(saved.achievementRewardCodeAt)) {
-    for (const i of require('./catalog').catalog) if (i.kind === kind) result.add(i.id);
+    for (const i of require('./catalog').catalog)
+      if (i.kind === kind && !i.gachaExclusive) result.add(i.id);
     if (kind === 'openings') result.add('soul-world');
   }
   const starter = saved.starterRewardPack;
   if (starter?.version === 1 && validAt(starter.redeemedAt)) {
     const allowed = new Set(
       require('./catalog')
-        .catalog.filter((i) => i.kind === kind)
+        .catalog.filter((i) => i.kind === kind && !i.gachaExclusive)
         .map((i) => i.id),
     );
     for (const id of Array.isArray(starter.grants?.[kind]) ? starter.grants[kind] : [])

@@ -2,8 +2,8 @@
   {
     "id": "barrage",
     "label": "連射／散射能量彈",
-    "color": "#00f0ff",
-    "description": "七色能量彈連射，彩色流光拖尾與著彈火花同步綻放。",
+    "color": "#63f5ff",
+    "description": "亮彩能量彈與銀白、鋼藍、淺金的金屬色彈交錯連射。",
     "achievementId": null,
     "damageMultiplier": 0.8
   },
@@ -65,7 +65,7 @@
   },
   {
     "id": "blade_aura",
-    "label": "藍黑半月劍氣",
+    "label": "半月劍氣",
     "color": "#00d0ff",
     "description": "幽藍鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。首次有效命中後自身移速提高15%，持續0.8秒。",
     "achievementId": "draw-first-correct",
@@ -73,7 +73,7 @@
   },
   {
     "id": "blade_aura_crimson",
-    "label": "紅黑半月劍氣",
+    "label": "半月劍氣（紅黑異色）",
     "color": "#ff0f3f",
     "description": "暗紅鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。首次有效命中後自身移速提高15%，持續0.8秒。",
     "achievementId": "draw-fastest-correct",
@@ -337,6 +337,244 @@
     "description": "自身護盾，鎖定落點後躍升，2.1秒落地範圍傷害並擊飛1秒。",
     "gachaOnly": true,
     "variantOf": "gate_of_heroes",
+    "area": {
+      "shape": "burst",
+      "radius": 22.5
+    }
+  },
+  {
+    "id": "barrage_alt",
+    "label": "連射／散射能量彈（玫紅異色）",
+    "color": "#fa4298",
+    "description": "亮玫紅能量彈穿插深莓紅、鐵灰與咖啡色彈，淺色外環勾勒深色彈身。",
+    "gachaOnly": true,
+    "variantOf": "barrage",
+    "paletteHue": 332,
+    "damageMultiplier": 0.8
+  },
+  {
+    "id": "beam_alt",
+    "label": "超人力霸王十字光線（紅黑異色）",
+    "color": "#fa294a",
+    "description": "十字電光蓄力，赤紅電弧包住漆黑束芯貫穿目標。",
+    "gachaOnly": true,
+    "variantOf": "beam",
+    "paletteHue": 351,
+    "damageMultiplier": 1
+  },
+  {
+    "id": "shield_alt",
+    "label": "六角形能量護盾（翡翠異色）",
+    "color": "#42faa4",
+    "description": "異色特效，招式效果與原版相同。六角能量護盾展開，先維持2秒完整減傷，再接2秒半幅減傷，重施只刷新時間。完整護盾首次實際減傷時，額外回復5能量。",
+    "gachaOnly": true,
+    "variantOf": "shield",
+    "paletteHue": 152,
+    "damageMultiplier": 0
+  },
+  {
+    "id": "chains_alt",
+    "label": "八方實體鎖鏈（赤銅異色）",
+    "color": "#fa9242",
+    "description": "異色特效，招式效果與原版相同。銀鋼鏈環從八方錯落收束，將目標鎖緊並迸出金屬火花。首次有效命中有20%機率定身1秒、另有30%機率減速20%持續1秒，分開判定。",
+    "gachaOnly": true,
+    "variantOf": "chains",
+    "paletteHue": 26,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "sphere_alt",
+    "label": "熾天覆七重圓環（海藍異色）",
+    "color": "#42c3fa",
+    "description": "異色特效，招式效果與原版相同。七重粉紫花瓣護盾，先維持2秒完整減傷，再接3秒半幅減傷，重施只刷新時間。完整護盾首次實際減傷時，額外回復5能量。",
+    "gachaOnly": true,
+    "variantOf": "sphere",
+    "paletteHue": 198,
+    "damageMultiplier": 0
+  },
+  {
+    "id": "orbital_alt",
+    "label": "天降光柱（紫晶異色）",
+    "color": "#ad42fa",
+    "description": "異色特效，招式效果與原版相同。天基軌道幾何符文鎖定、超高能天頂垂直降臨光束、地面熔岩焦痕。首次有效命中有30%機率封鎖瞬移1秒。",
+    "gachaOnly": true,
+    "variantOf": "orbital",
+    "paletteHue": 275,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "funnel_alt",
+    "label": "龍騎兵浮游砲（朱紅異色）",
+    "color": "#fa425b",
+    "description": "異色特效，招式效果與原版相同。六具裝甲浮游砲分離包圍目標，聚能交錯射擊後折返。",
+    "gachaOnly": true,
+    "variantOf": "funnel",
+    "paletteHue": 352,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "singularity_alt",
+    "label": "黑洞牽引（碧綠異色）",
+    "color": "#42fabd",
+    "description": "異色特效，招式效果與原版相同。超重力奇點引力渦旋與超新星爆發。末段命中會把目標短距離拉向施放位置。",
+    "gachaOnly": true,
+    "variantOf": "singularity",
+    "paletteHue": 160,
+    "damageMultiplier": 0.85
+  },
+  {
+    "id": "chain_lightning_alt",
+    "label": "連鎖雷霆／天頂落雷（金雷異色）",
+    "color": "#fad842",
+    "description": "異色特效，招式效果與原版相同。九天折線電弧劈裂、高壓等離子電漿光芒、強烈震屏暴擊。",
+    "gachaOnly": true,
+    "variantOf": "chain_lightning",
+    "paletteHue": 49,
+    "damageMultiplier": 0.8
+  },
+  {
+    "id": "frost_spikes_alt",
+    "label": "寒冰結晶／極地霜刺（緋晶異色）",
+    "color": "#fa428f",
+    "description": "異色特效，招式效果與原版相同。錯落冰川破地，深藍晶面襯出白亮冰鋒、裂紋與側生碎晶。首次有效命中使對手移速降低20%，持續1秒。",
+    "gachaOnly": true,
+    "variantOf": "frost_spikes",
+    "paletteHue": 335,
+    "damageMultiplier": 0.75
+  },
+  {
+    "id": "arrow_volley_alt",
+    "label": "光輝天降箭雨（蒼藍異色）",
+    "color": "#42a4fa",
+    "description": "異色特效，招式效果與原版相同。橘紅焰尾箭雨密集落下，白熱箭鏃、箭身與箭羽清楚可辨。首次有效命中有30%機率造成持續傷害，每秒一次，共2次。",
+    "gachaOnly": true,
+    "variantOf": "arrow_volley",
+    "paletteHue": 208,
+    "damageMultiplier": 0.8
+  },
+  {
+    "id": "flame_vortex_alt",
+    "label": "炎獄烈焰龍捲（幽紫異色）",
+    "color": "#9242fa",
+    "description": "異色特效，招式效果與原版相同。一大三小烈焰龍捲錯落捲升，金紅火流環繞主風暴旋轉。首次有效命中有30%機率造成持續傷害，每秒一次，共2次。",
+    "gachaOnly": true,
+    "variantOf": "flame_vortex",
+    "paletteHue": 266,
+    "damageMultiplier": 0.8
+  },
+  {
+    "id": "explosion_alt",
+    "label": "爆裂魔法・Explosion!（電藍異色）",
+    "color": "#4298fa",
+    "description": "異色特效，招式效果與原版相同。大範圍核爆與巨型蘑菇雲分段命中，傷害為其他多人招1.5倍；整段特效結束後自身定身1秒。",
+    "gachaOnly": true,
+    "variantOf": "explosion",
+    "paletteHue": 212,
+    "area": {
+      "shape": "burst",
+      "radius": 35
+    }
+  },
+  {
+    "id": "guanyin_barrage_alt",
+    "label": "百式觀音・千掌鎮壓（翠玉異色）",
+    "color": "#42faaa",
+    "description": "異色特效，招式效果與原版相同。觀音法相與五波巨拳鎮壓多人；施放後自身生命、攻擊、回血各提升10%，持續2秒。",
+    "gachaOnly": true,
+    "variantOf": "guanyin_barrage",
+    "paletteHue": 154,
+    "area": {
+      "shape": "fan",
+      "angle": 138
+    }
+  },
+  {
+    "id": "solar_phoenix_alt",
+    "label": "翼神龍・不死鳥型態（青焰異色）",
+    "color": "#42f7fa",
+    "description": "異色特效，招式效果與原版相同。金橘火焰神龍鳥橫掃多人，沿途留下火海；每次燃燒命中後5秒無法回復，再次燒到重新計時。",
+    "gachaOnly": true,
+    "variantOf": "solar_phoenix",
+    "paletteHue": 181,
+    "area": {
+      "shape": "rectangle",
+      "width": 26
+    }
+  },
+  {
+    "id": "dimension_cleave_alt",
+    "label": "龍鱗・反發・成雙之流星（靛藍異色）",
+    "color": "#4255fa",
+    "description": "異色特效，招式效果與原版相同。密集次元斬將空間切開，命中後掉落可拾回的下半身；被摧毀時本體目前生命減半。",
+    "gachaOnly": true,
+    "variantOf": "dimension_cleave",
+    "paletteHue": 234,
+    "area": {
+      "shape": "rectangle",
+      "width": 45
+    }
+  },
+  {
+    "id": "bijuu_beam_alt",
+    "label": "尾獸玉・超巨型噴射（熔金異色）",
+    "color": "#fabd42",
+    "description": "異色特效，招式效果與原版相同。九尾凝聚核心，朝三個方向以細射線貫穿多人；每位命中者各有30%機率定身1秒、另有20%機率減速20%持續1秒，分開判定。",
+    "gachaOnly": true,
+    "variantOf": "bijuu_beam",
+    "paletteHue": 40,
+    "area": {
+      "shape": "targetRays",
+      "width": 7
+    }
+  },
+  {
+    "id": "giga_drill_alt",
+    "label": "天元突破・巨鑽爆擊（赤紅異色）",
+    "color": "#fa4258",
+    "description": "異色特效，招式效果與原版相同。翡翠巨鑽貫穿多人，命中將角色擊飛，之後每秒追加傷害，持續3秒。",
+    "gachaOnly": true,
+    "variantOf": "giga_drill",
+    "paletteHue": 353,
+    "area": {
+      "shape": "cone",
+      "angle": 64.39999999999999
+    }
+  },
+  {
+    "id": "gate_of_babylon_alt",
+    "label": "王之財寶・乖離劍Ea（蒼青異色）",
+    "color": "#42defa",
+    "description": "異色特效，招式效果與原版相同。先消耗目前HP的30%，上方門陣兵器齊射後接Ea；Ea為兵器段兩倍，作者整套傷害82.8萬–111.2萬，未計暴擊、其他增益及減傷。",
+    "gachaOnly": true,
+    "variantOf": "gate_of_babylon",
+    "paletteHue": 189,
+    "area": {
+      "shape": "fan",
+      "angle": 138
+    }
+  },
+  {
+    "id": "excalibur_alt",
+    "label": "Excalibur・誓約勝利之劍（紫電異色）",
+    "color": "#c942fa",
+    "description": "異色特效，招式效果與原版相同。風之結界剝離，白金光束橫貫場景分段命中；施放期間自身受到傷害減少20%。",
+    "gachaOnly": true,
+    "variantOf": "excalibur",
+    "paletteHue": 284,
+    "area": {
+      "shape": "screenBeam",
+      "width": 27.5,
+      "blastRadius": 12.5
+    }
+  },
+  {
+    "id": "giant_orange_cat_alt",
+    "label": "天降巨橘・泰山壓頂（蒼藍異色）",
+    "color": "#4280fa",
+    "description": "異色特效，招式效果與原版相同。超巨大橘貓從天壓下，震波命中多人並使受擊者定身1秒，接著減速20%，持續1秒。",
+    "gachaOnly": true,
+    "variantOf": "giant_orange_cat",
+    "paletteHue": 220,
     "area": {
       "shape": "burst",
       "radius": 22.5

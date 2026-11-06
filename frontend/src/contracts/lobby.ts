@@ -1,4 +1,5 @@
 import attackEffects from '../../../public/shared/attack-effects.json';
+import { attackArtworkKind } from '../services/attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
 import { validPassage, type Passage } from '../engines/scene-path.js';
 import backgrounds from '../../../public/shared/lobby-backgrounds.json';
@@ -387,6 +388,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       .slice(-40)
       .map((value) => {
         const a = record(value);
+        const kind = attackArtworkKind(text(a.effect));
         if (
           !['id', 'fromId', 'toId', 'fromName', 'toName'].every((k) => text(a[k])) ||
           ![a.fromX, a.fromY, a.toX, a.toY].every(coordinate) ||
@@ -430,7 +432,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             : {}),
           ...(a.rays !== undefined
             ? (() => {
-                if (a.effect !== 'bijuu_beam' || !Array.isArray(a.rays) || a.rays.length !== 3)
+                if (kind !== 'bijuu_beam' || !Array.isArray(a.rays) || a.rays.length !== 3)
                   throw Error('尾獸玉射線資料格式不正確。');
                 return {
                   rays: a.rays.map((value) => {
@@ -444,7 +446,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             : {}),
           ...(a.hits !== undefined
             ? (() => {
-                const stages = attackTiming[a.effect as keyof typeof attackTiming] || [];
+                const stages = attackTiming[kind as keyof typeof attackTiming] || [];
                 if (
                   !Array.isArray(a.hits) ||
                   a.hits.length > Math.min(160, Math.max(1, stages.length) * 32)

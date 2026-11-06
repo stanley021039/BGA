@@ -16,9 +16,8 @@ import UiTabs from '../../components/UiTabs.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FrameChoices from '../../components/FrameChoices.vue';
 import AttackChoices from '../../components/AttackChoices.vue';
-import { attackEffects } from '../../stores/attack-loadout';
+import { attackEffectGroups, entranceEffectGroups } from '../../services/effect-variants';
 import EntranceChoices from '../../components/EntranceChoices.vue';
-import { entranceEffects } from '../../services/entrance-effects';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 
 const profile = useProfileStore(),
@@ -94,8 +93,8 @@ const tabs = computed(() => [
   },
   { id: 'music', label: '音樂', count: music.data ? music.data.tracks.length + ' 首' : '讀取中…' },
   { id: 'frames', label: '彈幕框', count: prefs.frames.length + ' 款' },
-  { id: 'entrance', label: '進場特效', count: entranceEffects.length + ' 款' },
-  { id: 'attack', label: '攻擊特效', count: attackEffects.length + ' 款' },
+  { id: 'entrance', label: '進場特效', count: entranceEffectGroups.length + ' 組' },
+  { id: 'attack', label: '攻擊特效', count: attackEffectGroups.length + ' 組' },
 ]);
 const duration = (seconds: number) =>
   Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2, '0');
