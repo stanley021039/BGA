@@ -8,6 +8,13 @@
     position: relative;
     z-index: 3;
   }
+  > .vue-room-skill-status {
+    position: absolute;
+    z-index: 2;
+    inset-inline-start: 50%;
+    inset-block-start: var(--stitch-space-8);
+    translate: -50% 0;
+  }
   > .vue-game-main {
     position: relative;
     z-index: 1;

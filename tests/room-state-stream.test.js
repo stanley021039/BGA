@@ -191,3 +191,23 @@ test('a minimum gap holds back rapid changes until the gap has passed', async ()
   assert.equal(states[1].phase, 'playing');
   stream.close();
 });
+
+test('the fast sweep only updates rooms with a short effect and leaves the presence sweep alone', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval'] });
+  const alive = [];
+  const { room, stream } = setup({
+    shouldFastSweep: (candidate) => candidate === room,
+    onAlive: (entry) => alive.push(entry),
+  });
+  t.after(() => stream.close());
+  const quiet = { code: 'QUIET1', phase: 'waiting' };
+  const a = connection();
+  const b = connection();
+  stream.subscribe(room, { ...a, user: { id: 'u1' }, playerId: 'p1' });
+  stream.subscribe(quiet, { ...b, user: { id: 'u2' }, playerId: 'p2' });
+  room.phase = quiet.phase = 'changed';
+  t.mock.timers.tick(250);
+  assert.equal(a.events('state').at(-1).phase, 'changed');
+  assert.equal(b.events('state').at(-1).phase, 'waiting');
+  assert.deepEqual(alive, []);
+});

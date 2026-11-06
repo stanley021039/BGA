@@ -128,3 +128,43 @@ test('leaving the frozen ray before impact misses, and an old second stage canno
   g.advance(3880);
   assert.equal(g.points[1].health, 1200000);
 });
+
+test('black hole pulls only on a landed final hit and leaves ongoing movement available', () => {
+  const hit = fixture('singularity');
+  const victim = hit.points[1];
+  victim.targetX = 48;
+  victim.targetY = 50;
+  hit.advance(850);
+  assert.equal(victim.x, 40);
+  hit.advance(1250);
+  assert.equal(victim.x, 35);
+  assert.equal(victim.targetX, 48);
+  assert.equal(victim.immobileUntil, 0);
+  hit.advance(1250);
+  assert.equal(victim.x, 35);
+
+  const dodged = fixture('singularity');
+  dodged.advance(850);
+  dodged.points[1].x = 80;
+  dodged.advance(1250);
+  assert.equal(dodged.event.hits.at(-1).missed, true);
+  assert.equal(dodged.points[1].x, 80);
+});
+
+test('missile casts cap attacker energy after three real hits, including an earlier miss', () => {
+  for (const effect of ['micro_missiles', 'micro_missiles_alt']) {
+    const full = fixture(effect);
+    full.advance(1600);
+    assert.equal(full.points[0].energy, 30);
+    assert.equal(full.points[1].energy, 20);
+
+    const partial = fixture(effect);
+    partial.points[1].x = 80;
+    partial.advance(850);
+    partial.points[1].x = 40;
+    partial.advance(1600);
+    assert.equal(partial.event.hits[0].missed, true);
+    assert.equal(partial.points[0].energy, 30);
+    assert.equal(partial.points[1].energy, 15);
+  }
+});

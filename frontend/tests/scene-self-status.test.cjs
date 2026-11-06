@@ -26,14 +26,16 @@ test('own HUD reacts to health, regeneration and buff changes, without moving st
       require: (id) =>
         id === 'vue'
           ? vue
-          : {
-              default: vue.defineComponent({
-                setup:
-                  (_p, { slots }) =>
-                  () =>
-                    vue.h('span', slots.default?.()),
-              }),
-            },
+          : id.endsWith('/scene-rules.json')
+            ? { default: require('../../public/shared/scene-rules.json') }
+            : {
+                default: vue.defineComponent({
+                  setup:
+                    (_p, { slots }) =>
+                    () =>
+                      vue.h('span', slots.default?.()),
+                }),
+              },
     },
   );
   const state = vue.reactive({
@@ -64,6 +66,34 @@ test('own HUD reacts to health, regeneration and buff changes, without moving st
     assert.match(host.textContent, /K 2/);
     assert.match(host.textContent, /D 1/);
     assert.match(host.textContent, /A 3/);
+    Object.assign(state.self, { slowMs: 600, hasteMs: 500 });
+    state.self.combatStatus.guardEnergy = 5;
+    state.self.combatStatus.authorBonus = true;
+    await vue.nextTick();
+    assert.match(
+      host.querySelector('.scene-bonuses [data-status="frost"]').getAttribute('aria-label'),
+      /移動減速 -20%，剩餘 0.6 秒/,
+    );
+    assert.equal(host.querySelector('[data-status="haste"]'), null);
+    assert.match(host.textContent, /格擋 \+5 能量/);
+    const groups = host.querySelectorAll('.scene-bonuses .scene-effect-group');
+    assert.deepEqual(
+      [...groups[0].querySelectorAll('[data-status]')].map((badge) => badge.dataset.status),
+      ['health-up', 'attack-up', 'regen-up'],
+    );
+    assert.ok(groups[1].querySelector('[data-status="frost"]'));
+    state.self.slowMs = 0;
+    await vue.nextTick();
+    assert.match(
+      host.querySelector('.scene-bonuses [data-status="haste"]').getAttribute('aria-label'),
+      /劍氣加速 \+15%，剩餘 0.5 秒/,
+    );
+    assert.ok(groups[1].querySelector('[data-status="haste"]'));
+    state.self.combatStatus.authorBonus = false;
+    state.self.hasteMs = 0;
+    state.self.combatStatus.guardEnergy = 0;
+    await vue.nextTick();
+    assert.equal(host.querySelector('[data-status="haste"]'), null);
     assert.match(
       host.querySelector('[data-status="timer"]').getAttribute('aria-label'),
       /等待回復 1.0 秒/,
