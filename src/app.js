@@ -1538,7 +1538,7 @@ function initializeApp(config, dataLock, acquired) {
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作需使用 POST');
           limitRate(roomRate, 'tutorial:' + user.id, 120);
           if (url.pathname === '/api/tutorial/start')
-            return send(tutorials.start(user.id, data.type));
+            return send(tutorials.start(user.id, data.type, data.followActor === true));
           if (url.pathname === '/api/tutorial/close')
             return send(tutorials.close(user.id, data.id));
           if (url.pathname === '/api/tutorial/step') return send(tutorials.apply(user.id, data));

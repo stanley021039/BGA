@@ -24,7 +24,7 @@ interface OracleState {
   terms: { id: string; word: string; eliminated: boolean; artist?: string | null }[];
   summary: { mistakes: number; round: number } | null;
 }
-const props = defineProps<{ snapshot: DrawSnapshot }>();
+const props = defineProps<{ snapshot: DrawSnapshot; tutorial?: boolean }>();
 const room = useRoomStore();
 const oracle = computed(() => props.snapshot.oracle as OracleState);
 const selected = ref('');
@@ -39,7 +39,7 @@ const editable = computed(
   () => !!oracle.value.board && !oracle.value.board.submitted && !room.busy,
 );
 watch(
-  () => [oracle.value.roundId, oracle.value.turnId],
+  () => [oracle.value.roundId, oracle.value.turnId, props.snapshot.me],
   () => {
     selected.value = '';
   },
@@ -65,13 +65,13 @@ async function eliminate() {
         <span v-if="oracle.board">已交畫 {{ oracle.readyCount }}／{{ oracle.maxErrors }} 人</span>
       </div>
       <PartyCountdown
-        v-if="oracle.deadline"
+        v-if="oracle.deadline && !tutorial"
         :deadline="oracle.deadline"
         :epoch="oracle.roundId + snapshot.phase + (oracle.turnId || '')"
         :duration="snapshot.phase === 'oracle-drawing' ? 120000 : 30000"
         :caption="snapshot.phase === 'oracle-drawing' ? '作畫剩餘' : '本次淘汰剩餘'"
       />
-      <p v-if="oracle.turnId">輪到的玩家逾時時，系統會代選一張牌。</p>
+      <p v-if="oracle.turnId && !tutorial">輪到的玩家逾時時，系統會代選一張牌。</p>
       <UiHeading v-if="oracle.turnId" :level="3">{{
         myTurn ? '輪到你淘汰一個沒人畫過的詞。' : '等待 ' + person(oracle.turnId) + ' 淘汰一個詞。'
       }}</UiHeading>
@@ -182,7 +182,7 @@ async function eliminate() {
         />
         <p v-if="oracle.summary">本輪誤刪 {{ oracle.summary.mistakes }} 個真題。</p>
         <UiButton
-          v-if="snapshot.phase === 'oracle-reveal' && room.gameManager"
+          v-if="!tutorial && snapshot.phase === 'oracle-reveal' && room.gameManager"
           variant="primary"
           label="下一輪"
           :disabled="room.busy"

@@ -112,7 +112,7 @@ watch(
   { immediate: true },
 );
 onMounted(() => {
-  if (!props.tutorial && new URLSearchParams(location.search).has('rules')) void help.value?.open();
+  if (new URLSearchParams(location.search).has('rules')) void help.value?.open();
   if (new URLSearchParams(location.search).has('learn')) void help.value?.open();
 });
 </script>

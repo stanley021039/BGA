@@ -26,7 +26,7 @@ export const gameCards: GameCard[] = [
     seats: '3–8 人',
     category: '派對・語音畫圖',
     description: '聽口令各自跟畫，搶答採集水晶。需要同桌或外部語音。',
-    guide: '/brainwave?rules=1',
+    guide: '/brainwave?learn=1',
   },
   {
     id: 'drama-bar',
@@ -35,7 +35,7 @@ export const gameCards: GameCard[] = [
     seats: '3–8 人',
     category: '派對・聲音表演',
     description: '一句台詞，六種情境。只聽語氣就猜得出來嗎？',
-    guide: '/drama-bar?rules=1',
+    guide: '/drama-bar?learn=1',
   },
   {
     id: 'decrypto',

@@ -7,13 +7,19 @@ import UiLink from './UiLink.vue';
 
 const modes = [
   { id: 'classic', type: 'draw', label: '你畫我猜', players: '2–8 人', guide: '/draw?learn=1' },
-  { id: 'oracle', type: 'draw', label: '塗鴉神諭', players: '2–8 人', guide: '/draw?learn=1' },
+  {
+    id: 'oracle',
+    type: 'draw',
+    label: '塗鴉神諭',
+    players: '2–8 人',
+    guide: '/draw?learn=1&mode=oracle',
+  },
   {
     id: 'brainwave',
     type: 'brainwave',
     label: '電波畫家',
     players: '3–8 人',
-    guide: '/brainwave?rules=1',
+    guide: '/brainwave?learn=1',
   },
   {
     id: 'minimal',
@@ -99,10 +105,10 @@ async function change(value: string | number | null | undefined) {
     <p v-else>{{ active ? '本桌玩法：' + active.label : '等待房主選擇畫畫玩法。' }}</p>
     <UiLink
       v-if="active"
-      :href="active.guide"
+      :href="active.guide + '&from=game&room=' + room.code"
       target="_blank"
       rel="noopener"
-      :label="active.label + '玩法說明'"
+      :label="active.label + '試玩教學'"
     />
   </div>
 </template>

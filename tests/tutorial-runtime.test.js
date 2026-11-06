@@ -123,3 +123,99 @@ test('teaching perspectives can change only within the owned sandbox and invalid
     { code: 'STALE_TUTORIAL' },
   );
 });
+
+function partyPractice(type) {
+  const runtime = createTutorials({ rng: random(123) });
+  let state = runtime.start('owner', type);
+  const update = (data, route) =>
+    (state = runtime.apply(
+      'owner',
+      {
+        id: state.id,
+        revision: state.revision,
+        requestId: randomUUID(),
+        ...data,
+      },
+      route,
+    ));
+  return {
+    state: () => state,
+    perspective(playerId) {
+      state = runtime.perspective('owner', { id: state.id, revision: state.revision, playerId });
+    },
+    act(action, input = {}) {
+      return update(
+        {
+          body: {
+            action,
+            roundId: state.snapshot.oracle?.roundId ?? state.snapshot.roundId,
+            requestId: randomUUID(),
+            ...input,
+          },
+        },
+        'action',
+      );
+    },
+    step(followActor = false) {
+      return update({ followActor });
+    },
+  };
+}
+
+test('電波畫家教學可手動畫圖與蓋牌，換角色前後各自只能看到自己的內容', () => {
+  const practice = partyPractice('brainwave');
+  const { actorId, players } = practice.state().snapshot;
+  practice.perspective(actorId);
+  practice.act('change-question');
+  practice.act('ready');
+  const correct = practice.state().snapshot.correct;
+  assert.ok(Number.isInteger(correct));
+  practice.act('shape', { shape: { kind: 'line', x1: 0.2, y1: 0.25, x2: 0.7, y2: 0.75 } });
+  const listener = players.find(({ id }) => id !== actorId).id;
+  practice.perspective(listener);
+  assert.equal(practice.state().snapshot.correct, null);
+  assert.deepEqual(practice.state().snapshot.board, []);
+  practice.act('guess', { option: correct });
+  assert.deepEqual(practice.state().snapshot.myGuesses, [correct]);
+  for (let step = 0; !practice.state().done && step < 16; step++) practice.step();
+  assert.equal(practice.state().done, true);
+  assert.equal(practice.state().snapshot.revealedBoards[actorId].length, 1);
+  assert.ok(practice.state().snapshot.latest.deltas[listener] > 0);
+});
+
+test('戲精酒吧教學可親自演出與作答，自動演示會切到正在操作的角色', () => {
+  const practice = partyPractice('drama-bar');
+  const { actorId } = practice.state().snapshot;
+  practice.perspective(actorId);
+  const correct = practice.state().snapshot.correct;
+  practice.act('performed');
+  const guessing = practice.step(true);
+  assert.equal(guessing.snapshot.phase, 'guessing');
+  assert.equal(guessing.snapshot.me, guessing.actorId);
+  assert.equal(guessing.snapshot.correct, null);
+  assert.equal(guessing.snapshot.latest, null);
+  const reveal = practice.act('guess', { option: (correct + 1) % 6 });
+  assert.equal(reveal.done, true);
+  assert.equal(reveal.snapshot.latest.correct, correct);
+  assert.deepEqual(reveal.snapshot.latest.penalized, [guessing.snapshot.me]);
+});
+
+test('塗鴉神諭教學可親自描線交畫及淘汰詞卡，揭曉前隱藏詞卡歸屬', () => {
+  const practice = partyPractice('oracle');
+  const { me } = practice.state().snapshot;
+  practice.act('oracle-trace', { trace: [{ index: 0, from: 20, to: 80 }] });
+  practice.act('oracle-submit');
+  assert.equal(practice.state().snapshot.oracle.board.submitted, true);
+  for (let step = 0; practice.state().snapshot.phase === 'oracle-drawing' && step < 12; step++)
+    practice.step();
+  const { oracle } = practice.state().snapshot;
+  assert.equal(practice.state().snapshot.phase, 'oracle-guessing');
+  assert.ok(oracle.terms.every((term) => !Object.hasOwn(term, 'artist')));
+  assert.deepEqual(oracle.boards[me].marks[0], [{ index: 0, from: 20, to: 80 }]);
+  practice.perspective(oracle.turnId);
+  practice.act('oracle-eliminate', { termId: oracle.terms[0].id });
+  assert.equal(practice.state().snapshot.oracle.terms[0].eliminated, true);
+  for (let step = 0; !practice.state().done && step < 8; step++) practice.step();
+  assert.equal(practice.state().done, true);
+  assert.ok(practice.state().snapshot.oracle.terms.some((term) => term.artist));
+});

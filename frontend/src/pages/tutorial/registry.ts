@@ -1,5 +1,5 @@
 import { defineAsyncComponent } from 'vue';
-import type { GameType, RoomSnapshot } from '../../contracts/room';
+import { readRoomSnapshot, type GameType, type RoomSnapshot } from '../../contracts/room';
 import { readPokerSnapshot } from '../../contracts/poker';
 import { readRaceSnapshot } from '../../contracts/race';
 import { readMajoritySnapshot } from '../../contracts/majority';
@@ -15,7 +15,8 @@ import { readMusicQuizSnapshot } from '../../contracts/musicquiz';
 import { readMinimalSnapshot } from '../../contracts/minimal';
 import { readCeoSnapshot } from '../../contracts/ceo';
 import { readAthleteSnapshot } from '../../contracts/second-wind';
-export type TutorialType = Exclude<GameType, 'lounge' | 'brainwave' | 'drama-bar'>;
+export type TutorialType = Exclude<GameType, 'lounge'> | 'oracle';
+const voiceScene = defineAsyncComponent(() => import('../voice-party/VoicePartyScene.vue'));
 interface Lesson {
   title: string;
   goal: string;
@@ -100,6 +101,39 @@ export const lessons: Record<TutorialType, Lesson> = {
     ],
     reader: readDrawSnapshot,
     scene: defineAsyncComponent(() => import('./TutorialDraw.vue')),
+  },
+  oracle: {
+    title: '塗鴉神諭',
+    goal: '沿虛線畫出自己的秘密題目，再看作品、排除沒人畫過的詞。',
+    points: [
+      '只描畫板的虛線。可翻面、旋轉或復原，交畫後就鎖定。',
+      '交齊作品後，輪到你時挑一個沒人畫過的候選詞並確認淘汰。',
+      '揭曉後可比對每位畫家的秘密題目，看看隊伍誤刪了幾個真題。',
+    ],
+    reader: readDrawSnapshot,
+    scene: defineAsyncComponent(() => import('../draw/DrawOracle.vue')),
+  },
+  brainwave: {
+    title: '電波畫家',
+    goal: '練習選題、用圖形傳口令、蓋牌搶答與結算水晶。',
+    points: [
+      '領圖者確認題組後才看得到正解。只用形狀、位置、方向和數量描述圖畫。',
+      '收訊者在私人畫板跟畫，最多送出三個不同選項。教學夥伴的圖形與答牌由系統示範。',
+      '揭曉才公開畫作。答對的先後順序影響水晶獎勵，猜錯或未提交可能扣水晶。',
+    ],
+    reader: readRoomSnapshot,
+    scene: voiceScene,
+  },
+  'drama-bar': {
+    title: '戲精酒吧',
+    goal: '用同一句台詞表演秘密情境，練習作答與同步揭曉。',
+    points: [
+      '只有表演者看得到抽中的情境。可以試著用符合情境的語速和語氣念出台詞，再按「演完了」。',
+      '猜題者各選一個情境。練習桌可切換角色，看看送出前後各方能看到什麼。',
+      '有人答對時，猜錯的人各記一杯。所有人都猜錯時，由表演者記一杯。',
+    ],
+    reader: readRoomSnapshot,
+    scene: voiceScene,
   },
   trpg: {
     title: '霧港跑團',
@@ -190,7 +224,8 @@ export const lessons: Record<TutorialType, Lesson> = {
     scene: defineAsyncComponent(() => import('../second-wind/AthleteScene.vue')),
   },
 };
-export function tutorialType(path: string): TutorialType | null {
+export function tutorialType(path: string, mode?: string | null): TutorialType | null {
   const type = path.split('/')[1] === 'race' ? 'thunder' : path.split('/')[1];
+  if (type === 'draw' && mode === 'oracle') return 'oracle';
   return Object.hasOwn(lessons, type) ? (type as TutorialType) : null;
 }
