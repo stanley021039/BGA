@@ -17,6 +17,8 @@ export const gameTypes = [
   'ceo',
   'second-wind',
   'lounge',
+  'brainwave',
+  'drama-bar',
 ] as const;
 export type GameType = (typeof gameTypes)[number];
 export const isGameType = (value: unknown): value is GameType =>

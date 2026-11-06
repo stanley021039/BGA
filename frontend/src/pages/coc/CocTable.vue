@@ -5,6 +5,7 @@ import type { CocSnapshot } from '../../contracts/coc';
 import { text } from '../../services/validation';
 import UiPanel from '../../components/UiPanel.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiHeading from '../../components/UiHeading.vue';
 import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import CocCombatControls from './CocCombatControls.vue';
@@ -325,8 +326,10 @@ async function act(action: string, data: Record<string, unknown> = {}) {
           />
         </template>
         <template v-else-if="state.offer"
-          ><h3>{{ state.offer.label }}</h3
-          ><p>{{ state.offer.risk }}</p
+          ><UiHeading :level="3" kind="prompt" label="待確認的行動">{{
+            state.offer.label
+          }}</UiHeading
+          ><p v-if="state.offer.risk"><strong>行動代價</strong> {{ state.offer.risk }}</p
           ><p
             >{{
               state.offer.unanimous
@@ -356,7 +359,7 @@ async function act(action: string, data: Record<string, unknown> = {}) {
               @click="act('confirm', { offerId: state.offer.id, approve: false })" /></div
         ></template>
         <template v-else-if="state.check"
-          ><h3>{{ state.check.label }}</h3
+          ><UiHeading :level="3" kind="prompt" label="目前檢定">{{ state.check.label }}</UiHeading
           ><p v-if="state.check.tiebreak"
             >雙方同級且數值相同，改擲 D100 比點數，較低者勝出；不再支付原行動資源或推進故事時間。</p
           ><p v-else

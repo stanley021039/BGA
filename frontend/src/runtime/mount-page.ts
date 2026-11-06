@@ -24,6 +24,8 @@ export function mountPage(
     'majority',
     'gift',
     'draw',
+    'brainwave',
+    'drama-bar',
     'trpg',
     'coc',
     'quacks',

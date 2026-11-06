@@ -1,4 +1,5 @@
 const { starterOrder } = require('./random-starter');
+const { KrakelOrakel } = require('./krakel-orakel');
 const { assertCanManageSettings } = require('../rooms/permissions');
 const { assertRecordCapacity } = require('../rooms/membership');
 const { randomInt, randomUUID } = require('node:crypto');
@@ -54,6 +55,7 @@ const validTopics = (topics) =>
 class DrawGuessRoom {
   constructor(code, name, rng = randomInt, now = Date.now) {
     this.type = 'draw';
+    Object.defineProperty(this, 'oracle', { value: new KrakelOrakel() });
     this.code = code;
     this.name = name;
     this.rng = rng;
@@ -257,6 +259,8 @@ class DrawGuessRoom {
     this.updated = this.now();
   }
   add(name, bot = false) {
+    if (this.phase.startsWith('oracle-'))
+      throw new HttpError(409, 'MATCH_STARTED', '本場塗鴉神諭已開始，請等下一局');
     assertRecordCapacity(this);
     if (this.activePlayers().length >= 8) throw Error('最多 8 位玩家');
     if (typeof name !== 'string' || !name.trim()) throw Error('請輸入名字');
@@ -293,6 +297,7 @@ class DrawGuessRoom {
       player.name + (leaving ? ' 已離開房間' : ' 已被房主踢出'),
     );
     if (this.phase === 'waiting' || this.phase === 'finished') return;
+    if (this.options.playMode === 'oracle') return this.oracle.interrupt(this);
     if (this.presenterId === target) this.completeAchievementUnit('interrupted');
     if (this.activePlayers().length < 2) {
       this.finish('玩家不足，本局提前結束');
@@ -307,6 +312,18 @@ class DrawGuessRoom {
   configure(id, data = {}) {
     assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) throw Error('遊戲中不能更改設定');
+    if (this.options.playMode === 'unselected')
+      throw new HttpError(409, 'DRAW_MODE_REQUIRED', '請先由房主選擇畫畫玩法');
+    if (data.playMode !== undefined && !['classic', 'oracle'].includes(data.playMode))
+      throw new HttpError(400, 'INVALID_DRAW_MODE', '玩法模式不正確');
+    if (data.playMode === 'oracle') {
+      const difficulty = data.oracleDifficulty ?? this.options.oracleDifficulty ?? 'easy';
+      if (!['easy', 'hard'].includes(difficulty))
+        throw new HttpError(400, 'INVALID_ORACLE_DIFFICULTY', '請選擇簡單或困難題庫');
+      this.options = { ...this.options, playMode: 'oracle', oracleDifficulty: difficulty };
+      this.event('settings', '已選擇塗鴉神諭');
+      return;
+    }
     if (!Number.isInteger(data.seconds) || ![60, 90, 120].includes(data.seconds))
       throw Error('作畫時間請選 60、90 或 120 秒');
     if (data.customPercent !== undefined && !validCustomPercent(data.customPercent))
@@ -329,6 +346,7 @@ class DrawGuessRoom {
       delete options.topics;
     }
     options.ending = readEnding(data.ending, this.options.ending);
+    if (data.playMode === 'classic') options.playMode = 'classic';
     this.options = options;
     this.event('settings', '已更新作畫時間與題目類別');
   }
@@ -347,6 +365,9 @@ class DrawGuessRoom {
   }
   start() {
     if (!['waiting', 'finished'].includes(this.phase)) throw Error('本局已開始');
+    if (this.options.playMode === 'unselected')
+      throw new HttpError(409, 'DRAW_MODE_REQUIRED', '請先由房主選擇畫畫玩法');
+    if (this.options.playMode === 'oracle') return this.oracle.start(this);
     this.achievementCapacity();
     this.players = this.activePlayers();
     if (this.players.length < 2 || this.players.length > 8) throw Error('需要 2 至 8 位玩家');
@@ -741,6 +762,7 @@ class DrawGuessRoom {
     this.newRound();
   }
   auto() {
+    if (this.options.playMode === 'oracle') return this.oracle.auto(this);
     const now = this.now(),
       artist = this.player(this.presenterId);
     if (
@@ -797,6 +819,7 @@ class DrawGuessRoom {
       this.event('host-transfer', target.name + ' 成為新房主');
       return;
     }
+    if (this.options.playMode === 'oracle') return this.oracle.act(this, id, action, data);
     if (action === 'choose') return this.choose(id, data.questionId);
     if (action === 'guess') return this.guess(id, data.answer);
     if (action === 'next') return this.next(id);
@@ -971,6 +994,7 @@ class DrawGuessRoom {
       presenterId: this.presenterId,
       options: this.options,
       deadline: this.deadline,
+      ...(this.options.playMode === 'oracle' ? { oracle: this.oracle.view(this, id) } : {}),
       serverNow: this.now(),
       candidates:
         this.phase === 'choosing' && id === this.presenterId

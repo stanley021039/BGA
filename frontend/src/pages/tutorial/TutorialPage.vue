@@ -17,7 +17,9 @@ import type { DrawSnapshot } from '../../contracts/drawing';
 import type { CocSnapshot } from '../../contracts/coc';
 import type { RoomSnapshot } from '../../contracts/room';
 import '../../styles/tutorial.scss';
-const type = tutorialType(location.pathname)!;
+const query = new URLSearchParams(location.search);
+const type = tutorialType(location.pathname, query.get('mode'))!;
+const voiceLesson = type === 'brainwave' || type === 'drama-bar';
 const lesson = lessons[type],
   room = useRoomStore(),
   race =
@@ -48,11 +50,13 @@ let timer: ReturnType<typeof setTimeout> | undefined,
   disposed = false,
   detach: (() => void) | undefined;
 const requests = new Set<AbortController>();
-const query = new URLSearchParams(location.search),
-  from = query.get('room') || '';
+const from = query.get('room') || '';
 const exitHref =
   query.get('from') === 'game' && /^[a-f0-9]{6}$/i.test(from)
-    ? '/' + (type === 'thunder' ? 'race' : type) + '/' + from.toUpperCase()
+    ? '/' +
+      (type === 'thunder' ? 'race' : type === 'oracle' ? 'draw' : type) +
+      '/' +
+      from.toUpperCase()
     : '/';
 const dice = computed(() => race?.state?.diceCheck);
 const outcomes = computed(() =>
@@ -69,7 +73,9 @@ const outcomes = computed(() =>
         else if (typeof p.stack === 'number') value = p.stack.toLocaleString() + ' 籌碼';
         else if (type === 'musicquiz' && Array.isArray(p.timeline))
           value = p.timeline.length + ' 張年代卡';
-        else if (typeof p.score === 'number') value = p.score + ' 分';
+        else if (typeof p.score === 'number' && type !== 'oracle')
+          value =
+            p.score + (type === 'brainwave' ? ' 顆水晶' : type === 'drama-bar' ? ' 杯' : ' 分');
         else if (typeof p.focus === 'number') value = '剩餘專注 ' + p.focus;
         else if (typeof p.turns === 'number') value = '已行動 ' + p.turns + ' 次';
         return value ? [{ id: p.id, name: p.name, value }] : [];
@@ -178,9 +184,9 @@ async function start(next: 'manual' | 'auto') {
   current.value = null;
   const token = generation;
   try {
-    const result = await send('start', { type });
+    const result = await send('start', { type, followActor: next === 'auto' });
     if (disposed || token !== generation) return;
-    detach = room.installTutorial(type, lesson.reader, transport);
+    detach = room.installTutorial(parse(result).snapshot.type, lesson.reader, transport);
     publish(result);
     schedule();
   } catch (e) {
@@ -197,6 +203,7 @@ async function step() {
     v = current.value;
   try {
     const result = await send('step', {
+      followActor: mode.value === 'auto',
       id: v.id,
       revision: v.revision,
       requestId: crypto.randomUUID(),
@@ -317,6 +324,10 @@ onBeforeUnmount(() => {
           ? '手動模式使用正式遊戲的調查與檢定操作；也可逐步示範。自動模式會完成一次基本流程，隨時可暫停。'
           : '手動模式使用原本遊戲的操作；教學夥伴的步驟可以逐步觀看。自動模式會示範一輪主要流程，隨時可暫停。'
       }}</p>
+      <div v-if="type === 'draw'" class="vue-tutorial-modes">
+        <UiLink href="/draw?learn=1&amp;mode=oracle" label="塗鴉神諭試玩教學" />
+        <UiLink href="/brainwave?learn=1" label="電波畫家試玩教學" />
+      </div>
       <UiLink
         v-if="type === 'thunder'"
         href="/race?learn=1&amp;detail=1"
@@ -331,6 +342,11 @@ onBeforeUnmount(() => {
     <UiNotice
       v-if="type === 'coc'"
       message="COC 獨立教學：沿用實際規則引擎；主持文字為教學示範，不連接 AI、不使用 API 額度。只有一位教學調查者，不加入 AI 隊友。"
+      persistent
+    />
+    <UiNotice
+      v-if="voiceLesson"
+      message="練習桌使用文字提示與示範答牌。正式遊戲請和同桌玩家通話。"
       persistent
     />
     <UiNotice v-if="error" tone="danger" :message="error" persistent /><UiButton
@@ -442,7 +458,7 @@ onBeforeUnmount(() => {
       </UiPanel>
       <section
         class="vue-tutorial-board"
-        :inert="mode === 'auto' || current.done || busy"
+        :inert="busy || ((mode === 'auto' || current.done) && !(type === 'oracle' && current.done))"
         aria-label="教學遊戲操作畫面"
       >
         <component :is="lesson.scene" v-if="type === 'thunder'" :model="race" />
@@ -452,6 +468,13 @@ onBeforeUnmount(() => {
           :snapshot="current.snapshot as DrawSnapshot"
           :canvas="current.canvas"
         />
+        <component
+          :is="lesson.scene"
+          v-else-if="type === 'oracle'"
+          :snapshot="current.snapshot as DrawSnapshot"
+          tutorial
+        />
+        <component :is="lesson.scene" v-else-if="voiceLesson" :type="type" tutorial />
         <component :is="lesson.scene" v-else />
       </section>
     </div>

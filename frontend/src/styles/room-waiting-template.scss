@@ -4,6 +4,9 @@
     box-sizing: border-box;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
+    &.has-mode-picker {
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
     gap: 16px;
     inline-size: 100%;
     min-inline-size: 0;
@@ -519,6 +522,9 @@
       min-height: 0;
       flex: 1 1 0;
       grid-template-rows: minmax(160px, min(28dvh, 300px)) minmax(0, 1fr);
+      &.has-mode-picker {
+        grid-template-rows: auto minmax(120px, min(22dvh, 240px)) minmax(0, 1fr);
+      }
       overflow: hidden;
       .vue-waiting-hero {
         min-block-size: 0;

@@ -457,7 +457,12 @@ test('header order follows the real draft and action seat, and racer details pre
     assert.equal(f.host.querySelector('.athlete-turn-order').textContent.trim(), 'c → a → b');
     assert.equal(f.host.querySelector('#athlete-racer-details').style.display, 'none');
     const headings = [...f.host.querySelectorAll('h2')].map((h) => h.textContent.trim());
-    assert.deepEqual(headings.slice(0, 3), ['積分與隊伍', '本場角色與能力', '曲折賽道']);
+    assert.deepEqual(headings.slice(0, 4), [
+      '等待 b 行動',
+      '積分與隊伍',
+      '本場角色與能力',
+      '曲折賽道',
+    ]);
     f.host.querySelector('button[aria-label="展開本場角色與能力"]').click();
     await vue.nextTick();
     assert.notEqual(f.host.querySelector('#athlete-racer-details').style.display, 'none');
@@ -465,6 +470,9 @@ test('header order follows the real draft and action seat, and racer details pre
     f.game.pending = { id: 'q', playerId: 'a', title: '選擇能力', options: [] };
     await vue.nextTick();
     assert.equal(f.host.querySelector('[aria-current="step"]').textContent, 'a');
+    const decision = f.host.querySelector('.athlete-action-slot');
+    assert.match(decision.querySelector('[data-kind="prompt"]').textContent, /選擇能力/);
+    assert.equal(f.host.querySelector('h2').textContent.trim(), '請選擇能力效果');
   } finally {
     f.dispose();
   }

@@ -18,10 +18,13 @@ const heading = useId();
 <template>
   <section
     class="vue-room-waiting-template"
-    :class="{ 'is-flow': flow }"
+    :class="{ 'is-flow': flow, 'has-mode-picker': $slots['mode-picker'] }"
     :data-waiting-game="type"
     :aria-labelledby="heading"
   >
+    <div v-if="$slots['mode-picker']" class="vue-waiting-mode-picker"
+      ><slot name="mode-picker"
+    /></div>
     <header class="vue-waiting-hero">
       <div
         class="vue-waiting-art"

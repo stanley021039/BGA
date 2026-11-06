@@ -134,6 +134,14 @@
     border-radius: var(--stitch-heading-bar-radius);
     background: var(--stitch-heading-bar-color);
   }
+  &[data-kind='prompt'] {
+    flex-direction: column;
+    gap: var(--stitch-space-4);
+    font-size: var(--stitch-text-page);
+    .ui-heading-label {
+      font-size: var(--stitch-text-body);
+    }
+  }
   &[data-kind='page'] {
     display: block;
     padding-block-end: var(--stitch-space-12);

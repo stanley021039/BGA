@@ -32,7 +32,7 @@ watch(
 );
 function cutoff(target: string) {
   const day = new Date(Date.parse(target + 'T00:00:00Z') - 1).toISOString().slice(0, 10);
-  return `${day} 23:59:59.999 前可預測；${target} 00:00（台北）起截止。`;
+  return `${target} 00:00（台北）；${day} 23:59:59.999 前可預測。`;
 }
 const status = computed(() => {
   const round = r.value;
@@ -53,11 +53,9 @@ const status = computed(() => {
       ><div
         ><small>目前開放預測的交易日</small
         ><h2>{{ market.current?.targetDate || '等待下一個交易日開放' }}</h2
-        ><p>{{
-          market.current
-            ? cutoff(market.current.targetDate)
-            : '依官方交易日曆確認，暫無可提交預測；已截止輪次仍繼續查核收盤結果。'
-        }}</p></div
+        ><p v-if="market.current"
+          ><strong>預測截止</strong> {{ cutoff(market.current.targetDate) }}</p
+        ><p v-else>依官方交易日曆確認，暫無可提交預測；已截止輪次仍繼續查核收盤結果。</p></div
       ><UiButton
         v-if="market.current && market.current.id !== r?.id"
         icon="next"
@@ -95,7 +93,7 @@ const status = computed(() => {
       }}</strong></div
     ><p v-if="r">{{
       r.rules.version >= 2
-        ? cutoff(r.targetDate)
+        ? '預測截止：' + cutoff(r.targetDate)
         : `沿用舊規則：前一晚 ${r.rules.cutoffTime}（台北）截止。`
     }}</p
     ><div class="vue-market-draw-tools"

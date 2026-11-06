@@ -151,6 +151,40 @@ const eventText = eventBody;
       /></template>
     </UiNotice>
     <UiNotice v-if="phaseNotice" :message="phaseNotice" persistent />
+    <UiPanel
+      v-if="raceVisible && game.racers?.length && game.phase === 'racing'"
+      tone="raised"
+      :title="
+        game.pending
+          ? game.pending.playerId === me
+            ? '請選擇能力效果'
+            : '等待 ' + name(game.pending.playerId) + ' 選擇能力'
+          : game.turnId === me
+            ? '輪到您的行動！'
+            : '等待 ' + name(game.turnId || '') + ' 行動'
+      "
+    >
+      <div class="athlete-action-slot"
+        ><UiButton
+          v-if="!game.pending"
+          variant="primary"
+          label="開始角色回合"
+          :disabled="!athlete.ready || game.turnId !== me"
+          @click="athlete.act('roll')" /><template v-if="game.pending"
+          ><UiHeading :level="3" kind="prompt" label="待處理的能力">{{
+            game.pending.title
+          }}</UiHeading
+          ><div class="athlete-actions"
+            ><UiButton
+              v-for="option in game.pending.options"
+              :key="option.value"
+              :label="option.label"
+              :disabled="!athlete.ready || game.pending.playerId !== me"
+              @click="
+                athlete.act('choice', { choiceId: game.pending.id, value: option.value })
+              " /></div></template
+      ></div>
+    </UiPanel>
     <UiPanel title="積分與隊伍">
       <template #title-after
         ><UiHoverInfo title="四場名次積分" help-only
@@ -510,38 +544,6 @@ const eventText = eventBody;
         <p v-if="game.monster !== null && game.monster !== undefined"
           >W.E.R.E.M.O.U.T.H.：{{ game.monster }} 格</p
         >
-      </UiPanel>
-      <UiPanel
-        v-if="game.phase === 'racing'"
-        tone="raised"
-        :title="
-          game.pending
-            ? game.pending.playerId === me
-              ? '請選擇能力效果'
-              : '等待 ' + name(game.pending.playerId) + ' 選擇能力'
-            : game.turnId === me
-              ? '輪到您的行動！'
-              : '等待 ' + name(game.turnId || '') + ' 行動'
-        "
-      >
-        <div class="athlete-action-slot"
-          ><UiButton
-            v-if="game.phase === 'racing' && !game.pending"
-            variant="primary"
-            label="開始角色回合"
-            :disabled="!athlete.ready || game.turnId !== me"
-            @click="athlete.act('roll')" /><template v-if="game.pending"
-            ><p>{{ game.pending.title }}</p
-            ><div class="athlete-actions"
-              ><UiButton
-                v-for="option in game.pending.options"
-                :key="option.value"
-                :label="option.label"
-                :disabled="!athlete.ready || game.pending.playerId !== me"
-                @click="
-                  athlete.act('choice', { choiceId: game.pending.id, value: option.value })
-                " /></div></template
-        ></div>
       </UiPanel>
     </template>
     <UiPanel

@@ -5,7 +5,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useLobbyStore } from '../../stores/lobby';
 import { useSessionStore } from '../../stores/session';
 import { gamePath, isGameType, type GameType } from '../../contracts/room';
-import { gameCards, gameTitle, loungeCard } from './catalog';
+import type { PublicRoom } from '../../contracts/lobby';
+import { lobbyCards as gameCards, gameTitle, isDrawingGame, loungeCard } from './catalog';
 import GameCarousel from './GameCarousel.vue';
 import LobbyBackdrop from './LobbyBackdrop.vue';
 import SceneKda from '../../components/SceneKda.vue';
@@ -29,7 +30,13 @@ watch(
 );
 const params = new URLSearchParams(location.search),
   requested = params.get('game') || 'thunder';
-const selected = ref(gameCards.some((card) => card.id === requested) ? requested : 'thunder'),
+const selected = ref(
+    isDrawingGame(requested)
+      ? 'draw'
+      : gameCards.some((card) => card.id === requested)
+        ? requested
+        : 'thunder',
+  ),
   chosen = computed(() => gameCards.find((card) => card.id === selected.value)!);
 const backdrop = ref<InstanceType<typeof LobbyBackdrop> | null>(null);
 const create = ref<InstanceType<typeof UiDialog> | null>(null),
@@ -54,10 +61,15 @@ const feedback = computed(() =>
       (params.has('closedRoom') ? '房間已結束或你已離開，請重新開桌或加入房間。' : ''),
 );
 const drawingCreate = computed(() => selected.value === 'draw');
-const pairCreate = computed(() => ['telephone', 'majority', 'draw'].includes(selected.value));
+const pairCreate = computed(() => ['majority', 'draw'].includes(selected.value));
 const roomCreate = computed(() => ['quacks', 'thunder', 'bluff'].includes(selected.value));
 const resumes = computed(() => lobby.rooms.filter((room) => room.seated)),
   lounges = computed(() => lobby.rooms.filter((room) => room.type === 'lounge'));
+function roomGameTitle(room: PublicRoom) {
+  if (room.playMode === 'oracle') return '塗鴉神諭';
+  if (room.playMode === 'unselected') return '畫畫天堂 · 尚未選玩法';
+  return gameTitle(room.type);
+}
 function open() {
   if (selected.value === 'market') return;
   if (selected.value === 'lounge') return openLounge();
@@ -165,8 +177,8 @@ onBeforeUnmount(() => {
             v-for="room in resumes"
             :key="room.code"
             icon="replay"
-            :label="'返回' + gameTitle(room.type) + ' ' + room.code"
-            :caption="'返回' + gameTitle(room.type)"
+            :label="'返回' + roomGameTitle(room) + ' ' + room.code"
+            :caption="'返回' + roomGameTitle(room)"
             :disabled="lobby.entryPending || lobby.roomsLoading"
             @click="lobby.resume(room)" /><StatusSlot
             :message="feedback"
@@ -203,7 +215,7 @@ onBeforeUnmount(() => {
             }}</p
             ><article v-for="room in lobby.rooms" :key="room.code" class="vue-lobby-room"
               ><div
-                ><span>{{ gameTitle(room.type) }}</span
+                ><span>{{ roomGameTitle(room) }}</span
                 ><h3>{{ room.name }}</h3
                 ><p>房號 {{ room.code }} · {{ room.playerCount }}／{{ room.maxPlayers }} 席</p></div
               ><div class="vue-lobby-room-actions"
@@ -388,7 +400,12 @@ onBeforeUnmount(() => {
           maxlength="24"
           placeholder="好友局"
           :disabled="lobby.entryPending" />
-        <div class="vue-lobby-create-options"><p>進入房間後，由房主調整本桌設定。</p></div
+        <div class="vue-lobby-create-options"
+          ><p>{{
+            drawingCreate
+              ? '先邀朋友進同一間畫室，再由房主挑選玩法及調整設定。'
+              : '進入房間後，由房主調整本桌設定。'
+          }}</p></div
         ><StatusSlot
           :message="feedback"
           :error="!!lobby.entryStatus"

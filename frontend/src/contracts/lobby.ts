@@ -14,6 +14,7 @@ export interface PublicRoom {
   name: string;
   type: GameType;
   phase: string;
+  playMode?: 'oracle' | 'unselected';
   playerCount: number;
   maxPlayers: number;
   seated: boolean;
@@ -172,6 +173,9 @@ export function readPublicRooms(value: unknown): PublicRoom[] {
     return {
       code: text(row.code).toUpperCase(),
       type: row.type,
+      ...(row.type === 'draw' && (row.playMode === 'oracle' || row.playMode === 'unselected')
+        ? { playMode: row.playMode }
+        : {}),
       name: text(row.name),
       phase: text(row.phase),
       playerCount: Number(row.playerCount),

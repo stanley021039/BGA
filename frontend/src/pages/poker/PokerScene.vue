@@ -8,6 +8,7 @@ import PokerCard from './PokerCard.vue';
 import PokerSeats from './PokerSeats.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiHeading from '../../components/UiHeading.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import PlayerName from '../../components/PlayerName.vue';
 const poker = usePokerStore(),
@@ -172,7 +173,7 @@ const turnHint = computed(() =>
         >
       </div>
       <div class="vue-poker-feedback"
-        ><p>{{ turnHint }}</p
+        ><UiHeading :level="2">{{ turnHint }}</UiHeading
         ><StatusSlot
           :persistent="poker.pending || poker.uncertain"
           :message="poker.notice"

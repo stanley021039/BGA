@@ -161,6 +161,20 @@ test('UiPanel supports ordered title additions without changing its accessible h
   assert.ok(html.indexOf('操作') < html.indexOf('棋盤'));
 });
 
+test('UiPanel displays a labelled game prompt as the title beside its actions', async () => {
+  const html = await render(
+    'UiPanel.vue',
+    { title: '足球場、拉鍊', titleLabel: '你的秘密題目' },
+    { actions: () => h('button', '完成作畫') },
+  );
+  const labelled = html.match(/aria-labelledby="([^"]+)"/)?.[1];
+  assert.ok(labelled);
+  assert.match(html, new RegExp('<h2[^>]*data-kind="prompt"[^>]*id="' + labelled + '"'));
+  assert.match(html, /class="ui-heading-label">你的秘密題目/);
+  assert.match(html.replace(/<!--.*?-->/g, ''), /class="ui-heading-text">足球場、拉鍊/);
+  assert.match(html, /<button>完成作畫<\/button>/);
+});
+
 test('UiCheckbox and UiFilePick keep a visible label around the native control', async () => {
   const box = await render('UiCheckbox.vue', { label: '常用', modelValue: true, disabled: true });
   const label = box.match(/<label\b([^>]*)>([\s\S]*?)<\/label>/);

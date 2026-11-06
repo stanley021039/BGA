@@ -211,6 +211,11 @@
   padding: 1rem;
   border: 1px solid var(--st-primary, #d6ba70);
   border-radius: 12px;
+  > p {
+    color: var(--stitch-ink);
+    font-size: var(--stitch-text-body);
+    line-height: var(--stitch-line-height-body);
+  }
 }
 
 #musicquiz-app .mq-card-lines {

@@ -85,6 +85,8 @@ function createRoomInvitations({
         'quacks',
         'ceo',
         'second-wind',
+        'brainwave',
+        'drama-bar',
       ].includes(room.type) &&
         room.phase === 'finished');
     const canInvite = roomHasSpace && joinPhase,

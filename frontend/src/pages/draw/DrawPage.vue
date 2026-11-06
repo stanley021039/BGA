@@ -16,6 +16,7 @@ import DrawingSurface from '../../components/DrawingSurface.vue';
 import DrawGallery from '../../components/DrawGallery.vue';
 import DrawScene from './DrawScene.vue';
 import DrawSettings from './DrawSettings.vue';
+import DrawOracle from './DrawOracle.vue';
 import DrawGuessPanel from './DrawGuessPanel.vue';
 import RoomSceneLayout from '../../components/RoomSceneLayout.vue';
 import RoomRoster from '../../components/RoomRoster.vue';
@@ -60,7 +61,11 @@ const help = ref<InstanceType<typeof UiDialog> | null>(null),
   hintDialog = ref<InstanceType<typeof UiDialog> | null>(null),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 const headerIntegrated = ref(false);
-const connected = computed(() => stream.value && !room.disconnected && !room.terminal);
+const pendingMode = computed(() => record(state.value?.options || {}).playMode === 'unselected');
+const oracleRound = computed(() => !!state.value?.oracle && state.value.phase !== 'waiting');
+const connected = computed(
+  () => (oracleRound.value || stream.value) && !room.disconnected && !room.terminal,
+);
 const motionRoot = ref<HTMLElement | null>(null),
   motion = useDrawMotion(motionRoot, connected);
 const { badges, locked } = motion;
@@ -112,7 +117,7 @@ const connectionNotice = computed(() =>
       ? '正在恢復房間座位…'
       : room.disconnected
         ? room.error || '房間連線中斷，正在重試…'
-        : state.value && !stream.value
+        : state.value && !oracleRound.value && !stream.value
           ? '即時連線重新連接中，房間狀態持續更新。'
           : '',
 );
@@ -242,7 +247,8 @@ async function fetchSeat(signal: AbortSignal) {
   }
 }
 async function start() {
-  if (!room.gameManager || !setup.value || preparing.value || room.busy) return;
+  if (!room.gameManager || !setup.value || pendingMode.value || preparing.value || room.busy)
+    return;
   if (state.value?.phase === 'finished') {
     await room.command('rematch', {});
     return;
@@ -359,7 +365,16 @@ onBeforeUnmount(() => {
     data-room-kind="draw"
     :class="{ 'is-header-integrated': headerIntegrated }"
   >
-    <RoomHeader title="你畫我猜" :focused="focus" @integrated="headerIntegrated = $event"
+    <RoomHeader
+      :title="
+        pendingMode
+          ? '畫畫天堂'
+          : record(state?.options || {}).playMode === 'oracle'
+            ? '塗鴉神諭'
+            : '你畫我猜'
+      "
+      :focused="focus"
+      @integrated="headerIntegrated = $event"
       ><template #navigation><DrawGallery ref="gallery" /></template
       ><UiButton
         variant="ghost"
@@ -397,7 +412,7 @@ onBeforeUnmount(() => {
       :connected="connected"
       :focused="focus"
       roster-class="vue-draw-roster-panel"
-      main-class="vue-draw-main"
+      :main-class="oracleRound ? 'vue-draw-main vue-draw-oracle-main' : 'vue-draw-main'"
       side-class="vue-draw-side"
       class="vue-draw-grid"
       :data-phase="state?.phase"
@@ -424,14 +439,15 @@ onBeforeUnmount(() => {
           ><template #actions
             ><UiButton
               variant="ghost"
-              v-if="room.host && setup"
+              v-if="room.host && setup && !pendingMode"
               icon="add"
               label="加入電腦玩家"
               :disabled="room.busy || !setup || !botAllowed || (state?.players.length || 0) >= 8"
               @click="room.command('bot', {})" /></template></RoomRoster
       ></template>
       <template #default
-        ><section class="vue-draw-board-panel"
+        ><DrawOracle v-if="state && oracleRound" :snapshot="state" />
+        <section v-else class="vue-draw-board-panel"
           ><header
             v-if="state && ['choosing', 'drawing'].includes(state.phase)"
             class="vue-draw-board-heading vue-draw-approved-hud"
@@ -520,9 +536,10 @@ onBeforeUnmount(() => {
             ref="settingsSection"
             tabindex="-1"
             class="vue-draw-settings-panel"
-            ><DrawSettings ref="settings" :snapshot="state" /><UiButton
+            ><p v-if="pendingMode">請先選擇畫畫玩法，之後這裡會顯示對應的設定。</p>
+            <DrawSettings v-else ref="settings" :snapshot="state" /><UiButton
               variant="primary"
-              v-if="room.gameManager"
+              v-if="room.gameManager && !pendingMode"
               :icon="state.phase === 'finished' ? 'replay' : 'play'"
               :label="state.phase === 'finished' ? '再玩一局' : '開始遊戲'"
               :pending="preparing || room.busy"
@@ -544,6 +561,10 @@ onBeforeUnmount(() => {
         15 分。</li
       ><li>時間到或全部猜中後揭曉；新加入的朋友從下一輪開始猜題。同分共同獲勝。</li
       ><li>最近畫作保留八輪，可投票、收藏、下載與分享；回看不會暫停全桌。</li></ol
+    ><h2>塗鴉神諭</h2
+    ><p
+      >2–8 人沿虛線描出秘密題目，再輪流淘汰沒有人畫的詞。2–3
+      人時，每人畫兩個詞，也各淘汰兩張。四輪內錯誤超過玩家數即失敗。</p
     ><a href="/draw-words">前往共編題庫</a></UiDialog
   >
   <UiDialog ref="hintDialog" title="題庫提示" compact @closed="hintClosed"

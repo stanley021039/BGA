@@ -349,13 +349,13 @@ function rank(index: number) {
                   :avatar="thinker?.avatar"
                   :bot="thinker?.bot" /></span
               ><h3>{{ state.prompt?.title }}</h3
-              ><small
+              ><p class="vue-bluff-topic-hint"
                 >難度 {{ state.prompt?.level }} ·
                 {{
                   state.prompt?.hints.length
-                    ? '類別：' + state.prompt.hints.join('／')
+                    ? '類別提示：' + state.prompt.hints.join('／')
                     : '沒有類別提示'
-                }}</small
+                }}</p
               ></header
             ><ul class="vue-bluff-seats"
               ><li

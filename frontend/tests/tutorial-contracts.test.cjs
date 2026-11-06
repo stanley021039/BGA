@@ -30,9 +30,11 @@ function load(file, cache = new Map()) {
 const { lessons, tutorialType } = load(
   path.resolve(__dirname, '../src/pages/tutorial/registry.ts'),
 );
-test('every lobby game has a typed tutorial, a discoverable learn URL and a server adapter', () => {
+test('every lobby game links to its interactive tutorial', () => {
   const { gameCards } = load(path.resolve(__dirname, '../src/pages/lobby/catalog.ts'));
   assert.deepEqual(new Set(Object.keys(lessons)), new Set(types));
+  assert.equal(tutorialType('/draw', 'oracle'), 'oracle');
+  assert.equal(tutorialType('/draw'), 'draw');
   for (const card of gameCards) {
     if (card.id === 'lounge') {
       assert.equal(card.guide, '');
@@ -62,7 +64,13 @@ for (const type of types)
       steps = 0;
     while (true) {
       const parsed = lessons[type].reader(s.snapshot);
-      assert.equal(parsed.type, type);
+      assert.equal(parsed.type, type === 'oracle' ? 'draw' : type);
+      if (type === 'oracle') {
+        assert.ok(parsed.oracle);
+        assert.equal(parsed.oracle.deadline, parsed.deadline);
+      }
+      if (type === 'brainwave') assert.ok(Array.isArray(parsed.board));
+      if (type === 'drama-bar') assert.ok(Array.isArray(parsed.question.options));
       assert.equal(parsed.code, 'FEED00');
       if (type === 'musicquiz' && parsed.playback) {
         assert.equal(parsed.playback.provider, 'audio');

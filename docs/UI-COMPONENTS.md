@@ -18,6 +18,8 @@
 
 `LobbyBackgroundPicker`（#319）在原共用背景選擇器旁使用 `UiCheckbox`「顯示大廳背景」與儲存提示；只更新本機顯示偏好。隱藏時大廳卸載裝飾背景、改用 default 底色，角色與操作保留；共享背景 ID、權限與冷卻不變。詳 [個人顯示契約](specs/LOBBY-BACKGROUND-VISIBILITY-319.md)。
 
+遊戲內的當前題目、台詞、待處理能力與檢定，使用 `UiHeading kind="prompt"`。可用 `label` 標示內容的角色或用途；當題目本身是面板標題時，用 `UiPanel` 的 `title` 與 `title-label`，將作畫或提交操作留在同一頁首。重點內容採頁面字級 28px、正文對比並可換行。回合指示可用一般區塊標題 20px，保留在相關操作附近；純備註才使用面板描述。
+
 `UiPanel` 的 `title-before`／`title-after` slot 將規則入口、補充資訊或單行順序置於標題同列，沿用共用 header 對齊；`actions` 仍保留在列尾。title-after 自適應剩餘寬度，內容可自行設單行省略，不以頁面覆寫標題位置。
 
 `UiHoverInfo helpOnly` 只呈現正常佔位的44px問號來源，沿用hover／鍵盤／點擊查看、Esc與點外部關閉，沒有額外關閉鈕；長內容可搭配 `interactive` 供移入捲動。預設卡面與社交說明行為不變。

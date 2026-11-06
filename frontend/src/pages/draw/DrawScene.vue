@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
+import DrawingModePicker from '../../components/DrawingModePicker.vue';
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import type { DrawSnapshot } from '../../contracts/drawing';
 import type { PublicDrawSnapshot } from '../../contracts/draw-results';
@@ -45,17 +46,28 @@ const correctCounts = computed(() => {
   }
 });
 const settings = computed(() => readDrawSettings(props.snapshot.options));
-const waitingFacts = computed(() => [
-  { label: '每輪時間', value: settings.value.seconds + ' 秒／題' },
-  { label: '結束條件', value: matchRule.value },
-  {
-    label: '題目類別',
-    value:
-      settings.value.topics.length +
-      ' 類；' +
-      (settings.value.topics.includes('custom') ? '含自訂' : '自訂未選'),
-  },
-]);
+const pendingMode = computed(() => record(props.snapshot.options).playMode === 'unselected');
+const oracleMode = computed(() => settings.value.playMode === 'oracle');
+const waitingFacts = computed(() => {
+  if (pendingMode.value) return [];
+  if (oracleMode.value)
+    return [
+      { label: '玩家人數', value: '2–8 人' },
+      { label: '題庫難度', value: settings.value.oracleDifficulty === 'hard' ? '困難' : '簡單' },
+      { label: '遊戲輪數', value: '共四輪' },
+    ];
+  return [
+    { label: '每輪時間', value: settings.value.seconds + ' 秒／題' },
+    { label: '結束條件', value: matchRule.value },
+    {
+      label: '題目類別',
+      value:
+        settings.value.topics.length +
+        ' 類；' +
+        (settings.value.topics.includes('custom') ? '含自訂' : '自訂未選'),
+    },
+  ];
+});
 const matchRule = computed(() =>
   settings.value.mode === 'score'
     ? `目標 ${settings.value.score} 分`
@@ -131,14 +143,22 @@ function rank(index: number) {
   <RoomWaitingTemplate
     v-if="snapshot.phase === 'waiting'"
     type="draw"
-    title="你畫我猜"
-    hero-title="朋友集結中，畫筆已備，準備開畫。"
-    description="輪流挑選題目作畫，其他朋友一起猜答案。"
+    :title="pendingMode ? '畫畫天堂' : oracleMode ? '塗鴉神諭' : '你畫我猜'"
+    :hero-title="pendingMode ? '先集合，再選畫畫玩法。' : undefined"
+    :description="
+      pendingMode
+        ? '由房主選好玩法後，本桌會一起前往對應的等待室。'
+        : oracleMode
+          ? '沿虛線描畫，再輪流淘汰沒有人畫的詞。'
+          : '輪流挑選題目作畫，其他朋友一起猜答案。'
+    "
+    :notice="pendingMode ? '目前尚未選玩法' : undefined"
     :art="waitingIllustration"
     art-alt="你畫我猜的畫室插畫"
     :facts="waitingFacts"
-    ><template #summary-extra>
-      <div class="vue-waiting-ready"
+    ><template #mode-picker><DrawingModePicker /></template>
+    <template #summary-extra>
+      <div v-if="!pendingMode && !oracleMode" class="vue-waiting-ready"
         ><p>{{
           room.gameManager
             ? '你可調整規則，邀請朋友，兩人到齊就能開始。'

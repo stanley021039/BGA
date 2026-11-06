@@ -1,0 +1,88 @@
+@use 'compact-header' as chrome;
+
+body.vue-voice-party-document .vue-game-document {
+  color: var(--stitch-ink);
+}
+
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  body.vue-voice-party-document:not(.ui-large-text) {
+    @include chrome.desktop;
+
+    .vue-game-document {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      block-size: 100dvh;
+      padding-block-end: var(--stitch-space-12);
+    }
+
+    #voice-party-app,
+    .vue-game-workspace,
+    .vue-game-grid {
+      min-block-size: 0;
+    }
+
+    .vue-game-workspace {
+      block-size: 100%;
+      gap: var(--stitch-space-12);
+    }
+
+    .vue-game-main {
+      overflow: auto;
+    }
+  }
+}
+
+.party-338-stage,
+.party-338-columns {
+  display: grid;
+  gap: var(--stitch-gap-section);
+  min-inline-size: 0;
+}
+.party-338-columns {
+  align-items: start;
+}
+.party-338-choices {
+  display: grid;
+  gap: var(--stitch-space-12);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+}
+.party-338-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--stitch-gap-controls);
+}
+.vue-draw-oracle-stage {
+  gap: var(--stitch-space-12);
+}
+.vue-draw-oracle-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--stitch-space-4) var(--stitch-gap-controls);
+}
+.vue-draw-oracle-board .vue-draw-oracle-artwork {
+  inline-size: min(100%, 64dvh, 44rem);
+  block-size: auto;
+  aspect-ratio: 1;
+  max-block-size: none;
+}
+.vue-draw-oracle-board > p {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  :root body .vue-draw-oracle-board.ui-panel[data-density='compact'] {
+    padding-inline: var(--stitch-space-8);
+  }
+  .vue-draw-oracle-board .party-338-controls {
+    gap: var(--stitch-space-8);
+  }
+  .vue-draw-oracle-board .vue-draw-oracle-artwork {
+    inline-size: 100%;
+  }
+}
+@media (min-width: 1050px) {
+  .party-338-two-columns {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}

@@ -42,6 +42,19 @@
     overflow: auto;
     overflow-wrap: anywhere;
   }
+  .vue-draw-grid[data-phase='drawing'][data-role='artist']
+    .vue-draw-board-heading
+    > .vue-draw-hud-prompt {
+    max-block-size: none;
+    overflow: visible;
+    h1 {
+      flex-basis: 100%;
+      max-block-size: none;
+      overflow: visible;
+      font-size: var(--stitch-text-page);
+      line-height: var(--stitch-line-height-heading);
+    }
+  }
   .vue-draw-hud-prompt small,
   .vue-draw-hud-prompt > span {
     font-size: 14px;
@@ -163,7 +176,7 @@
     font-size: 14px;
     line-height: 21px;
   }
-  .vue-draw-approved-settings fieldset:nth-child(2) .vue-draw-options {
+  .vue-draw-approved-settings fieldset:nth-of-type(2) .vue-draw-options {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     > label {
       justify-content: center;
@@ -231,11 +244,18 @@
 @media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
   :root body[data-game-kind='draw']:not(.ui-large-text) .vue-draw-approved {
     > .vue-draw-grid {
-      grid-template-columns: 220px minmax(0, 1fr) 280px;
+      grid-template-columns: var(--draw-roster-width, 220px) minmax(0, 1fr) var(
+          --draw-chat-width,
+          280px
+        );
       column-gap: 16px;
+      &[data-phase='drawing'][data-role='artist'] {
+        --draw-roster-width: 180px;
+        --draw-chat-width: 240px;
+      }
     }
     .vue-draw-board-panel {
-      grid-template-rows: 64px minmax(0, 1fr) 28px;
+      grid-template-rows: auto minmax(0, 1fr) 28px;
       gap: 8px;
       padding: 12px;
     }
@@ -333,6 +353,10 @@
 @media (max-width: 760px) {
   :root body[data-game-kind='draw'] .vue-draw-approved {
     @include compact.rows;
+    > .vue-draw-grid[data-phase='drawing'][data-role='artist'] .vue-drawing-frame {
+      block-size: auto;
+      aspect-ratio: 2;
+    }
     .vue-drawing-console.is-editable > .vue-drawing-console-layout {
       grid-template-rows: auto 3.5rem 3.5rem;
     }

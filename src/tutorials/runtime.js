@@ -2,12 +2,17 @@
 const { randomUUID, randomInt } = require('node:crypto');
 const { HttpError } = require('../http/errors');
 const { planTutorialAction } = require('../ai');
+const { planPartyLesson } = require('./party');
+const { BrainwaveRoom, DramaBarRoom } = require('../games/voice-party');
 const classes = {
   poker: require('../games/poker').Room,
   thunder: require('../games/thunder').ThunderRoom,
   majority: require('../games/majority').MajorityRoom,
   gift: require('../games/gift').GiftRoom,
   draw: require('../games/draw-guess').DrawGuessRoom,
+  oracle: require('../games/draw-guess').DrawGuessRoom,
+  brainwave: BrainwaveRoom,
+  'drama-bar': DramaBarRoom,
   trpg: require('../games/trpg').TrpgRoom,
   coc: require('../games/coc').CocRoom,
   quacks: require('../games/quacks').QuacksRoom,
@@ -62,6 +67,12 @@ const labels = {
   rollDice: '擲骰',
   acceptDice: '確認檢定結果',
   'draw-stroke': '畫一筆',
+  'change-question': '換一組題目',
+  shape: '畫一個圖形',
+  performed: '完成聲音表演',
+  'oracle-trace': '沿虛線描畫',
+  'oracle-submit': '交出畫作',
+  'oracle-eliminate': '淘汰候選詞',
   'draw-fortune': '翻開占卜卡',
   buy: '購買藥材',
   'shop-ready': '完成採購',
@@ -102,6 +113,9 @@ function createTutorials({
   }
   function complete(s) {
     const r = s.room;
+    if (s.type === 'oracle') return r.phase === 'oracle-reveal' || r.phase === 'finished';
+    if (s.type === 'brainwave' || s.type === 'drama-bar')
+      return r.phase === 'reveal' || r.phase === 'finished';
     if (r.type === 'decrypto')
       return r.phase === 'finished' || (r.phase === 'reveal' && r.round >= 2 && r.turn === 1);
     return (
@@ -148,7 +162,9 @@ function createTutorials({
       const p = r.players[(s.cursor + n) % r.players.length];
       if (p.kicked) continue;
       if (!s.caches.has(p.id)) s.caches.set(p.id, {});
-      const planned = planTutorialAction(r, p, s.caches.get(p.id));
+      const planned = ['brainwave', 'drama-bar', 'oracle'].includes(s.type)
+        ? planPartyLesson(s.type, r, p)
+        : planTutorialAction(r, p, s.caches.get(p.id));
       if (planned) s.planned.push(planned);
     }
     // Timers are advanced only on this private teaching table, never global clocks or real rooms.
@@ -177,6 +193,7 @@ function createTutorials({
     snapshot.hostId = r.host;
     // Keep the original validated deadlines without expiring while a learner reads.
     if (snapshot.deadline != null) snapshot.deadline = now() + 86400000;
+    if (snapshot.oracle?.deadline != null) snapshot.oracle.deadline = snapshot.deadline;
     if (snapshot.playback) {
       snapshot.playback = {
         provider: 'audio',
@@ -192,7 +209,7 @@ function createTutorials({
     }
     return {
       id: s.id,
-      type: snapshot.type,
+      type: s.type,
       revision: s.revision,
       done: s.done,
       steps: s.steps,
@@ -208,10 +225,14 @@ function createTutorials({
         : null,
       snapshot,
       events: s.events.slice(-8),
-      ...(r.type === 'draw' ? { canvas: r.canvasSnapshot() } : {}),
+      ...(s.type === 'draw' ? { canvas: r.canvasSnapshot() } : {}),
     };
   }
-  function start(owner, type) {
+  function followPartyActor(s) {
+    if (['brainwave', 'drama-bar', 'oracle'].includes(s.type) && s.planned[0])
+      s.player = s.planned[0].actor;
+  }
+  function start(owner, type, followActor = false) {
     expire();
     if (!types.includes(type)) fail(400, 'INVALID_TUTORIAL', '這款遊戲尚未註冊教學');
     for (const [id, s] of sessions) if (s.owner === owner) sessions.delete(id);
@@ -223,12 +244,17 @@ function createTutorials({
     const room = new classes[type]('FEED00', '獨立教學桌', rng, () => clock.value);
     for (const name of ['學員小明', '教學小晴', '教學阿哲', '教學小安'].slice(
       0,
-      type === 'decrypto' ? 4 : ['poker', 'thunder', 'quacks'].includes(type) ? 2 : 3,
+      ['decrypto', 'oracle'].includes(type)
+        ? 4
+        : ['poker', 'thunder', 'quacks'].includes(type)
+          ? 2
+          : 3,
     ))
       room.add(name, false);
     const s = {
       id: randomUUID(),
       owner,
+      type,
       room,
       clock,
       player: room.players[0].id,
@@ -246,8 +272,10 @@ function createTutorials({
       room.settings.banks = ['custom'];
       room.customSongs = copy(require('./audio').songs);
     }
+    if (type === 'oracle') room.configure(room.host, { playMode: 'oracle' });
     room.start();
     prepare(s);
+    if (followActor) followPartyActor(s);
     sessions.set(s.id, s);
     return view(s);
   }
@@ -256,7 +284,8 @@ function createTutorials({
     const s = get(owner, data.id);
     if (typeof data.requestId !== 'string' || !/^[a-zA-Z0-9-]{8,80}$/.test(data.requestId))
       fail(400, 'INVALID_REQUEST_ID', '請重新送出教學操作');
-    const fingerprint = JSON.stringify([data.revision, route, data.body]);
+    const followActor = route === 'step' && data.followActor === true;
+    const fingerprint = JSON.stringify([data.revision, route, data.body, followActor]);
     if (s.receipts.has(data.requestId)) {
       if (s.receipts.get(data.requestId) !== fingerprint)
         fail(409, 'REQUEST_CONFLICT', '教學操作內容不一致');
@@ -307,6 +336,7 @@ function createTutorials({
     s.receipts.set(data.requestId, fingerprint);
     if (s.receipts.size > 64) s.receipts.delete(s.receipts.keys().next().value);
     prepare(s);
+    if (followActor) followPartyActor(s);
     return view(s);
   }
   function perspective(owner, data) {

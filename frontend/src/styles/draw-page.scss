@@ -496,6 +496,10 @@ body.vue-draw-focus .vue-draw-document {
   .vue-draw-document {
     padding: t.space(4);
   }
+  body[data-game-kind='draw']:is([data-draw-phase='drawing'], [data-draw-phase='oracle-drawing'])
+    .vue-draw-document {
+    padding-inline: var(--stitch-space-8);
+  }
   .vue-draw-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -630,8 +634,13 @@ body.vue-draw-focus .vue-draw-document {
     .vue-draw-grid:not(:has(.vue-draw-guess-panel)) {
       grid-template-rows: minmax(0, 1fr);
     }
-    .vue-draw-main {
+    .vue-draw-main:not(.vue-draw-oracle-main) {
       display: contents;
+    }
+    .vue-draw-oracle-main {
+      grid-column: 2;
+      grid-row: 1;
+      overflow: auto;
     }
     .vue-draw-roster-panel {
       grid-column: 1;
@@ -806,6 +815,16 @@ body.vue-draw-focus .vue-draw-document {
       aspect-ratio: 2;
       justify-self: center;
       background: white;
+    }
+    // Give the artist the full width. Scroll within the frame when the 2:1
+    // canvas needs more height; guessers still see the entire picture at once.
+    .vue-drawing-surface.is-artist .vue-drawing-frame {
+      overflow-y: auto;
+      align-items: safe center;
+      > canvas {
+        inline-size: 100%;
+        max-block-size: none;
+      }
     }
     .vue-drawing-scene {
       min-block-size: 0;
