@@ -73,7 +73,7 @@
   },
   {
     "id": "blade_aura_crimson",
-    "label": "紅黑半月劍氣",
+    "label": "半月劍氣（紅黑異色）",
     "color": "#ff0f3f",
     "description": "暗紅鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。",
     "achievementId": "draw-fastest-correct",
@@ -350,12 +350,12 @@
   },
   {
     "id": "beam_alt",
-    "label": "超人力霸王十字光線（琥珀異色）",
-    "color": "#fab042",
-    "description": "異色特效，招式效果與原版相同。蓄力十字手勢幾何電光、高能集束貫通射線、連續震顫衝擊。",
+    "label": "超人力霸王十字光線（紅黑異色）",
+    "color": "#fa294a",
+    "description": "十字電光蓄力，赤紅電弧包住漆黑束芯貫穿目標。",
     "gachaOnly": true,
     "variantOf": "beam",
-    "paletteHue": 36,
+    "paletteHue": 351,
     "damageMultiplier": 1
   },
   {

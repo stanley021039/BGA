@@ -36,7 +36,7 @@ test('both crescent variants are separate selectable persistent artwork IDs', ()
   const original = effects.find((e) => e.id === 'blade_aura');
   assert.equal(original.label, '半月劍氣');
   assert.equal(original.color, '#00d0ff');
-  assert.equal(effects.find((e) => e.id === 'blade_aura_crimson').label, '紅黑半月劍氣');
+  assert.equal(effects.find((e) => e.id === 'blade_aura_crimson').label, '半月劍氣（紅黑異色）');
 });
 
 test('Q and E have independent cooldowns, stable event artwork and deduplicated retries', () => {

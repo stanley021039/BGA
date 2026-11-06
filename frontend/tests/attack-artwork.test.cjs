@@ -176,6 +176,13 @@ test('rose barrage retains seven projectile hues and a rose main accent', () => 
   assert.ok(hues.size >= 7);
 });
 
+test('red-and-black cross beam paints a dark core and a red outer beam', () => {
+  const { colors } = run('beam_alt', '#fa294a');
+  assert.ok(colors.includes('#080204'));
+  assert.ok(colors.includes('#fa294a'));
+  assert.ok(colors.includes('#ff546a'));
+});
+
 test('every current offensive renderer waits for both authoritative settlement and its arrival clock', () => {
   const timing = require('../../public/shared/attack-timing.json');
   for (const effect of require('../../public/shared/attack-effects.json').filter(

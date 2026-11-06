@@ -763,6 +763,7 @@ export function createAttackScene(context, options) {
         }
       } else if (p.type === 'specium_beam') {
         const progress = 1 - p.life / p.maxLife;
+        const redBeam = variant?.id === 'beam_alt' ? variant : null;
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.strokeStyle = '#ffffff';
@@ -777,20 +778,22 @@ export function createAttackScene(context, options) {
         ctx.lineTo(0, 38);
         ctx.stroke();
         ctx.restore();
-        ctx.strokeStyle = p.color;
+        if (redBeam) context.strokeStyle = redBeam.color;
+        else ctx.strokeStyle = p.color;
         ctx.lineWidth = 26 * Math.sin(progress * Math.PI);
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(p.targetX, p.targetY);
         ctx.stroke();
 
-        // Core hot-white line
-        ctx.strokeStyle = '#ffffff';
+        // The red-and-black version has a dark core framed by the outer beam.
+        ctx.strokeStyle = redBeam ? '#080204' : '#ffffff';
         ctx.lineWidth = 8 * Math.sin(progress * Math.PI);
         ctx.stroke();
 
         // Double spiral electric overlay
-        ctx.strokeStyle = '#7df4ff';
+        if (redBeam) context.strokeStyle = '#ff546a';
+        else ctx.strokeStyle = '#7df4ff';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
         const beamDist = Math.hypot(p.targetX - p.x, p.targetY - p.y);
