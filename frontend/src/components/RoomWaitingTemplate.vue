@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useId } from 'vue';
+import UiLink from './UiLink.vue';
 import '../styles/room-waiting-template.scss';
 defineProps<{
   type: string;
@@ -12,6 +13,7 @@ defineProps<{
   facts: readonly { label: string; value: string }[];
   notice?: string;
   flow?: boolean;
+  quickAction?: { href: string; label: string };
 }>();
 const heading = useId();
 </script>
@@ -35,22 +37,24 @@ const heading = useId();
       <div class="vue-waiting-hero-copy"
         ><h1 :id="heading">{{ heroTitle || title }}</h1
         ><p>{{ heroDescription || description }}</p
-        ><slot name="hero-actions"
+        ><UiLink
+          v-if="quickAction"
+          class="vue-waiting-quick-action"
+          :href="quickAction.href"
+          :label="quickAction.label" /><slot name="hero-actions"
       /></div>
     </header>
     <div class="vue-waiting-lower">
-      <section class="vue-waiting-summary" aria-label="已設定內容"
-        ><span class="vue-waiting-summary-label">已設定內容</span><h2>{{ title }}</h2
-        ><p>{{ description }}</p>
+      <section class="vue-waiting-summary" aria-label="房間摘要"
+        ><h2>{{ heroTitle && heroTitle !== title ? title : '房間摘要' }}</h2
+        ><p v-if="heroDescription && heroDescription !== description">{{ description }}</p>
         <dl
           ><div v-for="fact in facts" :key="fact.label"
             ><dt>{{ fact.label }}</dt
             ><dd>{{ fact.value }}</dd></div
           ></dl
         >
-        <slot name="summary-extra" /><p class="vue-waiting-notice">{{
-          notice || '等待房主或管理者開始'
-        }}</p>
+        <slot name="summary-extra" /><p v-if="notice" class="vue-waiting-notice">{{ notice }}</p>
       </section>
       <section class="vue-waiting-settings" aria-label="遊戲設定"
         ><h2>房間設定</h2

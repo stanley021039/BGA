@@ -152,13 +152,26 @@ function rank(index: number) {
           ? '沿虛線描畫，再輪流淘汰沒有人畫的詞。'
           : '輪流挑選題目作畫，其他朋友一起猜答案。'
     "
-    :notice="pendingMode ? '目前尚未選玩法' : undefined"
+    :notice="oracleMode && !room.gameManager ? '等待房主或管理者開始' : undefined"
     :art="waitingIllustration"
     art-alt="你畫我猜的畫室插畫"
     :facts="waitingFacts"
+    :quick-action="
+      pendingMode
+        ? undefined
+        : room.gameManager
+          ? { href: '#room-waiting-start-draw', label: '前往開局' }
+          : !oracleMode
+            ? { href: '#draw-waiting-ready', label: '前往就緒' }
+            : undefined
+    "
     ><template #mode-picker><DrawingModePicker /></template>
     <template #summary-extra>
-      <div v-if="!pendingMode && !oracleMode" class="vue-waiting-ready"
+      <div
+        v-if="!pendingMode && !oracleMode"
+        id="draw-waiting-ready"
+        tabindex="-1"
+        class="vue-waiting-ready"
         ><p>{{
           room.gameManager
             ? '你可調整規則，邀請朋友，兩人到齊就能開始。'
@@ -224,7 +237,7 @@ function rank(index: number) {
           :avatar="artist?.avatar || null"
           :bot="artist?.bot"
         /><strong>{{ artist?.name || '畫者' }}</strong></div
-      ><p>正在挑選本輪題目，畫作開始後就會出現在這裡。準備好猜答案！</p></div
+      ><p>開始作畫後，畫作會顯示在這裡。</p></div
     >
   </section>
   <section

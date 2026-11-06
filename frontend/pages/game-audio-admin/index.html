@@ -24,8 +24,7 @@
         >歌曲
         <select id="song"></select></label
       ><section class="page-panel"
-        ><h2>完整音檔自動切片</h2
-        ><p>上傳完整歌曲，先產生8秒前奏和30秒精華草稿。試聽後可調整起點，再套用到遊戲。</p
+        ><h2>完整音檔自動切片</h2><p>上傳完整歌曲以產生草稿。試聽並調整起點後，即可套用。</p
         ><p id="converter-status" role="status"></p
         ><label
           >完整音檔（最多100MB、30分鐘）<input
@@ -39,7 +38,7 @@
           ><button class="page-button" id="restore-draft">繼續編輯草稿</button></div
         ><div id="draft" hidden
           ><h3>試聽與調整切點</h3><p id="draft-summary"></p
-          ><p>自動精華依音量與靜音分析提出建議，不保證是副歌。</p
+          ><p>自動切點依音量與靜音分析，請試聽確認是否切到副歌。</p
           ><label>前奏起點（秒）<input id="intro-start" type="number" min="0" step="0.1" /></label
           ><audio id="intro-preview" controls preload="none" aria-label="前奏試聽"></audio
           ><label

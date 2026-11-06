@@ -17,10 +17,12 @@ import QuacksFlask from './QuacksFlask.vue';
 import QuacksWitches from './QuacksWitches.vue';
 import QuacksEffects from './QuacksEffects.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiLink from '../../components/UiLink.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import UiField from '../../components/UiField.vue';
 import UiTabs from '../../components/UiTabs.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
+defineProps<{ booksReady: boolean }>();
 const emit = defineEmits<{ 'books-opened': [] }>();
 const game = useQuacksStore(),
   room = useRoomStore(),
@@ -196,6 +198,12 @@ onBeforeUnmount(() => {
       <div class="vue-quacks-waiting-game">
         <h1>郎中闖江湖</h1>
         <QuacksWaitingHero art-only />
+        <UiLink
+          v-if="room.gameManager"
+          class="vue-waiting-quick-action"
+          :href="booksReady ? '#room-waiting-start-quacks' : '#quacks-waiting-books'"
+          :label="booksReady ? '前往開局' : '前往藥材書'"
+        />
       </div>
       <section class="vue-waiting-settings" aria-label="房間設定">
         <h2>房間設定</h2>

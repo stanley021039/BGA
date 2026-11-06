@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useProfileStore } from '../../stores/profile';
 import { useMusicStore } from '../../stores/libraries';
 import { usePreferencesStore } from '../../stores/preferences';
@@ -66,7 +66,17 @@ const avatars = computed(() => [
     value: { kind: 'artwork', artworkId: a.id } as Avatar,
   })),
 ]);
-function matches(name: string, origin: string, key: 'avatars' | 'characters' | 'music') {
+type FilterSection = keyof typeof filters;
+function hasFilter(section: FilterSection) {
+  const { query, source } = filters[section];
+  return !!query.trim() || source !== 'all';
+}
+async function clearFilters(section: FilterSection) {
+  filters[section] = { query: '', source: 'all' };
+  await nextTick();
+  document.getElementById(section + '-search')?.focus();
+}
+function matches(name: string, origin: string, key: FilterSection) {
   const f = filters[key];
   return (
     (f.source === 'all' || f.source === origin) &&
@@ -85,13 +95,21 @@ const tracks = computed(() =>
   ),
 );
 const tabs = computed(() => [
-  { id: 'avatars', label: '頭像', count: profile.data ? avatars.value.length + ' 張' : '讀取中…' },
+  {
+    id: 'avatars',
+    label: '頭像',
+    count: profile.data ? avatars.value.length + ' 張' : profile.loading ? '讀取中…' : undefined,
+  },
   {
     id: 'characters',
     label: '角色',
-    count: profile.data ? characters.value.length + ' 位' : '讀取中…',
+    count: profile.data ? characters.value.length + ' 位' : profile.loading ? '讀取中…' : undefined,
   },
-  { id: 'music', label: '音樂', count: music.data ? music.data.tracks.length + ' 首' : '讀取中…' },
+  {
+    id: 'music',
+    label: '音樂',
+    count: music.data ? music.data.tracks.length + ' 首' : music.loading ? '讀取中…' : undefined,
+  },
   { id: 'frames', label: '彈幕框', count: prefs.frames.length + ' 款' },
   { id: 'entrance', label: '進場特效', count: entranceEffectGroups.length + ' 組' },
   { id: 'attack', label: '攻擊特效', count: attackEffectGroups.length + ' 組' },
@@ -234,7 +252,7 @@ onBeforeUnmount(() => {
       :pending="profile.loading || music.loading"
       @click="refresh"
   /></div>
-  <p>管理自己的頭像、角色、音樂與彈幕框，也能選用朋友分享的收藏。</p>
+  <p>也可使用朋友分享的收藏。</p>
   <StatusSlot
     id="collection-message"
     :message="pending ? '正在處理…' : profile.error || music.error || message"
@@ -318,8 +336,14 @@ onBeforeUnmount(() => {
             :pending="activeAction === 'avatar:delete:' + item.id"
             @click="remove('avatar', item.id, item.name)"
         /></template> </CollectionCard
-      ><p v-if="!foundAvatars.length" class="collection-empty">沒有符合的頭像。</p></div
-    >
+      ><div v-if="!foundAvatars.length" class="collection-empty">
+        <p>{{ hasFilter('avatars') ? '沒有符合的頭像。' : '還沒有頭像。' }}</p>
+        <UiButton
+          v-if="hasFilter('avatars')"
+          label="清除篩選"
+          @click="clearFilters('avatars')"
+        /> </div
+    ></div>
   </ResourcePanel>
   <ResourcePanel
     v-show="section === 'characters'"
@@ -408,8 +432,14 @@ onBeforeUnmount(() => {
             :pending="activeAction === 'character:delete:' + item.id"
             @click="remove('character', item.id, item.name)"
         /></template> </CollectionCard
-      ><p v-if="!foundCharacters.length" class="collection-empty">沒有符合的角色。</p></div
-    >
+      ><div v-if="!foundCharacters.length" class="collection-empty">
+        <p>{{ hasFilter('characters') ? '沒有符合的角色。' : '還沒有角色。' }}</p>
+        <UiButton
+          v-if="hasFilter('characters')"
+          label="清除篩選"
+          @click="clearFilters('characters')"
+        /> </div
+    ></div>
   </ResourcePanel>
   <ResourcePanel
     v-show="section === 'music'"
@@ -441,7 +471,7 @@ onBeforeUnmount(() => {
       ><summary>上傳音樂</summary
       ><CollectionUpload id="music-upload" kind="music" :reload="music.load"
     /></details>
-    <p>上傳後所有會員都可在遊戲桌選曲播放，也可在收藏庫試聽。請分享你有權公開播放的音樂。</p>
+    <p>所有會員都可在遊戲桌播放。請只上傳有權公開播放的音樂。</p>
     <div id="music-grid" class="collection-grid"
       ><CollectionCard
         v-for="item in tracks"
@@ -458,8 +488,10 @@ onBeforeUnmount(() => {
           :disabled="pending"
           :pending="activeAction === 'music:delete:' + item.id"
           @click="remove('music', item.id, item.title)" /></CollectionCard
-      ><p v-if="!tracks.length" class="collection-empty">沒有符合的音樂。</p></div
-    >
+      ><div v-if="!tracks.length" class="collection-empty">
+        <p>{{ hasFilter('music') ? '沒有符合的音樂。' : '還沒有音樂。' }}</p>
+        <UiButton v-if="hasFilter('music')" label="清除篩選" @click="clearFilters('music')" /> </div
+    ></div>
   </ResourcePanel>
   <ResourcePanel
     v-show="section === 'frames'"
@@ -498,8 +530,7 @@ onBeforeUnmount(() => {
           : '點選即套用至這個瀏覽器的遊戲彈幕。'
       }}</span></template
     >
-    <p>4 款經典與 20 款全新動態框，全部可直接使用。</p
-    ><FrameChoices
+    <FrameChoices
       id="frames-grid"
       :query="frameQuery"
       :group="frameGroup"
@@ -517,8 +548,8 @@ onBeforeUnmount(() => {
     <template #summary
       ><span>{{
         prefs.motion?.reduced || prefs.motion?.enabled === false
-          ? '目前關閉動態效果，預覽不會播放；選擇仍會套用。'
-          : '點選即套用並預覽；進入好友大廳時，大家都會看到你的進場特效。'
+          ? '動態已關閉，仍可套用特效。'
+          : '點選即套用；進入好友大廳時會向其他玩家播放。'
       }}</span></template
     >
     <EntranceChoices />

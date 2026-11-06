@@ -101,8 +101,7 @@ onBeforeUnmount(() => {
 <template>
   <a id="collection-return" class="quiet" :href="returnHref">← 返回收藏庫</a>
   <div class="page-heading"
-    ><div class="kicker">YOUR ART / YOUR GAMES</div><h1>我的繪畫圖庫</h1
-    ><p>畫一張、上傳一張，先存進自己的圖庫，再用於角色、表情或禮物。</p></div
+    ><h1>我的繪畫圖庫</h1><p>將畫作存入圖庫，就能用於角色、表情或禮物。</p></div
   >
   <div class="studio-layout">
     <StudioCanvas @ready="ready"
@@ -237,7 +236,7 @@ onBeforeUnmount(() => {
       id="artwork-empty"
       class="gallery-empty studio-gallery-empty"
       ><UiIcon name="cards" /><strong>尚未建立或上傳任何作品</strong
-      ><p>畫一張、加入照片，或從上方上傳已有圖片。儲存後就能在這裡用作角色或自訂禮物。</p></div
+      ><p>畫一張、加入照片，或上傳圖片。</p></div
     >
   </section>
   <ConfirmDialog ref="confirm" />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ heading?: string; inStage?: boolean; waiting?: boolean }>();
+defineProps<{ heading?: string; inStage?: boolean; waiting?: boolean; startId?: string }>();
 </script>
 <template>
   <section
@@ -10,6 +10,10 @@ defineProps<{ heading?: string; inStage?: boolean; waiting?: boolean }>();
       v-if="waiting && $slots['before-start']"
       class="vue-game-before-start"
       ><slot name="before-start" /></div
-    ><slot v-else name="before-start" /><div class="vue-game-start-slot"><slot name="start" /></div
+    ><slot v-else name="before-start" /><div
+      :id="startId"
+      :tabindex="startId ? -1 : undefined"
+      class="vue-game-start-slot"
+      ><slot name="start" /></div
   ></section>
 </template>

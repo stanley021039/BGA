@@ -639,6 +639,26 @@ test('unavailable or malformed consent storage keeps asking without inferring ac
   );
 });
 
+test('empty rooms leave entry clear and visible videos still require consent', async () => {
+  const h = harness();
+  let prompts = 0;
+  h.component.consent.value = { open: async () => prompts++ };
+  try {
+    await receive(h);
+    assert.equal(prompts, 0, 'an empty room has no video to consent to');
+    await h.component.show(false);
+    assert.equal(prompts, 0, 'opening empty media controls does not ask about video');
+    await receive(h, { current: autoVideo });
+    assert.equal(prompts, 1);
+    assert.equal(
+      h.calls.some(([method]) => method === 'joinVideo'),
+      false,
+    );
+  } finally {
+    h.dispose();
+  }
+});
+
 test('actual Vue window asks once and reuses the tab decision for a new room', async () => {
   const h = harness();
   try {

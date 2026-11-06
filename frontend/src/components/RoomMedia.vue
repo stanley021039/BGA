@@ -404,6 +404,8 @@ async function maybeConsent() {
     !props.connected ||
     !media.connected ||
     !consentKey.value ||
+    media.snapshot?.current?.type !== 'video' ||
+    (!opened.value && !props.stage) ||
     videoConsent.value !== undefined ||
     document.hidden ||
     prompt ||

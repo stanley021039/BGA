@@ -23,7 +23,7 @@ defineEmits<{ retry: [] }>();
     <header class="resource-panel-heading"><slot name="heading" /></header>
     <div class="resource-panel-filters"><slot name="filters" /></div>
     <div class="resource-panel-summary" role="status" aria-live="polite" aria-atomic="true"
-      ><slot name="summary"
+      ><slot v-if="!loading && !error" name="summary"
     /></div>
     <div :id="contentId" class="resource-panel-content" :aria-busy="loading">
       <p v-if="loading && !$slots.loading" class="resource-notice">正在載入…</p>

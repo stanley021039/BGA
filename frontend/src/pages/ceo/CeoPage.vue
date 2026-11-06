@@ -52,7 +52,7 @@ const phase = computed(() =>
     </RoomWaitingTemplate>
     <CeoScene v-else-if="ceo.state" />
     <p v-else>正在讀取執行長房間…</p>
-    <template #settings><p>3–6 人；本局使用明確標示的本站替代牌庫。</p></template>
+    <template #settings><p>本局使用本站替代牌庫。</p></template>
     <template #help>
       <ol>
         <li>每人起始 30 元與自家 7 張股票。每回合三選一：收購公司、買進他人一張股票、發放股利。</li>
