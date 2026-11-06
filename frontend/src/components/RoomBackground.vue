@@ -9,6 +9,7 @@ import { useRoomStore } from '../stores/room';
 import { record } from '../services/validation';
 import { readLobbySnapshot } from '../contracts/lobby';
 import LobbyVisitor from '../pages/lobby/LobbyVisitor.vue';
+import SceneKda from './SceneKda.vue';
 import StatusSlot from './StatusSlot.vue';
 import MobileSceneControls from './MobileSceneControls.vue';
 import { sceneDirections, useSceneControls } from '../services/scene-controls';
@@ -97,6 +98,9 @@ const projection = computed(() => {
   }
 });
 const snapshot = computed(() => projection.value.snapshot);
+const self = computed(() =>
+  snapshot.value?.visitors.find((visitor) => visitor.id === snapshot.value?.selfId),
+);
 const controls = useSceneControls({
   context: () => room.code + ':' + room.scope,
   enabled: () => props.connected && !props.focused && !props.inert && !!snapshot.value,
@@ -336,4 +340,21 @@ onBeforeUnmount(() => {
       class="vue-room-movement-error"
     />
   </div>
+  <SceneKda
+    v-if="
+      connected &&
+      !focused &&
+      !inert &&
+      self?.health &&
+      (self.slowMs ||
+        self.hasteMs ||
+        self.combatStatus?.guardEnergy ||
+        self.combatStatus?.teleportBlockedMs ||
+        self.combatStatus?.ordinaryDotMs)
+    "
+    class="vue-room-skill-status"
+    :connected="connected"
+    :self="self"
+    skill-only
+  />
 </template>

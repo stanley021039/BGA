@@ -50,7 +50,11 @@ function hit(from, to, effect, damage) {
     !multi.has(effect) &&
     owner.health > 0 &&
     (!from.energyActor || owner.lifeId === from.energyLifeId)
-  )
-    gain(owner, rules.ordinaryHit);
+  ) {
+    const remaining = from.ordinaryEnergyRemaining;
+    const amount = Math.min(remaining ?? rules.ordinaryHit, rules.ordinaryHit);
+    if (remaining !== undefined) from.ordinaryEnergyRemaining -= amount;
+    gain(owner, amount);
+  }
 }
 module.exports = { fitsSlot, gain, walk, check, spend, hit };

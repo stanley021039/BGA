@@ -19,7 +19,7 @@
     "id": "shield",
     "label": "六角形能量護盾",
     "color": "#00f0ff",
-    "description": "六角能量護盾展開，先維持2秒完整減傷，再接3秒半幅減傷，重施只刷新時間。",
+    "description": "六角能量護盾展開，先維持2秒完整減傷，再接2秒半幅減傷，重施只刷新時間。完整護盾首次實際減傷時，額外回復5能量。",
     "achievementId": "gift-first-gift",
     "damageMultiplier": 0
   },
@@ -27,7 +27,7 @@
     "id": "chains",
     "label": "八方實體鎖鏈",
     "color": "#dce6f1",
-    "description": "銀鋼鏈環從八方錯落收束，將目標鎖緊並迸出金屬火花。",
+    "description": "銀鋼鏈環從八方錯落收束，將目標鎖緊並迸出金屬火花。首次有效命中有20%機率定身1秒、另有30%機率減速20%持續1秒，分開判定。",
     "achievementId": "majority-first-vote",
     "damageMultiplier": 0.9
   },
@@ -35,7 +35,7 @@
     "id": "sphere",
     "label": "熾天覆七重圓環",
     "color": "#f472b6",
-    "description": "七重粉紫花瓣護盾，先維持2秒完整減傷，再接3秒半幅減傷，重施只刷新時間。",
+    "description": "七重粉紫花瓣護盾，先維持2秒完整減傷，再接3秒半幅減傷，重施只刷新時間。完整護盾首次實際減傷時，額外回復5能量。",
     "achievementId": "minimal-first-match",
     "damageMultiplier": 0
   },
@@ -43,7 +43,7 @@
     "id": "orbital",
     "label": "天降光柱",
     "color": "#ffd556",
-    "description": "天基軌道幾何符文鎖定、超高能天頂垂直降臨光束、地面熔岩焦痕。",
+    "description": "天基軌道幾何符文鎖定、超高能天頂垂直降臨光束、地面熔岩焦痕。首次有效命中有30%機率封鎖瞬移1秒。",
     "achievementId": "thunder-first-drive",
     "damageMultiplier": 0.9
   },
@@ -59,25 +59,25 @@
     "id": "singularity",
     "label": "黑洞牽引",
     "color": "#a855f7",
-    "description": "超重力奇點引力渦旋、吞噬全場星塵碎屑與假人、崩壞超新星爆發。",
+    "description": "超重力奇點引力渦旋與超新星爆發。末段命中會把目標短距離拉向施放位置。",
     "achievementId": "bluff-convincing",
-    "damageMultiplier": 0.9
+    "damageMultiplier": 0.85
   },
   {
     "id": "blade_aura",
     "label": "藍黑半月劍氣",
     "color": "#00d0ff",
-    "description": "幽藍鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。",
+    "description": "幽藍鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。首次有效命中後自身移速提高15%，持續0.8秒。",
     "achievementId": "draw-first-correct",
-    "damageMultiplier": 1
+    "damageMultiplier": 0.9
   },
   {
     "id": "blade_aura_crimson",
     "label": "紅黑半月劍氣",
     "color": "#ff0f3f",
-    "description": "暗紅鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。",
+    "description": "暗紅鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。首次有效命中後自身移速提高15%，持續0.8秒。",
     "achievementId": "draw-fastest-correct",
-    "damageMultiplier": 1
+    "damageMultiplier": 0.9
   },
   {
     "id": "chain_lightning",
@@ -91,15 +91,15 @@
     "id": "frost_spikes",
     "label": "寒冰結晶／極地霜刺",
     "color": "#7df4ff",
-    "description": "錯落冰川破地，深藍晶面襯出白亮冰鋒、裂紋與側生碎晶。",
+    "description": "錯落冰川破地，深藍晶面襯出白亮冰鋒、裂紋與側生碎晶。首次有效命中使對手移速降低20%，持續1秒。",
     "achievementId": "telephone-first-match",
-    "damageMultiplier": 0.8
+    "damageMultiplier": 0.75
   },
   {
     "id": "arrow_volley",
     "label": "光輝天降箭雨",
     "color": "#ff5a24",
-    "description": "橘紅焰尾箭雨密集落下，白熱箭鏃、箭身與箭羽清楚可辨。",
+    "description": "橘紅焰尾箭雨密集落下，白熱箭鏃、箭身與箭羽清楚可辨。首次有效命中有30%機率造成持續傷害，每秒一次，共2次。",
     "achievementId": "minimal-three-shapes",
     "damageMultiplier": 0.8
   },
@@ -107,7 +107,7 @@
     "id": "flame_vortex",
     "label": "炎獄烈焰龍捲",
     "color": "#ff3366",
-    "description": "一大三小烈焰龍捲錯落捲升，金紅火流環繞主風暴旋轉。",
+    "description": "一大三小烈焰龍捲錯落捲升，金紅火流環繞主風暴旋轉。首次有效命中有30%機率造成持續傷害，每秒一次，共2次。",
     "achievementId": "quacks-fifty-points",
     "damageMultiplier": 0.8
   },
@@ -159,7 +159,7 @@
     "id": "bijuu_beam",
     "label": "尾獸玉・超巨型噴射",
     "color": "#a855f7",
-    "description": "九尾凝聚核心，朝三個方向以細射線貫穿多人；每位命中者各有20%機率定身1秒。",
+    "description": "九尾凝聚核心，朝三個方向以細射線貫穿多人；每位命中者各有30%機率定身1秒、另有20%機率減速20%持續1秒，分開判定。",
     "achievementId": "musicquiz-intro-streak",
     "area": {
       "shape": "targetRays",
@@ -204,7 +204,7 @@
     "id": "giant_orange_cat",
     "label": "天降巨橘・泰山壓頂",
     "color": "#ff9d36",
-    "description": "超巨大橘貓從天壓下，震波命中多人並讓受擊者不能移動1秒。",
+    "description": "超巨大橘貓從天壓下，震波命中多人並使受擊者定身1秒，接著減速20%，持續1秒。",
     "achievementId": "draw-soul-artist",
     "area": {
       "shape": "burst",
@@ -215,7 +215,7 @@
     "id": "shaohua_devour",
     "label": "大嘴少華・宅宅吞",
     "color": "#ffb858",
-    "description": "以角色75%速度持續追蹤，留場越久頭越大；接觸咬合0.4秒後使對方剩1HP。",
+    "description": "以角色75%速度追蹤，接觸咬合0.4秒後使對方剩1HP。逾時3秒未咬中會原地爆炸，施放者目前生命減半。",
     "gachaOnly": true,
     "ultimate": true
   },
@@ -223,7 +223,7 @@
     "id": "shaohua_devour_alt",
     "label": "大嘴少華・宅宅吞（異色）",
     "color": "#b388ff",
-    "description": "以角色75%速度持續追蹤，留場越久頭越大；接觸咬合0.4秒後使對方剩1HP。",
+    "description": "以角色75%速度追蹤，接觸咬合0.4秒後使對方剩1HP。逾時3秒未咬中會原地爆炸，施放者目前生命減半。",
     "gachaOnly": true,
     "variantOf": "shaohua_devour",
     "ultimate": true
@@ -256,7 +256,8 @@
     "label": "電磁軌道砲",
     "color": "#55ddff",
     "description": "六段線圈加速，950毫秒軌道砲命中。",
-    "gachaOnly": true
+    "gachaOnly": true,
+    "damageMultiplier": 1.05
   },
   {
     "id": "railgun_alt",
@@ -264,7 +265,8 @@
     "color": "#b388ff",
     "description": "六段線圈加速，950毫秒軌道砲命中。",
     "gachaOnly": true,
-    "variantOf": "railgun"
+    "variantOf": "railgun",
+    "damageMultiplier": 1.05
   },
   {
     "id": "plasma_pulse",
@@ -287,7 +289,7 @@
     "id": "micro_missiles",
     "label": "微型飛彈齊射",
     "color": "#ffad54",
-    "description": "四枚弧形導彈分段命中，同一目標共計一次普通傷害。",
+    "description": "四枚弧形導彈分段命中，每次施放最多回復30能量。",
     "gachaOnly": true,
     "damageMultiplier": 0.7
   },
@@ -295,7 +297,7 @@
     "id": "micro_missiles_alt",
     "label": "微型飛彈齊射（異色）",
     "color": "#b388ff",
-    "description": "四枚弧形導彈分段命中，同一目標共計一次普通傷害。",
+    "description": "四枚弧形導彈分段命中，每次施放最多回復30能量。",
     "gachaOnly": true,
     "variantOf": "micro_missiles",
     "damageMultiplier": 0.7
@@ -305,7 +307,8 @@
     "label": "光子狙擊",
     "color": "#ff779f",
     "description": "全息瞄準鏡收束後，1250毫秒光子狙擊。",
-    "gachaOnly": true
+    "gachaOnly": true,
+    "damageMultiplier": 1.05
   },
   {
     "id": "photon_sniper_alt",
@@ -313,7 +316,8 @@
     "color": "#b388ff",
     "description": "全息瞄準鏡收束後，1250毫秒光子狙擊。",
     "gachaOnly": true,
-    "variantOf": "photon_sniper"
+    "variantOf": "photon_sniper",
+    "damageMultiplier": 1.05
   },
   {
     "id": "gate_of_heroes",

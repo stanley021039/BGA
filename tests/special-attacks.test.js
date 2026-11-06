@@ -66,7 +66,7 @@ for (const suffix of ['', '_alt']) {
       suffix +
       ' follows moving target and bites exactly 400ms after real contact, ignoring shields',
     () => {
-      const f = fixture('shaohua_devour' + suffix),
+      const f = fixture('shaohua_devour' + suffix, { to: { x: 40, y: 50 } }),
         [a, b] = f.actors;
       f.combat.protect(b, 100);
       f.advance(300);
@@ -136,38 +136,39 @@ test('hero cancels on death, new life or caster removal; homing retargets withou
   }
 });
 
-test('homing is slower, survives misses and an empty field, then bites a later target only once', () => {
-  const f = fixture('shaohua_devour'),
-    [a, b, c] = f.actors;
-  b.x = 99;
-  c.x = 97;
+test('homing expires at three seconds, costs half current HP once, and never resumes', () => {
+  const f = fixture('shaohua_devour');
+  const [caster, target, other] = f.actors;
+  target.x = 99;
+  other.x = 97;
   f.advance(1100);
   assert.ok(f.event.head.x > 28.9 && f.event.head.x < 29.1);
-  assert.equal(f.event.head.contactAt, 0);
-  f.advance(3500);
-  assert.equal(f.event.head.cancelled, false);
-  assert.equal(f.event.hits.length, 0);
-  assert.ok(f.event.until > 7000);
   f.actors.splice(1);
-  let work = 0;
-  f.timeline.advance([f.event], f.actors, 100000, (actor, at) => {
-    work++;
-    f.combat.advance(actor, at);
-  });
-  assert.ok(work <= 81, 'at most 80 simulation ticks plus final actor reconciliation');
+  caster.health = 800000;
+  caster.lastHitAt = 1100;
+  f.advance(3099);
   assert.equal(f.event.head.cancelled, false);
+  assert.equal(caster.health, 800000);
+  f.advance(3100);
+  assert.equal(f.event.until, 3950);
+  assert.equal(f.event.head.cancelled, true);
+  assert.equal(f.event.head.exploded, true);
+  assert.equal(f.event.head.at, 3000);
+  assert.equal(caster.health, 400000);
+  f.advance(3200);
+  assert.equal(caster.health, 400000);
   assert.equal(f.event.hits.length, 0);
-  const newcomer = { id: 'd', x: Math.min(99, f.event.head.x + 10), y: 50 };
-  f.combat.advance(newcomer, 100000);
-  f.actors.push(newcomer);
-  for (let t = 100050; t < 103000 && !f.event.head.finished; t += 50) f.advance(t);
+});
+
+test('a bite finishing exactly at three seconds counts as success', () => {
+  const f = fixture('shaohua_devour', { to: { x: 46.25, y: 50 } });
+  const [caster, target] = f.actors;
+  f.advance(3100);
   assert.equal(f.event.head.finished, true);
-  assert.equal(f.event.hits.length, 1);
-  assert.equal(newcomer.health, 1);
-  assert.equal(a.kda.kills, 0);
-  assert.ok(f.event.hits[0].delayMs > 100000);
-  f.advance(104000);
-  assert.equal(f.event.hits.length, 1);
+  assert.equal(f.event.head.exploded, undefined);
+  assert.equal(f.event.hits[0].delayMs, 3000);
+  assert.equal(target.health, 1);
+  assert.equal(caster.health, 1200000);
 });
 
 test('a recast replaces the previous homing entity and caster departure cancels it', () => {
@@ -175,16 +176,18 @@ test('a recast replaces the previous homing entity and caster departure cancels 
   const next = { ...f.event, id: 'replacement', at: 1700, head: undefined };
   f.timeline.prepare(next, f.actors[0], [f.actors[1]]);
   assert.equal(f.event.head.cancelled, true);
+  assert.equal(f.actors[0].health, 600000);
   assert.equal(f.event.hits.length, 0);
   f.actors.shift();
   f.timeline.advance([f.event, next], f.actors, 1800, (actor, time) =>
     f.combat.advance(actor, time),
   );
   assert.equal(next.head.cancelled, true);
+  assert.equal(next.head.exploded, undefined);
   assert.equal(next.hits.length, 0);
 });
 
-test('normal walking outruns the head in every direction and aspect; a stationary target survives the bite at 1 HP', () => {
+test('normal walking outruns the head in every direction and aspect until it expires', () => {
   const { sceneWalk } = require('../frontend/src/engines/scene-path.js');
   const { sceneDistance } = require('../src/rooms/scene-combat');
   for (const aspectRatio of [16 / 9, 9 / 16])
@@ -205,7 +208,7 @@ test('normal walking outruns the head in every direction and aspect; a stationar
       const f = fixture('shaohua_devour', { from, to, aspectRatio }),
         victim = f.actors[1];
       const initialGap = sceneDistance(from, to, aspectRatio);
-      for (let time = 150; time <= 3100; time += 50) {
+      for (let time = 150; time < 3100; time += 50) {
         const step = sceneWalk(victim, goal, 50);
         victim.x = step.x;
         victim.y = step.y;
@@ -222,9 +225,9 @@ test('normal walking outruns the head in every direction and aspect; a stationar
         Math.abs(headTravel / playerTravel - 0.75) < 0.001,
         'head walks at 75% of the same character path',
       );
-      for (let time = 3150; time < 15000 && !f.event.head.finished; time += 50) f.advance(time);
-      assert.ok(f.event.head.finished, 'standing still lets the head catch up');
-      assert.equal(victim.health, 1);
+      f.advance(3100);
+      assert.equal(f.event.head.cancelled, true);
+      assert.equal(victim.health, 1200000);
       assert.equal(victim.respawnAt, 0);
       assert.equal(f.actors[0].kda.kills, 0);
     }
@@ -254,10 +257,10 @@ test('tech single-target phases follow the ordinary combo budget with no status 
         b = f.actors[1];
       f.advance(1700);
       const damage = {
-        railgun: 200000,
+        railgun: 210000,
         plasma_pulse: 180000,
         micro_missiles: 140000,
-        photon_sniper: 200000,
+        photon_sniper: 210000,
       }[kind];
       assert.equal(b.health, 1200000 - damage, kind + suffix);
       assert.equal(b.sealedUntil, 0);

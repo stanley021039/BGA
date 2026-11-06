@@ -1110,6 +1110,7 @@ function initializeApp(config, dataLock, acquired) {
   // Pushes room views to seated players as soon as they change (#232).
   const stateStream = createStateStream({
     project: (room, playerId) => withSocial(room, room.view(playerId)),
+    shouldFastSweep: roomSpace.needsFastUpdates,
     valid: (entry) =>
       !!auth.sessionFrom(entry.req) &&
       rooms.get(entry.room.code) === entry.room &&

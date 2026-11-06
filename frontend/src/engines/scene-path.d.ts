@@ -10,9 +10,20 @@ export interface Point {
 }
 export function validPassage(value: unknown): value is Passage;
 export function passageTarget(from: Point, target: Point, box?: Passage | null): Point;
+export interface SceneSpeed {
+  slowMs?: number;
+  hasteMs?: number;
+}
 export function sceneWalk(
   from: Point,
   target: Point,
   elapsedMs: number,
   box?: Passage | null,
 ): Point & { remainingMs: number; crossed: boolean };
+export function sceneWalkWithSpeed(
+  from: Point,
+  target: Point,
+  elapsedMs: number,
+  box: Passage | null | undefined,
+  speed: SceneSpeed,
+): Point & { remainingMs: number; crossed: boolean; walkedMs: number };

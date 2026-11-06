@@ -25,7 +25,7 @@ function prepareSpecial(event, self, target, source) {
   event.hits = [];
   event.damage = 0;
   event.critical = false;
-  event.until = event.at + 4400;
+  event.until = event.at + (event.head ? rules.shaohua.lifetimeMs : 4400);
   return {
     source,
     jobs,
@@ -45,15 +45,18 @@ function queueHomingSteps(event, state, time) {
   if (s?.kind !== 'shaohua_devour') return;
   state.jobs = [];
   if (event.head.finished || event.head.cancelled) return;
-  // A persistent gameplay entity, one per caster. Decoration still ends at 4.2s.
-  // Keep at most 80 simulation steps; a dormant scene never replays hours of work.
-  if (time - s.nextAt >= rules.shaohua.catchUpMs) {
-    s.lastAt = time - rules.shaohua.catchUpMs;
-    s.nextAt = s.lastAt + rules.shaohua.stepMs;
-  }
-  for (; s.nextAt <= time; s.nextAt += rules.shaohua.stepMs)
+  const end = Math.min(time, event.at + rules.shaohua.lifetimeMs);
+  for (; s.nextAt <= end; s.nextAt += rules.shaohua.stepMs)
     state.jobs.push({ at: s.nextAt, special: true, done: false });
-  event.until = time + 4400;
+}
+function failHoming(event, caster, time) {
+  event.head.cancelled = true;
+  event.head.at = time - event.at;
+  event.until = time;
+  if (caster?.health > 0) {
+    caster.health = Math.ceil(caster.health / 2);
+    caster.lastHitAt = caster.regenAt = time;
+  }
 }
 function advanceSpecial(combat, event, state, job, bodies, map) {
   const s = state.special,
@@ -110,9 +113,7 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
   const h = event.head;
   if (h.finished || h.cancelled) return;
   if (!caster) {
-    h.cancelled = true;
-    h.at = job.at - event.at;
-    event.until = job.at + 1000;
+    failHoming(event, null, job.at);
     return;
   }
   if (
@@ -132,6 +133,14 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
     h.contactAt = h.biteAt = 0;
   }
   const target = s.target;
+  const elapsed = job.at - event.at;
+  const biting = target && h.contactAt && elapsed >= h.biteAt;
+  if (elapsed >= rules.shaohua.lifetimeMs && !biting) {
+    failHoming(event, origin, job.at);
+    h.exploded = true;
+    event.until += rules.shaohua.burstMs;
+    return;
+  }
   if (!target) {
     s.lastAt = job.at;
     h.at = job.at - event.at;
@@ -141,17 +150,16 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
   event.toName = target.name || event.toName;
   h.targetX = target.x;
   h.targetY = target.y;
-  const elapsed = job.at - event.at,
-    dt = (job.at - s.lastAt) / 1000;
+  const dt = (job.at - s.lastAt) / 1000;
   s.lastAt = job.at;
   h.at = elapsed;
   if (h.contactAt) {
     h.x = target.x;
     h.y = target.y;
-    if (elapsed >= h.biteAt) {
+    if (biting) {
       settle(target, 'bite', h.biteAt);
       h.finished = true;
-      event.until = job.at + 1000;
+      event.until = Math.min(event.until, job.at + 1000);
     }
     return;
   }
@@ -166,4 +174,4 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
     h.biteAt = elapsed + rules.shaohua.biteMs;
   }
 }
-module.exports = { prepareSpecial, advanceSpecial, queueHomingSteps };
+module.exports = { prepareSpecial, advanceSpecial, queueHomingSteps, failHoming };

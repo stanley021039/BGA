@@ -4,6 +4,7 @@ const energy = require('./scene-energy');
 const { HttpError } = require('../http/errors');
 const { createSceneCombat } = require('./scene-combat');
 const { createAttackTimeline } = require('./attack-timeline');
+const { sceneWalkWithSpeed } = require('../../frontend/src/engines/scene-path.js');
 const { randomBytes } = require('node:crypto');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
@@ -56,17 +57,22 @@ function createLobby(
     combat.advance(visitor, time);
     if (!visitor.health) return;
     const start = { x: visitor.x, y: visitor.y };
-    const elapsed = Math.max(
-      0,
-      (time - Math.max(visitor.updatedAt, visitor.immobileUntil || 0)) / 1000,
+    const walkFrom = Math.max(visitor.updatedAt, visitor.immobileUntil || 0);
+    const {
+      x: rawX,
+      y: rawY,
+      walkedMs,
+    } = sceneWalkWithSpeed(
+      visitor,
+      { x: visitor.targetX, y: visitor.targetY },
+      Math.max(0, time - walkFrom),
+      null,
+      {
+        slowMs: Math.max(0, (visitor.slowUntil || 0) - walkFrom),
+        hasteMs: Math.max(0, (visitor.hasteUntil || 0) - walkFrom),
+      },
     );
-    const dx = visitor.targetX - visitor.x,
-      dy = visitor.targetY - visitor.y;
-    const duration = Math.hypot(dx / WALK_X_PER_SECOND, dy / WALK_Y_PER_SECOND);
-    const ratio = duration ? Math.min(1, elapsed / duration) : 1;
-    energy.walk(visitor, Math.min(elapsed, duration) * 1000);
-    const rawX = visitor.x + dx * ratio,
-      rawY = visitor.y + dy * ratio;
+    energy.walk(visitor, walkedMs);
     const shiftX = Math.floor(rawX / 100) * 100,
       shiftY = Math.floor(rawY / 100) * 100;
     visitor.x = rawX - shiftX;
@@ -229,7 +235,7 @@ function createLobby(
     combat.canCast(self, time);
     energy.spend(self, slot);
     const defensive = target === self;
-    const hit = defensive ? combat.protect(self, time) : { damage: 0, critical: false };
+    const hit = defensive ? combat.protect(self, time, effect) : { damage: 0, critical: false };
     self.lastAttacks ||= {};
     self.lastAttacks[slot] = time;
     const event = {
@@ -339,8 +345,7 @@ function createLobby(
   function teleport(user, entrance) {
     const visitor = enter(user, entrance);
     combat.advance(visitor, now());
-    combat.canMove(visitor, now());
-    combat.canCast(visitor, now());
+    combat.canTeleport(visitor, now());
     // Open gutters and the lower floor keep arrivals clear of the game carousel.
     const zones = [
       [6, 18, 45, 76],

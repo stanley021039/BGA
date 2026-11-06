@@ -32,20 +32,28 @@ export interface SceneCombatStatus {
   guanyin: boolean;
   excalibur: boolean;
   shield: 'none' | 'full' | 'residual';
+  guardEnergy?: number;
   regenerating: boolean;
   regenWaitMs: number;
   regenBlockedMs?: number;
   sealedMs?: number;
+  teleportBlockedMs?: number;
+  ordinaryDotMs?: number;
   regenPerSecond: number;
 }
 export interface LobbyVisitor {
   heroFlightUntil?: number;
   sealedUntil?: number;
+  teleportBlockedUntil?: number;
   energy?: number;
   energyMaximum?: number;
   combatStatus?: SceneCombatStatus;
   severed?: boolean;
   immobileUntil?: number;
+  guardFullMs?: number;
+  guardMs?: number;
+  slowMs?: number;
+  hasteMs?: number;
   knockback?: {
     id: string;
     fromX: number;
@@ -124,6 +132,7 @@ export interface AttackHead {
   biteAt: number;
   finished: boolean;
   cancelled: boolean;
+  exploded?: boolean;
 }
 export interface LobbySnapshot {
   attacks: LobbyAttack[];
@@ -228,6 +237,10 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         assists: counter(item.kda && record(item.kda).assists),
       },
       immobileUntil: finite(item.immobileUntil) ? item.immobileUntil : 0,
+      guardFullMs: Math.min(5000, counter(item.guardFullMs)),
+      guardMs: Math.min(5000, counter(item.guardMs)),
+      slowMs: counter(item.slowMs),
+      hasteMs: counter(item.hasteMs),
       severed: item.severed === true,
       fragment: (() => {
         if (!item.fragment) return null;
@@ -318,10 +331,13 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           guanyin: status.guanyin === true,
           excalibur: status.excalibur === true,
           shield: status.shield as SceneCombatStatus['shield'],
+          guardEnergy: counter(status.guardEnergy),
           regenerating: status.regenerating === true,
           regenWaitMs: status.regenWaitMs,
           regenBlockedMs: Number(status.regenBlockedMs || 0),
           sealedMs: Number(status.sealedMs || 0),
+          teleportBlockedMs: Math.min(1000, counter(status.teleportBlockedMs)),
+          ordinaryDotMs: Math.min(2000, counter(status.ordinaryDotMs)),
           regenPerSecond: Number(status.regenPerSecond),
         };
       })(),
@@ -330,6 +346,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       health: finite(item.health) ? item.health : undefined,
       heroFlightUntil: finite(item.heroFlightUntil) ? item.heroFlightUntil : 0,
       sealedUntil: finite(item.sealedUntil) ? item.sealedUntil : 0,
+      teleportBlockedUntil: finite(item.teleportBlockedUntil) ? item.teleportBlockedUntil : 0,
       maxHealth: finite(item.maxHealth) ? item.maxHealth : undefined,
       respawnAt: finite(item.respawnAt) ? item.respawnAt : undefined,
       id: text(item.id),
@@ -406,6 +423,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                     biteAt: Number(h.biteAt),
                     finished: h.finished,
                     cancelled: h.cancelled,
+                    exploded: h.exploded === true,
                   },
                 };
               })()

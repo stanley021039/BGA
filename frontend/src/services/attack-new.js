@@ -58,16 +58,16 @@ export function createNewAttack(ctx, options) {
         .filter((h) => !h.pending && !h.missed && h.damage > 0)
         .map((h) => ({ ...h, at: h.delayMs }));
     const previewHead = () => {
-      const p = Math.min(1, elapsed / 3000);
+      const p = Math.min(1, elapsed / 2200);
       return {
         x: options.from.x + (options.to.x - options.from.x) * p,
         y: options.from.y + (options.to.y - options.from.y) * p,
         targetX: options.to.x,
         targetY: options.to.y,
         at: elapsed,
-        contactAt: elapsed >= 3000 ? 3000 : 0,
-        biteAt: 3400,
-        finished: elapsed >= 3400,
+        contactAt: elapsed >= 2200 ? 2200 : 0,
+        biteAt: 2600,
+        finished: elapsed >= 2600,
         cancelled: false,
       };
     };
