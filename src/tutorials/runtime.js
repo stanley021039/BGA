@@ -12,6 +12,7 @@ const classes = {
   coc: require('../games/coc').CocRoom,
   quacks: require('../games/quacks').QuacksRoom,
   bluff: require('../games/bluff').BluffRoom,
+  decrypto: require('../games/decrypto').DecryptoRoom,
   telephone: require('../games/telephone').TelephoneRoom,
   musicquiz: require('../games/musicquiz').MusicQuizRoom,
   minimal: require('../games/minimal').MinimalRoom,
@@ -101,6 +102,8 @@ function createTutorials({
   }
   function complete(s) {
     const r = s.room;
+    if (r.type === 'decrypto')
+      return r.phase === 'finished' || (r.phase === 'reveal' && r.round >= 2 && r.turn === 1);
     return (
       ['finished', 'showdown'].includes(r.phase) ||
       (r.phase === 'reveal' && (r.results?.length || r.result || r.round)) ||
@@ -218,9 +221,9 @@ function createTutorials({
     if (type === 'coc') return coc.start(owner);
     const clock = { value: now() };
     const room = new classes[type]('FEED00', '獨立教學桌', rng, () => clock.value);
-    for (const name of ['學員小明', '教學小晴', '教學阿哲'].slice(
+    for (const name of ['學員小明', '教學小晴', '教學阿哲', '教學小安'].slice(
       0,
-      ['poker', 'thunder', 'quacks'].includes(type) ? 2 : 3,
+      type === 'decrypto' ? 4 : ['poker', 'thunder', 'quacks'].includes(type) ? 2 : 3,
     ))
       room.add(name, false);
     const s = {

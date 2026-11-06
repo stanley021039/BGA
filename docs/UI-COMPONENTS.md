@@ -14,6 +14,10 @@
 
 ## 快速對照
 
+共用 SiteHeader 的「導覽選單」保留同頻／送禮／畫猜題庫連結，並提供「素材來源與授權」（`/credits`，#327）；使用共用頁首的頁面沿用同一入口，大廳不另放捷徑。沿用原展開／收合、Tab、Escape 返焦及點外部關閉行為，授權頁內容與網址保持不變。
+
+`LobbyBackgroundPicker`（#319）在原共用背景選擇器旁使用 `UiCheckbox`「顯示大廳背景」與儲存提示；只更新本機顯示偏好。隱藏時大廳卸載裝飾背景、改用 default 底色，角色與操作保留；共享背景 ID、權限與冷卻不變。詳 [個人顯示契約](specs/LOBBY-BACKGROUND-VISIBILITY-319.md)。
+
 `UiPanel` 的 `title-before`／`title-after` slot 將規則入口、補充資訊或單行順序置於標題同列，沿用共用 header 對齊；`actions` 仍保留在列尾。title-after 自適應剩餘寬度，內容可自行設單行省略，不以頁面覆寫標題位置。
 
 `UiHoverInfo helpOnly` 只呈現正常佔位的44px問號來源，沿用hover／鍵盤／點擊查看、Esc與點外部關閉，沒有額外關閉鈕；長內容可搭配 `interactive` 供移入捲動。預設卡面與社交說明行為不變。

@@ -15,6 +15,7 @@ const games = Object.freeze({
   musicquiz: '猜歌挑戰',
   minimal: '極簡畫家',
   bluff: '瞎掰王',
+  decrypto: '截碼戰',
   quacks: '郎中闖江湖',
   ceo: '王牌執行長',
   'second-wind': '運動員',
@@ -188,6 +189,27 @@ function spectatorView(room, gameAudio) {
   const mark = (values) => rows(values).forEach((id) => ready.add(id));
 
   switch (type) {
+    case 'decrypto': {
+      for (const [t, team] of room.teams.entries()) {
+        section(team.name || (t === 0 ? '白隊' : '黑隊'), [
+          `截碼成功 ${team.interceptions}／2 · 溝通失誤 ${team.failures}／2`,
+        ]);
+      }
+      if (room.phase !== 'clues')
+        for (const [t, clues] of room.clues.entries())
+          if (t <= room.turn && clues) section((t === 0 ? '白隊' : '黑隊') + '公開線索', clues);
+      for (const r of room.results)
+        section(`第 ${r.round} 輪 ${r.team === 0 ? '白隊' : '黑隊'}揭曉`, [
+          r.clues.join('／'),
+          `正確密碼 ${r.code.join('－')} · ${r.decoded ? '隊內猜中' : '溝通失誤'} · ${r.intercepted ? '被截碼' : '未被截碼'}`,
+        ]);
+      if (done && !room.interrupted) {
+        section('本場結果', [(room.winner?.names || []).join('、')]);
+        for (const [t, words] of room.keywords.entries())
+          section((t === 0 ? '白隊' : '黑隊') + '關鍵詞', words);
+      }
+      break;
+    }
     case 'poker': {
       out.duration = 45000;
       out.cards = rows(room.board).slice(0, 5);

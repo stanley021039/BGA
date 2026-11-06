@@ -22,6 +22,16 @@ export const loungeCard: GameCard = {
 };
 export const gameCards: GameCard[] = [
   {
+    id: 'decrypto',
+    title: '截碼戰',
+    english: 'SECRET SIGNALS',
+    description: '三條線索傳密碼，讓隊友猜中、讓對手猜不透。',
+    seats: '4–8 人',
+    category: '派對・推理',
+    art: 'decrypto',
+    guide: '/decrypto?learn=1',
+  },
+  {
     id: 'second-wind',
     title: '運動員 Second Wind',
     english: 'SECOND WIND',

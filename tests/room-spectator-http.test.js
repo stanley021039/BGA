@@ -11,7 +11,7 @@ const { games } = require('../src/rooms/spectator');
 async function fixture(t, config = {}) {
   const password = 'synthetic-spectator-' + randomUUID();
   const f = await appFixture(t, {
-    config: { ceoEnabled: true, secondWindEnabled: true, ...config },
+    config: { ceoEnabled: true, secondWindEnabled: true, decryptoEnabled: true, ...config },
     seed: async (db) => {
       await createAuth(db).bootstrap('watch_host', password);
       const hash = db
@@ -58,8 +58,9 @@ test('every room type exposes GET-only authenticated observation without seats, 
       if (type !== 'lounge') {
         await call('host', 'bot', { code });
         await call('host', 'bot', { code });
+        if (type === 'decrypto') await call('host', 'bot', { code });
       }
-      const count = type === 'lounge' ? 1 : 3;
+      const count = type === 'lounge' ? 1 : type === 'decrypto' ? 4 : 3;
       const before = await call('host', 'state?code=' + code);
       const v = await call('guest', 'watch?code=' + code.toLowerCase());
       assert.equal(v.type, type);
@@ -92,7 +93,7 @@ test('every room type exposes GET-only authenticated observation without seats, 
         await call('host', 'start', { code });
         const started = await call('guest', 'watch?code=' + code);
         assert.notEqual(started.phase, 'waiting');
-        assert.equal(started.players.length, 3);
+        assert.equal(started.players.length, count);
       }
     });
 });

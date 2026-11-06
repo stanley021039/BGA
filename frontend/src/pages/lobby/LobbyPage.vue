@@ -173,7 +173,6 @@ onBeforeUnmount(() => {
             :error="!!lobby.entryStatus" /></div
       ></template>
     </GameCarousel>
-    <p class="version-note"><a href="/credits">素材來源與授權</a></p>
     <LobbyBackdrop ref="backdrop" /><StatusSlot
       :message="lobby.attackStatus"
       :error="!!lobby.attackStatus"

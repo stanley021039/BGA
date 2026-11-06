@@ -222,7 +222,7 @@ onBeforeUnmount(() => {
         <div ref="moreButton" class="vue-site-more">
           <UiButton
             variant="ghost"
-            label="遊戲題庫"
+            label="導覽選單"
             :aria-expanded="moreOpen"
             aria-controls="vue-site-library-menu"
             @click="toggleMore"
@@ -235,7 +235,7 @@ onBeforeUnmount(() => {
             :style="morePosition.style.value"
           >
             <a href="/community?tab=questions">同頻俱樂部</a><a href="/gifts">送禮達人</a
-            ><a href="/draw-words">你畫我猜</a>
+            ><a href="/draw-words">你畫我猜</a><a href="/credits">素材來源與授權</a>
           </div>
         </div>
       </template>
