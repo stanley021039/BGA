@@ -143,14 +143,6 @@
 .decrypto-rules li {
   margin-block: var(--stitch-space-12);
 }
-.decrypto-cover {
-  display: grid;
-  place-content: center;
-  height: 100%;
-  gap: var(--stitch-space-16);
-  font-size: var(--stitch-text-data);
-  font-weight: 700;
-}
 @media (max-width: 700px) {
   .decrypto-flow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
