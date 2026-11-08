@@ -35,7 +35,12 @@ const validation = {
     return typeof v === 'string' ? v : '';
   },
 };
-const contract = load('contracts/gacha.ts', { '../services/validation': validation });
+const contract = load('contracts/gacha.ts', {
+  '../services/validation': validation,
+  '../../../public/shared/gacha-pools.json': {
+    default: require('../../public/shared/gacha-pools.json'),
+  },
+});
 const item = {
   key: 'attacks:railgun',
   kind: 'attacks',
@@ -48,6 +53,28 @@ const item = {
   exchangeCost: 100,
   owned: false,
 };
+test('gacha showcase follows the current pool, interleaves kinds and orders legendary before epic', () => {
+  const reward = (kind, id, rarity) => ({ ...item, kind, id, rarity, key: kind + ':' + id });
+  const fire = reward('attacks', 'fire', 'legendary');
+  const ice = reward('attacks', 'ice', 'legendary');
+  const voice = reward('sounds', 'voice', 'legendary');
+  const entrance = reward('entrances', 'entrance', 'epic');
+  const frame = reward('frames', 'frame', 'rare');
+  const inputs = [entrance, fire, ice, frame, voice];
+  const keys = (items) => Array.from(contract.gachaShowcaseItems(items), (item) => item.key);
+  assert.deepEqual(keys(inputs), [fire.key, voice.key, ice.key, entrance.key]);
+  assert.deepEqual(
+    keys(inputs.map((item) => (item === fire ? { ...item, rarity: 'rare' } : item))),
+    [ice.key, voice.key, entrance.key],
+  );
+  const poolKinds = contract.gachaPoolKinds('arrival');
+  assert.deepEqual(keys(inputs.filter((item) => poolKinds.includes(item.kind))), [
+    voice.key,
+    entrance.key,
+  ]);
+  assert.deepEqual(keys([frame]), [frame.key]);
+  assert.deepEqual(keys([]), []);
+});
 const requestId = 'a0000000-0000-4000-8000-000000000001';
 const receipt = () => ({
   requestId,
@@ -59,9 +86,10 @@ const receipt = () => ({
   at: '2026-10-29T00:00:00.000Z',
 });
 const state = () => ({
+  odds: { weights: { common: 75, rare: 18, epic: 5, legendary: 2 }, revision: 'a'.repeat(64) },
   wallet: { coins: 1000, fragments: 100 },
   items: [item],
-  pools: ['all', ...contract.gachaKinds].map((id) => ({
+  pools: contract.gachaPoolIds.map((id) => ({
     id,
     label: id,
     count: 1,
@@ -70,11 +98,13 @@ const state = () => ({
 });
 test('gacha receipts reject inconsistent pool, costs, duplicates and unsafe wallet values', () => {
   assert.equal(contract.readGachaReceipt(receipt(), 'draw').results[0].label, '電磁軌道砲');
+  assert.equal(contract.readGachaReceipt({ ...receipt(), pool: 'combat' }, 'draw').pool, 'combat');
   for (const change of [
     (r) => (r.wallet.coins = -1),
     (r) => (r.wallet.coins = Number.MAX_SAFE_INTEGER + 1),
     (r) => r.results.push(r.results[0]),
     (r) => (r.pool = 'entrances'),
+    (r) => (r.pool = 'arrival'),
     (r) => (r.fragmentsGained = 5),
     (r) => {
       r.results[0].fragments = 5;
@@ -107,9 +137,10 @@ test('uncertain draw keeps one request across retry and blocks a second purchase
     calls = [],
     queue = [];
   class ApiError extends Error {
-    constructor(status) {
+    constructor(status, code) {
       super('rejected');
       this.status = status;
+      this.code = code;
     }
   }
   const mod = load(
@@ -146,10 +177,12 @@ test('uncertain draw keeps one request across retry and blocks a second purchase
   const store = mod.useGachaStore();
   await vue.nextTick();
   await Promise.resolve();
+  await store.load();
   queue.push(async () => {
     throw Error('connection lost after commit');
   });
   assert.equal(await store.draw('attacks', 1), null);
+  assert.equal(calls.at(-1).body.oddsRevision, 'a'.repeat(64));
   assert.equal(store.unsettled.requestId, requestId);
   assert.ok(storage.has('bga:gacha:pending:user-a'));
   const before = calls.length;
@@ -162,6 +195,14 @@ test('uncertain draw keeps one request across retry and blocks a second purchase
   assert.equal(store.state.wallet.coins, 900);
   assert.equal(store.state.items[0].owned, true);
   assert.equal(storage.size, 0);
+  const beforeStale = calls.length;
+  queue.push(async () => {
+    throw new ApiError(409, 'GACHA_ODDS_CHANGED');
+  });
+  assert.equal(await store.draw('attacks', 1), null);
+  assert.equal(store.unsettled, null);
+  assert.equal(calls.slice(beforeStale).filter((c) => c.method === 'POST').length, 1);
+  assert.equal(calls.at(-1).url, '/api/gacha');
   queue.push(async () => {
     throw new ApiError(409);
   });

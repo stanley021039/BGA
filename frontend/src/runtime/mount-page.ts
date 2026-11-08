@@ -6,6 +6,7 @@ import type { App, Component } from 'vue';
 import { createPinia, disposePinia, type Pinia } from 'pinia';
 import { usePreferencesStore } from '../stores/preferences';
 import SiteHeader from '../components/SiteHeader.vue';
+import GachaLegendaryBarrage from '../components/GachaLegendaryBarrage.vue';
 import { resetMediaConsentOnReload } from '../services/media-consent';
 import '../styles/foundations.scss';
 import '../styles/feedback.scss';
@@ -71,6 +72,7 @@ export function mountPage(
         h(Fragment, [
           header ? h(Teleport, { to: header }, h(SiteHeader)) : null,
           h(page, watching ? { code: route![2].toUpperCase() } : undefined),
+          h(GachaLegendaryBarrage),
         ]),
     });
     app.use(pinia);

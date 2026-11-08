@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "encoding": "MP3, 24 kHz. Chant cues: joint stereo, ABR target 26 kbps, loudness target -12 LUFS. Other cues: mono 16–24 kbps.",
+  "files": [
+    {
+      "file": "gacha-chant-you-say-run.mp3",
+      "source": "使用者提供 My Hero Academia OST.mp3",
+      "sourceStartMs": 110000,
+      "sourceSha256": "262cf499877137740424504d398c8acc0e7c14cd8d11b0f956ae6f099ad6a8f6",
+      "sourceBytes": 9279738,
+      "sha256": "42a3947d60331add9ec9320c417a6fec4ee49824013ea39f56533a317b82903e",
+      "bytes": 41492,
+      "durationMs": 12000
+    },
+    {
+      "file": "gacha-chant-il-vento-doro.mp3",
+      "source": "使用者提供 il vento d'oro.mp3",
+      "sourceStartMs": 227000,
+      "sourceSha256": "81a24dfd7ad723a45c6f29e12411b113c4fb1a3a7f6184c7aaeba1a0fac9b6b4",
+      "sourceBytes": 11827200,
+      "sha256": "6dced00587c0b8ef346fed93797571c68894850435715a166cb45fc52018b4d0",
+      "bytes": 43652,
+      "durationMs": 12000
+    },
+    {
+      "file": "gacha-chant-attack-on-titan.mp3",
+      "source": "使用者提供 Attack on Titan OST.mp3",
+      "sourceStartMs": 145000,
+      "sourceSha256": "6b65494b0d61d8086816774fa6aecc30f7226c7003d16a24b81e99419bbc3be3",
+      "sourceBytes": 10281795,
+      "durationMs": 12000,
+      "bytes": 42668,
+      "sha256": "01e8c5b9abe908c5303a207a65d4a7cfbcf239d10df5b26976ad14c2bb63388a"
+    },
+    {
+      "file": "gacha-chant-swordland.mp3",
+      "source": "使用者提供 Swordland.mp3",
+      "sourceStartMs": 120000,
+      "sourceSha256": "5f1ca180c24bb73e169a5bc72a45e41f0139fb389a5f37ee6e91a68ca0b59325",
+      "sourceBytes": 7922416,
+      "durationMs": 12000,
+      "bytes": 41204,
+      "sha256": "a5cfffea62f56efe24554cc79cbb7cd6146a66b394c08333f9f66d6adb5f71a3"
+    },
+    {
+      "file": "gacha-chant-unicorn.mp3",
+      "source": "使用者提供 UNICORN.mp3",
+      "sourceStartMs": 179000,
+      "sourceSha256": "015129217be4eb812d7de80fb2a3d9c1619dc3ed4ca732875c4d9f00d54e9e99",
+      "sourceBytes": 11950516,
+      "durationMs": 12000,
+      "bytes": 41780,
+      "sha256": "5af4c8b401c2c1eff07d79f50f1a676c669424948e7f4c6b6ae5ff19bfc9ad4f"
+    },
+    {
+      "file": "gacha-rush.mp3",
+      "source": "使用者提供 衝啊.mp3",
+      "sourceSha256": "90443d9f1b92ccf2d9d2c871fb23fcd2ae4098afe063721e37399c4821e769eb",
+      "sourceBytes": 117300,
+      "sha256": "f9b0428b9c8d7893a3304fcf25d75935c971ce0d7404cb24b9c1695e27964595",
+      "bytes": 8948,
+      "durationMs": 2900
+    },
+    {
+      "file": "gacha-shuffle.mp3",
+      "source": "本專案原創合成洗牌與短音",
+      "sourceSha256": "f04f9647fdab40d4d71f9ebb65ba7e250f4c18612c81f29a168bddeb7580d4ed",
+      "sourceBytes": 213644,
+      "sha256": "82cdf123b788a3e6c47c01565f255b5379a4db03d0354895d32f701249692dfb",
+      "bytes": 13772,
+      "durationMs": 4450
+    },
+    {
+      "file": "gacha-success.mp3",
+      "source": "使用者提供 成功啦.mp3",
+      "sourceSha256": "3b1fe3b4138e71842e32c6525b1c435fd7de6c48d443b9982a28e645d06785ff",
+      "sourceBytes": 63667,
+      "sha256": "f4d38a6792b76904e3aa580958aef4ad9da47224fbdc6aac18e28d2e6e801611",
+      "bytes": 12188,
+      "durationMs": 3940,
+      "processing": "Gain and limiter applied to the existing edit, with extra gain after 1.5 s.",
+      "previousEditSha256": "8cf28efc16d93f8fae5988a78e297dbaec94fd68232b9794d74602df6c17bb85"
+    },
+    {
+      "file": "gacha-scream.mp3",
+      "source": "使用者提供 尖叫.mp3",
+      "sourceSha256": "1febeb9cdee1c032397f037c399679074252c9abab67c69a0c5922b7d7ae0a97",
+      "sourceBytes": 128787,
+      "sha256": "1cd117973bffcdef88c21b8203d79739cf25f2b185272a28a61e33bf017787e2",
+      "bytes": 8876,
+      "durationMs": 2870
+    },
+    {
+      "file": "gacha-glint.mp3",
+      "source": "本專案原創合成：閃卡雙音",
+      "sourceSha256": "d10c0b619366b627b349b652c9f17a70118c8531001dd5c7556212df3c7e9dbd",
+      "sourceBytes": 9164,
+      "sha256": "021d539e4c17b894d9fbcbf023c6553781cadf1695a2dc87cb6be8459c012e39",
+      "bytes": 716,
+      "durationMs": 190
+    },
+    {
+      "file": "gacha-flat.mp3",
+      "source": "本專案原創合成：平盤和弦",
+      "sourceSha256": "59c564ba7541b3c82558f72f2d677eb8bcf1dba76a347ac0dd19e335f3964558",
+      "sourceBytes": 112844,
+      "sha256": "e99e57bfa425f8af08e721309acd09063af1ba9b991b46022b164f6698c88b12",
+      "bytes": 5036,
+      "durationMs": 2350
+    }
+  ]
+}

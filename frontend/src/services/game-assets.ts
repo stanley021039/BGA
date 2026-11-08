@@ -9,6 +9,14 @@ import athleteTrackPreview from '../assets/second-wind/twisty-twirl-1600.webp';
 // Art and sounds a game uses only once play starts, warmed while seats fill up.
 // Sound files follow the registry in public/shared/audio-settings.js.
 const sound = (name: string) => '/assets/game-sounds/' + name;
+export function warmGachaAudio(): void {
+  if (!preloadAllowed()) return;
+  whenIdle(() => {
+    const effects = AudioSettings?.get().effects;
+    if (effects?.enabled && effects.volume && !document.hidden)
+      warm([...AudioSettings.gachaEffectAssets, sound('quacks-card.wav')], { idle: false });
+  });
+}
 export function warmNewSkillAssets(effect: string, width = 0, height = 0) {
   if (effect.replace(/_alt$/, '') === 'shaohua_devour')
     warm(['/assets/attacks/shaohua-closed.webp', '/assets/attacks/shaohua-open.webp']);

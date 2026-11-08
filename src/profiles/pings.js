@@ -12,22 +12,9 @@ const types = [
   'surprised',
   'admire',
 ];
-const voiceCues = [
-  'amazing',
-  'bad',
-  'card-check',
-  'sleep',
-  'look',
-  'legacy',
-  'no-bluff',
-  'cry',
-  'coward',
-  'goodnight',
-  'senior',
-  'practice',
-  'huh',
-  'what',
-].map((name) => 'ping-voice-' + name);
+const voiceCues = require('../../public/shared/ping-voices.json').map(
+  ({ id }) => 'ping-voice-' + id,
+);
 const uuid = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
 const artworkPath = new RegExp('^/assets/artworks/(' + uuid + ')$', 'i');
 const soundPath = new RegExp(
@@ -90,12 +77,7 @@ function validate(db, userId, input, { lenient = false } = {}) {
             voiceCues.includes(sound.effect) &&
             !require('../achievements/bonus-rewards').ownedSounds(db, userId).includes(sound.effect)
           ) {
-            if (!lenient)
-              throw new HttpError(
-                403,
-                'PING_SOUND_LOCKED',
-                '請先取得對應成就音效，或兌換 Ping 獎勵',
-              );
+            if (!lenient) throw new HttpError(403, 'PING_SOUND_LOCKED', '請先取得這段標記語音');
           } else item.sound = { effect: sound.effect };
         } else {
           const match = typeof sound?.url === 'string' && soundPath.exec(sound.url);

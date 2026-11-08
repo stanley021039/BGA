@@ -52,6 +52,53 @@ function check(base = root, { build = false } = {}) {
     )
       fail('Missing smaller MP3: ' + e.source);
   }
+  function checkAudioDerivatives(clips, label, requiredFiles) {
+    const required = new Set(requiredFiles);
+    for (const clip of clips) {
+      if (!required.delete(clip.file)) {
+        fail('Invalid or duplicate ' + label + ' audio entry');
+        continue;
+      }
+      const bytes = fs.readFileSync(path.join(soundsDir, clip.file));
+      if (
+        clip.sha256 !== hash(bytes) ||
+        clip.bytes !== bytes.length ||
+        !/^[a-f0-9]{64}$/.test(clip.sourceSha256) ||
+        !Number.isInteger(clip.sourceBytes) ||
+        clip.bytes >= clip.sourceBytes
+      )
+        fail(label + ' audio provenance or compression mismatch: ' + clip.file);
+    }
+    if (required.size) fail('Missing ' + label + ' audio: ' + [...required].join(', '));
+  }
+  const gacha = JSON.parse(read('public/assets/game-sounds/gacha-manifest.json'));
+  if (gacha.schema !== 1 || !Array.isArray(gacha.files))
+    throw Error('Invalid gacha audio manifest');
+  checkAudioDerivatives(gacha.files, 'Gacha', [
+    'gacha-chant-you-say-run.mp3',
+    'gacha-chant-il-vento-doro.mp3',
+    'gacha-chant-attack-on-titan.mp3',
+    'gacha-chant-swordland.mp3',
+    'gacha-chant-unicorn.mp3',
+    'gacha-rush.mp3',
+    'gacha-glint.mp3',
+    'gacha-flat.mp3',
+    'gacha-shuffle.mp3',
+    'gacha-success.mp3',
+    'gacha-scream.mp3',
+  ]);
+  const voices = JSON.parse(read('public/shared/ping-voices.json'));
+  const ping = JSON.parse(read('public/assets/game-sounds/ping-voice-manifest.json'));
+  if (ping.version !== 1 || !Array.isArray(ping.cues)) throw Error('Invalid Ping voice manifest');
+  checkAudioDerivatives(
+    ping.cues.filter((clip) => Object.hasOwn(clip, 'source')),
+    'Ping voice',
+    [
+      'ping-voice-amazing.mp3',
+      'ping-voice-senior.mp3',
+      ...voices.filter(({ gachaOnly }) => gachaOnly).map(({ id }) => 'ping-voice-' + id + '.mp3'),
+    ],
+  );
   let total = 0,
     deliveredSounds = 0;
   for (const absolute of files(path.join(base, 'public/assets'))) {
@@ -77,7 +124,7 @@ function check(base = root, { build = false } = {}) {
       if (size > 384 * 1024) fail('Sound exceeds 384 KiB: ' + file);
     }
   }
-  if (total > 2 * 1024 * 1024) fail('Combined sounds exceed 2 MiB');
+  if (total > 2176 * 1024) fail('Combined sounds exceed 2176 KiB');
   for (const file of ['login-864.webp', 'home-family.jpg', 'soul-world.webp'])
     if (fs.statSync(path.join(base, 'public/assets/auth', file)).size > 256 * 1024)
       fail('Opening image exceeds 256 KiB: ' + file);

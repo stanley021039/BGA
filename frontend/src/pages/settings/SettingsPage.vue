@@ -3,6 +3,7 @@ import CocAiSettings from '../../components/CocAiSettings.vue';
 import CocCharacterLibrary from '../../components/CocCharacterLibrary.vue';
 import AudioSettings from '../../engines/audio-settings.js';
 import PingModel from '../../engines/ping-model.js';
+import pingVoices from '../../../../public/shared/ping-voices.json';
 
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -150,25 +151,10 @@ const soundChoices = computed(() => [
     label: '內建 · ' + pingLabels[type],
     locked: false,
   })),
-  ...[
-    ['amazing', '太神啦'],
-    ['bad', '他很壞'],
-    ['card-check', '窩咬驗牌'],
-    ['sleep', '那我也要睡了啦'],
-    ['look', '讓我看看'],
-    ['legacy', '傳承精神'],
-    ['no-bluff', '不要瞎掰'],
-    ['cry', '你在哭哦'],
-    ['coward', '俗仔'],
-    ['goodnight', '晚安'],
-    ['senior', '野獸前輩'],
-    ['practice', '菜就多練'],
-    ['huh', '蛤'],
-    ['what', '靠北三小'],
-  ].map(([name, label]) => ({
-    key: 'effect:ping-voice-' + name,
+  ...pingVoices.map(({ id, label }) => ({
+    key: 'effect:ping-voice-' + id,
     label: '語音 · ' + label,
-    locked: !ownedVoices.value.includes('ping-voice-' + name),
+    locked: !ownedVoices.value.includes('ping-voice-' + id),
   })),
   ...characters.value.flatMap((character) =>
     Object.entries(character.sounds).map(([expression, sound]) => ({
@@ -196,7 +182,7 @@ function changePingIcon(type: PingType, value: string) {
 }
 function changePingSound(type: PingType, key: string) {
   if (soundChoices.value.find((item) => item.key === key)?.locked) {
-    message.value = '需先取得對應成就音效或兌換 Ping 獎勵。';
+    message.value = '請先取得這段標記語音。';
     return;
   }
   const choice: PingPreference = { ...pingChoices.value[type] };
@@ -687,7 +673,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
                   @click="previewPing(type)"
                 /> </UiListRow></UiList
             ><p class="settings-intro"
-              >內建標記音效可直接使用；成就語音須先達成條件或輸入對應兌換碼。</p
+              >內建標記音效可直接使用；已取得的語音可套用到房間標記。</p
             ></UiPanel
           ></fieldset
         ></section

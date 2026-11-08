@@ -1,21 +1,26 @@
 'use strict';
 const overrides = require('../../public/shared/gacha-rarities.json');
+const poolGroups = require('../../public/shared/gacha-pools.json');
+const { exchangeCosts } = require('../../public/shared/gacha-economy.json');
 const definitions = new Map(require('../achievements/catalog').definitions.map((d) => [d.id, d]));
+const { BUILTIN_FRAME_OPTIONS } = require('../barrage/builtins');
 const { variants: entranceVariants } = require('../../public/shared/entrance-palette.json');
 const tiers = Object.freeze({
-  common: { label: '普通', weight: 100, duplicateFragments: 1, exchangeCost: 20 },
-  rare: { label: '稀有', weight: 20, duplicateFragments: 5, exchangeCost: 100 },
-  legendary: { label: '傳說', weight: 2, duplicateFragments: 20, exchangeCost: 400 },
+  common: { label: '普通', weight: 75, duplicateFragments: 1, exchangeCost: exchangeCosts.common },
+  rare: { label: '稀有', weight: 18, duplicateFragments: 5, exchangeCost: exchangeCosts.rare },
+  epic: { label: '史詩', weight: 5, duplicateFragments: 10, exchangeCost: exchangeCosts.epic },
+  legendary: {
+    label: '傳說',
+    weight: 2,
+    duplicateFragments: 20,
+    exchangeCost: exchangeCosts.legendary,
+  },
 });
 const poolLabels = Object.freeze({
   all: '綜合卡池',
-  attacks: '攻擊招式',
-  entrances: '進場特效',
-  backgrounds: '大廳背景',
-  frames: '彈幕框',
-  media: '播放器風格',
-  sounds: '標記語音',
+  ...Object.fromEntries(Object.entries(poolGroups).map(([id, group]) => [id, group.label])),
 });
+const kinds = Object.freeze(Object.values(poolGroups).flatMap((group) => group.kinds));
 const intro = (id) =>
   /intro|regular|participation/.test((definitions.get(id)?.category || '') + ' ' + id)
     ? 'common'
@@ -72,9 +77,17 @@ for (const [kind, variants] of [
     add(kind, e.id, e.label, parentRarities.get(e.variantOf) || 'common', [], false, true);
 }
 for (const e of require('../../public/shared/lobby-backgrounds.json').filter(
-  (e) => e.achievementId,
+  (e) => e.achievementId || e.id === 'castle',
 ))
-  add('backgrounds', e.id, e.label, intro(e.achievementId), [e.achievementId]);
+  add(
+    'backgrounds',
+    e.id,
+    e.label,
+    e.achievementId ? intro(e.achievementId) : 'common',
+    [e.achievementId],
+    !!e.achievementId,
+    !e.achievementId,
+  );
 for (const e of require('../achievements/rewards').rewards)
   for (const kind of ['frames', 'media'])
     add(kind, e.frameId, e.label, intro(e.achievementId), [
@@ -82,6 +95,8 @@ for (const e of require('../achievements/rewards').rewards)
       e.legacyAchievementId,
       ...(e.previousAchievementIds || []),
     ]);
+for (const e of BUILTIN_FRAME_OPTIONS.filter((e) => e.id !== 'default' && !e.achievementId))
+  for (const kind of ['frames', 'media']) add(kind, e.id, e.label, 'common', [], false, true);
 const voices = new Map();
 for (const [a, , ids, names] of require('../achievements/bonus-rewards').pairs)
   ids.forEach((id, i) => {
@@ -93,19 +108,23 @@ for (const [a, , ids, names] of require('../achievements/bonus-rewards').pairs)
     } else voices.set(key, { label: names[i], rarity: intro(a), achievementIds: [a] });
   });
 for (const [id, e] of voices) add('sounds', id, e.label, e.rarity, e.achievementIds);
+for (const { id, label, gachaOnly } of require('../../public/shared/ping-voices.json'))
+  if (gachaOnly) add('sounds', 'ping-voice-' + id, label, 'common', [], false, true);
 const catalog = Object.freeze(items);
 const byKey = new Map(catalog.map((i) => [i.key, i]));
 function poolItems(pool) {
-  return typeof pool !== 'string'
-    ? null
-    : pool === 'all'
-      ? catalog
-      : Object.hasOwn(poolLabels, pool)
-        ? catalog.filter((i) => i.kind === pool)
-        : null;
+  if (typeof pool !== 'string') return null;
+  if (pool === 'all') return catalog;
+  // Older requests and their persisted receipts still use single-kind pool IDs.
+  const included = Object.hasOwn(poolGroups, pool)
+    ? poolGroups[pool].kinds
+    : kinds.includes(pool)
+      ? [pool]
+      : null;
+  return included ? catalog.filter((item) => included.includes(item.kind)) : null;
 }
 function publicItem(i) {
   const { key, kind, id, label, rarity, rarityLabel, weight, duplicateFragments, exchangeCost } = i;
   return { key, kind, id, label, rarity, rarityLabel, weight, duplicateFragments, exchangeCost };
 }
-module.exports = { catalog, tiers, poolLabels, poolItems, byKey, publicItem };
+module.exports = { catalog, tiers, kinds, poolGroups, poolLabels, poolItems, byKey, publicItem };

@@ -21,7 +21,7 @@ export function createAreaAttack(ctx, options, onImpact) {
   const { width, height, from, to, area } = options;
   const aspect = options.aspectRatio || width / height,
     divisor = Math.max(1, aspect);
-  const previewUnit = Math.min(width / 115, height / 100);
+  const previewUnit = options.previewUnit ?? Math.min(width / 115, height / 100);
   const mx = options.preview ? previewUnit : ((width / 100) * divisor) / aspect,
     my = options.preview ? previewUnit : (height / 100) * divisor;
   const ax = (to.x - from.x) / mx,

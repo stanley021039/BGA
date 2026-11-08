@@ -248,6 +248,19 @@
   }
 }
 
+:root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-dialog-full-viewport {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  inline-size: 100%;
+  block-size: 100dvh;
+  max-inline-size: none;
+  max-block-size: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .vue-button.ui-icon-button {
   padding: tokens.space(2);
 }

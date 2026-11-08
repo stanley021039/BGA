@@ -6,6 +6,26 @@ let AudioSettings;
     listeners = new Set(),
     effects = new Map(),
     gameEffects = new Set();
+  const chantDeadlineMs = 12150;
+  const gachaCues = {
+    'gacha-chant-you-say-run': ['/assets/game-sounds/gacha-chant-you-say-run.mp3', chantDeadlineMs],
+    'gacha-chant-il-vento-doro': [
+      '/assets/game-sounds/gacha-chant-il-vento-doro.mp3',
+      chantDeadlineMs,
+    ],
+    'gacha-chant-attack-on-titan': [
+      '/assets/game-sounds/gacha-chant-attack-on-titan.mp3',
+      chantDeadlineMs,
+    ],
+    'gacha-chant-swordland': ['/assets/game-sounds/gacha-chant-swordland.mp3', chantDeadlineMs],
+    'gacha-chant-unicorn': ['/assets/game-sounds/gacha-chant-unicorn.mp3', chantDeadlineMs],
+    'gacha-rush': ['/assets/game-sounds/gacha-rush.mp3', 3100],
+    'gacha-glint': ['/assets/game-sounds/gacha-glint.mp3', 270],
+    'gacha-flat': ['/assets/game-sounds/gacha-flat.mp3', 2450],
+    'gacha-shuffle': ['/assets/game-sounds/gacha-shuffle.mp3', 4550],
+    'gacha-success': ['/assets/game-sounds/gacha-success.mp3', 4150],
+    'gacha-scream': ['/assets/game-sounds/gacha-scream.mp3', 3050],
+  };
   const defaults = () => ({
     version: 2,
     music: { enabled: false, volume: 0.3 },
@@ -236,7 +256,7 @@ let AudioSettings;
       'ping-question': ['/assets/game-sounds/ping-question.wav', 1131],
       'ping-help': ['/assets/game-sounds/ping-help.wav', 2802],
       'ping-look': ['/assets/game-sounds/ping-look.wav', 1706],
-      'ping-voice-amazing': ['/assets/game-sounds/ping-voice-amazing.mp3', 3360],
+      'ping-voice-amazing': ['/assets/game-sounds/ping-voice-amazing.mp3', 2500],
       'ping-voice-bad': ['/assets/game-sounds/ping-voice-bad.mp3', 4880],
       'ping-voice-card-check': ['/assets/game-sounds/ping-voice-card-check.mp3', 1180],
       'ping-voice-sleep': ['/assets/game-sounds/ping-voice-sleep.mp3', 1120],
@@ -246,10 +266,35 @@ let AudioSettings;
       'ping-voice-cry': ['/assets/game-sounds/ping-voice-cry.mp3', 700],
       'ping-voice-coward': ['/assets/game-sounds/ping-voice-coward.mp3', 2420],
       'ping-voice-goodnight': ['/assets/game-sounds/ping-voice-goodnight.mp3', 3550],
-      'ping-voice-senior': ['/assets/game-sounds/ping-voice-senior.mp3', 8500],
+      'ping-voice-senior': ['/assets/game-sounds/ping-voice-senior.mp3', 2100],
       'ping-voice-practice': ['/assets/game-sounds/ping-voice-practice.mp3', 1570],
       'ping-voice-huh': ['/assets/game-sounds/ping-voice-huh.mp3', 910],
       'ping-voice-what': ['/assets/game-sounds/ping-voice-what.mp3', 2040],
+      'ping-voice-gay': ['/assets/game-sounds/ping-voice-gay.mp3', 1000],
+      'ping-voice-sword-shield': ['/assets/game-sounds/ping-voice-sword-shield.mp3', 1550],
+      'ping-voice-poor-thing': ['/assets/game-sounds/ping-voice-poor-thing.mp3', 900],
+      'ping-voice-leather-shoes': ['/assets/game-sounds/ping-voice-leather-shoes.mp3', 1500],
+      'ping-voice-answer-me': ['/assets/game-sounds/ping-voice-answer-me.mp3', 1100],
+      'ping-voice-why-yelling': ['/assets/game-sounds/ping-voice-why-yelling.mp3', 1200],
+      'ping-voice-butt-party': ['/assets/game-sounds/ping-voice-butt-party.mp3', 3850],
+      'ping-voice-gay-club': ['/assets/game-sounds/ping-voice-gay-club.mp3', 4200],
+      'ping-voice-wings': ['/assets/game-sounds/ping-voice-wings.mp3', 3750],
+      'ping-voice-sneak-attack': ['/assets/game-sounds/ping-voice-sneak-attack.mp3', 1000],
+      'ping-voice-group-chat': ['/assets/game-sounds/ping-voice-group-chat.mp3', 4200],
+      'ping-voice-horn': ['/assets/game-sounds/ping-voice-horn.mp3', 3900],
+      'ping-voice-god-of-gamblers': ['/assets/game-sounds/ping-voice-god-of-gamblers.mp3', 3800],
+      'ping-voice-after-two-thousand': [
+        '/assets/game-sounds/ping-voice-after-two-thousand.mp3',
+        3900,
+      ],
+      'ping-voice-yare-yare': ['/assets/game-sounds/ping-voice-yare-yare.mp3', 2700],
+      'ping-voice-nailong-laugh': ['/assets/game-sounds/ping-voice-nailong-laugh.mp3', 2300],
+      'ping-voice-i-am-gay': ['/assets/game-sounds/ping-voice-i-am-gay.mp3', 3650],
+      'ping-voice-no-no-no': ['/assets/game-sounds/ping-voice-no-no-no.mp3', 7550],
+      'ping-voice-wei-wei-meng-meng': [
+        '/assets/game-sounds/ping-voice-wei-wei-meng-meng.mp3',
+        5300,
+      ],
       'entry-home-family': ['/assets/game-sounds/entry-home-family.mp3', 8500],
       'entry-intro': ['/assets/game-sounds/entry-intro-user.mp3', 2040],
       'entrance-soul-world': ['/assets/game-sounds/entrance-soul-world.mp3', 3610],
@@ -281,7 +326,11 @@ let AudioSettings;
       nitro: ['/assets/game-sounds/nitro.wav', 1400],
       skid: ['/assets/game-sounds/skid.wav', 740],
     };
-    const cue = Object.hasOwn(cues, kind) ? cues[kind] : null;
+    const cue = Object.hasOwn(gachaCues, kind)
+      ? gachaCues[kind]
+      : Object.hasOwn(cues, kind)
+        ? cues[kind]
+        : null;
     if (cue) {
       const release =
         ['correct', 'incorrect'].includes(kind) &&
@@ -300,13 +349,15 @@ let AudioSettings;
         },
         game: kind !== 'invitation',
         maxStartDelayMs:
-          kind === 'confirm' || kind === 'reveal'
-            ? 10000
-            : kind.startsWith('ping-voice-')
-              ? 5000
-              : ['ingredient-draw', 'quacks-draw', 'quacks-stop'].includes(kind)
-                ? 3000
-                : 1000,
+          kind === 'gacha-glint'
+            ? 180
+            : kind === 'confirm' || kind === 'reveal'
+              ? 10000
+              : kind.startsWith('ping-voice-')
+                ? 5000
+                : ['ingredient-draw', 'quacks-draw', 'quacks-stop'].includes(kind)
+                  ? 3000
+                  : 1000,
       });
       if (!clip) release?.();
       return clip;
@@ -376,6 +427,7 @@ let AudioSettings;
     suspendMusic,
     isMusicSuspended: () => musicInterruptions.size > 0,
     playEffect,
+    gachaEffectAssets: Object.values(gachaCues).map(([url]) => url),
     playExpression,
     stopEffect,
     stopEffects,

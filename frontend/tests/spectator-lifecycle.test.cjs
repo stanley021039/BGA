@@ -25,6 +25,7 @@ function fixture() {
     id = 0;
   const timers = new Map(),
     calls = [],
+    connections = [],
     urls = [],
     cache = new Map();
   const schedule = (fn, delay, repeat = false) => {
@@ -91,6 +92,16 @@ function fixture() {
         Error,
         DOMException,
         AbortController,
+        EventSource: class {
+          constructor(url) {
+            this.url = url;
+            this.closed = false;
+            connections.push(this);
+          }
+          close() {
+            this.closed = true;
+          }
+        },
         Date: { now: () => now },
         location: { pathname: '/draw/ABCDEF' },
         history: {
@@ -128,6 +139,7 @@ function fixture() {
   };
   return {
     calls,
+    connections,
     urls,
     timers,
     root,
@@ -157,6 +169,7 @@ test('actual spectator component has one read, ignores aborted responses, follow
     f.calls[0].resolve(first);
     await flush();
     assert.match(f.root.textContent, /你畫我猜觀戰/);
+    assert.equal(f.connections[0].url, '/api/watch/events?code=ABCDEF');
     await f.advance(1000);
     assert.equal(f.calls.length, 2);
     f.visible(true);
@@ -178,6 +191,7 @@ test('actual spectator component has one read, ignores aborted responses, follow
     f.calls[2].resolve(next);
     await flush();
     assert.match(f.root.textContent, /德州撲克觀戰/);
+    assert.equal(f.connections.length, 1);
     assert.equal(f.urls.at(-1), '/poker/ABCDEF?watch=1');
     assert.equal(f.root.querySelector('[data-component="SpectatorCanvas"]'), null);
     await f.advance(2500);
@@ -185,6 +199,7 @@ test('actual spectator component has one read, ignores aborted responses, follow
     f.calls[3].reject(new f.ApiError('已被踢出', 403));
     await flush();
     assert.doesNotMatch(f.root.textContent, /德州撲克觀戰/);
+    assert.equal(f.connections[0].closed, true);
     assert.equal(f.timers.size, 0);
     await f.advance(20000);
     assert.equal(f.calls.length, 4);

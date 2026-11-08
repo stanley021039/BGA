@@ -35,8 +35,13 @@ const columns = computed(() => {
 let timer: ReturnType<typeof setTimeout> | null = null,
   clock: ReturnType<typeof setInterval> | null = null,
   job: AbortController | null = null,
+  presence: EventSource | null = null,
   disposed = false,
   generation = 0;
+function leavePresence() {
+  presence?.close();
+  presence = null;
+}
 function stop() {
   generation++;
   if (timer) clearTimeout(timer);
@@ -44,6 +49,10 @@ function stop() {
   timer = clock = null;
   job?.abort();
   job = null;
+}
+function suspend() {
+  stop();
+  leavePresence();
 }
 async function refresh() {
   if (disposed || job || document.hidden || terminal.value) return;
@@ -62,6 +71,7 @@ async function refresh() {
     );
     if (disposed || token !== generation || controller.signal.aborted) return;
     if (next.code !== props.code.toUpperCase()) throw Error('收到其他房間的觀戰資料。');
+    presence ??= new EventSource('/api/watch/events?code=' + encodeURIComponent(next.code));
     state.value = next;
     now.value = Date.now();
     offset.value = now.value - next.serverNow;
@@ -78,6 +88,7 @@ async function refresh() {
     // A revoked session or removed room must not keep displaying the last private room's result.
     if (cause instanceof ApiError && [401, 403, 404, 409].includes(cause.status)) {
       state.value = null;
+      leavePresence();
       terminal.value = true;
       if (clock) clearInterval(clock);
       clock = null;
@@ -110,12 +121,16 @@ const card = (n: number | null) =>
 onMounted(() => {
   visibility();
   document.addEventListener('visibilitychange', visibility);
+  window.addEventListener('pagehide', suspend);
+  window.addEventListener('pageshow', visibility);
   window.addEventListener('online', retry);
 });
 onBeforeUnmount(() => {
   disposed = true;
-  stop();
+  suspend();
   document.removeEventListener('visibilitychange', visibility);
+  window.removeEventListener('pagehide', suspend);
+  window.removeEventListener('pageshow', visibility);
   window.removeEventListener('online', retry);
 });
 </script>

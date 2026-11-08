@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { attackEffectGroups } from '../services/effect-variants';
 import { requestJson } from '../services/http';
 import { useSessionStore } from '../stores/session';
@@ -16,10 +16,23 @@ import UiButton from './UiButton.vue';
 import UiChoiceCard from './UiChoiceCard.vue';
 import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
+import UiTabs from './UiTabs.vue';
 withDefaults(defineProps<{ showCurrent?: boolean }>(), { showCurrent: false });
 const currentRevision = ref({ q: 0, e: 0, r: 0 });
+const previewTabs: { id: 'normal' | 'ultimate'; label: string }[] = [
+  { id: 'normal', label: '一般招式' },
+  { id: 'ultimate', label: '大招' },
+];
+const previewTabsId = useId();
+const previewMode = ref('normal');
+const previewBySlot = ref({ q: 'barrage', r: 'guanyin_barrage' });
+const previewSlot = computed(() => (previewMode.value === 'ultimate' ? 'r' : 'q'));
+const preview = computed(() => previewBySlot.value[previewSlot.value]);
+const previewGroups = {
+  normal: attackEffectGroups.filter((group) => fitsAttackSlot('q', group.original.id)),
+  ultimate: attackEffectGroups.filter((group) => fitsAttackSlot('r', group.original.id)),
+};
 const store = useAttackLoadoutStore(),
-  preview = ref('barrage'),
   revision = ref(0),
   noticeKey = ref(0),
   loadPending = ref(false),
@@ -85,7 +98,7 @@ async function change(slot: AttackSlot, value: string | number | null | undefine
   }
 }
 function play(id: string) {
-  preview.value = id;
+  previewBySlot.value[previewSlot.value] = id;
   revision.value++;
 }
 </script>
@@ -109,12 +122,9 @@ function play(id: string) {
       >
         <div class="attack-preview" :aria-label="slot.toUpperCase() + ' 鍵目前特效預覽'">
           <AttackArtwork
-            preview
             v-if="store.ready && store.loadout[slot]"
             :effect="store.loadout[slot]"
             :play-key="currentRevision[slot]"
-            :from="{ x: 25, y: 65 }"
-            :to="{ x: 65, y: 65 }"
           />
         </div>
         <UiButton
@@ -170,56 +180,72 @@ function play(id: string) {
           label="重新讀取攻擊設定"
           :pending="loadPending"
           @click="loadLoadout" /></div></div
-    ><div class="attack-preview attack-preview-main" aria-label="攻擊特效預覽"
-      ><AttackArtwork
-        preview
-        :effect="preview"
-        :play-key="revision"
-        :from="{ x: 25, y: 65 }"
-        :to="{ x: 65, y: 65 }"
-      /><span class="attack-preview-label">{{
-        attackEffects.find((e) => e.id === preview)?.label
-      }}</span></div
-    ><div class="attack-effect-grid" role="group" aria-label="攻擊特效預覽選擇" tabindex="0"
-      ><EffectVariantGroup
-        v-for="group in attackEffectGroups"
-        :key="group.original.id"
-        :original="group.original"
-        :versions="group.versions"
-        :preferred="equipped"
-        :allowed="allowed"
-        @preview="play"
-        v-slot="{ effect }"
-        ><UiChoiceCard
-          :label="effect.label + '預覽' + (allowed(effect.id) ? '' : '（未解鎖）')"
-          :selected="preview === effect.id"
-          @click="play(effect.id)"
-          ><template #label
-            ><span class="attack-effect-heading"
-              ><span
-                class="attack-color"
-                :style="{ background: effect.color }"
-                aria-hidden="true"
-              ></span
-              ><span class="ui-choice-label">{{ effect.label }}</span></span
-            ><span class="attack-effect-detail">{{
-              allowed(effect.id) ? '已解鎖・預覽' : '未解鎖・預覽'
-            }}</span
-            ><span v-if="!allowed(effect.id)" class="attack-effect-detail">{{
-              'paletteHue' in effect ? '抽卡或碎片兌換解鎖' : '抽卡、碎片兌換或兌換碼解鎖'
-            }}</span></template
-          ><template #selection
-            ><span class="ui-choice-state" aria-hidden="true">{{
-              preview === effect.id ? '✓ 正在預覽' : ''
-            }}</span></template
-          ></UiChoiceCard
-        ></EffectVariantGroup
+    ><UiTabs
+      v-model="previewMode"
+      :items="previewTabs"
+      label="招式預覽分類"
+      :id-prefix="previewTabsId + '-tab'"
+      :panel-prefix="previewTabsId + '-panel'"
+    /><div
+      v-for="tab in previewTabs"
+      v-show="tab.id === previewMode"
+      :id="previewTabsId + '-panel-' + tab.id"
+      :key="tab.id"
+      class="attack-preview-section"
+      role="tabpanel"
+      :aria-labelledby="previewTabsId + '-tab-' + tab.id"
+      ><template v-if="tab.id === previewMode"
+        ><div
+          class="attack-preview attack-preview-main"
+          :class="{ 'is-ultimate': previewMode === 'ultimate' }"
+          :aria-label="previewMode === 'ultimate' ? '大招預覽' : '一般招式預覽'"
+          ><AttackArtwork :effect="preview" :play-key="revision" /><span
+            class="attack-preview-label"
+            >{{ attackEffects.find((e) => e.id === preview)?.label }}</span
+          ></div
+        ></template
+      ><div class="attack-effect-grid" role="group" aria-label="攻擊特效預覽選擇" tabindex="0"
+        ><EffectVariantGroup
+          v-for="group in previewGroups[tab.id]"
+          :key="group.original.id"
+          :original="group.original"
+          :versions="group.versions"
+          :preferred="equipped"
+          :allowed="allowed"
+          @preview="play"
+          v-slot="{ effect }"
+          ><UiChoiceCard
+            :label="effect.label + '預覽' + (allowed(effect.id) ? '' : '（未解鎖）')"
+            :selected="preview === effect.id"
+            @click="play(effect.id)"
+            ><template #label
+              ><span class="attack-effect-heading"
+                ><span
+                  class="attack-color"
+                  :style="{ background: effect.color }"
+                  aria-hidden="true"
+                ></span
+                ><span class="ui-choice-label">{{ effect.label }}</span></span
+              ><span class="attack-effect-detail">{{
+                allowed(effect.id) ? '已解鎖・預覽' : '未解鎖・預覽'
+              }}</span
+              ><span v-if="!allowed(effect.id)" class="attack-effect-detail">{{
+                'paletteHue' in effect ? '抽卡或碎片兌換解鎖' : '抽卡、碎片兌換或兌換碼解鎖'
+              }}</span></template
+            ><template #selection
+              ><span class="ui-choice-state" aria-hidden="true">{{
+                preview === effect.id ? '✓ 正在預覽' : ''
+              }}</span></template
+            ></UiChoiceCard
+          ></EffectVariantGroup
+        ></div
       ></div
     ></div
   >
 </template>
 <style scoped>
-.attack-choices {
+.attack-choices,
+.attack-preview-section {
   display: grid;
   gap: var(--stitch-gap-controls);
   min-inline-size: 0;
@@ -260,7 +286,10 @@ function play(id: string) {
   position: sticky;
   inset-block-start: 0;
   z-index: 1;
-  block-size: clamp(140px, 28dvh, 240px);
+  block-size: clamp(180px, 34dvh, 310px);
+}
+.attack-preview-main.is-ultimate {
+  block-size: clamp(220px, 43dvh, 405px);
 }
 .attack-preview-label {
   position: absolute;

@@ -73,14 +73,62 @@ test('daily credit uses Taipei midnight, survives store recreation, and cannot d
   assert.equal(taipeiDay(time), '2026-10-29');
   store.daily(user);
   store.daily(user);
-  assert.equal(store.wallet(user).coins, 100);
+  assert.equal(store.wallet(user).coins, 1000);
   new GachaStore(db, { clock: () => time }).daily(user);
-  assert.equal(store.wallet(user).coins, 100);
+  assert.equal(store.wallet(user).coins, 1000);
   time++;
   assert.equal(taipeiDay(time), '2026-10-30');
   store.daily(user);
-  assert.equal(store.wallet(user).coins, 200);
+  assert.equal(store.wallet(user).coins, 2000);
   assert.equal(db.prepare("SELECT COUNT(*) n FROM gacha_ledger WHERE reason='login'").get().n, 2);
+});
+test('daily bonuses count old credits without paying them again and repeat after the fifth claim', (t) => {
+  let time = Date.parse('2026-10-29T15:59:59.999Z');
+  const { db, user, store } = fixture(t, { clock: () => time });
+  store.ledger('login:2026-10-29:' + user, user, 'login', 100, 0, 'a'.repeat(64), store.at());
+  store.daily(user);
+  assert.equal(store.wallet(user).coins, 100);
+  time++;
+  const expected = [1000, 1500, 1000, 2000, 1000, 1000, 1500];
+  for (const coins of expected) {
+    const before = store.wallet(user).coins;
+    new GachaStore(db, { clock: () => time }).daily(user);
+    store.daily(user);
+    assert.equal(store.wallet(user).coins - before, coins);
+    time += 2 * 86400000;
+  }
+});
+test('each pool counts historical draws separately and boosts only milestone cards in ten pulls', (t) => {
+  const bonusRolls = [6044, 6045];
+  const { db, user, other, store } = fixture(t, {
+    choose: (limit) => (limit === 9300 ? bonusRolls.shift() : 0),
+  });
+  fund(store, db, user, 20_000, 0);
+  const draw = (pool, count) => store.draw(user, { pool, count, requestId: randomUUID() });
+  for (let n = 0; n < 4; n++) draw('combat', 10);
+  for (let n = 0; n < 9; n++) draw('combat', 1);
+  db.prepare(
+    "UPDATE gacha_requests SET response_json=json_remove(response_json,'$.drawCount')",
+  ).run();
+  const poolCount = (id, player = user) =>
+    store.state(player).pools.find((pool) => pool.id === id).drawCount;
+  assert.equal(poolCount('combat'), 49);
+  assert.equal(poolCount('combat', other), 0);
+  assert.equal(draw('all', 1).results[0].rarity, 'common');
+  assert.equal(draw('arrival', 1).results[0].rarity, 'common');
+  const request = { pool: 'combat', count: 10, requestId: randomUUID() };
+  const receipt = store.draw(user, request);
+  assert.equal(receipt.drawCount, 59);
+  assert.equal(receipt.results[0].rarity, 'epic');
+  assert.ok(receipt.results.slice(1).every((item) => item.rarity === 'common'));
+  assert.deepEqual(store.draw(user, request), receipt);
+  assert.equal(poolCount('combat'), 59);
+  assert.equal(poolCount('all'), 1);
+  assert.equal(poolCount('arrival'), 1);
+  for (let n = 0; n < 4; n++) draw('combat', 10);
+  assert.equal(draw('combat', 1).results[0].rarity, 'legendary');
+  assert.equal(poolCount('combat'), 100);
+  assert.deepEqual(bonusRolls, []);
 });
 test('ten pulls charge once, deduplicate rewards within the same batch, and replay exactly', (t) => {
   const { db, user, store } = fixture(t, { choose: () => 0 });
@@ -107,21 +155,22 @@ test('ten pulls charge once, deduplicate rewards within the same batch, and repl
     (e) => e.code === 'GACHA_REQUEST_CONFLICT',
   );
 });
-test('weighted draw respects item boundaries and the combined pool uses item weights directly', (t) => {
-  let roll = 0;
-  const { db, user, store } = fixture(t, { choose: () => roll });
+test('weighted draw respects rarity and uniform item boundaries', (t) => {
+  const rolls = [];
+  const { db, user, store } = fixture(t, { choose: () => rolls.shift() });
   fund(store, db, user, 1000, 0);
-  const entries = poolItems('all'),
-    total = entries.reduce((n, i) => n + i.weight, 0);
-  for (const [sample, expected] of [
-    [0, entries[0]],
-    [entries[0].weight - 1, entries[0]],
-    [entries[0].weight, entries[1]],
-    [total - 1, entries.at(-1)],
+  const entries = poolItems('all');
+  for (const [sample, rarity, itemIndex] of [
+    [0, 'common', 0],
+    [74, 'common', 1],
+    [75, 'rare', 0],
+    [93, 'epic', 0],
+    [98, 'legendary', 0],
+    [99, 'legendary', 1],
   ]) {
-    roll = sample;
+    rolls.push(sample, itemIndex);
     const r = store.draw(user, { requestId: randomUUID(), pool: 'all', count: 1 });
-    assert.equal(r.results[0].key, expected.key);
+    assert.equal(r.results[0].key, entries.filter((item) => item.rarity === rarity)[itemIndex].key);
   }
 });
 test('a failed pull batch rolls back debit, ownership, shards, and request receipt', (t) => {
@@ -229,12 +278,12 @@ test('normal completed matches reward active humans once, preserve winners and e
     ],
   };
   assert.deepEqual(store.awardMatch(facts), [
-    { userId: user, coins: 75 },
-    { userId: other, coins: 50 },
+    { userId: user, coins: 500 },
+    { userId: other, coins: 300 },
   ]);
   assert.deepEqual(store.awardMatch(facts), []);
-  assert.equal(store.wallet(user).coins, 75);
-  assert.equal(store.wallet(other).coins, 50);
+  assert.equal(store.wallet(user).coins, 500);
+  assert.equal(store.wallet(other).coins, 300);
   assert.equal(store.wallet(afk).coins, 0);
   assert.deepEqual(store.awardMatch({ ...facts, id: randomUUID(), purpose: 'test' }), []);
   assert.deepEqual(store.awardMatch({ ...facts, id: randomUUID(), normalEnd: false }), []);
@@ -254,7 +303,7 @@ test('normal completed matches reward active humans once, preserve winners and e
       }),
     (e) => e.code === 'GACHA_EVENT_CONFLICT',
   );
-  assert.equal(store.wallet(user).coins, 75);
+  assert.equal(store.wallet(user).coins, 500);
 });
 test('schema21 migration snapshots legacy ownership exactly once; later achievements do not grant rewards', (t) => {
   const dir = mkdtempSync(path.join(tmpdir(), 'bga-gacha-'));
@@ -343,9 +392,10 @@ test('every new palette is an independent draw and exchange reward with the orig
   const attack = poolItems('attacks').find((item) => item.id === 'shield_alt');
   const entrance = poolItems('entrances').find((item) => item.id === 'classic-alt');
   const pick = poolItems('attacks')
-    .slice(0, poolItems('attacks').indexOf(attack))
-    .reduce((total, item) => total + item.weight, 0);
-  const { db, store, user, other } = fixture(t, { choose: () => pick });
+    .filter((item) => item.rarity === attack.rarity)
+    .indexOf(attack);
+  const rolls = [0, pick];
+  const { db, store, user, other } = fixture(t, { choose: () => rolls.shift() });
   fund(store, db, user);
   assert.equal(
     store.draw(user, { pool: 'attacks', count: 1, requestId: randomUUID() }).results[0].id,

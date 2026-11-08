@@ -31,6 +31,9 @@ $typography: (
 }
 
 :root {
+  // #341 Taiwan stock-cinematic semantics, independent of UI success/error colours.
+  --stitch-gacha-up: #da4a50;
+  --stitch-gacha-down: #2a9670;
   // Scene foregrounds are fixed pairs: artwork brightness is independent of the UI theme.
   --stitch-scene-light-ink: #1b1c1c;
   --stitch-scene-light-hover: #eeebe6;

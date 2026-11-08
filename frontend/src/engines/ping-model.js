@@ -1,3 +1,5 @@
+import voices from '../../../public/shared/ping-voices.json' with { type: 'json' };
+
 let PingModel;
 (function (root) {
   'use strict';
@@ -25,22 +27,7 @@ let PingModel;
     surprised: '#ffae4b',
     admire: '#ff8cda',
   });
-  const voiceCues = [
-    'amazing',
-    'bad',
-    'card-check',
-    'sleep',
-    'look',
-    'legacy',
-    'no-bluff',
-    'cry',
-    'coward',
-    'goodnight',
-    'senior',
-    'practice',
-    'huh',
-    'what',
-  ].map((name) => 'ping-voice-' + name);
+  const voiceCues = voices.map(({ id }) => 'ping-voice-' + id);
   const defaults = ['ping', 'attention', 'question', 'help', 'look'];
   function wheel(input) {
     const items = Object.keys(types).filter(

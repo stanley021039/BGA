@@ -1145,7 +1145,7 @@ export function playAttackArtwork(surface, options) {
   const ctx = surface.getContext('2d');
   if (!ctx) return () => {};
   const { width, height } = options,
-    quality = Math.min(1, 1280 / width, 900 / height);
+    quality = Math.min(options.renderScale ?? 1, 1280 / width, 900 / height);
   surface.width = Math.max(1, Math.round(width * quality));
   surface.height = Math.max(1, Math.round(height * quality));
   ctx.setTransform(quality, 0, 0, quality, 0, 0);

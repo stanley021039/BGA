@@ -50,6 +50,13 @@
       >喝啤酒、雙手食指打叉與哭哭表情來自使用者提供的圖片。抽／停操作圖使用內建圖片工具輕微Q化，喝啤酒字幕改為「還要爽爽」；爆鍋來源圖原樣保留，介面只顯示左側表情。這些角色圖片不列入本站原創SVG或前述開放授權圖示。</p
     ></section
   ><section class="credit-card"
+    ><h2>抽卡詠唱配樂</h2
+    ><p
+      >使用者提供〈You Say Run〉（林ゆうき）、〈il vento d’oro〉（菅野祐悟）、《Attack on Titan
+      OST》、〈Swordland〉與〈UNICORN〉（澤野弘之）的音檔。本站裁切片段、調整音量與淡入淡出，並轉成立體聲
+      MP3。</p
+    ></section
+  ><section class="credit-card"
     ><h2>前端開源軟體</h2
     ><p
       ><a href="https://github.com/vuejs/core/blob/main/LICENSE">Vue</a>、<a

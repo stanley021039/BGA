@@ -2,7 +2,13 @@
 import { nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import UiButton from './UiButton.vue';
 const props = withDefaults(
-  defineProps<{ title: string; compact?: boolean; dismissible?: boolean }>(),
+  defineProps<{
+    title: string;
+    titleHidden?: boolean;
+    compact?: boolean;
+    fullViewport?: boolean;
+    dismissible?: boolean;
+  }>(),
   { dismissible: true },
 );
 const emit = defineEmits<{ closing: []; closed: [] }>();
@@ -45,18 +51,18 @@ defineExpose({ open, close });
     ref="dialog"
     autofocus
     class="vue-dialog ui-dialog vue-stitch-dialog"
-    :class="{ 'vue-dialog-compact': compact }"
+    :class="{ 'vue-dialog-compact': compact, 'vue-dialog-full-viewport': fullViewport }"
     :aria-labelledby="headingId"
     @cancel="cancel"
     @close="closed"
   >
-    <header class="vue-dialog-header"
-      ><h2 :id="headingId">{{ title }}</h2
-      ><slot name="close"
+    <header class="vue-dialog-header" :class="{ 'is-title-hidden': titleHidden }"
+      ><h2 :id="headingId" :class="{ 'ui-sr-only': titleHidden }">{{ title }}</h2
+      ><slot name="header-actions" /><slot name="close"
         ><UiButton
           icon="close"
           icon-only
-          caption="關閉"
+          :caption="titleHidden ? undefined : '關閉'"
           :label="'關閉' + title"
           :disabled="!dismissible"
           @click="close" /></slot
@@ -64,3 +70,8 @@ defineExpose({ open, close });
     <div v-if="visible" class="vue-dialog-content"><slot /></div>
   </dialog>
 </template>
+<style scoped>
+.vue-dialog-header.is-title-hidden {
+  justify-content: flex-end;
+}
+</style>

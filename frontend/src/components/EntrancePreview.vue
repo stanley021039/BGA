@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MotionPolicy from '../engines/motion-policy.js';
+import '../styles/entrance-preview.scss';
 
 import { sizedImage } from '../services/image-size';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -7,7 +8,12 @@ import { apparate } from '../pages/lobby/apparition';
 import type { EntranceEffectId } from '../services/entrance-effects';
 import { usePreferencesStore } from '../stores/preferences';
 // Plays the chosen entrance effect on the player's own character.
-const props = defineProps<{ effect: EntranceEffectId; image: string; name: string }>();
+const props = defineProps<{
+  effect: EntranceEffectId;
+  image: string;
+  name: string;
+  size?: 128 | 256;
+}>();
 const prefs = usePreferencesStore(),
   stage = ref<HTMLElement | null>(null);
 let stop: (() => void) | null = null;
@@ -34,7 +40,9 @@ defineExpose({ play });
   <button type="button" class="entrance-preview" aria-label="重播進場特效" @click="play"
     ><span ref="stage" class="entrance-stage" aria-hidden="true"
       ><span class="entrance-preview-actor"
-        ><img :src="sizedImage(image, 256)" alt="" draggable="false" /><span>{{ name }}</span></span
+        ><img :src="sizedImage(image, size ?? 256)" alt="" draggable="false" /><span>{{
+          name
+        }}</span></span
       ></span
     ><span class="entrance-preview-hint">點一下重播</span></button
   >

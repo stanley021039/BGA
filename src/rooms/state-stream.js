@@ -27,6 +27,7 @@ function createStateStream({
   onFlush = () => {},
   onAlive = () => {},
   onHeartbeat = () => {},
+  onConnectionsChanged = () => {},
   sweepMs = 1000,
   shouldFastSweep,
   heartbeatMs = 15000,
@@ -53,6 +54,7 @@ function createStateStream({
   }
   function send(entry) {
     if (!valid(entry)) return entry.close();
+    if (!project) return;
     // A busy channel can change faster than anyone needs to see: within the gap
     // the view is not even built, and the next sweep sends what waited.
     if (minGapMs && Date.now() - entry.sentAt < minGapMs) return;
@@ -100,12 +102,14 @@ function createStateStream({
     fastSweep = null,
     heartbeat = null;
   function startTimers() {
-    if (sweep) return;
-    sweep = setInterval(sweepRooms, sweepMs);
-    sweep.unref();
-    if (shouldFastSweep) {
-      fastSweep = setInterval(sweepFastRooms, 250);
-      fastSweep.unref();
+    if (heartbeat) return;
+    if (project) {
+      sweep = setInterval(sweepRooms, sweepMs);
+      sweep.unref();
+      if (shouldFastSweep) {
+        fastSweep = setInterval(sweepFastRooms, 250);
+        fastSweep.unref();
+      }
     }
     heartbeat = setInterval(beat, heartbeatMs);
     heartbeat.unref();
@@ -173,6 +177,7 @@ function createStateStream({
         set.delete(entry);
         if (!set.size && rooms.get(room.code) === set) rooms.delete(room.code);
         if (!rooms.size) stopTimers();
+        onConnectionsChanged(entry.room);
         try {
           res.end();
         } catch {
@@ -191,6 +196,7 @@ function createStateStream({
     // Asks the browser to wait a moment before reconnecting.
     write(entry, 'retry: 2000\n\n');
     send(entry);
+    if (!entry.closed) onConnectionsChanged(room);
     return entry;
   }
   // Small signals (new chat message, new invitation) that tell a page to read
@@ -202,7 +208,20 @@ function createStateStream({
     for (const set of [...rooms.values()])
       for (const entry of [...set]) if (entry.userId === userId) write(entry, event(kind, '{}'));
   }
+  function publish(code, kind, data, { excludeUserId } = {}) {
+    const text = event(kind, JSON.stringify(data));
+    for (const entry of [...(rooms.get(code) || [])]) {
+      if (!valid(entry)) entry.close();
+      else if (entry.userId !== excludeUserId) write(entry, text);
+    }
+  }
   const watched = (code) => !!rooms.get(code)?.size;
+  function viewerNames(room, include = () => true) {
+    const names = new Map();
+    for (const entry of rooms.get(room.code) || [])
+      if (entry.room === room && include(entry)) names.set(entry.userId, entry.user.display_name);
+    return [...names.values()];
+  }
   function closeRoom(code) {
     for (const entry of [...(rooms.get(code) || [])]) entry.close();
     rooms.delete(code);
@@ -223,7 +242,18 @@ function createStateStream({
       }
     notify(next);
   }
-  return { subscribe, notify, hint, hintUser, watched, closeRoom, close, rebind };
+  return {
+    subscribe,
+    notify,
+    hint,
+    hintUser,
+    publish,
+    watched,
+    viewerNames,
+    closeRoom,
+    close,
+    rebind,
+  };
 }
 
 module.exports = { createStateStream, stateTag };

@@ -99,7 +99,7 @@ const { withEntryIntro } = require('./http/entry-intro');
 const { createRoomTransitions } = require('./rooms/transitions');
 const { returnToWaiting } = require('./rooms/rematch');
 const { roomGames, switchGame, assertGameContext } = require('./rooms/game-switch');
-const { spectatorView, observerAudioContext } = require('./rooms/spectator');
+const { spectatorView, observerAudioContext, games: spectatorGames } = require('./rooms/spectator');
 const { createStateStream, stateTag } = require('./rooms/state-stream');
 const roomPersistence = require('./rooms/persistence');
 const { botSupport, addTestBot } = require('./ai');
@@ -459,6 +459,9 @@ function initializeApp(config, dataLock, acquired) {
       actionFeedback: require('./rooms/action-feedback').actionFeedback(room),
       type: room.type || 'poker',
       gameRevision: room.gameRevision || 0,
+      ...(Object.hasOwn(spectatorGames, room.type || 'poker')
+        ? { viewerNames: observerStream.viewerNames(room, canObserveRoom) }
+        : {}),
       roomGames: roomGames.filter((game) => {
         if (game.type === 'decrypto')
           return config.decryptoEnabled ?? config.frontendEnabled === true;
@@ -547,6 +550,7 @@ function initializeApp(config, dataLock, acquired) {
   achievementStore = new AchievementStore(db);
   gachaStore = new (require('./gacha/store').GachaStore)(db, {
     clock: config.gachaClock || Date.now,
+    choose: config.gachaChoose,
   });
   artworkStore = new ArtworkStore(db);
   musicStore = new MusicStore(
@@ -1124,6 +1128,19 @@ function initializeApp(config, dataLock, acquired) {
     onAlive: (entry) => resumeSeat(entry.room, entry.user),
     onHeartbeat: (entry) => roomInvitations.touch(entry.user),
   });
+  function canObserveRoom({ room, userId }) {
+    return (
+      rooms.get(room.code) === room &&
+      Object.hasOwn(spectatorGames, room.type || 'poker') &&
+      !kickedUsers.get(room.code)?.has(userId) &&
+      !seats.get(room.code)?.has(userId)
+    );
+  }
+  const observerStream = createStateStream({
+    project: () => ({}),
+    valid: (entry) => canObserveRoom(entry) && !!auth.sessionFrom(entry.req),
+    onConnectionsChanged: stateStream.notify,
+  });
   const transitions = createRoomTransitions({
     runtime,
     onTransition: (room) => {
@@ -1202,6 +1219,18 @@ function initializeApp(config, dataLock, acquired) {
     lobbyStream.notify(LOBBY_CHANNEL);
     return view;
   };
+  const gachaAnnouncements = require('./gacha/announcements').createGachaAnnouncements(
+    (entry) => !!auth.sessionFrom(entry.req),
+  );
+  const gachaSpectators = require('./gacha/spectators').createGachaSpectators({
+    db,
+    valid: (entry) => !!auth.sessionFrom(entry.req),
+    hideAnnouncement: gachaAnnouncements.hide,
+    announce: (user, receipt) => {
+      gachaAnnouncements.stage(user, receipt);
+      gachaAnnouncements.release(user.id, receipt.requestId);
+    },
+  });
   const port = config.port,
     protocol = 'http';
   function limitAuth(req) {
@@ -1396,15 +1425,39 @@ function initializeApp(config, dataLock, acquired) {
         }
         const user = auth.requireUser(req);
         gachaStore.daily(user.id);
+        const spectatePath = /^\/api\/gacha\/spectate(?:\/([a-f0-9-]{36}))?$/i.exec(url.pathname);
+        if (spectatePath && req.method === 'GET') {
+          if (!gachaSpectators.subscribe(spectatePath[1], { req, res, user }))
+            throw new HttpError(429, 'STREAM_LIMIT', '觀戰連線已達上限');
+          return;
+        }
+        if (spectatePath && !spectatePath[1] && req.method === 'POST') {
+          limitRate(roomRate, 'gacha-spectate:' + user.id, 120);
+          return send(gachaSpectators.update(user, data));
+        }
+        if (url.pathname === '/api/gacha/events' && req.method === 'GET') {
+          if (!gachaAnnouncements.subscribe({ req, res, user }))
+            throw new HttpError(429, 'STREAM_LIMIT', '彈幕連線已達上限');
+          return;
+        }
+        if (url.pathname === '/api/gacha/reveal' && req.method === 'POST') {
+          limitRate(roomRate, 'gacha-reveal:' + user.id, 30);
+          if (typeof data?.requestId !== 'string' || !/^[a-f0-9-]{36}$/i.test(data.requestId))
+            throw new HttpError(400, 'INVALID_GACHA_REQUEST', '抽卡操作識別碼不正確');
+          gachaAnnouncements.release(user.id, data.requestId);
+          return send({ ok: true });
+        }
         if (url.pathname === '/api/gacha' && req.method === 'GET')
-          return send(gachaStore.state(user.id));
+          return send({ ...gachaStore.state(user.id), characterImage: portraitUrl(user.id) });
         if (url.pathname === '/api/gacha/history' && req.method === 'GET')
           return send(gachaStore.history(user.id));
         if (url.pathname === '/api/gacha/draw') {
           if (req.method !== 'POST')
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '抽卡需使用 POST');
           limitRate(roomRate, 'gacha:' + user.id, 30);
-          return send(gachaStore.draw(user.id, data));
+          return send(
+            gachaStore.draw(user.id, data, (receipt) => gachaAnnouncements.stage(user, receipt)),
+          );
         }
         if (url.pathname === '/api/gacha/exchange') {
           if (req.method !== 'POST')
@@ -1919,6 +1972,15 @@ function initializeApp(config, dataLock, acquired) {
           if (user.role !== 'admin')
             throw new HttpError(403, 'ADMIN_REQUIRED', '只有管理者可以操作');
 
+          if (url.pathname === '/api/admin/gacha/odds') {
+            if (req.method === 'GET') return send(gachaStore.odds());
+            if (req.method === 'POST') {
+              limitRate(accountRate, 'gacha-odds:' + user.id, 30);
+              return send(gachaStore.setOdds(user.id, data));
+            }
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作不支援此方法');
+          }
+
           if (url.pathname === '/api/admin/market/images' && req.method === 'GET') {
             limitRate(accountRate, 'market-pending:' + user.id, 60);
             if (['buckets', 'weekdays'].some((key) => url.searchParams.getAll(key).length > 1))
@@ -2301,6 +2363,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/room-events',
             '/api/telephone/watch',
             '/api/watch',
+            '/api/watch/events',
             '/api/watch-audio',
             '/api/telephone/draft',
             '/api/bluff/caption',
@@ -2340,7 +2403,7 @@ function initializeApp(config, dataLock, acquired) {
         if (!room) throw new HttpError(404, 'ROOM_NOT_FOUND', '找不到房間，請確認房間代碼');
         if (kickedUsers.get(room.code)?.has(user.id))
           throw new HttpError(403, 'KICKED', '你已被房主踢出房間');
-        if (['/api/watch', '/api/watch-audio'].includes(url.pathname)) {
+        if (['/api/watch', '/api/watch-audio', '/api/watch/events'].includes(url.pathname)) {
           if (room.type === 'coc')
             throw new HttpError(
               403,
@@ -2350,11 +2413,20 @@ function initializeApp(config, dataLock, acquired) {
           const audio = url.pathname === '/api/watch-audio';
           if (req.method !== 'GET' && !(audio && req.method === 'HEAD'))
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '觀戰只支援讀取');
-          limitRate(roomRate, (audio ? 'watch-audio:' : 'watch:') + user.id, audio ? 120 : 90);
+          const events = url.pathname === '/api/watch/events';
+          const rateKey = audio ? 'watch-audio:' : events ? 'watch-events:' : 'watch:';
+          limitRate(roomRate, rateKey + user.id, audio ? 120 : events ? 30 : 90);
           if (seats.get(room.code)?.has(user.id))
             throw new HttpError(409, 'ALREADY_SEATED', '已入座玩家請使用玩家畫面');
           if (audio)
             return gameAudio.serve(req, res, room, observerAudioContext(room), url.searchParams);
+          if (events) {
+            if (!Object.hasOwn(spectatorGames, room.type || 'poker'))
+              throw new HttpError(404, 'WATCH_UNAVAILABLE', '這款遊戲尚未開放觀戰');
+            if (!observerStream.subscribe(room, { req, res, user }))
+              throw new HttpError(429, 'STREAM_LIMIT', '觀戰連線已達上限');
+            return;
+          }
           return send(spectatorView(room, gameAudio));
         }
         if (url.pathname === '/api/telephone/watch') {
@@ -2435,6 +2507,7 @@ function initializeApp(config, dataLock, acquired) {
             watchRooms.rebind(room, next);
             roomSpace.rebind(room, next);
             rooms.set(room.code, next);
+            observerStream.rebind(room, next);
             stateStream.rebind(room, next);
             room = next;
           }
@@ -3105,10 +3178,18 @@ function initializeApp(config, dataLock, acquired) {
         if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
         return sendImage(req, res, url, row, url.searchParams.has('v'));
       }
-      if (url.pathname.startsWith('/assets/attacks/')) {
+      const gachaPoster =
+        /^\/assets\/(attacks|entrances|backgrounds)\/gacha\/([a-z_-]+?)(?:-256|-96)?\.webp$/.exec(
+          url.pathname,
+        );
+      if (gachaPoster || url.pathname.startsWith('/assets/attacks/')) {
         auth.requireUser(req);
         const name = url.pathname.slice('/assets/attacks/'.length);
+        const knownPoster =
+          gachaPoster &&
+          require('./gacha/catalog').byKey.has(gachaPoster[1] + ':' + gachaPoster[2]);
         if (
+          !knownPoster &&
           ![
             'shaohua-closed.webp',
             'shaohua-open.webp',
@@ -3119,9 +3200,7 @@ function initializeApp(config, dataLock, acquired) {
           ].includes(name)
         )
           throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到招式圖片');
-        const { bytes, version } = readStatic(
-          path.join(__dirname, '..', 'public/assets/attacks', name),
-        );
+        const { bytes, version } = readStatic(path.join(__dirname, '..', 'public', url.pathname));
         return sendImage(
           req,
           res,
@@ -3338,24 +3417,9 @@ function initializeApp(config, dataLock, acquired) {
       files['/assets/game-sounds/entry-home-family.mp3'] =
         'assets/game-sounds/entry-home-family.mp3';
       files['/assets/game-sounds/entry-intro-user.mp3'] = 'assets/game-sounds/entry-intro-user.mp3';
-      for (const name of [
-        'amazing',
-        'bad',
-        'card-check',
-        'sleep',
-        'look',
-        'legacy',
-        'no-bluff',
-        'cry',
-        'coward',
-        'goodnight',
-        'senior',
-        'practice',
-        'huh',
-        'what',
-      ])
-        files['/assets/game-sounds/ping-voice-' + name + '.mp3'] =
-          'assets/game-sounds/ping-voice-' + name + '.mp3';
+      for (const { id } of require('../public/shared/ping-voices.json'))
+        files['/assets/game-sounds/ping-voice-' + id + '.mp3'] =
+          'assets/game-sounds/ping-voice-' + id + '.mp3';
       for (const name of [
         'register-320.webp',
         'register-480.webp',
@@ -3377,6 +3441,8 @@ function initializeApp(config, dataLock, acquired) {
           files['/assets/' + sound.directory + '/' + name] =
             'assets/' + sound.directory + '/' + sound.file;
       }
+      for (const { file } of require('../public/assets/game-sounds/gacha-manifest.json').files)
+        files['/assets/game-sounds/' + file] = 'assets/game-sounds/' + file;
       files['/shared/entry-intro.css'] = 'shared/entry-intro.css';
       if (
         (url.pathname === '/ceo' || roomPath?.[1] === 'ceo') &&
@@ -3412,7 +3478,7 @@ function initializeApp(config, dataLock, acquired) {
         if (
           !require('./achievements/bonus-rewards').ownedSounds(db, owner.id).includes(voiceAsset[1])
         )
-          throw new HttpError(403, 'PING_SOUND_LOCKED', '請先取得對應成就音效，或兌換 Ping 獎勵');
+          throw new HttpError(403, 'PING_SOUND_LOCKED', '請先取得這段標記語音');
       }
       if (file.endsWith('.html') && file !== 'login.html') {
         const visitor = auth.sessionFrom(req);
@@ -3596,7 +3662,10 @@ function initializeApp(config, dataLock, acquired) {
       await attempt(() => mediaThumbnails.stop());
       await attempt(() => mediaAudio.stop());
       await attempt(() => stateStream.close());
+      await attempt(() => observerStream.close());
       await attempt(() => lobbyStream.close());
+      await attempt(() => gachaAnnouncements.close());
+      await attempt(() => gachaSpectators.close());
       await attempt(() => runtime.drainStreams());
       await serverClosed;
       for (const room of rooms.values()) await attempt(() => awardRoomAchievements(room));
