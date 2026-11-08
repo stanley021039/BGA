@@ -444,7 +444,10 @@ test('cinematic reveals one receipt once and releases finite timers on complete,
   assert.equal(movie.host.querySelector('.stock-series'), openingSeries);
   assert.equal(movie.host.querySelectorAll('.stock-final-candle').length, 1);
   assert.equal(movie.host.querySelector('[data-ending]').getAttribute('data-ending'), 'rise');
-  assert.match(movie.host.querySelector('.stock-index-ending').textContent, /收盤 [6-9]\d,\d{3} 點/);
+  assert.match(
+    movie.host.querySelector('.stock-index-ending').textContent,
+    /收盤 [6-9]\d,\d{3} 點/,
+  );
   assert.equal(movie.host.textContent.includes('傳說現身'), false);
   await movie.advance(helper.gachaTimeline.complete);
   assert.equal(movie.completed, 1);
