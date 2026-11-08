@@ -49,7 +49,7 @@ async function approve() {
             >{{ gallery.upload.name }} · {{ gallery.upload.width }} × {{ gallery.upload.height }}</p
           ></template
         ><p v-else>選擇檔案後顯示預覽</p></div
-      ><p>上傳者：{{ market.state?.me.displayName }}（依登入帳號記錄）</p
+      ><p>上傳者：{{ market.state?.me.displayName }}</p
       ><MarketRulePicks
         v-model:buckets="gallery.buckets"
         v-model:weekdays="gallery.weekdays"

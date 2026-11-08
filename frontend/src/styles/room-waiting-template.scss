@@ -81,7 +81,7 @@
       gap: 24px;
       min-inline-size: 0;
     }
-    .vue-waiting-hero-copy > a {
+    .vue-waiting-hero-copy > a:not(.ui-button) {
       display: inline-flex;
       align-items: center;
       min-block-size: 44px;
@@ -116,15 +116,7 @@
     .vue-waiting-summary {
       background: var(--stitch-surface-subtle, #faf8f5);
     }
-    .vue-waiting-summary-label {
-      align-self: start;
-      min-inline-size: 120px;
-      padding: 4px 16px;
-      border-radius: 24px;
-      background: #fff2b9;
-      color: #80661b;
-      font-size: 14px;
-    }
+
     .vue-waiting-summary > p:not(.vue-waiting-notice) {
       color: var(--stitch-muted);
     }
@@ -314,17 +306,28 @@
     }
   }
 }
+:root body[data-visual-theme] .vue-waiting-quick-action {
+  display: none;
+}
+
 @media (max-width: 760px) {
+  :root body[data-visual-theme] .vue-waiting-quick-action {
+    display: inline-flex;
+  }
   :root body[data-visual-theme] .vue-room-waiting-template {
     min-block-size: 0;
     .vue-waiting-hero {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 20px;
-      padding: 20px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+      min-block-size: 0;
+      gap: var(--stitch-space-12);
+      padding: var(--stitch-space-16);
     }
     .vue-waiting-art > img {
-      max-block-size: 180px;
-      inline-size: min(100%, 240px);
+      max-block-size: 96px;
+      inline-size: 100%;
+    }
+    .vue-waiting-hero-copy {
+      gap: var(--stitch-space-8);
     }
     .vue-waiting-lower {
       grid-template-columns: minmax(0, 1fr);
@@ -344,8 +347,8 @@
       padding-block-start: 12px;
     }
     .vue-waiting-summary > dl > div {
-      min-block-size: 96px;
-      padding: 8px;
+      min-block-size: 0;
+      padding: var(--stitch-space-8);
     }
     .vue-waiting-summary dt {
       font-size: 14px;
@@ -699,7 +702,6 @@
     background: var(--stitch-surface);
     color: var(--stitch-ink);
   }
-  .vue-waiting-summary-label,
   dt,
   .vue-waiting-notice {
     font-size: var(--stitch-text-hint);

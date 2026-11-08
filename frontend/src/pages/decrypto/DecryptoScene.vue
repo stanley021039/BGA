@@ -158,7 +158,7 @@ const digitOptions = [
     </div>
     <UiPanel v-if="s.phase === 'waiting'" class="decrypto-waiting" title="準備秘密通訊">
       <p>4–8 人，兩隊各 2–4 人。每人輪流出題；其他隊友一起討論，由本輪猜碼代表確認答案。</p>
-      <p>日常與童年懷舊詞庫。房間聊天全桌可見，請勿把秘密關鍵詞或密碼貼進公開聊天。</p>
+      <p>房間聊天全桌可見，請勿貼出秘密關鍵詞或密碼。</p>
       <div id="room-waiting-settings-decrypto"></div>
     </UiPanel>
     <template v-else>

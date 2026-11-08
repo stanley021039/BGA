@@ -1552,6 +1552,15 @@
     padding: 20px;
     box-sizing: border-box;
   }
+  .vue-quacks-waiting-game > .vue-waiting-quick-action {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    .vue-quacks-waiting-game > .vue-waiting-quick-action {
+      display: inline-flex;
+      justify-self: start;
+    }
+  }
   .vue-quacks-waiting-game {
     display: grid;
     align-content: center;
@@ -1646,6 +1655,21 @@
     }
   }
   @media (max-width: 600px) {
+    .vue-quacks-waiting-game {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--stitch-space-12);
+
+      > .vue-waiting-quick-action {
+        grid-column: 1 / -1;
+        justify-self: start;
+      }
+
+      .vue-quacks-rq03-hero,
+      .vue-quacks-rq03-art {
+        min-height: 0;
+      }
+    }
     .vue-quacks-pot-caption h1 {
       font-size: 20px;
     }

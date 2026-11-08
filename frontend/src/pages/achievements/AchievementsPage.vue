@@ -12,11 +12,10 @@ onMounted(() => void store.load());
 
 <template>
   <div class="page-heading"
-    ><div class="kicker">YOUR TABLE MOMENTS</div><h1>成就收藏冊<span>✦</span></h1
-    ><p>記下玩過的桌遊時刻。</p></div
+    ><h1>成就收藏冊<span>✦</span></h1></div
   >
   <UiLink href="/gacha" label="獎勵抽卡機" icon="gift" variant="primary" />
-  <p>成就記錄遊玩里程碑；新外觀可透過抽卡、碎片兌換或兌換碼獲得，既有獎勵保留。</p>
+  <p>外觀可透過抽卡、碎片兌換或兌換碼獲得。既有獎勵保留。</p>
   <AchievementRedeem @redeemed="store.load()" />
   <section
     class="page-panel vue-stitch-panel achievements-panel"

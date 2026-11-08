@@ -682,7 +682,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         id="settings-panel-lobby"
         class="settings-panel settings-panel-lobby"
         aria-labelledby="settings-tab-lobby"
-        ><UiPanel class="settings-background-panel" title="大廳與開場" note="選擇後立即套用"
+        ><UiPanel class="settings-background-panel" title="大廳與開場" note="立即套用"
           ><LobbyBackgroundPicker /><OpeningPicker /></UiPanel></section
       ><section
         v-show="activePanel === 'attack'"
@@ -692,8 +692,8 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         ><UiPanel
           class="settings-attack-panel"
           title="攻擊特效"
-          description="設定 Q／E 普通招式與 R 多人招式。"
-          note="選擇後立即套用"
+          description="Q／E 普通招式，R 多人招式。"
+          note="立即套用"
           ><template #actions><a href="/collection?section=attack">前往收藏庫 ↗</a></template
           ><AttackChoices v-if="activePanel === 'attack'" show-current /></UiPanel></section
       ><section
@@ -701,11 +701,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         id="settings-panel-barrage"
         class="settings-panel settings-panel-barrage"
         aria-labelledby="settings-tab-barrage"
-        ><UiPanel
-          class="settings-barrage-panel"
-          title="彈幕外觀"
-          note="點選即套用，設定保存在此瀏覽器"
-        >
+        ><UiPanel class="settings-barrage-panel" title="彈幕外觀" note="立即套用，僅儲存於此瀏覽器">
           <p
             id="settings-barrage-frame-status"
             class="settings-frame-status"
@@ -739,7 +735,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         ><UiPanel
           class="settings-barrage-panel settings-media-panel"
           title="播放器外觀"
-          note="點選即套用，設定保存在此瀏覽器"
+          note="立即套用，僅儲存於此瀏覽器"
         >
           <p
             id="settings-media-frame-status"
@@ -770,7 +766,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         ><UiPanel
           class="settings-barrage-panel settings-entrance-panel"
           title="進場特效"
-          note="點選即套用，設定保存在此瀏覽器"
+          note="立即套用，僅儲存於此瀏覽器"
         >
           <template #actions><a href="/collection?section=entrance">前往收藏庫 ↗</a></template>
           <p

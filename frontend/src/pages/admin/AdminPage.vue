@@ -73,8 +73,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <div class="page-heading"
-    ><div class="kicker">THE CLUB / CONTROL ROOM</div><h1>管理者工具</h1
-    ><p>管理會員與邀請，確認留言板的 GitHub 同步狀態。</p></div
+    ><h1>管理者工具</h1><p>管理會員與邀請，確認留言板的 GitHub 同步狀態。</p></div
   >
   <div class="vue-admin-access"
     ><a class="vue-admin-link-button" href="/market#admin">股市冥燈：建立交易日與結算 ↗</a

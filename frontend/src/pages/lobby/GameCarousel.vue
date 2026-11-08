@@ -192,13 +192,8 @@ onBeforeUnmount(() => {
           @focus="warmGamePage(card.id)"
         >
           <div class="tile-image"
-            ><div
-              v-if="visible(i) && card.id === 'decrypto'"
-              class="decrypto-cover"
-              aria-hidden="true"
-              ><span>1 · 2 · 3 · 4</span><span>秘密通訊</span></div
             ><img
-              v-else-if="visible(i) && card.id !== 'decrypto'"
+              v-if="visible(i)"
               :src="lobbyCovers[card.id].src"
               :srcset="lobbyCovers[card.id].srcset"
               sizes="(min-width: 1181px) and (min-height: 640px) and (pointer: fine) 300px, (max-width: 371px) calc(100vw - 32px), 340px"

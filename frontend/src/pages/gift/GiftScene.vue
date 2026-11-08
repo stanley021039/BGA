@@ -246,7 +246,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
               }}」 · {{ giftRankLabels[focus.rank] }}</p
             ><UiButton icon="close" label="跳過演出" @click="stop" /></template
           ><template v-else
-            ><p>本輪 {{ state.result.entries.length }} 件禮物已揭曉，完整明細都在下方。</p
+            ><p>本輪揭曉 {{ state.result.entries.length }} 件禮物。</p
             ><UiButton
               icon="replay"
               label="重播焦點禮物"
