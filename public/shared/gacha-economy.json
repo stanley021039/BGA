@@ -1,0 +1,9 @@
+{
+  "dailyCoins": 1000,
+  "dailyLoginBonuses": [0, 0, 500, 0, 1000],
+  "matchCoins": 300,
+  "winnerCoins": 200,
+  "bonusInterval": 50,
+  "bonusPercent": { "epic": 65, "legendary": 35 },
+  "exchangeCosts": { "common": 40, "rare": 160, "epic": 320, "legendary": 560 }
+}

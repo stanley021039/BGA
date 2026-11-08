@@ -49,6 +49,35 @@ async function fixture(t, config = {}) {
   return { ...f, request, cookies };
 }
 
+test('seated players see distinct live viewer nicknames for their room', async (t) => {
+  const { base, request, cookies } = await fixture(t);
+  const { code } = await request('host', 'create', { type: 'poker' });
+  const route = 'watch/events?code=' + code;
+  const state = () => request('host', 'state?code=' + code);
+  const controllers = [new AbortController(), new AbortController()];
+  t.after(() => controllers.forEach((controller) => controller.abort()));
+  await request('none', route, undefined, 401);
+  await request('host', route, undefined, 409);
+  assert.deepEqual((await state()).viewerNames, []);
+  assert.equal((await request('guest', 'watch?code=' + code)).viewerNames, undefined);
+  for (const controller of controllers) {
+    const response = await fetch(base + '/api/' + route, {
+      headers: { Cookie: cookies.guest },
+      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]),
+    });
+    assert.equal(response.status, 200);
+  }
+  assert.deepEqual((await state()).viewerNames, ['觀戰朋友']);
+  controllers[0].abort();
+  assert.deepEqual((await state()).viewerNames, ['觀戰朋友']);
+  controllers[1].abort();
+  for (let attempt = 0; attempt < 25; attempt++) {
+    if (!(await state()).viewerNames.length) break;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  assert.deepEqual((await state()).viewerNames, []);
+});
+
 test('every room type exposes GET-only authenticated observation without seats, player commands or private controller state', async (t) => {
   const f = await fixture(t),
     call = f.request;

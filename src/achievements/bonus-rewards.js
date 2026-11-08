@@ -1,18 +1,28 @@
 'use strict';
+const voiceLabels = new Map(
+  require('../../public/shared/ping-voices.json').map(({ id, label }) => [id, label]),
+);
 // Each sound achievement grants a pair. Existing ping sounds stay available
 // only after the corresponding achievement or Ping reward code is owned.
-const pairs = Object.freeze([
-  ['draw-fastest-correct', 'draw', ['amazing', 'look'], ['太神啦', '讓我看看']],
-  ['gift-first-gift', 'gift', ['legacy', 'goodnight'], ['傳承精神', '晚安']],
-  ['majority-one-channel', 'majority', ['cry', 'huh'], ['你在哭哦', '蛤']],
-  ['poker-first-hand', 'poker', ['card-check', 'bad'], ['窩咬驗牌', '他很壞']],
-  ['thunder-first-drive', 'thunder', ['practice', 'coward'], ['菜就多練', '俗仔']],
-  ['quacks-double-explosion', 'quacks', ['what', 'sleep'], ['靠北三小', '那我也要睡了啦']],
-  ['telephone-first-match', 'telephone', ['legacy', 'goodnight'], ['傳承精神', '晚安']],
-  ['musicquiz-rescue', 'musicquiz', ['amazing', 'look'], ['太神啦', '讓我看看']],
-  ['bluff-convincing', 'bluff', ['no-bluff', 'senior'], ['不要瞎掰', '野獸前輩']],
-  ['minimal-first-match', 'minimal', ['cry', 'huh'], ['你在哭哦', '蛤']],
-]);
+const pairs = Object.freeze(
+  [
+    ['draw-fastest-correct', 'draw', ['amazing', 'look']],
+    ['gift-first-gift', 'gift', ['legacy', 'goodnight']],
+    ['majority-one-channel', 'majority', ['cry', 'huh']],
+    ['poker-first-hand', 'poker', ['card-check', 'bad']],
+    ['thunder-first-drive', 'thunder', ['practice', 'coward']],
+    ['quacks-double-explosion', 'quacks', ['what', 'sleep']],
+    ['telephone-first-match', 'telephone', ['legacy', 'goodnight']],
+    ['musicquiz-rescue', 'musicquiz', ['amazing', 'look']],
+    ['bluff-convincing', 'bluff', ['no-bluff', 'senior']],
+    ['minimal-first-match', 'minimal', ['cry', 'huh']],
+  ].map(([achievement, game, ids]) => [
+    achievement,
+    game,
+    ids,
+    ids.map((id) => voiceLabels.get(id)),
+  ]),
+);
 function rewardLabels(id) {
   const pair = pairs.find(([achievement]) => achievement === id);
   return [

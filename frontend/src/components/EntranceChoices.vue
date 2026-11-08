@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '../styles/entrance-preview.scss';
 import MotionPolicy from '../engines/motion-policy.js';
 
 import { onBeforeUnmount, onMounted, ref } from 'vue';
@@ -108,38 +109,6 @@ onBeforeUnmount(() => stop?.());
   align-items: stretch;
   gap: var(--stitch-gap-controls);
   padding: var(--stitch-space-8);
-}
-.entrance-stage {
-  position: relative;
-  display: block;
-  inline-size: 100%;
-  block-size: 160px;
-  overflow: hidden;
-  border-radius: var(--stitch-radius-control);
-  background: var(--stitch-surface);
-}
-.entrance-preview-actor {
-  position: absolute;
-  left: 50%;
-  bottom: var(--stitch-space-20);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--stitch-space-2);
-  transform: translateX(-50%);
-  img {
-    inline-size: 72px;
-    block-size: 78px;
-    object-fit: contain;
-  }
-  > span {
-    padding: 0 var(--stitch-space-8);
-    border: var(--stitch-border);
-    border-radius: var(--stitch-radius-pill);
-    background: var(--stitch-primary);
-    color: var(--stitch-on-primary);
-    font-size: var(--stitch-text-hint);
-  }
 }
 .entrance-description {
   min-block-size: 3em;

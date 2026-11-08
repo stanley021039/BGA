@@ -6,11 +6,13 @@ import { array, record } from '../services/validation';
 import {
   readGachaState,
   readGachaReceipt,
+  readGachaOdds,
+  type GachaOdds,
   type GachaState,
   type GachaReceipt,
 } from '../contracts/gacha';
 type Operation =
-  | { operation: 'draw'; requestId: string; pool: string; count: 1 | 10 }
+  | { operation: 'draw'; requestId: string; pool: string; count: 1 | 10; oddsRevision?: string }
   | { operation: 'exchange'; requestId: string; key: string };
 export const useGachaStore = defineStore('gacha', () => {
   const session = useSessionStore(),
@@ -23,6 +25,10 @@ export const useGachaStore = defineStore('gacha', () => {
     last = ref<GachaReceipt | null>(null),
     unsettled = ref<Operation | null>(null),
     history = ref<GachaReceipt[]>([]);
+  const adminOdds = ref<GachaOdds | null>(null),
+    oddsPending = ref(false),
+    oddsMessage = ref(''),
+    oddsNotice = ref(0);
   let generation = 0,
     loadGeneration = 0;
   const controllers = new Set<AbortController>(),
@@ -40,12 +46,19 @@ export const useGachaStore = defineStore('gacha', () => {
     try {
       const p = JSON.parse(sessionStorage.getItem(key()) || 'null');
       if (!p || !/^[a-f0-9-]{36}$/i.test(p.requestId)) return;
-      if (p.operation === 'draw' && typeof p.pool === 'string' && [1, 10].includes(p.count))
+      if (
+        p.operation === 'draw' &&
+        typeof p.pool === 'string' &&
+        [1, 10].includes(p.count) &&
+        (p.oddsRevision === undefined ||
+          (typeof p.oddsRevision === 'string' && /^[a-f0-9]{64}$/.test(p.oddsRevision)))
+      )
         unsettled.value = {
           operation: 'draw',
           requestId: p.requestId,
           pool: p.pool,
           count: p.count,
+          ...(p.oddsRevision ? { oddsRevision: p.oddsRevision } : {}),
         };
       else if (p.operation === 'exchange' && typeof p.key === 'string')
         unsettled.value = { operation: 'exchange', requestId: p.requestId, key: p.key };
@@ -103,6 +116,10 @@ export const useGachaStore = defineStore('gacha', () => {
       last.value = receipt;
       if (state.value) {
         state.value.wallet = receipt.wallet;
+        if (receipt.operation === 'draw' && receipt.drawCount !== undefined) {
+          const pool = state.value.pools.find((pool) => pool.id === receipt.pool);
+          if (pool) pool.drawCount = Math.max(pool.drawCount, receipt.drawCount);
+        }
         const keys = new Set(
           receipt.operation === 'draw' ? receipt.results.map((i) => i.key) : [receipt.item.key],
         );
@@ -116,6 +133,8 @@ export const useGachaStore = defineStore('gacha', () => {
       if (epoch === generation) {
         const definitive = e instanceof ApiError && e.status >= 400 && e.status < 500;
         if (definitive) retain(null);
+        if (e instanceof ApiError && e.code === 'GACHA_ODDS_CHANGED') await load();
+        if (epoch !== generation) return null;
         message.value = definitive
           ? e.message
           : '結果尚未確認，請按「確認上次結果」；同一操作不會重複扣款。';
@@ -127,8 +146,61 @@ export const useGachaStore = defineStore('gacha', () => {
     }
   }
   function draw(pool: string, count: 1 | 10) {
-    if (unsettled.value) return Promise.resolve(null);
-    return execute({ operation: 'draw', requestId: crypto.randomUUID(), pool, count });
+    if (unsettled.value || !state.value) return Promise.resolve(null);
+    return execute({
+      operation: 'draw',
+      requestId: crypto.randomUUID(),
+      pool,
+      count,
+      oddsRevision: state.value.odds.revision,
+    });
+  }
+  async function loadOdds() {
+    if (session.user?.role !== 'admin' || oddsPending.value) return;
+    const epoch = generation;
+    oddsPending.value = true;
+    try {
+      const next = readGachaOdds(await request('/api/admin/gacha/odds'));
+      if (epoch === generation) {
+        adminOdds.value = next;
+        oddsMessage.value = '';
+      }
+    } catch (e) {
+      if (epoch === generation) {
+        oddsMessage.value = e instanceof Error ? e.message : '權重讀取失敗';
+        oddsNotice.value++;
+      }
+    } finally {
+      if (epoch === generation) oddsPending.value = false;
+    }
+  }
+  async function saveOdds(weights: GachaOdds['weights']) {
+    if (session.user?.role !== 'admin' || !adminOdds.value || oddsPending.value) return false;
+    const epoch = generation;
+    oddsPending.value = true;
+    try {
+      const next = readGachaOdds(
+        await request('/api/admin/gacha/odds', {
+          method: 'POST',
+          body: { weights, revision: adminOdds.value.revision },
+        }),
+      );
+      if (epoch !== generation) return false;
+      adminOdds.value = next;
+      await load();
+      if (epoch !== generation) return false;
+      oddsMessage.value = '權重已儲存，新的抽取將使用此設定。';
+      oddsNotice.value++;
+      return true;
+    } catch (e) {
+      if (epoch === generation) {
+        oddsMessage.value = e instanceof Error ? e.message : '儲存結果未確認，請重新讀取權重。';
+        oddsNotice.value++;
+      }
+      return false;
+    } finally {
+      if (epoch === generation) oddsPending.value = false;
+    }
   }
   function exchange(key: string) {
     if (unsettled.value) return Promise.resolve(null);
@@ -161,6 +233,9 @@ export const useGachaStore = defineStore('gacha', () => {
       state.value = null;
       last.value = null;
       history.value = [];
+      adminOdds.value = null;
+      oddsPending.value = false;
+      oddsMessage.value = '';
       pending.value = loading.value = false;
       unsettled.value = null;
       if (identity.value) {
@@ -189,5 +264,11 @@ export const useGachaStore = defineStore('gacha', () => {
     exchange,
     loadHistory,
     recover: () => (unsettled.value ? execute(unsettled.value) : Promise.resolve(null)),
+    adminOdds,
+    oddsPending,
+    oddsMessage,
+    oddsNotice,
+    loadOdds,
+    saveOdds,
   };
 });

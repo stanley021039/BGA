@@ -90,7 +90,11 @@ declare global {
         options?: { gesture?: boolean },
       ): void;
       stopEffect(clip: HTMLAudioElement | null | undefined): boolean;
-      playEffect?(cue: string, options?: { onError?: () => void }): HTMLAudioElement | undefined;
+      gachaEffectAssets: readonly string[];
+      playEffect?(
+        cue: string,
+        options?: { onError?: () => void; onStop?: (clip: HTMLAudioElement) => void },
+      ): HTMLAudioElement | undefined;
       playExpression(
         sound: { url: string; durationMs: number },
         options?: { onStop?: (clip: HTMLAudioElement) => void; onError?: () => void },

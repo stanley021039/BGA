@@ -5,6 +5,7 @@ const digest = (v) => createHash('sha256').update(JSON.stringify(v)).digest('hex
 function validateGachaDatabase(db) {
   const flag = db.prepare("SELECT value FROM gacha_settings WHERE name='legacy_imported_at'").get();
   if (!flag || !validAt(flag.value)) throw Error('Missing gacha migration receipt');
+  require('./odds').read(db);
   for (const row of db.prepare('SELECT * FROM gacha_wallets').iterate()) {
     if (!validAt(row.updated_at)) throw Error('Invalid gacha wallet time');
     const totals = db

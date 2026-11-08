@@ -1,30 +1,18 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { usePreferencesStore } from '../stores/preferences';
-import { isDefensiveAttack } from '../services/attack-variants.js';
 import { playAttackArtwork } from '../services/attack-artwork';
 import { warmNewSkillAssets } from '../services/game-assets';
-import { attackColor, attackOptions } from '../services/attack-placement';
-import type { LobbyAttackHit } from '../contracts/lobby';
+import { attackColor, previewAttackOptions } from '../services/attack-placement';
 const props = defineProps<{
   effect: string;
-  ageMs?: number;
-  preview?: boolean;
-  damage?: number;
-  critical?: boolean;
-  hits?: LobbyAttackHit[];
-  rays?: { x: number; y: number }[];
-  aspectRatio?: number;
   playKey: string | number;
-  from: { x: number; y: number };
-  to: { x: number; y: number };
 }>();
 const prefs = usePreferencesStore(),
   surface = ref<HTMLCanvasElement | null>(null),
   stage = ref<HTMLElement | null>(null);
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 const color = computed(() => attackColor(props.effect));
-const target = computed(() => (isDefensiveAttack(props.effect) ? props.from : props.to));
 let cleanup: (() => void) | null = null,
   revision = 0,
   mounted = false;
@@ -44,11 +32,9 @@ async function play() {
     return;
   const { width, height } = stage.value.getBoundingClientRect();
   if (!width || !height) return;
-  warmNewSkillAssets(props.effect, width, height);
-  cleanup = playAttackArtwork(
-    surface.value,
-    attackOptions(props, width, height, () => props.hits),
-  );
+  const options = previewAttackOptions(props.effect, width, height);
+  warmNewSkillAssets(props.effect, options.width, options.height);
+  cleanup = playAttackArtwork(surface.value, options);
 }
 onMounted(() => {
   mounted = true;
@@ -76,11 +62,7 @@ onBeforeUnmount(() => {
     :data-effect="effect"
     aria-hidden="true"
     ><canvas ref="surface"></canvas
-    ><span
-      v-if="still"
-      class="attack-static-hit"
-      :style="{ left: target.x + '%', top: 'calc(' + target.y + '% - 42px)', borderColor: color }"
-    ></span
+    ><span v-if="still" class="attack-static-hit" :style="{ borderColor: color }"></span
   ></div>
 </template>
 <style scoped>
@@ -100,6 +82,7 @@ onBeforeUnmount(() => {
 }
 .attack-static-hit {
   position: absolute;
+  inset: 50% auto auto 50%;
   width: 44px;
   height: 44px;
   transform: translate(-50%, -50%);

@@ -3,7 +3,69 @@ const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('../../tests/helpers/browser-modules.cjs'),
   vm = require('node:vm'),
-  path = require('node:path');
+  path = require('node:path'),
+  ts = require('typescript');
+
+test('attack previews frame both regular and area effects around the stage center', () => {
+  const module = { exports: {} };
+  const attackEffects = require('../../public/shared/attack-effects.json');
+  vm.runInNewContext(
+    ts.transpileModule(
+      fs.readFileSync(path.join(__dirname, '../src/services/attack-placement.ts'), 'utf8'),
+      { compilerOptions: { module: ts.ModuleKind.CommonJS } },
+    ).outputText,
+    {
+      module,
+      exports: module.exports,
+      require: () => ({
+        attackEffects,
+        fitsAttackSlot: (slot, id) => {
+          const effect = attackEffects.find((entry) => entry.id === id);
+          return !!effect && (slot === 'r') === !!(effect.area || effect.ultimate);
+        },
+      }),
+    },
+  );
+  const { previewAttackOptions, attackOptions } = module.exports;
+  for (const [width, height] of [
+    [934, 232],
+    [320, 260],
+    [1200, 550],
+  ]) {
+    for (const id of [
+      'shield_alt',
+      'beam',
+      'frost_spikes',
+      'guanyin_barrage',
+      'dimension_cleave',
+    ]) {
+      const frame = previewAttackOptions(id, width, height);
+      for (const point of [frame.from, frame.to]) {
+        assert.ok(Math.abs(point.x / frame.width - 0.5) <= 0.3, id);
+        assert.ok(Math.abs(point.y / frame.height - 0.5) < 0.15, id);
+      }
+      assert.ok(Math.abs(frame.width * frame.renderScale - width) < 1);
+      assert.ok(Math.abs(frame.height * frame.renderScale - height) < 1);
+    }
+    for (const id of ['funnel', 'funnel_alt']) {
+      const frame = previewAttackOptions(id, width, height);
+      assert.equal(frame.from.x, frame.width / 2);
+      assert.equal(frame.to.x, frame.width / 2);
+      assert.equal(frame.from.y, frame.height / 2);
+      assert.equal(frame.to.y, frame.height / 2);
+    }
+    const area = previewAttackOptions('guanyin_barrage', width, height);
+    assert.ok(area.previewUnit * area.renderScale > Math.min(width / 105, height / 68) * 1.12);
+  }
+  const live = attackOptions(
+    { effect: 'beam', from: { x: 20, y: 65 }, to: { x: 70, y: 65 } },
+    1000,
+    200,
+  );
+  assert.equal(live.from.x, 200);
+  assert.equal(live.to.x, 700);
+  assert.equal(live.to.y, 88);
+});
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
   .replace(/^import .*motion-lifetime.js';\n/m, '')

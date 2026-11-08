@@ -14,6 +14,8 @@ export type AttackArtworkOptions = {
     missed?: boolean;
   }[];
   preview?: boolean;
+  previewUnit?: number;
+  renderScale?: number;
   damage?: number;
   critical?: boolean;
   aspectRatio?: number;

@@ -1,0 +1,5 @@
+{
+  "styles": { "label": "彈幕框與播放器風格", "kinds": ["frames", "media"] },
+  "combat": { "label": "攻擊招式與大廳背景", "kinds": ["attacks", "backgrounds"] },
+  "arrival": { "label": "進場特效與語音", "kinds": ["entrances", "sounds"] }
+}

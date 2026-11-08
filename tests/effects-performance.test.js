@@ -4,9 +4,11 @@ const { test } = require('node:test'),
   path = require('node:path'),
   os = require('node:os');
 const { check } = require('../tools/perf-check.cjs'),
-  { appFixture } = require('./helpers/app-fixture.cjs');
+  { appFixture } = require('./helpers/app-fixture.cjs'),
+  { versionFor } = require('../src/http/static-cache');
 const root = path.resolve(__dirname, '..'),
-  manifest = require('../public/assets/game-sounds/compressed-manifest.json');
+  manifest = require('../public/assets/game-sounds/compressed-manifest.json'),
+  gachaManifest = require('../public/assets/game-sounds/gacha-manifest.json');
 test('all original short sounds deliver compressed MP3 under old and new URLs with ETag revalidation', async (t) => {
   const { base } = await appFixture(t);
   for (const e of manifest.sounds)
@@ -26,6 +28,23 @@ test('all original short sounds deliver compressed MP3 under old and new URLs wi
       assert.equal((await again.arrayBuffer()).byteLength, 0);
     }
 });
+test('gacha cues cache only the version matching their compressed bytes', async (t) => {
+  const { base } = await appFixture(t);
+  for (const { file } of gachaManifest.files) {
+    const bytes = fs.readFileSync(path.join(root, 'public/assets/game-sounds', file));
+    const url = base + '/assets/game-sounds/' + file;
+    const current = await fetch(url + '?v=' + versionFor(bytes));
+    assert.equal(current.status, 200, file);
+    assert.equal(current.headers.get('content-type'), 'audio/mpeg');
+    assert.equal(current.headers.get('cache-control'), 'private, max-age=31536000, immutable');
+    assert.deepEqual(Buffer.from(await current.arrayBuffer()), bytes);
+    const stale = await fetch(url + '?v=stale', {
+      headers: { 'If-None-Match': current.headers.get('etag') },
+    });
+    assert.equal(stale.status, 304, file);
+    assert.equal(stale.headers.get('cache-control'), 'private, no-cache');
+  }
+});
 test('performance guard fails on new raw audio, modified compressed bytes, oversized art, embedded media and build output', (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-perf-check-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -37,7 +56,10 @@ test('performance guard fails on new raw audio, modified compressed bytes, overs
   ])
     fs.mkdirSync(path.join(dir, rel), { recursive: true });
   for (const f of fs.readdirSync(path.join(root, 'public/assets/game-sounds')))
-    if (/\.(wav|mp3)$/.test(f) || f === 'compressed-manifest.json')
+    if (
+      /\.(wav|mp3)$/.test(f) ||
+      ['compressed-manifest.json', 'gacha-manifest.json', 'ping-voice-manifest.json'].includes(f)
+    )
       fs.copyFileSync(
         path.join(root, 'public/assets/game-sounds', f),
         path.join(dir, 'public/assets/game-sounds', f),
@@ -47,7 +69,7 @@ test('performance guard fails on new raw audio, modified compressed bytes, overs
       path.join(root, 'public/assets/auth', f),
       path.join(dir, 'public/assets/auth', f),
     );
-  for (const f of ['entrance-stitch.json', 'lobby-background-live.json'])
+  for (const f of ['entrance-stitch.json', 'lobby-background-live.json', 'ping-voices.json'])
     fs.copyFileSync(path.join(root, 'public/shared', f), path.join(dir, 'public/shared', f));
   fs.mkdirSync(path.join(dir, 'public/assets/gift-sounds'), { recursive: true });
   for (const file of fs.readdirSync(path.join(root, 'public/assets/gift-sounds')))

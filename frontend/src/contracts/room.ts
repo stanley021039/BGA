@@ -50,6 +50,7 @@ export interface RoomSnapshot extends Record<string, unknown> {
   host: boolean | string;
   hostId?: string;
   players: RoomPlayer[];
+  viewerNames?: string[];
 }
 const validCode = (value: unknown): value is string =>
   typeof value === 'string' && /^[a-f0-9]{6}$/i.test(value);

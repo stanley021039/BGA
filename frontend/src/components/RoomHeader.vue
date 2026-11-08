@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoomStore } from '../stores/room';
 import RoomInvite from './RoomInvite.vue';
 import RoomGameSwitcher from './RoomGameSwitcher.vue';
+import SpectatorRoster from './SpectatorRoster.vue';
 import UiButton from './UiButton.vue';
 import UiPopover from './UiPopover.vue';
 import StatusSlot from './StatusSlot.vue';
@@ -63,7 +64,10 @@ async function copyCode() {
           class="vue-room-code-button"
           :label="'複製房間代碼 ' + room.code"
           :caption="'房間 ' + room.code"
-          @click="copyCode" /><RoomInvite
+          @click="copyCode" /><RoomInvite /><SpectatorRoster
+          v-if="room.snapshot?.viewerNames"
+          :key="room.code"
+          :names="room.snapshot.viewerNames"
       /></div>
       <div class="vue-room-topbar-navigation"
         ><a class="vue-room-nav-home" href="/">遊戲大廳</a

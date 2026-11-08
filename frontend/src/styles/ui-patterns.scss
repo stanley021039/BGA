@@ -21,6 +21,10 @@
       color: var(--stitch-badge-#{$tone}-ink);
     }
   }
+  &[data-tone='epic'] {
+    background: var(--stitch-artwork-swatch-c4b5fd);
+    color: var(--stitch-artwork-preview-bg);
+  }
   &[data-counter] {
     min-inline-size: 1.75rem;
     min-block-size: 1.75rem;
@@ -147,6 +151,17 @@
     padding-block-end: var(--stitch-space-12);
     border-block-end: var(--stitch-page-heading-rule);
     font-size: var(--stitch-text-page);
+  }
+  &[data-kind='card'] {
+    justify-content: center;
+    text-align: center;
+    font-size: var(--stitch-text-body);
+    &[data-card-size='section'] {
+      font-size: var(--stitch-text-section);
+    }
+    &[data-card-size='page'] {
+      font-size: var(--stitch-text-page);
+    }
   }
 }
 :root body button.ui-choice-card[data-choice-state] {

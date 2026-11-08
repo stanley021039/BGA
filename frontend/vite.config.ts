@@ -46,7 +46,7 @@ const documents: Plugin = {
   },
 };
 
-// Image paths written in the sources (/assets/...png|webp|svg|jpg|gif) get their
+// Image and gacha audio paths written in the sources get their
 // file's content version (?v=), the same value the server checks, so browsers keep
 // them until the bytes change. Paths built at runtime are left alone.
 const publicRoot = fileURLToPath(new URL('../public', import.meta.url));
@@ -64,7 +64,7 @@ function versionOf(pathname: string) {
   return versions.get(pathname);
 }
 const ASSET =
-  /(\/assets\/[A-Za-z0-9_./-]+\.(?:png|webp|svg|jpe?g|gif))(\?[A-Za-z0-9_=&.-]*)?(?=['"`)\s])/g;
+  /(\/assets\/(?:[A-Za-z0-9_./-]+\.(?:png|webp|svg|jpe?g|gif)|game-sounds\/gacha-(?:chant-(?:you-say-run|il-vento-doro|attack-on-titan|swordland|unicorn)|rush|glint|flat|shuffle|success|scream)\.mp3))(\?[A-Za-z0-9_=&.-]*)?(?=['"`)\s])/g;
 function versionAssets(code: string) {
   return code.replace(ASSET, (match, pathname: string, query = '') => {
     const version = versionOf(pathname);

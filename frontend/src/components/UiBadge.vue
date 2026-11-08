@@ -2,7 +2,7 @@
 import '../styles/ui-patterns.scss';
 withDefaults(
   defineProps<{
-    tone?: 'primary' | 'success' | 'info' | 'warning' | 'danger' | 'neutral' | 'disabled';
+    tone?: 'primary' | 'success' | 'info' | 'warning' | 'danger' | 'neutral' | 'disabled' | 'epic';
     counter?: boolean;
     nowrap?: boolean;
     shape?: 'pill' | 'circle';

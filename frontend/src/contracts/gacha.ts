@@ -1,4 +1,5 @@
 import { record, array, text } from '../services/validation';
+import poolGroups from '../../../public/shared/gacha-pools.json';
 export const gachaKinds = [
   'attacks',
   'entrances',
@@ -8,17 +9,38 @@ export const gachaKinds = [
   'sounds',
 ] as const;
 export type GachaKind = (typeof gachaKinds)[number];
+export const gachaRarities = ['common', 'rare', 'epic', 'legendary'] as const;
+export const gachaPoolIds = ['all', ...Object.keys(poolGroups)];
+export function gachaPoolKinds(pool: string): readonly GachaKind[] {
+  if (pool === 'all') return gachaKinds;
+  if (Object.hasOwn(poolGroups, pool))
+    return poolGroups[pool as keyof typeof poolGroups].kinds as GachaKind[];
+  return gachaKinds.filter((kind) => kind === pool);
+}
 export interface GachaItem {
   key: string;
   kind: GachaKind;
   id: string;
   label: string;
-  rarity: 'common' | 'rare' | 'legendary';
+  rarity: (typeof gachaRarities)[number];
   rarityLabel: string;
   weight: number;
   duplicateFragments: number;
   exchangeCost: number;
   owned: boolean;
+}
+export function gachaShowcaseItems(items: readonly GachaItem[]): GachaItem[] {
+  const ordered = [...gachaRarities].reverse().map((rarity) => {
+    const groups = gachaKinds.map((kind) =>
+      items.filter((item) => item.rarity === rarity && item.kind === kind),
+    );
+    const count = Math.max(...groups.map((group) => group.length));
+    return Array.from({ length: count }, (_, index) =>
+      groups.flatMap((group) => (group[index] ? [group[index]] : [])),
+    ).flat();
+  });
+  const featured = ordered.slice(0, 2).flat();
+  return featured.length ? featured : (ordered.find((group) => group.length) ?? []);
 }
 export interface GachaWallet {
   coins: number;
@@ -26,8 +48,42 @@ export interface GachaWallet {
 }
 export interface GachaState {
   wallet: GachaWallet;
-  pools: { id: string; label: string; count: number; totalWeight: number }[];
+  pools: {
+    id: string;
+    label: string;
+    count: number;
+    totalWeight: number;
+    drawCount: number;
+    bonusWeights?: GachaOdds['weights'];
+  }[];
   items: GachaItem[];
+  odds: GachaOdds;
+  characterImage?: string;
+}
+export interface GachaOdds {
+  weights: Record<GachaItem['rarity'], number>;
+  revision: string;
+}
+export function readGachaOdds(value: unknown): GachaOdds {
+  const r = record(value),
+    w = record(r.weights);
+  if (typeof r.revision !== 'string' || !/^[a-f0-9]{64}$/.test(r.revision))
+    throw Error('抽卡機率版本格式不正確');
+  const weights = {
+    common: Number(w.common),
+    rare: Number(w.rare),
+    epic: Number(w.epic),
+    legendary: Number(w.legendary),
+  };
+  for (const key of gachaRarities)
+    if (
+      typeof w[key] !== 'number' ||
+      !Number.isSafeInteger(weights[key]) ||
+      weights[key] < 1 ||
+      weights[key] > 1000000
+    )
+      throw Error('抽卡權重格式不正確');
+  return { weights, revision: r.revision };
 }
 export interface GachaResult extends GachaItem {
   duplicate: boolean;
@@ -40,6 +96,7 @@ export type GachaReceipt =
       pool: string;
       cost: number;
       results: GachaResult[];
+      drawCount?: number;
       fragmentsGained: number;
       wallet: GachaWallet;
       at: string;
@@ -70,11 +127,7 @@ export function readGachaItem(value: unknown): GachaItem {
     kind = required(r.kind) as GachaKind,
     rarity = required(r.rarity) as GachaItem['rarity'],
     id = required(r.id);
-  if (
-    !gachaKinds.includes(kind) ||
-    !['common', 'rare', 'legendary'].includes(rarity) ||
-    r.key !== kind + ':' + id
-  )
+  if (!gachaKinds.includes(kind) || !gachaRarities.includes(rarity) || r.key !== kind + ':' + id)
     throw Error('抽卡獎項格式不正確');
   return {
     key: String(r.key),
@@ -94,22 +147,41 @@ export function readGachaState(value: unknown): GachaState {
     items = array(r.items).map(readGachaItem),
     pools = array(r.pools).map((v) => {
       const p = record(v);
+      const bonus = p.bonusWeights === undefined ? undefined : record(p.bonusWeights);
       return {
         id: required(p.id),
         label: required(p.label),
         count: integer(p.count),
         totalWeight: integer(p.totalWeight),
+        drawCount: integer(p.drawCount ?? 0),
+        ...(bonus && {
+          bonusWeights: {
+            common: integer(bonus.common ?? 0),
+            rare: integer(bonus.rare ?? 0),
+            epic: integer(bonus.epic ?? 0),
+            legendary: integer(bonus.legendary ?? 0),
+          },
+        }),
       };
     });
   if (
     items.length === 0 ||
-    pools.length !== 7 ||
+    pools.length !== gachaPoolIds.length ||
     new Set(items.map((i) => i.key)).size !== items.length ||
-    new Set(pools.map((p) => p.id)).size !== 7 ||
-    pools.some((p) => p.id !== 'all' && !gachaKinds.includes(p.id as GachaKind))
+    new Set(pools.map((p) => p.id)).size !== gachaPoolIds.length ||
+    pools.some((p) => !gachaPoolIds.includes(p.id))
   )
     throw Error('抽卡獎池格式不正確');
-  return { wallet: readWallet(r.wallet), items, pools };
+  const characterImage = text(r.characterImage);
+  return {
+    wallet: readWallet(r.wallet),
+    items,
+    pools,
+    odds: readGachaOdds(r.odds),
+    ...(/^\/characters\/[a-f0-9-]{36}\?(?:v=[a-z0-9_-]{16}&)?size=256$/i.test(characterImage)
+      ? { characterImage }
+      : {}),
+  };
 }
 export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange'): GachaReceipt {
   const r = record(value),
@@ -140,15 +212,19 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
     throw Error('抽卡結果數量不正確');
   const fragmentsGained = integer(r.fragmentsGained);
   const pool = required(r.pool);
-  if (
-    !['all', ...gachaKinds].includes(pool) ||
-    results.some((i) => pool !== 'all' && i.kind !== pool)
-  )
-    throw Error('抽卡卡池明細不一致');
+  const kinds = gachaPoolKinds(pool);
+  if (results.some((item) => !kinds.includes(item.kind))) throw Error('抽卡卡池明細不一致');
   if (
     results.some((i) => i.fragments !== (i.duplicate ? i.duplicateFragments : 0)) ||
     results.reduce((n, i) => n + i.fragments, 0) !== fragmentsGained
   )
     throw Error('抽卡碎片明細不一致');
-  return { operation, ...common, pool, results, fragmentsGained };
+  return {
+    operation,
+    ...common,
+    pool,
+    results,
+    fragmentsGained,
+    ...(r.drawCount === undefined ? {} : { drawCount: integer(r.drawCount) }),
+  };
 }

@@ -1,4 +1,4 @@
-import { attackEffects } from '../stores/attack-loadout';
+import { attackEffects, fitsAttackSlot } from '../stores/attack-loadout';
 import type { LobbyAttackHit, AttackHead, LobbyAttack } from '../contracts/lobby';
 
 export type AttackPoint = { x: number; y: number };
@@ -21,6 +21,65 @@ export type AttackPlacement = {
 export const attackColor = (effect: string) =>
   attackEffects.find((e) => e.id === effect)?.color || attackEffects[0].color;
 
+const targetCentered = new Set([
+  'beam',
+  'chains',
+  'orbital',
+  'singularity',
+  'chain_lightning',
+  'frost_spikes',
+  'arrow_volley',
+  'flame_vortex',
+  'explosion',
+  'giant_orange_cat',
+]);
+
+export function previewAttackOptions(effect: string, stageWidth: number, stageHeight: number) {
+  const ultimate = fitsAttackSlot('r', effect);
+  const renderScale = Math.min(ultimate ? 1.65 : 1.45, stageWidth / 260, stageHeight / 180);
+  const width = stageWidth / renderScale;
+  const height = stageHeight / renderScale;
+  const definition = attackEffects.find((entry) => entry.id === effect);
+  const original = definition?.variantOf || effect;
+  const closeArea = original === 'guanyin_barrage' || original === 'dimension_cleave';
+  const unit = closeArea ? Math.min(width / 92, height / 57) : Math.min(width / 110, height / 62);
+  const mid = width / 2;
+  const y = height / 2 + (original === 'guanyin_barrage' ? unit * 8 : 0);
+  const area = definition?.area;
+  const distance = area ? 34 * unit : Math.min(width * 0.38, height * 0.82);
+  const from = { x: mid - distance / 2, y };
+  const to = { x: mid + distance / 2, y };
+  if (targetCentered.has(original)) {
+    to.x = mid;
+    from.x = mid - distance * 0.6;
+  } else if (original === 'shield' || original === 'sphere' || original === 'funnel') {
+    from.x = to.x = mid;
+  } else if (original === 'guanyin_barrage') {
+    from.x = mid - 7 * unit;
+    to.x = from.x + 30 * unit;
+  } else if (original === 'dimension_cleave') {
+    from.x = mid - distance * 0.75;
+    to.x = from.x + distance;
+  } else if (original === 'gate_of_babylon') {
+    from.x = mid;
+    to.x = mid + distance * 0.78;
+  } else if (original === 'shaohua_devour') {
+    to.x = width * 0.58;
+    from.x = width * 0.36;
+  }
+  return {
+    effect,
+    width,
+    height,
+    from,
+    to,
+    renderScale,
+    previewUnit: unit,
+    preview: true,
+    color: attackColor(effect),
+  };
+}
+
 // Scene positions are percentages of the stage; an avatar's anchor sits 42px
 // above the point the attack aims at. `currentHits` lets a live attack read
 // hits the server settles after it started.
@@ -32,13 +91,6 @@ export function attackOptions(
   currentAttack: () => Partial<LobbyAttack> = () => attack,
 ) {
   const point = (x: number, y: number) => ({ x: (x * width) / 100, y: (y * height) / 100 - 42 });
-  const fitPreview =
-    attack.preview && !!attackEffects.find((effect) => effect.id === attack.effect)?.area;
-  const unit = Math.min(width / 115, height / 100);
-  const from = fitPreview
-    ? { x: width * 0.22, y: height * 0.65 }
-    : point(attack.from.x, attack.from.y);
-  const to = fitPreview ? { x: from.x + unit * 35, y: from.y } : point(attack.to.x, attack.to.y);
   return {
     ageMs: attack.ageMs,
     readHits: Array.isArray(attack.hits)
@@ -79,7 +131,7 @@ export function attackOptions(
     color: attackColor(attack.effect),
     width,
     height,
-    from,
-    to,
+    from: point(attack.from.x, attack.from.y),
+    to: point(attack.to.x, attack.to.y),
   };
 }

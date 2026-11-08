@@ -1,5 +1,27 @@
 # 共用 UI 元件與 token
 
+設定與收藏的 `AttackChoices` 以 `UiTabs` 區分一般招式與大招，沿用 Q／E 與 R 的配裝分類。兩個分頁分別保留最後選取的招式，僅目前分頁播放。大招使用更高的預覽舞台，其他動態展示共用相同的取景。
+
+## 股票抽卡演出（#341）
+
+卡牌稀有度新增 `UiBadge tone="epic"`，使用紫色徽章，史詩卡面搭配紫色光暈。機率清單依傳說、史詩、稀有、普通排序。
+
+`GachaFeatured`（#359）由當前卡池資料組成輪播。先傳說、再史詩，同級交替展示各種類。標記語音顯示名稱，已擁有的語音才提供手動播放。
+
+翻牌時在滿版彈窗中央一次顯示一張大卡。翻開後點畫面可繼續，也可用 Enter 或空白鍵。未翻牌以 `UiChoiceCard action image-only` 讓整張牌背可點擊及以鍵盤操作，保留編號作為可及名稱。史詩與傳說牌背共用紫色閃光，普通及稀有牌背使用藍光外框。翻完後可查看總結果與同卡池的再抽按鈕。十連總結果在桌機排成上下各五張，窄視窗重排為三欄或兩欄，保留長品名、碎片徽章及類別。
+
+`GachaSpotlight` 在同一滿版 `UiDialog` 裡暫時取代卡片。有專屬吟唱時，先播放光效、配樂及兩句吟唱，接著顯示獎品名稱、稀有度及對應演出。攻擊和進場異色沿用原版吟唱。沒有專屬吟唱時直接顯示獎品及演出。`UiDialog title-hidden` 可隱藏可見標題並保留對話框的可及名稱。減少動態時改用靜態展示，關閉或播放完回到當前卡片。
+
+碎片兌換清單以文字按鈕呈現獎品名稱，點擊即進入 `GachaSpotlight` 預覽模式。效果直接播放，可手動重播或關閉，語音由玩家點播。關閉後焦點回到來源名稱，兌換由清單原本的確認流程處理。
+
+`UiHeading kind="card"` 預設為 16px，可用 `card-size="section"` 或 `card-size="page"` 套用 20px 或 28px 的共用字級，保留置中和換行。抽卡單張的語音預覽用 28px，總結果的語音預覽用 20px。單張獎品名稱、徽章和類別以共用間距分隔。
+
+`GachaSpectator`（#357）在抽卡頁列出抽卡者主動開放的場次，觀看入口使用 `UiPanel`、`UiList` 與 `UiButton`。滿版 `UiDialog` 只呈現伺服器當下公開的走勢、牌面或吟唱。未翻牌的等待畫面使用 `UiPanel`，觀眾的獎勵卡與展示元件只供觀看。
+
+`SpectatorRoster`（#358）使用共用按鈕、彈窗與清單呈現觀戰人數及暱稱。遊戲房將入口放在房號旁，抽卡結果使用 `UiDialog` 的 `header-actions` 插槽，開啟名單時仍可獨立返回結果。
+
+`GachaCinematic` 是正式抽卡的場景插畫，接收當次顯示暱稱與已確定的結局。演出和翻牌共用滿版 `UiDialog`，可略過翻牌直接看總結果。場景用 `UiBadge` 名牌、SVG 與 transform／opacity 動態，五個計時工作接入 motion-lifetime 並在完成或卸載時清除。`GachaRewardCard` 使用 `UiPanel`、`UiIcon`、置中的 `UiHeading kind="card"` 及 `UiBadge`。`GachaRewardThumbnail` 顯示攻擊招式、進場特效定格及大廳背景的原有美術。設定、卡池和獎品的動態招式預覽使用 `AttackArtwork` 共用置中取景。`--stitch-gacha-up` 與 `--stitch-gacha-down` 表達台股紅漲綠跌。獎池清單及翻牌共用 `UiBadge` 的 `primary`、`info`、`neutral` 表示傳說、稀有、普通。`GachaLegendaryBarrage` 共用頁面掛載，依彈幕與減少動態偏好，顯示抽卡者暱稱、傳說品名與張數。
+
 2026-10-23 起全站只有一種外觀：Stitch，依 Figma 第三份「BGA｜03 Stitch 最終設計・共用元件」頁面「00｜共用元件」（最新共用規範 R6 node `2179:11730`；Stitch source `e7a7b9d5e7de4aac884b16f2ed44fb0b`；未被 R6 取代的 C07／C05 專用元件仍沿用）。Vue 頁面（`frontend/src/pages/`）只用本頁列出的元件與 `--stitch-*` token；`npm run ui:check` 在 CI 擋下新增的原始色碼、頁面原生控制項與舊 token。
 
 ## 手機角色操作（#301）
@@ -97,7 +119,7 @@
 <ConfirmDialog ref="confirm" />  <!-- await confirm.value.ask('確定刪除？') -->
 ```
 
-原生 `showModal()`，Escape 與關閉鈕返焦觸發元素；`dismissible=false` 時不可關閉（例如送出中）。`compact` 為 28rem 寬。外觀（2026-10-23 選定，同 C07-R2 加入房間）：白底、2px 深色邊、圓角 16px、硬陰影 `--stitch-shadow-raised`、內距 16px、標題 20px／700；底部按鈕列間距 `--stitch-gap-controls`。`UiPopover` 浮動選單同一套立體外觀。
+原生 `showModal()`，Escape 與關閉鈕返焦觸發元素；`dismissible=false` 時不可關閉（例如送出中）。`compact` 為 28rem 寬，`full-viewport` 用於填滿瀏覽器內容區的演出。外觀（2026-10-23 選定，同 C07-R2 加入房間）：白底、2px 深色邊、圓角 16px、硬陰影 `--stitch-shadow-raised`、內距 16px、標題 20px／700；底部按鈕列間距 `--stitch-gap-controls`。`UiPopover` 浮動選單同一套立體外觀。
 
 ### UiPanel
 

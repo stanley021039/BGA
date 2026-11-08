@@ -389,27 +389,12 @@ test('all five ping cues use playable WAV paths, shared volume and mute', async 
 });
 
 test('selectable voice pings play their MP3 files', async () => {
-  const names = [
-    'amazing',
-    'bad',
-    'card-check',
-    'sleep',
-    'look',
-    'legacy',
-    'no-bluff',
-    'cry',
-    'coward',
-    'goodnight',
-    'senior',
-    'practice',
-    'huh',
-    'what',
-  ];
-  for (const name of names) {
+  const voices = require('../public/shared/ping-voices.json');
+  for (const { id } of voices) {
     const ui = harness();
-    const clip = ui.api.playEffect('ping-voice-' + name);
+    const clip = ui.api.playEffect('ping-voice-' + id);
     await tick();
-    assert.equal(clip.src, '/assets/game-sounds/ping-voice-' + name + '.mp3');
+    assert.equal(clip.src, '/assets/game-sounds/ping-voice-' + id + '.mp3');
     assert.equal(clip.volume, 0.25);
     clip.onended();
   }
@@ -417,7 +402,11 @@ test('selectable voice pings play their MP3 files', async () => {
 test('every published voice ping matches its user-provided source manifest', () => {
   const directory = path.join(__dirname, '../public/assets/game-sounds');
   const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'ping-voice-manifest.json')));
-  assert.equal(manifest.cues.length, 14);
+  const voices = require('../public/shared/ping-voices.json');
+  assert.deepEqual(
+    manifest.cues.map(({ id, label }) => ({ id, label })),
+    voices.map(({ id, label }) => ({ id: 'ping-voice-' + id, label })),
+  );
   for (const cue of manifest.cues) {
     const bytes = fs.readFileSync(path.join(directory, cue.file));
     assert.equal(createHash('sha256').update(bytes).digest('hex'), cue.sha256, cue.id);
