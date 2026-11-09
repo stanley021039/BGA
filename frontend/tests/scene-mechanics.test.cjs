@@ -78,19 +78,24 @@ test('a dropped lower body renders only the owner image bottom half and its inde
     id: 'owner',
     name: '測試玩家',
     image: '/character.png',
-    fragment: { id: 'lower', x: 35, y: 55, health: 600000, maxHealth: 600000 },
+    fragment: { id: 'lower', x: 35, y: 55, health: 600000, maxHealth: 600000, stealable: false },
   });
   const host = document.createElement('div');
   document.body.append(host);
   const app = vue.createApp({ render: () => vue.h(module.exports.default, { visitors: [owner] }) });
   app.mount(host);
   try {
-    assert.match(host.querySelector('[role=img]').getAttribute('aria-label'), /本人走近可拾回/);
+    assert.match(host.querySelector('[role=img]').getAttribute('aria-label'), /本人可拾回/);
     assert.equal(host.querySelector('img').getAttribute('src'), '/character.png');
     assert.equal(host.querySelector('progress').getAttribute('value'), '600000');
+    owner.fragment.stealable = true;
     owner.fragment.health = 400000;
     await vue.nextTick();
     assert.equal(host.querySelector('progress').getAttribute('value'), '400000');
+    assert.match(
+      host.querySelector('[role=img]').getAttribute('aria-label'),
+      /其他玩家拾取回 30 能量/,
+    );
     owner.fragment = null;
     await vue.nextTick();
     assert.equal(host.querySelector('.scene-fragment'), null);
