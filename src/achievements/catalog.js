@@ -542,6 +542,46 @@ rows.push(
     'exploration',
   ],
 );
+for (const [game, intro, victory, activity, icon] of [
+  ['brainwave', '默契上線', '一畫就懂', '領圖作畫或提交猜測', 'edit'],
+  ['drama-bar', '今晚我上台', '全場焦點', '完成表演或提交猜測', 'sound'],
+  ['decrypto', '收到密電', '密碼已破解', '提交線索、解碼、截碼或關鍵詞答案', 'lock'],
+  ['second-wind', '初登跑道', '終點線見', '選手招募、選角、擲骰或能力選擇', 'car'],
+  ['ceo', '第一筆交易', '董事會喝采', '收購公司、買進股票或發放股利', 'cards'],
+  ['arena', '初試鋒芒', '競技場新星', '對敵方玩家造成傷害', 'shield'],
+]) {
+  const participation = '完成一場至少兩名真人有效參與的對局，且本人有' + activity + '。';
+  rows.push(
+    [game + '-first-match', game, intro, participation, game + '.first-match', icon, 'intro'],
+    [
+      game + '-first-win',
+      game,
+      victory,
+      '符合完局參與條件，並在正式結算獲勝（含並列）。',
+      game + '.first-win',
+      'check',
+      'fun',
+    ],
+  );
+}
+for (const [game, key, title, condition, icon] of [
+  ['brainwave', 'quick-read', '看圖秒懂', '同一輪第一個猜中領圖者的題目', 'edit'],
+  ['drama-bar', 'unanimous', '一開口全場都懂', '親自演出一輪，至少兩名猜題者且全員猜中', 'sound'],
+  ['decrypto', 'interception', '截到密電', '擔任猜碼代表並成功截到對手的密碼', 'lock'],
+  ['second-wind', 'two-races', '雙冠跑者', '同一局拿下至少兩場分站第一名', 'car'],
+  ['ceo', 'three-transactions', '全能經理人', '同一局完成收購、買股與發放股利各至少一次', 'cards'],
+  ['arena', 'five-points', '五點攻勢', '在競技場單場取得至少 5 分', 'shield'],
+]) {
+  rows.push([
+    game + '-' + key,
+    game,
+    title,
+    '符合完局參與條件，並' + condition + '。',
+    game + '.' + key,
+    icon,
+    'fun',
+  ]);
+}
 const retiredBackgrounds = require('./retired-backgrounds');
 for (const background of [
   ...require('../../public/shared/lobby-backgrounds.json'),

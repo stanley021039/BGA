@@ -264,6 +264,16 @@ class DramaBarRoom extends VoicePartyRoom {
   start() {
     this.begin(this.options.cycles, 0);
   }
+  drawQuestion() {
+    super.drawQuestion();
+    const { phrase, options } = this.question;
+    const remaining = [...options];
+    const selected = Array.from({ length: this.optionsCount }, () => {
+      const [option] = remaining.splice(this.rng(remaining.length), 1);
+      return option;
+    });
+    this.question = { phrase, options: selected };
+  }
   openTurn() {
     this.correct = this.rng(this.optionsCount);
     this.setPhase('performing', 45);

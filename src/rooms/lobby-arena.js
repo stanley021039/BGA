@@ -63,6 +63,7 @@ function createLobbyArena(
   startDelayMs = 0,
   requireReady = false,
   getMaps = () => [],
+  onFinish = () => {},
 ) {
   const profiles = new Map();
   function clearProfile(actor) {
@@ -218,6 +219,7 @@ function createLobbyArena(
           0;
       actor.lastPickup = null;
     }
+    onFinish(match);
   }
   function command(user, input, visitors, reset) {
     if (

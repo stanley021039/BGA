@@ -399,6 +399,7 @@ function initializeApp(config, dataLock, acquired) {
       startDelayMs: 5000,
       requireReady,
       expandedMap: requireReady,
+      onFinish: requireReady ? recordArenaAchievements : undefined,
       practiceBots: config.achievementPurpose === 'test' ? config.arenaPracticeBots : undefined,
     });
   const lobby = makeLobby();
@@ -833,6 +834,33 @@ function initializeApp(config, dataLock, acquired) {
       }
     }
   };
+  function recordArenaAchievements(match) {
+    if (achievementPurpose !== 'production' || match.practiceBots?.length) return;
+    const eligible = match.players.filter((p) => !p.forfeited && p.damageDealt > 0);
+    if (
+      eligible.length < 2 ||
+      (match.mode === 'team' && new Set(eligible.map((p) => p.team)).size < 2)
+    )
+      return;
+    const matchResult = {
+      id: match.id,
+      game: 'arena',
+      completed_at: new Date(match.endsAt).toISOString(),
+      participants: eligible.map((p) => ({
+        user_id: p.id,
+        seat_id: p.id,
+        eligible: true,
+        challenges: [
+          ...(match.winners.includes(match.mode === 'team' ? p.team : p.id)
+            ? ['arena-first-win']
+            : []),
+          ...(p.score >= 5 ? ['arena-five-points'] : []),
+        ],
+      })),
+    };
+    pendingAchievementUnits.set(match.id, { room: match, matchResult });
+    retryAchievementUnits();
+  }
   const collectAchievementUnits = (room) => {
     for (const facts of room.pendingAchievementUnits?.() || []) {
       if (!pendingAchievementUnits.has(facts.unit_event_id))

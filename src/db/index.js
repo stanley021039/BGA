@@ -2,10 +2,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const { ACHIEVEMENT_TABLES, ACHIEVEMENT_SQL } = require('../achievements/schema');
-const { REWARD_TABLES, REWARD_SQL } = require('../achievements/reward-schema');
+const { REWARD_TABLES, REWARD_SQL, MATCH_EVENT_SQL } = require('../achievements/reward-schema');
 const { GACHA_TABLES, GACHA_SQL } = require('../gacha/schema');
 const { COC_TABLES, COC_SQL } = require('../coc/schema');
-const SCHEMA_VERSION = 22;
+const SCHEMA_VERSION = 23;
 const MARKET_CURVE_TABLES = ['market_forecasts', 'market_curve_ledger'];
 const MARKET_CURVE_SQL = [
   `CREATE TABLE IF NOT EXISTS market_forecasts(round_id TEXT NOT NULL REFERENCES market_rounds(id),user_id TEXT NOT NULL REFERENCES users(id),forecast_tick INTEGER NOT NULL CHECK(typeof(forecast_tick)='integer' AND forecast_tick BETWEEN -100 AND 100),revision INTEGER NOT NULL CHECK(revision>0),created_at TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(round_id,user_id))`,
@@ -653,6 +653,20 @@ function openDatabase(file) {
       db.exec(GACHA_SQL.join(';') + '; PRAGMA user_version=22');
       require('../gacha/legacy').snapshotLegacyRewards(db);
       validateFeatureSchema(db, 22);
+    } catch (error) {
+      db.exec('ROLLBACK; PRAGMA foreign_keys=ON');
+      db.close();
+      throw error;
+    }
+  }
+  if (version < 23) {
+    try {
+      db.exec(`ALTER TABLE achievement_match_events RENAME TO achievement_match_events_v22;
+        ${MATCH_EVENT_SQL};
+        INSERT INTO achievement_match_events SELECT * FROM achievement_match_events_v22;
+        DROP TABLE achievement_match_events_v22;
+        PRAGMA user_version=23;`);
+      validateFeatureSchema(db, 23);
     } catch (error) {
       db.exec('ROLLBACK; PRAGMA foreign_keys=ON');
       db.close();

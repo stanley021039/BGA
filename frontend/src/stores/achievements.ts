@@ -16,6 +16,13 @@ export const achievementGroups = [
   { key: 'telephone', label: '傳情畫意', icon: 'edit' },
   { key: 'minimal', label: '極簡藝術家', icon: 'edit' },
   { key: 'trpg', label: '故事冒險', icon: 'book' },
+  { key: 'brainwave', label: '電波畫家', icon: 'edit' },
+  { key: 'drama-bar', label: '戲精酒吧', icon: 'sound' },
+  { key: 'decrypto', label: '截碼戰', icon: 'lock' },
+  { key: 'second-wind', label: 'Second Wind', icon: 'car' },
+  { key: 'ceo', label: '王牌執行長', icon: 'cards' },
+  { key: 'arena', label: '戰鬥競技場', icon: 'shield' },
+  { key: 'market', label: '股市', icon: 'table' },
   { key: 'all', label: '跨桌探索', icon: 'table' },
   { key: 'other', label: '其他成就', icon: 'book' },
 ];

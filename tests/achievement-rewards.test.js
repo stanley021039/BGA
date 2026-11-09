@@ -30,7 +30,7 @@ test('all twelve games have distinct original rewards and additional attainable 
   assert.equal(rewards.length, 24);
   assert.equal(new Set(rewards.map((r) => r.game)).size, 12);
   assert.equal(new Set(rewards.map((r) => r.frameId)).size, 24);
-  assert.equal(definitions.length, 70);
+  assert.equal(definitions.length, 88);
   for (const r of rewards) {
     assert.ok(definitions.some((d) => d.id === r.achievementId));
     assert.ok(definitions.some((d) => d.id === r.game + '-regular'));

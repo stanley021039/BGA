@@ -1,9 +1,69 @@
 'use strict';
 const { randomUUID } = require('node:crypto');
 const { UUID } = require('./units');
-const TYPES = new Set(['musicquiz', 'bluff', 'minimal', 'telephone', 'trpg']);
+const { newMatchActions } = require('./challenges');
+const TYPES = new Set([
+  'musicquiz',
+  'bluff',
+  'minimal',
+  'telephone',
+  'trpg',
+  ...Object.keys(newMatchActions),
+]);
+function wonNewMatch(room, player) {
+  if (room.type === 'ceo') return room.results[0]?.winners?.includes(player.id);
+  if (room.type === 'second-wind') return room.observerGame()?.winners?.includes(player.id);
+  if (room.type === 'decrypto') return room.winner.teams.includes(room.teamOf(player.id));
+  return player.score === room.winner.score;
+}
+function newMatchChallenge(room, id, actions) {
+  switch (room.type) {
+    case 'brainwave':
+      if (
+        room.results.some(
+          (round) => round.guesses.findLast((guess) => guess.option === round.correct)?.id === id,
+        )
+      )
+        return 'brainwave-quick-read';
+      break;
+    case 'drama-bar':
+      if (
+        room.results.some((round) => {
+          const guesses = Object.values(round.guesses);
+          return (
+            round.actorId === id &&
+            guesses.length >= 2 &&
+            guesses.length === room.seatOrder.length - 1 &&
+            guesses.every((option) => option === round.correct)
+          );
+        })
+      )
+        return 'drama-bar-unanimous';
+      break;
+    case 'decrypto':
+      if (
+        room.results.some((round) => {
+          const team = room.teams[1 - round.team].members;
+          return round.intercepted && team[round.round % team.length] === id;
+        })
+      )
+        return 'decrypto-interception';
+      break;
+    case 'second-wind':
+      if (
+        room.results.filter((race) => race.ranking.some((p) => p.playerId === id && p.rank === 1))
+          .length >= 2
+      )
+        return 'second-wind-two-races';
+      break;
+    case 'ceo':
+      if (actions?.size === newMatchActions.ceo.length) return 'ceo-three-transactions';
+      break;
+  }
+}
 function attachMatchAchievements(room) {
   if (!TYPES.has(room.type)) return;
+  const newGame = Object.hasOwn(newMatchActions, room.type);
   let current = null;
   const start = room.start,
     act = room.act;
@@ -28,21 +88,30 @@ function attachMatchAchievements(room) {
           return;
         if (room.type !== 'telephone' && !room.winner) return;
         const rounds = new Set((room.results || []).map((r) => r.round));
-        const required =
-          room.type === 'trpg'
+        const required = newGame
+          ? 1
+          : room.type === 'trpg'
             ? 6
             : room.type === 'telephone'
               ? room.roundLimit
               : room.type === 'bluff'
                 ? room.roundLimit
                 : 3;
-        if (room.type !== 'telephone' && rounds.size < required) return;
+        if (!newGame && room.type !== 'telephone' && rounds.size < required) return;
         const participants = current.participants.map((p) => {
           const player = room.player(p.seat_id),
             set = current.decisions.get(p.seat_id) || new Set();
           const count =
-            room.type === 'telephone' ? set.size : [...set].filter((r) => rounds.has(r)).length;
+            newGame || room.type === 'telephone'
+              ? set.size
+              : [...set].filter((r) => rounds.has(r)).length;
           const challenges = [...(current.challenges.get(p.seat_id) || [])];
+          if (newGame && player && wonNewMatch(room, player))
+            challenges.push(room.type + '-first-win');
+          if (newGame) {
+            const challenge = newMatchChallenge(room, p.seat_id, current.actions.get(p.seat_id));
+            if (challenge) challenges.push(challenge);
+          }
           if (room.type === 'musicquiz') {
             let streak = 0;
             for (const r of room.results) {
@@ -74,7 +143,8 @@ function attachMatchAchievements(room) {
             eligible: !!player && !player.bot && !player.kicked && count >= required,
           };
         });
-        if (!participants.length) return;
+        if (!participants.length || (newGame && participants.filter((p) => p.eligible).length < 2))
+          return;
         current.completed = Object.freeze({
           id: current.id,
           game: room.type,
@@ -112,6 +182,7 @@ function attachMatchAchievements(room) {
         id,
         participants,
         decisions: new Map(),
+        actions: new Map(),
         challenges: new Map(),
         colors: new Set(),
         longText: new Set(),
@@ -125,6 +196,7 @@ function attachMatchAchievements(room) {
     value: function (id, action, data = {}) {
       const round = this.round,
         stepId = this.stepId,
+        roundId = this.roundId,
         p = this.player(id),
         targetRole = this.roles?.[data.targetId],
         artistId = this.order?.[this.shown],
@@ -136,8 +208,9 @@ function attachMatchAchievements(room) {
               ? Object.hasOwn(this.submissions || {}, id)
               : false,
         result = act.call(this, id, action, data);
-      const effective =
-        this.type === 'musicquiz'
+      const effective = newGame
+        ? newMatchActions[this.type].includes(action) && data.roundId === roundId
+        : this.type === 'musicquiz'
           ? (action === 'guess' && !!(data.choiceId || data.text?.trim() || data.artist?.trim())) ||
             ['place', 'challenge'].includes(action)
           : this.type === 'bluff'
@@ -147,9 +220,15 @@ function attachMatchAchievements(room) {
               : this.type === 'telephone'
                 ? action === 'submit' && round > 0 && data.stepId === stepId
                 : action === 'plan';
+      if (newGame && action === 'restart' && this.roundId !== roundId)
+        for (const rounds of current?.decisions.values() || []) rounds.delete(round);
       if (current && p && !p.bot && effective) {
         if (!current.decisions.has(id)) current.decisions.set(id, new Set());
         current.decisions.get(id).add(round);
+        if (this.type === 'ceo') {
+          if (!current.actions.has(id)) current.actions.set(id, new Set());
+          current.actions.get(id).add(action);
+        }
       }
       if (current && p && !p.bot) {
         const add = (seat, challenge) => {

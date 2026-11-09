@@ -203,3 +203,67 @@ test('countertrend reward needs a real positive settlement against more than hal
     'reset leaves trading history intact',
   );
 });
+
+test('new game achievements require a normal finish and effective actions from two humans', (t) => {
+  const f = fixture(t);
+  const { DramaBarRoom } = require('../src/games/voice-party');
+  const room = new DramaBarRoom('ABCDEF', '戲精成就', () => 0);
+  const seats = bind(room, f.ids);
+  room.start();
+  for (let round = 0; round < seats.length; round++) {
+    const actor = seats.find((p) => p.id === room.actorId);
+    act(room, actor, 'performed');
+    const guessers = seats.filter((p) => p !== actor);
+    act(room, guessers[0], 'guess', { option: 0 });
+    act(room, guessers[1], 'guess', { option: round === 0 ? 0 : 1 });
+    room.matchAchievements.finish();
+    if (room.phase !== 'finished') {
+      assert.equal(room.matchAchievements.completed, null);
+      act(room, seats[0], 'next');
+    }
+  }
+  const result = room.matchAchievements.completed;
+  assert.equal(result.participants.filter((p) => p.eligible).length, 3);
+  assert.ok(result.participants.some((p) => p.challenges.includes('drama-bar-first-win')));
+  assert.ok(result.participants.some((p) => !p.challenges.length));
+  assert.deepEqual(
+    result.participants
+      .filter((p) => p.challenges.includes('drama-bar-unanimous'))
+      .map((p) => p.seat_id),
+    [seats[0].id],
+  );
+  assert.deepEqual(f.store.recordMatch(result, { purpose: 'test' }), []);
+  assert.ok(f.store.recordMatch(result).length);
+  assert.deepEqual(f.store.recordMatch(result), []);
+  assert.equal(validateRewardsDatabase(f.db), true);
+});
+
+test('an arena receipt accepts sixteen distinct accounts and grants a winner only once', (t) => {
+  const f = fixture(t);
+  const participants = Array.from({ length: 16 }, (_, i) => ({
+    user_id: f.ids[i] || randomUUID(),
+    seat_id: 'arena-seat-' + i,
+    eligible: i < 2,
+    challenges: i === 0 ? ['arena-first-win'] : [],
+  }));
+  participants
+    .slice(3)
+    .forEach((p, i) =>
+      f.db
+        .prepare(
+          'INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)',
+        )
+        .run(p.user_id, 'arena' + i, '玩家', 'unused', 'member', '2026-10-19T00:00:00.000Z'),
+    );
+  const result = {
+    id: randomUUID(),
+    game: 'arena',
+    completed_at: '2026-11-09T09:30:00.000Z',
+    participants,
+  };
+  const awards = f.store.recordMatch(result);
+  assert.equal(awards.filter((a) => a.achievement_id === 'arena-first-match').length, 2);
+  assert.equal(awards.filter((a) => a.achievement_id === 'arena-first-win').length, 1);
+  assert.deepEqual(f.store.recordMatch(result), []);
+  assert.equal(validateRewardsDatabase(f.db), true);
+});

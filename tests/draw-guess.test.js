@@ -381,7 +381,7 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
     for (const topics of [[], ['wrong'], ['food', 'food'], 'food'])
       assert.equal((await post('create', host, { type: 'draw', topics })).status, 400);
     const bank = await (await fetch(base + '/api/draw/words', { headers: host })).json();
-    assert.equal(bank.builtin.length, 1000);
+    assert.equal(bank.builtin.length, 1018);
     assert.ok(bank.topics.some((topic) => topic.id === 'meme'));
     const meme = await post('draw/words', host, {
       title: 'HTTP原創梗圖測試',

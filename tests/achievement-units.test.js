@@ -76,8 +76,8 @@ function fixture(t, { uppercase = false } = {}) {
 test('metadata registers the unchanged entries, scoped unit IDs and five Quacks IDs', (t) => {
   const f = fixture(t),
     list = f.store.list(f.users[0]);
-  assert.equal(list.achievements.length, 70);
-  assert.equal(new Set(definitions.map((d) => d.id)).size, 70);
+  assert.equal(list.achievements.length, 88);
+  assert.equal(new Set(definitions.map((d) => d.id)).size, 88);
   assert.deepEqual(
     definitions.slice(0, 5).map(({ id, title }) => ({ id, title })),
     [
@@ -99,9 +99,19 @@ test('metadata registers the unchanged entries, scoped unit IDs and five Quacks 
     assert.equal(d.unlockedAt, null);
     assert.ok(d.condition_key && d.description);
     assert.ok(
-      ['edit', 'check', 'gift', 'users', 'cards', 'car', 'table', 'sound', 'frame'].includes(
-        d.icon_key,
-      ),
+      [
+        'edit',
+        'check',
+        'gift',
+        'users',
+        'cards',
+        'car',
+        'table',
+        'sound',
+        'frame',
+        'lock',
+        'shield',
+      ].includes(d.icon_key),
     );
   }
   assert.ok(Object.isFrozen(definitions));
