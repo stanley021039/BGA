@@ -3,9 +3,6 @@ const { transaction } = require('../db');
 const { HttpError } = require('../http/errors');
 const { defaults } = require('../profiles/appearance');
 const codes = Object.freeze([
-  { code: '我愛少華', group: 'frames', label: '彈幕與播放器外觀' },
-  { code: '我愛其學', group: 'entrances', label: '進場特效與網站開場動畫' },
-  { code: '我愛士憲', group: 'pings', label: 'Ping 圖示與音效' },
   { code: '我愛作者', group: 'other', label: '其他獎勵（大廳背景、攻擊特效與戰鬥加成）' },
 ]);
 const validAt = (at) =>

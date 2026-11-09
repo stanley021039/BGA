@@ -8,7 +8,11 @@ const { DatabaseSync } = require('node:sqlite');
 const { openDatabase } = require('../src/db');
 const { createApp } = require('../src/app');
 
-async function fixture(t, purpose = 'production', { uppercaseIds = false } = {}) {
+async function fixture(
+  t,
+  purpose = 'production',
+  { uppercaseIds = false, retiredRewards = false } = {},
+) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-achievement-http-'));
   const config = {
     port: 0,
@@ -38,6 +42,29 @@ async function fixture(t, purpose = 'production', { uppercaseIds = false } = {})
       i === 0 ? 'admin' : 'member',
       new Date().toISOString(),
     );
+  if (retiredRewards) {
+    const at = new Date().toISOString();
+    const [user, legacy] = users;
+    db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+      JSON.stringify({
+        achievementRewardCodes: { frames: at, entrances: at, pings: at },
+      }),
+      user.id,
+    );
+    db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+      JSON.stringify({
+        achievementRewardCodeAt: at,
+      }),
+      legacy.id,
+    );
+    const add = db.prepare('INSERT INTO gacha_ownership VALUES(?,?,?,?,?)');
+    for (const kind of ['frames', 'media', 'entrances', 'sounds']) {
+      const item = require('../src/gacha/catalog').catalog.find((entry) => entry.kind === kind);
+      add.run(user.id, kind, item.id, 'legacy', at);
+    }
+    add.run(user.id, 'openings', 'soul-world', 'legacy', at);
+    add.run(legacy.id, 'sounds', 'ping-voice-amazing', 'draw', at);
+  }
   db.close();
   let app = createApp(config),
     base = 'http://127.0.0.1:' + (await app.listen()).port;
@@ -355,67 +382,42 @@ test('HTTP mixed human/AI blank answers officially merged into one group award a
   assert.equal(facts.participants.length, 3);
 });
 
-test('four reward codes grant independent categories without unlocking gameplay achievements', async (t) => {
-  const f = await fixture(t);
-  for (const code of ['錯誤', null, {}, '作者們好帥', '我愛少華'.repeat(30)])
-    assert.equal((await f.raw(2, 'achievements/redeem', { code })).status, 400);
+test('retired codes reject new claims and revoke only code and achievement access', async (t) => {
+  const f = await fixture(t, 'production', { retiredRewards: true });
+  for (const code of ['我愛少華', '我愛其學', '我愛士憲']) {
+    for (const seat of [0, 2]) {
+      const response = await f.raw(seat, 'achievements/redeem', { code });
+      assert.equal(response.status, 400);
+    }
+  }
+  await f.restart();
+  for (const seat of [0, 1, 2]) {
+    const state = await f.api(seat, 'achievements');
+    assert.ok(state.rewards.every((r) => !r.claimedAt && !r.mediaClaimedAt));
+    assert.equal(state.bonusRewards.entrances.length, 0);
+    assert.deepEqual(state.bonusRewards.openings, ['home-family']);
+    assert.deepEqual(state.bonusRewards.sounds, seat === 1 ? ['ping-voice-amazing'] : []);
+  }
   const profile = await f.api(2, 'profile/settings');
   await f.api(2, 'profile/settings', {
     ...profile,
     appearance: {
       ...profile.appearance,
       achievementRewardCodeAt: new Date().toISOString(),
-      achievementRewardCodes: { frames: new Date().toISOString() },
+      achievementRewardCodes: { other: new Date().toISOString() },
     },
   });
-  assert.ok((await f.api(2, 'achievements')).rewards.every((r) => !r.claimedAt));
-  const lockedSettings = await f.api(1, 'profile/settings');
-  assert.equal(
-    (
-      await f.raw(1, 'profile/settings', {
-        ...lockedSettings,
-        pings: { attention: { iconType: 'admire', sound: { effect: 'ping-voice-amazing' } } },
-      })
-    ).status,
-    403,
-  );
-  const frames = await f.api(1, 'achievements/redeem', { code: '我愛少華' });
-  assert.equal(frames.redemption.group, 'frames');
-  assert.ok(frames.rewards.every((r) => r.claimedAt));
-  assert.equal(frames.bonusRewards.entrances.length, 0);
-  assert.equal(frames.bonusRewards.sounds.length, 0);
-  assert.deepEqual(frames.bonusRewards.backgrounds, ['default', 'castle']);
-  assert.deepEqual(unlocked(frames), []);
-  const repeat = await f.api(1, 'achievements/redeem', { code: '我愛少華' });
-  assert.equal(repeat.redemption.alreadyRedeemed, true);
-  assert.equal(repeat.redemption.redeemedAt, frames.redemption.redeemedAt);
-  const entrances = await f.api(1, 'achievements/redeem', { code: '我愛其學' });
-  assert.equal(entrances.bonusRewards.entrances.length, 24);
-  assert.deepEqual(entrances.bonusRewards.openings, ['home-family', 'soul-world']);
-  assert.equal(entrances.bonusRewards.sounds.length, 0);
-  const pings = await f.api(2, 'achievements/redeem', { code: '我愛士憲' });
-  assert.equal(pings.bonusRewards.sounds.length, 14);
-  assert.equal(pings.bonusRewards.pingIcons.length, 10);
-  assert.ok(pings.rewards.every((r) => !r.claimedAt));
-  assert.equal(pings.bonusRewards.entrances.length, 0);
-  assert.deepEqual(pings.bonusRewards.backgrounds, ['default', 'castle']);
-  const other = await f.api(0, 'achievements/redeem', { code: '我愛作者' });
-  assert.equal(other.bonusRewards.backgrounds.length, 10);
-  assert.ok(other.rewards.every((r) => !r.claimedAt));
-  assert.equal(other.bonusRewards.entrances.length, 0);
-  assert.equal(other.bonusRewards.sounds.length, 0);
-  const settings = await f.api(1, 'profile/settings');
-  await f.api(1, 'profile/settings', settings);
-  await f.restart();
-  const persisted = await f.api(1, 'achievements');
-  assert.ok(persisted.rewards.every((r) => r.claimedAt));
-  assert.equal(persisted.bonusRewards.entrances.length, 24);
-  assert.deepEqual(unlocked(persisted), []);
-  await f.api(1, 'profile/opening', { theme: 'soul-world' });
-  f.read((db) => assert.equal(db.prepare('SELECT COUNT(*) n FROM user_achievements').get().n, 0));
+  assert.deepEqual((await f.api(2, 'achievements')).bonusRewards.backgrounds, [
+    'default',
+    'castle',
+  ]);
   assert.equal(
     (await f.raw(0, 'admin/achievements/reset', { confirmation: 'RESET ALL ACHIEVEMENTS' })).status,
     404,
   );
-  assert.ok((await f.api(1, 'achievements')).rewards.every((r) => r.claimedAt));
+  const other = await f.api(2, 'achievements/redeem', { code: '我愛作者' });
+  assert.equal(other.bonusRewards.backgrounds.length, 10);
+  assert.deepEqual(unlocked(other), []);
+  const pack = await f.api(2, 'achievements/redeem', { code: '新手大禮包' });
+  assert.equal(pack.redemption.label, '新手大禮包');
 });

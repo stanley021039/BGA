@@ -1,4 +1,5 @@
 const { attackKind } = require('./attack-kind');
+const { rules: pickupRules } = require('./lobby-pickups');
 const timing = require('../../public/shared/attack-timing.json');
 const rules = require('../../public/shared/scene-rules.json');
 const { inAttackArea, selectBijuuDirections } = require('./attack-targets');
@@ -15,7 +16,7 @@ const statusSettleMs = 500;
 
 // No per-projectile timers. Polls/commands advance this bounded scene clock.
 // Actor references remain private, never in serialized snapshots.
-function createAttackTimeline(combat) {
+function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => null) {
   const runtime = new WeakMap();
   const homingByCaster = new WeakMap();
   function prepare(event, self, targets, actors = targets) {
@@ -29,8 +30,16 @@ function createAttackTimeline(combat) {
         ? { ordinaryEnergyRemaining: rules.energy.missileCastCap }
         : {}),
       id: self.id,
+      combatEpoch: self.combatEpoch || 0,
+      matchId: self.matchId || null,
+      castId: event.id,
+      slot: event.slot,
+      originX: event.fromX,
+      originY: event.fromY,
       health: 1,
       authorBonus: self.authorBonus,
+      archetype: self.archetype,
+      pickupAttackBonus: event.at < (self.pickupAttackUntil || 0) ? pickupRules.attackBonus : 0,
       guanyinUntil: self.guanyinUntil,
       kda: self.kda,
       ...(effect === 'gate_of_babylon' ? { comboDamage: combat.rollBabylonDamage(self) } : {}),
@@ -149,11 +158,12 @@ function createAttackTimeline(combat) {
       job.done = true;
       if (advancedAt !== job.at) {
         for (const actor of bodies) moveActor(actor, job.at);
+        afterAdvance(bodies, job.at);
         advancedAt = job.at;
       }
       const map = new Map(combat.targets(bodies).map((actor) => [actor.id, actor]));
       if (job.special) {
-        advanceSpecial(combat, event, state, job, bodies, map);
+        advanceSpecial(combat, event, state, job, bodies, map, wallsFor(state.source));
         continue;
       }
       if (job.recovery) {
@@ -248,6 +258,10 @@ function createAttackTimeline(combat) {
         }
         hit.toX = actor.x;
         hit.toY = actor.y;
+        if (hit.blocked) {
+          hit.missed = true;
+          continue;
+        }
         const firstContact =
           !state.firstContact && hit.damage > 0 && actor.health > 0 && actor.kind !== 'fragment';
         if (firstContact) state.firstContact = true;
@@ -277,6 +291,7 @@ function createAttackTimeline(combat) {
       }
     }
     for (const actor of bodies) moveActor(actor, time);
+    afterAdvance(bodies, time);
   }
   function needsFastUpdates(events, time) {
     return events.some((event) => {

@@ -306,6 +306,35 @@ test('failed new cue playback frees both caps and reports once without unhandled
   assert.equal(f.timers.size, 0);
 });
 
+test('arena countdown can retry a skipped or failed start and deduplicates playback', () => {
+  const f = fixture();
+  const controller = f.controller;
+  const options = { retryIfUnavailable: true };
+  controller.update(f.state());
+  controller.update(f.state());
+
+  assert.equal(controller.play('arena-countdown', 'final', options), undefined);
+  f.api.set('effects', { enabled: true });
+  const first = controller.play('arena-countdown', 'final', options);
+  assert.ok(first);
+  assert.equal(controller.play('arena-countdown', 'final', options), undefined);
+  first.onerror();
+  assert.ok(controller.play('arena-countdown', 'final', options));
+  assert.equal(controller.play('arena-countdown', 'final', options), undefined);
+});
+
+test('arena countdown can retry after a media start timeout', () => {
+  const f = fixture({ pending: true });
+  f.api.set('effects', { enabled: true });
+  f.controller.update(f.state());
+  f.controller.update(f.state());
+  const options = { retryIfUnavailable: true };
+
+  assert.ok(f.controller.play('arena-countdown', 'final', options));
+  f.tick(1000);
+  assert.ok(f.controller.play('arena-countdown', 'final', options));
+});
+
 test('explosion cue respects live gates, mute, duplicate keys and original fixed source', () => {
   const f = fixture(),
     c = f.controller;

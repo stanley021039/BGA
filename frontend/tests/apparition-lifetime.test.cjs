@@ -34,6 +34,9 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
   const sandbox = {
     window: root,
     exports: {},
+    document: { createElement: () => ({ setAttribute() {}, remove() {} }) },
+    requestAnimationFrame: () => 1,
+    cancelAnimationFrame() {},
     setTimeout(fn) {
       const id = ++sequence;
       timers.set(id, fn);
@@ -62,7 +65,10 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
             },
           }
         : name.includes('entrance-body')
-          ? { playEntranceBody: sandbox.playEntranceBody }
+          ? {
+              playEntranceBody: sandbox.playEntranceBody,
+              playEntranceBackdrop: sandbox.playEntranceBackdrop,
+            }
           : name.endsWith('/entrance-effects')
             ? {
                 entranceVariant: (id) =>
@@ -74,7 +80,7 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
   vm.runInContext(
     fs
       .readFileSync(path.join(__dirname, '../src/services/entrance-body.js'), 'utf8')
-      .replace('export function ', 'function '),
+      .replaceAll('export function ', 'function '),
     sandbox,
   );
   vm.runInContext(code, sandbox);
@@ -102,7 +108,7 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
     anchors.push({ anchor, classes });
     return sandbox.exports.apparate(
       anchor,
-      { getBoundingClientRect: () => ({ left: 0, top: 0 }) },
+      { append() {}, getBoundingClientRect: () => ({ left: 0, top: 0 }) },
       id,
     );
   };

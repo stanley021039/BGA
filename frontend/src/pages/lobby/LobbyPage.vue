@@ -157,7 +157,7 @@ onBeforeUnmount(() => {
     >
     <GameCarousel v-model="selected" @create="open" @join="openJoin()"
       ><template #lobby-action
-        ><UiButton
+        ><UiLink href="/arena" label="戰鬥競技場" icon="shield" /><UiButton
           icon="chat"
           caption="對話"
           label="對話"

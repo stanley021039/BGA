@@ -29,7 +29,7 @@ test('energy counts actual fractional walking time, caps at 100, and never banks
   energy.walk(actor, 999);
   assert.equal(actor.energy, 0);
   energy.walk(actor, 1);
-  assert.equal(actor.energy, 1);
+  assert.equal(actor.energy, 2);
   energy.walk(actor, 200000);
   assert.equal(actor.energy, 100);
   energy.spend(actor, 'r');
@@ -59,6 +59,46 @@ test('ordinary hits give 10/5; multi hits only give the victim 5, and shields/in
   combat.hit(a, b, 400, 'barrage');
   assert.equal(a.energy, 10);
   assert.equal(b.energy, 10);
+});
+
+test('energy archetype boosts each gain, preserves tenths and respects the scene cap', () => {
+  const actor = { archetype: 'energy', health: 1, energyMaximum: 150, ordinaryHitEnergy: 12 };
+  const target = { health: 1 };
+  energy.walk(actor, 1000);
+  assert.equal(actor.energy, 2.4);
+  energy.hit(actor, target, 'beam', 1);
+  assert.equal(actor.energy, 16.4);
+  energy.hit(target, actor, 'beam', 1);
+  assert.equal(actor.energy, 22.4);
+  energy.gain(actor, 25);
+  assert.equal(actor.energy, 52.4);
+  actor.energy = 149.8;
+  assert.throws(() => energy.check(actor, 'r', 'explosion'), { code: 'INSUFFICIENT_SCENE_ENERGY' });
+  energy.gain(actor, 2);
+  assert.equal(actor.energy, 150);
+  energy.check(actor, 'r', 'explosion');
+  energy.spend(actor, 'r');
+  assert.equal(actor.energy, 0);
+});
+
+test('author energy stacks with the chosen archetype without raising the cap', () => {
+  const target = { health: 1 };
+  for (const [archetype, perHit] of [
+    [null, 13.2],
+    ['energy', 15.4],
+  ]) {
+    const actor = {
+      archetype,
+      authorBonus: true,
+      health: 1,
+      energyMaximum: 150,
+      ordinaryHitEnergy: 12,
+    };
+    energy.hit(actor, target, 'beam', 1);
+    assert.equal(actor.energy, perHit);
+    energy.gain(actor, 200);
+    assert.equal(actor.energy, 150);
+  }
 });
 
 function fixture(kind) {
@@ -218,15 +258,15 @@ for (const kind of ['lobby', 'room']) {
     const before = f.actor();
     f.move('a', { x: before.x + 12, y: before.y });
     f.tick(1000);
-    assert.equal(f.actor().energy, 1);
+    assert.equal(f.actor().energy, before.energy + 2);
     f.tick(5000);
-    assert.equal(f.actor().energy, 1);
+    assert.equal(f.actor().energy, before.energy + 2);
     for (let i = 0; i < 10; i++) f.view();
-    assert.equal(f.actor().energy, 1);
+    assert.equal(f.actor().energy, before.energy + 2);
     if (kind === 'lobby') f.scene.teleport({ id: 'a', display_name: 'a' });
     else f.scene.move(f.room, 'a', { action: 'teleport' });
     f.tick(1000);
-    assert.equal(f.actor().energy, 1);
+    assert.equal(f.actor().energy, before.energy + 2 - (kind === 'lobby' ? 20 : 0));
   });
   test(`${kind}: rejects empty R, category bypass and forged energy; consumes once after a valid cast`, () => {
     const f = fixture(kind);
@@ -266,7 +306,7 @@ for (const kind of ['lobby', 'room']) {
         { code: 'INVALID_MOVEMENT' },
       );
     f.charge();
-    assert.equal(f.actor().energy, 100);
+    assert.equal(f.actor().energy, kind === 'lobby' ? 150 : 100);
     const before = f.actor('b').energy;
     f.attack('r', 'guanyin_barrage');
     assert.equal(f.actor().energy, 0);
@@ -288,10 +328,23 @@ for (const kind of ['lobby', 'room']) {
       received = f.actor('b').energy;
     f.attack('q', 'barrage');
     f.tick(1600);
-    assert.equal(f.actor().energy, before + 30);
+    assert.equal(f.actor().energy, before + (kind === 'lobby' ? 36 : 30));
     assert.equal(f.actor('b').energy, received + 15);
     f.view();
     f.attack('q', 'barrage');
-    assert.equal(f.actor().energy, before + 30);
+    assert.equal(f.actor().energy, before + (kind === 'lobby' ? 36 : 30));
   });
 }
+
+test('new lobby visitors start at 20 and each successful teleport costs 20', () => {
+  const f = fixture('lobby');
+  const user = { id: 'a', display_name: 'a' };
+  assert.equal(f.actor().energy, 20);
+  f.scene.teleport(user);
+  assert.equal(f.actor().energy, 0);
+  const before = f.actor();
+  assert.throws(() => f.scene.teleport(user), { code: 'INSUFFICIENT_SCENE_ENERGY' });
+  const after = f.actor();
+  assert.equal(after.energy, 0);
+  assert.equal(after.teleportId, before.teleportId);
+});

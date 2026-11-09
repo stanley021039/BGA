@@ -188,6 +188,7 @@ test('lobby HTTP preserves view, move, options, expression validation and cooldo
   assert.equal(view.status, 200);
   assert.equal(view.body.selfId, f.owner.body.id);
   assert.deepEqual(Object.keys(view.body).sort(), [
+    'arena',
     'attacks',
     'background',
     'barrages',
@@ -196,6 +197,10 @@ test('lobby HTTP preserves view, move, options, expression validation and cooldo
     'serverNow',
     'visitors',
   ]);
+  assert.deepEqual(view.body.arena.covers, []);
+  assert.deepEqual(view.body.arena.pickups, []);
+  assert.deepEqual(view.body.arena.hazards, []);
+  assert.equal(view.body.arena.match, null);
   assert.equal(typeof view.body.pingContext.roomInstanceId, 'string');
   assert.equal(typeof view.body.pingContext.scene, 'string');
   assert.ok(Number.isSafeInteger(view.body.pingContext.serverNow));

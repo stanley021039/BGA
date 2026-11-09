@@ -1,3 +1,5 @@
+const { rules: pickupRules } = require('./lobby-pickups');
+const { profile } = require('./archetypes');
 const { HttpError } = require('../http/errors');
 const { attackKind } = require('./attack-kind');
 const rules = require('../../public/shared/scene-rules.json');
@@ -11,18 +13,22 @@ const damageMultipliers = new Map(
   attackEffects.map((effect) => [effect.id, effect.damageMultiplier ?? 1]),
 );
 
+function authorSpeed(actor) {
+  return actor.authorBonus ? rules.authorBonus.speedMultiplier : 1;
+}
 // Radius as a percentage of the scene's longer edge, independent of aspect ratio.
 function sceneDistance(from, to, aspectRatio) {
   return Math.hypot((to.x - from.x) * aspectRatio, to.y - from.y) / Math.max(1, aspectRatio);
 }
 
 // Decorative scene combat has no connection to board-game scores or player lives.
-function createSceneCombat(random = Math.random, authorBonus = () => false) {
+function createSceneCombat(random = Math.random, authorBonus = () => false, policy = {}) {
   const contributions = new WeakMap();
   const stats = (actor) => (actor.kda ||= { kills: 0, deaths: 0, assists: 0 });
   const healthFactor = (actor) =>
     (actor.authorBonus ? rules.authorBonus.healthMultiplier : 1) *
-    (actor.guanyinActive ? rules.guanyinBonus.multiplier : 1);
+    (actor.guanyinActive ? rules.guanyinBonus.multiplier : 1) *
+    profile(actor).health;
   function reset(actor, time) {
     actor.energy ||= 0;
     actor.energyWalkMs = 0;
@@ -49,11 +55,19 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     actor.sealedUntil = 0;
     actor.regenBlockedUntil = 0;
     actor.fragment = null;
+    actor.hazardId = actor.hazardKind = null;
+    actor.hazardTickAt = actor.emberTrailUntil = 0;
     actor.severed = false;
     actor.drillDot = null;
     actor.ordinaryDot = null;
     actor.dotPulse = null;
     actor.knockback = null;
+    actor.pickupSpeedAt =
+      actor.pickupSpeedUntil =
+      actor.pickupShieldUntil =
+      actor.pickupAttackUntil =
+        0;
+    actor.lastPickup = null;
     actor.regenAt = time;
     actor.lastHitAt = time;
   }
@@ -194,9 +208,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     if (time < (actor.teleportBlockedUntil || 0))
       throw new HttpError(409, 'SCENE_TELEPORT_BLOCKED', '光柱封鎖中，暫時無法瞬移');
   }
-  function collect(actor, from) {
-    const part = actor.fragment;
-    if (!part || !actor.health) return;
+  function touchesFragment(actor, from, part) {
     let closest = actor;
     if (from) {
       const dx = (actor.x - from.x) * part.aspect,
@@ -210,9 +222,35 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
         : 1;
       closest = { x: from.x + (actor.x - from.x) * t, y: from.y + (actor.y - from.y) * t };
     }
-    if (sceneDistance(closest, part, part.aspect) <= 3) {
+    return sceneDistance(closest, part, part.aspect) <= 3;
+  }
+  function collect(actor, from, actors = [], time = actor.combatAt, fromAt = time) {
+    if (!actor.health) return;
+    if (actor.fragment && touchesFragment(actor, from, actor.fragment)) {
       actor.fragment = null;
       actor.severed = false;
+    }
+    for (const owner of actors) {
+      const part = owner.fragment;
+      if (
+        owner === actor ||
+        !owner.health ||
+        !part?.health ||
+        time < part.stealableAt ||
+        (actor.combatEpoch || 0) !== (owner.combatEpoch || 0)
+      )
+        continue;
+      let eligibleFrom = from;
+      if (from && fromAt < part.stealableAt && time > fromAt) {
+        const progress = (part.stealableAt - fromAt) / (time - fromAt);
+        eligibleFrom = {
+          x: from.x + (actor.x - from.x) * progress,
+          y: from.y + (actor.y - from.y) * progress,
+        };
+      }
+      if (!touchesFragment(actor, eligibleFrom, part)) continue;
+      owner.fragment = null;
+      energy.gain(actor, rules.fragment.stealEnergy);
     }
   }
   function applyEffect(
@@ -305,6 +343,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
         maxHealth: Math.round(actor.maxHealth / 2),
         health: Math.round(actor.maxHealth / 2),
         aspect,
+        stealableAt: time + rules.fragment.ownerOnlyMs,
       };
     }
     if (effect === 'singularity' && phase === 'finish') {
@@ -361,8 +400,18 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       Math.floor(random() * (rules.babylon.authorComboMax - rules.babylon.authorComboMin + 1));
     return Math.round(reference / (actor.authorBonus ? 1 : rules.authorBonus.damageMultiplier));
   }
+  function canHit(from, to, time, effect) {
+    return policy.canHit?.(from, to, time, attackKind(effect)) ?? true;
+  }
+  function canContinueCast(source, actor, time) {
+    return policy.canContinueCast?.(source, actor, time) ?? true;
+  }
   function hit(from, to, time, effect, weight = 1, phase = '') {
     effect = attackKind(effect);
+    if (!canHit(from, to, time, effect)) {
+      const coverImpact = policy.coverImpact?.(from, to, time, effect);
+      return { damage: 0, critical: false, blocked: true, ...(coverImpact && { coverImpact }) };
+    }
     alive(from);
     // A downed actor cannot award another kill, even through a repeated event.
     if (to.health === 0 || from === to) return { damage: 0, critical: false };
@@ -409,16 +458,31 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       blockedPercent = min + Math.floor(random() * (max - min + 1));
       if (time >= to.shieldUntil) blockedPercent *= rules.shield.residualMultiplier;
     }
+    const cover = policy.damageThroughCover?.(from, to, effect) ?? 1;
     const damage =
       effect === 'shaohua_devour'
-        ? Math.max(0, to.health - 1)
+        ? Math.round(Math.max(0, to.health - 1) * cover)
         : Math.round(
             incoming *
+              cover *
+              (profile(from).damage +
+                (from.pickupAttackBonus ??
+                  (time < (from.pickupAttackUntil || 0) ? pickupRules.attackBonus : 0))) *
+              profile(to).defense *
               (1 - blockedPercent / 100) *
+              (time < (to.pickupShieldUntil || 0) ? 0.7 : 1) *
               (time < (to.excaliburUntil || 0)
                 ? 1 - rules.excaliburGuard.reductionPercent / 100
                 : 1),
           );
+    const weakened =
+      damage > 0 &&
+      (cover < 1 ||
+        (effect !== 'shaohua_devour' &&
+          (blockedPercent > 0 ||
+            profile(to).defense < 1 ||
+            time < (to.pickupShieldUntil || 0) ||
+            time < (to.excaliburUntil || 0))));
     if (to.kind === 'fragment') {
       to.health = Math.max(0, to.health - damage);
       if (!to.health && to.owner.fragment === to && to.owner.health > 0) {
@@ -426,7 +490,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
         to.owner.lastHitAt = to.owner.regenAt = time;
         to.owner.fragment = null;
       }
-      return { damage, critical };
+      return { damage, critical, ...(weakened && { weakened }) };
     }
     let helpers = contributions.get(to);
     if (!helpers) contributions.set(to, (helpers = new Map()));
@@ -446,8 +510,9 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       to.guardEnergyReady = false;
       const before = to.energy || 0;
       energy.gain(to, rules.shield.guardEnergy);
-      to.guardEnergy = { at: time, amount: to.energy - before };
+      to.guardEnergy = { at: time, amount: Math.round((to.energy - before) * 10) / 10 };
     }
+    policy.onDamage?.(from, to, time, Math.min(to.health, damage));
     to.health = Math.max(0, to.health - damage);
     to.lastHitAt = to.regenAt = time;
     if (!to.health) {
@@ -456,26 +521,54 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
       for (const [id, entry] of helpers)
         if (id !== from.id && id !== to.id) stats(entry.actor).assists++;
       contributions.delete(to);
-      to.shieldUntil = 0;
-      to.shieldResidualUntil = 0;
-      to.guardEnergyReady = false;
-      to.guardEnergy = null;
-      to.slowUntil = 0;
-      to.teleportBlockedUntil = 0;
-      to.hasteUntil = 0;
-      to.guanyinUntil = 0;
-      to.excaliburUntil = 0;
-      to.heroFlightUntil = 0;
-      to.sealedUntil = 0;
-      to.regenBlockedUntil = 0;
-      to.fragment = null;
-      to.drillDot = null;
-      to.ordinaryDot = null;
-      to.respawnAt = time + rules.respawnMs;
-      to.targetX = to.x;
-      to.targetY = to.y;
+      clearDeath(to, time);
     }
-    return { damage, critical };
+    policy.onHit?.(from, to, time, damage);
+    return { damage, critical, ...(weakened && { weakened }) };
+  }
+  function clearDeath(actor, time) {
+    actor.shieldUntil = 0;
+    actor.shieldResidualUntil = 0;
+    actor.guardEnergyReady = false;
+    actor.guardEnergy = null;
+    actor.slowUntil = 0;
+    actor.teleportBlockedUntil = 0;
+    actor.hasteUntil = 0;
+    actor.heroFlightUntil = 0;
+    actor.sealedUntil = 0;
+    actor.ordinaryDot = null;
+    actor.guanyinUntil = 0;
+    actor.excaliburUntil = 0;
+    actor.regenBlockedUntil = 0;
+    actor.fragment = null;
+    actor.drillDot = null;
+    actor.pickupSpeedAt =
+      actor.pickupSpeedUntil =
+      actor.pickupShieldUntil =
+      actor.pickupAttackUntil =
+        0;
+    actor.lastPickup = null;
+    actor.respawnAt = time + rules.respawnMs;
+    actor.targetX = actor.x;
+    actor.targetY = actor.y;
+    actor.wallRoute = [];
+  }
+  function environmentDamage(actor, time, fraction) {
+    if (!actor.health) return;
+    const reduction = time < (actor.pickupShieldUntil || 0) ? 0.7 : 1;
+    const damage = Math.min(
+      actor.health,
+      Math.max(1, Math.round(actor.maxHealth * fraction * reduction * profile(actor).defense)),
+    );
+    policy.onEnvironmentDamage?.(actor, time, damage);
+    actor.health -= damage;
+    actor.dotPulse = { id: `terrain:${actor.lifeId}:${time}`, at: time, damage, critical: false };
+    actor.lastHitAt = actor.regenAt = time;
+    if (!actor.health) {
+      stats(actor).deaths++;
+      contributions.delete(actor);
+      clearDeath(actor, time);
+    }
   }
   function view(actor, includeStatus = false) {
     const time = actor.combatAt || 0;
@@ -536,7 +629,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
           }
         : {}),
       energy: actor.energy || 0,
-      energyMaximum: rules.energy.maximum,
+      energyMaximum: energy.maximum(actor),
       health: actor.health,
       maxHealth: actor.maxHealth,
       respawnAt: actor.respawnAt,
@@ -565,16 +658,21 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
             y: actor.fragment.y,
             health: actor.fragment.health,
             maxHealth: actor.fragment.maxHealth,
+            stealable: time >= actor.fragment.stealableAt,
           }
         : null,
       severed: actor.severed === true,
     };
   }
   return {
+    reset,
+    environmentDamage,
     advance,
     alive,
     protect,
     hit,
+    canHit,
+    canContinueCast,
     view,
     freeze,
     canMove,
@@ -587,4 +685,4 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     rollBabylonDamage,
   };
 }
-module.exports = { createSceneCombat, sceneDistance };
+module.exports = { createSceneCombat, sceneDistance, authorSpeed };

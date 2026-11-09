@@ -22,7 +22,15 @@ const ROSE_BARRAGE = [
 ];
 const BARRAGE_SHOT_SCALES = [1, 0.72, 1.28];
 
-export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle = 0) {
+export function drawUltimateRevision(
+  ctx,
+  kind,
+  p,
+  targetX = 760,
+  targets,
+  angle = 0,
+  casterOffset = { x: 0, y: 0 },
+) {
   p = Math.max(0, Math.min(1, p));
   ctx.save();
 
@@ -30,7 +38,7 @@ export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle
          1. GATE OF BABYLON (60 Golden Portals + 6 Weapons + Ea Core)
          ---------------------------------------------------------------------- */
   if (kind === 'gate_of_babylon') {
-    drawBabylonVolley(ctx, p, targets, angle);
+    drawBabylonVolley(ctx, p, targets, angle, casterOffset);
     if (p > 0.78) {
       const release = Math.min(1, (p - 0.78) / 0.15);
       for (const target of (targets || [{ x: 760, y: 0 }]).slice(0, 32)) {
@@ -167,7 +175,7 @@ export function drawUltimateRevision(ctx, kind, p, targetX = 760, targets, angle
          ---------------------------------------------------------------------- */
   else if (kind === 'bijuu_beam') {
     ctx.save();
-    ctx.translate(-98, 0);
+    ctx.translate(casterOffset.x - 98, casterOffset.y);
 
     // Nine Huge Waving Tail Curves Behind
     ctx.strokeStyle = 'rgba(241, 193, 0, 0.6)';
@@ -820,6 +828,7 @@ export function drawBabylonVolley(
     { x: 560, y: 180 },
   ],
   orientation = 0,
+  casterOffset = { x: 0, y: 0 },
 ) {
   p = Math.max(0, Math.min(1, p));
   ctx.save();
@@ -1167,7 +1176,7 @@ export function drawBabylonVolley(
     const radius = 18 * d.scale * doorP;
 
     ctx.save();
-    ctx.translate(d.x, d.y);
+    ctx.translate(d.x + casterOffset.x, d.y + casterOffset.y);
 
     // 空間漣漪金色漸層 (Ripple)
     const pulse = 1 + Math.sin(p * 20 + d.wave * Math.PI * 2) * 0.12;

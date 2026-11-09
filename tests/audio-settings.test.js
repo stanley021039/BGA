@@ -505,3 +505,23 @@ test('a disabled result cue never interrupts music', () => {
   assert.equal(pauses, 0);
   assert.equal(resumes, 0);
 });
+
+test('arena countdown plays separate short clips without seeking', () => {
+  const ui = harness();
+  const clip = ui.api.playEffect('arena-countdown');
+  assert.equal(clip.src, '/assets/game-sounds/arena-countdown-tick.mp3');
+  assert.equal(clip.currentTime, 0);
+  ui.api.stopEffect(clip);
+  const bell = ui.api.playEffect('arena-countdown-bell');
+  assert.equal(bell.src, '/assets/game-sounds/arena-countdown-bell.mp3');
+  assert.equal(bell.currentTime, 0);
+});
+
+test('arena countdown retains a reserved slot when other effects fill playback', () => {
+  const ui = harness();
+  for (const cue of ['turn', 'dice-roll', 'invitation', 'invitation'])
+    assert.ok(ui.api.playEffect(cue));
+  assert.equal(ui.api.playEffect('turn'), undefined);
+  assert.ok(ui.api.playEffect('arena-countdown'));
+  assert.equal(ui.api.playEffect('arena-countdown'), undefined);
+});

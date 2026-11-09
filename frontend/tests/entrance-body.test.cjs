@@ -5,7 +5,7 @@ const { test } = require('node:test'),
   vm = require('node:vm');
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/entrance-body.js'), 'utf8')
-  .replace('export function ', 'function ');
+  .replaceAll('export function ', 'function ');
 const effects = require('../../public/shared/entrance-stitch.json');
 test('all 24 Stitch entrances materialize the actual image and name, then restore their original styles on cancellation', () => {
   const context = {};
@@ -97,4 +97,42 @@ test('each theme has distinct body poses and the actor is raised above the effec
     assert.ok(animations.every((a) => a.cancelled === 1));
   }
   assert.equal(poses.size, 24);
+});
+
+test('all imported backdrops fade out by the settled pose of their character', () => {
+  const scope = {};
+  vm.createContext(scope);
+  vm.runInContext(source, scope);
+  for (const effect of effects) {
+    const animations = [];
+    const node = {
+      animate(frames, options) {
+        const animation = {
+          frames,
+          options,
+          cancel() {
+            this.cancelled = true;
+          },
+        };
+        animations.push(animation);
+        return animation;
+      },
+      querySelector: () => null,
+    };
+    const cleanup = scope.playEntranceBackdrop(node, effect.duration);
+    scope.playEntranceBody(node, node, effect.id, effect.duration);
+    const [backdrop, character] = animations;
+    const rest = character.frames.find(
+      (frame) => frame.opacity === 1 && frame.transform === 'none',
+    );
+    assert.equal(
+      backdrop.frames.find((frame) => frame.opacity === 0).offset,
+      rest.offset,
+      effect.id,
+    );
+    assert.equal(backdrop.options.duration, character.options.duration);
+    assert.equal(backdrop.options.easing, character.options.easing);
+    cleanup();
+    assert.equal(backdrop.cancelled, true);
+  }
 });

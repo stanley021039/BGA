@@ -32,6 +32,7 @@ const documents = new Set([
   '/gifts',
   '/admin',
   '/rules',
+  '/arena',
   '/decrypto',
   '/credits',
 ]);

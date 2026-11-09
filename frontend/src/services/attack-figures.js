@@ -14,7 +14,7 @@
  * 內部局部坐標系：施法者 (0,0)，攻擊方向朝右 (+X)，最遠攻擊距離 X=760，Y 範圍 ±220。
  * 無計時器、無 rAF，純數學幾何繪製，嚴格控制粒子在上限 96 顆以內。
  */
-export function drawFateAttack(ctx, kind, p) {
+export function drawFateAttack(ctx, kind, p, casterOffset = { x: 0, y: 0 }) {
   p = Math.max(0, Math.min(1, p));
 
   if (kind === 'gate_of_babylon') {
@@ -343,7 +343,7 @@ export function drawFateAttack(ctx, kind, p) {
       swordAngle = -0.85 + 0.95 * slashT; // 揮至微向下傾角
     }
 
-    ctx.translate(swordX, swordY);
+    ctx.translate(swordX + casterOffset.x, swordY + casterOffset.y);
     ctx.rotate(swordAngle);
 
     // 1. 繪製真實金色誓約勝利之劍本體 (黃金劍身 + 藍琺瑯飾紋 + 金色十字護手)
@@ -408,7 +408,7 @@ export function drawFateAttack(ctx, kind, p) {
     // 4. 地面風壓氣流環 (蓄力與斬擊時在地面 X:40, Y:130)
     if (p >= 0.25 && p <= 0.85) {
       ctx.save();
-      ctx.translate(40, 120);
+      ctx.translate(40 + casterOffset.x, 120 + casterOffset.y);
       ctx.scale(1, 0.25);
       ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
       ctx.lineWidth = 3;

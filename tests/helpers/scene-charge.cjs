@@ -17,7 +17,8 @@ function chargeScene(scene, room, users, id, advance) {
   move({ x: original.x, y: original.y });
   advance(10000);
   view();
-  if (view().visitors.find((actor) => actor.id === id).energy !== 100)
+  const charged = view().visitors.find((actor) => actor.id === id);
+  if (charged.energy !== charged.energyMaximum)
     throw Error('Walking fixture did not earn full energy');
 }
 module.exports = { chargeScene };

@@ -4,14 +4,23 @@ const { test } = require('node:test'),
 const { createSceneCombat } = require('../src/rooms/scene-combat');
 const { createAttackTimeline } = require('../src/rooms/attack-timeline');
 const { selectAttackTargets } = require('../src/rooms/attack-targets');
-function fixture(effect, { from = { x: 20, y: 50 }, to = { x: 45, y: 50 }, aspectRatio = 1 } = {}) {
+function fixture(
+  effect,
+  {
+    from = { x: 20, y: 50 },
+    to = { x: 45, y: 50 },
+    aspectRatio = 1,
+    policy = {},
+    walls = null,
+  } = {},
+) {
   const actors = [
     { id: 'a', ...from },
     { id: 'b', ...to },
     { id: 'c', x: 65, y: 70 },
   ];
-  const combat = createSceneCombat(() => 0.5),
-    timeline = createAttackTimeline(combat);
+  const combat = createSceneCombat(() => 0.5, undefined, policy),
+    timeline = createAttackTimeline(combat, undefined, () => walls);
   actors.forEach((a) => combat.advance(a, 100));
   const event = {
     effect,
@@ -294,4 +303,48 @@ test('reaper publishes and settles separate seals for all selected victims', () 
   );
   assert.ok(f.event.hits.every((h) => !h.pending && h.damage > 0));
   assert.ok(f.actors.slice(1).every((a) => a.sealedUntil === 4700));
+});
+
+test('hero excludes protected actors before the target cap and cannot land after the cast scope closes', () => {
+  const policy = {
+    canHit: (_, target) => target.id === 'b',
+    canContinueCast: (_, __, time) => time < 3000,
+  };
+  const active = fixture('gate_of_heroes', { policy });
+  active.actors[2].x = 45;
+  active.actors[2].y = 50;
+  active.advance(2200);
+  assert.deepEqual(
+    active.event.hits.map((hit) => hit.toId),
+    ['b'],
+  );
+  assert.equal(active.actors[2].immobileUntil, 0);
+
+  const expired = fixture('gate_of_heroes', {
+    policy: { ...policy, canContinueCast: () => false },
+  });
+  expired.advance(2200);
+  assert.equal(expired.actors[0].x, 20);
+  assert.equal(expired.event.cancelled, true);
+  assert.deepEqual(expired.event.hits, []);
+});
+
+test('arena devour follows wall corners and bites only after a clear approach', () => {
+  const { createWalls } = require('../src/rooms/walls');
+  const walls = createWalls(1);
+  const from = { x: 20, y: 81 };
+  const to = { x: 20, y: 92 };
+  assert.equal(walls.clear(from, to), false);
+  const f = fixture('shaohua_devour_alt', { from, to, walls });
+  let previous = from;
+  let roundedCorner = false;
+  for (let t = 150; t <= 4100 && !f.event.head.finished; t += 50) {
+    f.advance(t);
+    const head = f.event.head;
+    assert.ok(walls.clear(previous, head));
+    if (Math.abs(head.x - from.x) > 3) roundedCorner = true;
+    previous = { x: head.x, y: head.y };
+  }
+  assert.ok(roundedCorner);
+  assert.equal(f.event.hits[0]?.toId, 'b');
 });

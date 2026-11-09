@@ -13,6 +13,10 @@
     overscroll-behavior: contain;
   }
 }
+.mobile-scene-controls-top {
+  inset-block-start: max(var(--stitch-space-16), env(safe-area-inset-top));
+  inset-block-end: auto;
+}
 .mobile-scene-actions,
 .mobile-scene-directions {
   display: grid;

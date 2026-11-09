@@ -1,3 +1,19 @@
+const settled = 0.92;
+const easing = 'ease-out';
+
+export function playEntranceBackdrop(node, duration) {
+  const fade = node.animate?.(
+    [
+      { opacity: 1, offset: 0 },
+      { opacity: 1, offset: 0.64 },
+      { opacity: 0, offset: settled },
+      { opacity: 0, offset: 1 },
+    ],
+    { duration, easing, fill: 'both' },
+  );
+  return () => fade?.cancel();
+}
+
 // Animate the real character, using the entrance owner's lifetime and quota.
 export function playEntranceBody(anchor, img, id, duration) {
   if (!img?.animate || !id.startsWith('stitch-')) return () => {};
@@ -165,10 +181,10 @@ export function playEntranceBody(anchor, img, id, duration) {
           transform: pose[2],
           offset: 0.76,
         },
-        { opacity: 1, filter: 'none', clipPath: 'inset(0)', transform: 'none', offset: 0.92 },
+        { opacity: 1, filter: 'none', clipPath: 'inset(0)', transform: 'none', offset: settled },
         { opacity: 1, filter: 'none', clipPath: 'inset(0)', transform: 'none', offset: 1 },
       ],
-      { duration, easing: 'ease-out', fill: 'both' },
+      { duration, easing, fill: 'both' },
     ),
   ];
   // The effect canvas/markup lives at z=200. Lift the real actor for this entrance

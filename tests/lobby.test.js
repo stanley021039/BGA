@@ -23,9 +23,20 @@ test('random teleport moves only the caller, stops walking and publishes a new e
   const observed = lobby.view(bob);
   assert.equal(observed.visitors.find((v) => v.id === 'alice').teleportId, 1);
   assert.equal(observed.visitors.find((v) => v.id === 'bob').x, before.x);
+  assert.equal(first.energy, 0);
+  assert.throws(() => lobby.teleport(alice, 'sparks'), { code: 'INSUFFICIENT_SCENE_ENERGY' });
+  for (const x of [90, 10, 90]) {
+    lobby.move(alice, { x, y: 50 });
+    for (let i = 0; i < 6; i++) {
+      time += 1000;
+      lobby.view(alice);
+    }
+  }
+  const charged = lobby.view(alice).visitors.find((v) => v.id === 'alice');
   const second = lobby.teleport(alice, 'sparks').visitors.find((v) => v.id === 'alice');
   assert.equal(second.teleportId, 2);
-  assert.notEqual(second.x, first.x);
+  assert.notEqual(second.x, charged.x);
+  assert.equal(second.energy, charged.energy - 20);
 });
 
 test('click destinations advance at bounded speed and emotes expire for other visitors', () => {

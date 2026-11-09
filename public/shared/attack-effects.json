@@ -148,7 +148,7 @@
     "id": "dimension_cleave",
     "label": "龍鱗・反發・成雙之流星",
     "color": "#ff3366",
-    "description": "密集次元斬將空間切開，命中後掉落可拾回的下半身；被摧毀時本體目前生命減半。",
+    "description": "密集次元斬將空間切開，命中後掉落下半身，本人可拾回。3 秒後其他玩家可拾取並回復 30 能量。下半身被摧毀時，本體目前生命減半。",
     "achievementId": "bluff-convincing",
     "area": {
       "shape": "rectangle",
@@ -505,7 +505,7 @@
     "id": "dimension_cleave_alt",
     "label": "龍鱗・反發・成雙之流星（靛藍異色）",
     "color": "#4255fa",
-    "description": "異色特效，招式效果與原版相同。密集次元斬將空間切開，命中後掉落可拾回的下半身；被摧毀時本體目前生命減半。",
+    "description": "異色特效，招式效果與原版相同。密集次元斬將空間切開，命中後掉落下半身，本人可拾回。3 秒後其他玩家可拾取並回復 30 能量。下半身被摧毀時，本體目前生命減半。",
     "gachaOnly": true,
     "variantOf": "dimension_cleave",
     "paletteHue": 234,

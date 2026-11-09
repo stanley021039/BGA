@@ -1,3 +1,12 @@
+import { readPickupEffects, type PickupEffects } from './lobby-pickups';
+import {
+  readArenaRooms,
+  readArchetype,
+  readLobbyArena,
+  type ArenaArchetype,
+  type LobbyArena,
+} from './lobby-arena';
+import sceneRules from '../../../public/shared/scene-rules.json';
 import attackEffects from '../../../public/shared/attack-effects.json';
 import { attackArtworkKind } from '../services/attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
@@ -44,11 +53,15 @@ export interface SceneCombatStatus {
   regenPerSecond: number;
 }
 export interface LobbyVisitor {
+  concealed?: boolean;
   heroFlightUntil?: number;
   sealedUntil?: number;
   teleportBlockedUntil?: number;
   energy?: number;
   energyMaximum?: number;
+  archetype?: ArenaArchetype | null;
+  hazardKind?: 'mud' | 'embers' | null;
+  pickupEffects?: PickupEffects;
   combatStatus?: SceneCombatStatus;
   severed?: boolean;
   immobileUntil?: number;
@@ -64,8 +77,21 @@ export interface LobbyVisitor {
     durationMs?: number;
     vertical?: boolean;
   } | null;
-  dotPulse?: { id: string; damage: number; critical: boolean; at: number } | null;
-  fragment?: { id: string; x: number; y: number; health: number; maxHealth: number } | null;
+  dotPulse?: {
+    id: string;
+    damage: number;
+    critical: boolean;
+    weakened?: boolean;
+    at: number;
+  } | null;
+  fragment?: {
+    id: string;
+    x: number;
+    y: number;
+    health: number;
+    maxHealth: number;
+    stealable?: boolean;
+  } | null;
   kda?: { kills: number; deaths: number; assists: number };
   passage?: Passage | null;
   health?: number;
@@ -89,6 +115,9 @@ export interface LobbyVisitor {
   entrance: EntranceEffectId;
 }
 export interface LobbyAttackHit {
+  blocked?: boolean;
+  weakened?: boolean;
+  coverImpact?: { x: number; y: number };
   aimX?: number;
   aimY?: number;
   phase?: string;
@@ -110,6 +139,7 @@ export interface LobbyAttack {
   aspectRatio?: number;
   damage?: number;
   critical?: boolean;
+  weakened?: boolean;
   effect: string;
   slot: 'q' | 'e' | 'r';
   id: string;
@@ -137,6 +167,8 @@ export interface AttackHead {
   exploded?: boolean;
 }
 export interface LobbySnapshot {
+  arena?: LobbyArena | null;
+  arenaRoom?: { currentId: string | null; rooms: { id: string; name: string; count: number }[] };
   attacks: LobbyAttack[];
   background: { id: string; changedAt: number; nextChangeAt: number };
   barrages: BarrageEvent[];
@@ -185,6 +217,9 @@ export function readPublicRooms(value: unknown): PublicRoom[] {
       joinable: row.joinable === true,
     };
   });
+}
+function readEnergyMaximum(value: unknown) {
+  return value === sceneRules.energy.lobbyMaximum ? value : sceneRules.energy.maximum;
 }
 export function readLobbySnapshot(value: unknown): LobbySnapshot {
   const row = record(value);
@@ -236,6 +271,19 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       };
     }
     return {
+      ...(item.archetype !== undefined ? { archetype: readArchetype(item.archetype) } : {}),
+      ...(item.hazardKind !== undefined
+        ? {
+            hazardKind: (() => {
+              if (![null, 'mud', 'embers'].includes(item.hazardKind as null | 'mud' | 'embers'))
+                throw Error('陷阱狀態不正確。');
+              return item.hazardKind as null | 'mud' | 'embers';
+            })(),
+          }
+        : {}),
+      ...(item.pickupEffects !== undefined
+        ? { pickupEffects: readPickupEffects(item.pickupEffects) }
+        : {}),
       kda: {
         kills: counter(item.kda && record(item.kda).kills),
         deaths: counter(item.kda && record(item.kda).deaths),
@@ -244,6 +292,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       immobileUntil: finite(item.immobileUntil) ? item.immobileUntil : 0,
       guardFullMs: Math.min(5000, counter(item.guardFullMs)),
       guardMs: Math.min(5000, counter(item.guardMs)),
+      concealed: item.concealed === true,
       slowMs: counter(item.slowMs),
       hasteMs: counter(item.hasteMs),
       severed: item.severed === true,
@@ -266,6 +315,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           y: part.y,
           health: part.health,
           maxHealth: part.maxHealth,
+          ...(part.stealable === true ? { stealable: true } : {}),
         };
       })(),
       knockback: (() => {
@@ -303,6 +353,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           id: text(pulse.id),
           damage: Number(pulse.damage),
           critical: pulse.critical,
+          ...(pulse.weakened === true && { weakened: true }),
           at: pulse.at,
         };
       })(),
@@ -336,7 +387,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           guanyin: status.guanyin === true,
           excalibur: status.excalibur === true,
           shield: status.shield as SceneCombatStatus['shield'],
-          guardEnergy: counter(status.guardEnergy),
+          guardEnergy: finite(status.guardEnergy) ? Math.max(0, status.guardEnergy) : 0,
           regenerating: status.regenerating === true,
           regenWaitMs: status.regenWaitMs,
           regenBlockedMs: Number(status.regenBlockedMs || 0),
@@ -346,8 +397,10 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           regenPerSecond: Number(status.regenPerSecond),
         };
       })(),
-      energy: Math.min(100, counter(item.energy)),
-      energyMaximum: 100,
+      energy: finite(item.energy)
+        ? Math.max(0, Math.min(readEnergyMaximum(item.energyMaximum), item.energy))
+        : 0,
+      energyMaximum: readEnergyMaximum(item.energyMaximum),
       health: finite(item.health) ? item.health : undefined,
       heroFlightUntil: finite(item.heroFlightUntil) ? item.heroFlightUntil : 0,
       sealedUntil: finite(item.sealedUntil) ? item.sealedUntil : 0,
@@ -381,6 +434,8 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
   )
     throw Error('大廳角色身分不一致。');
   return {
+    arena: readLobbyArena(row.arena),
+    ...(row.arenaRoom ? { arenaRoom: readArenaRooms(row.arenaRoom) } : {}),
     // Older lobby servers sent plain messages without the room event discriminator.
     barrages: readBarrages(
       array(row.barrages).map((value) => {
@@ -492,11 +547,21 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                           };
                         })()
                       : {}),
+                    ...(hit.blocked !== undefined ? { blocked: hit.blocked === true } : {}),
+                    ...(hit.coverImpact !== undefined
+                      ? (() => {
+                          const impact = record(hit.coverImpact);
+                          if (!finite(impact.x) || !finite(impact.y))
+                            throw Error('Invalid cover impact');
+                          return { coverImpact: { x: Number(impact.x), y: Number(impact.y) } };
+                        })()
+                      : {}),
                     toId: text(hit.toId),
                     toX: Number(hit.toX),
                     toY: Number(hit.toY),
                     damage: Number(hit.damage),
                     critical: hit.critical,
+                    ...(hit.weakened === true && { weakened: true }),
                   };
                 });
                 if (
@@ -513,6 +578,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             : {}),
           damage: finite(a.damage) ? Math.max(0, a.damage) : undefined,
           critical: a.critical === true,
+          ...(a.weakened === true && { weakened: true }),
           effect: attackEffects.some((e) => e.id === a.effect) ? String(a.effect) : 'barrage',
           slot: a.slot === 'r' ? 'r' : a.slot === 'e' ? 'e' : 'q',
           id: text(a.id),

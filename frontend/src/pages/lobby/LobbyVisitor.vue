@@ -4,6 +4,7 @@ import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
 import { sceneWalkWithSpeed } from '../../engines/scene-path.js';
+import { interpolateSceneVisitor } from '../../services/scene-interpolation';
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
@@ -14,14 +15,20 @@ import { apparate, entranceDuration } from './apparition';
 const NAME_LIMIT = 10;
 const props = defineProps<{
     visitor: LobbyVisitor;
+    team?: string;
     message?: BarrageEvent;
     self: boolean;
     reset: number;
     open: boolean;
     connected: boolean;
     arrive?: boolean;
+    followCamera?: boolean;
   }>(),
-  emit = defineEmits<{ select: [element: HTMLElement]; arrived: [] }>();
+  emit = defineEmits<{
+    select: [element: HTMLElement];
+    arrived: [];
+    position: [x: number, y: number];
+  }>();
 const node = ref<HTMLElement | null>(null),
   speech = ref<HTMLElement | null>(null),
   left = ref(props.visitor.x),
@@ -36,6 +43,13 @@ const node = ref<HTMLElement | null>(null),
   bubbleBelow = ref(false),
   bubbleHeight = ref('180px'),
   ornate = ref(false);
+watch(
+  [left, top, () => props.followCamera],
+  ([x, y, follow]) => {
+    if (follow) emit('position', x, y);
+  },
+  { immediate: true, flush: 'post' },
+);
 const shortName = computed(() => {
   const chars = [...props.visitor.name];
   return chars.length > NAME_LIMIT ? chars.slice(0, NAME_LIMIT).join('') + '…' : props.visitor.name;
@@ -223,13 +237,16 @@ watch(
     const tick = (time: number) => {
       moveFrame = 0;
       if (disposed || epoch !== revision || document.hidden || !props.connected) return;
-      const position = sceneWalkWithSpeed(
-        visitor,
-        { x: visitor.targetX, y: visitor.targetY },
-        time - started,
-        visitor.passage,
-        visitor,
-      );
+      const position =
+        (visitor.archetype || visitor.pickupEffects?.speedUntil) && !visitor.passage
+          ? interpolateSceneVisitor(visitor, time - started)
+          : sceneWalkWithSpeed(
+              visitor,
+              { x: visitor.targetX, y: visitor.targetY },
+              time - started,
+              visitor.passage,
+              visitor,
+            );
       left.value = wrap(position.x);
       top.value = wrap(position.y);
       if (hasSpeech.value) positionBubble();
@@ -305,6 +322,8 @@ window.addEventListener('resize', positionBubble);
       '--lobby-move-duration': duration + 'ms',
     }"
     :data-ping-player="visitor.id"
+    :data-arena-team="team"
+    :data-arena-concealed="visitor.concealed || undefined"
     :aria-label="self ? visitor.name + '（你），點一下發表情，C 鍵瞬移、R 鍵多人招式' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
@@ -342,9 +361,12 @@ window.addEventListener('resize', positionBubble);
     <div
       v-if="visitor.dotPulse"
       :key="visitor.dotPulse.id"
+      :class="{ 'is-weak': visitor.dotPulse.weakened }"
       class="scene-dot-number"
       aria-hidden="true"
-      >{{ visitor.dotPulse.damage.toLocaleString() }}</div
+      >{{
+        visitor.dotPulse.damage.toLocaleString() + (visitor.dotPulse.weakened ? ' (WEAK)' : '')
+      }}</div
     >
     <div v-show="visitor.health !== 0" class="scene-avatar-portrait">
       <img
@@ -382,7 +404,10 @@ window.addEventListener('resize', positionBubble);
       :visitor="visitor"
       :self="self"
       :connected="connected"
-    /><span v-if="visitor.health !== 0">{{ shortName }}</span>
+    /><span v-if="visitor.health !== 0"
+      >{{ team ? (team === 'red' ? '綠隊 · ' : '藍隊 · ') : '' }}{{ shortName
+      }}{{ visitor.concealed ? ' · 隱身' : '' }}</span
+    >
   </component>
 </template>
 <style scoped>
@@ -448,5 +473,8 @@ window.addEventListener('resize', positionBubble);
   font-weight: 700;
   pointer-events: none;
   translate: -50% -12px;
+}
+.is-weak {
+  color: var(--stitch-artwork-swatch-8edcff, lightblue);
 }
 </style>

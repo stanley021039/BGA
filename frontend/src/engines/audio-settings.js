@@ -5,7 +5,8 @@ let AudioSettings;
   const key = 'ah-audio-settings',
     listeners = new Set(),
     effects = new Map(),
-    gameEffects = new Set();
+    gameEffects = new Set(),
+    priorityEffects = new Set();
   const chantDeadlineMs = 12150;
   const gachaCues = {
     'gacha-chant-you-say-run': ['/assets/game-sounds/gacha-chant-you-say-run.mp3', chantDeadlineMs],
@@ -80,6 +81,7 @@ let AudioSettings;
     if (!cleanup) return false;
     effects.delete(clip);
     gameEffects.delete(clip);
+    priorityEffects.delete(clip);
     cleanup();
     return true;
   }
@@ -178,15 +180,15 @@ let AudioSettings;
   function playClip(
     url,
     durationMs,
-    { onError, onStop, game = false, maxStartDelayMs = 10000 } = {},
+    { onError, onStop, game = false, maxStartDelayMs = 10000, priority = false } = {},
   ) {
     const settings = preferences.effects;
     if (
       !settings.enabled ||
       !settings.volume ||
       document.hidden ||
-      effects.size >= 4 ||
-      (game && gameEffects.size >= 2)
+      (priority ? priorityEffects.size >= 1 : effects.size - priorityEffects.size >= 4) ||
+      (game && !priority && gameEffects.size >= 2)
     )
       return;
     let clip;
@@ -194,7 +196,9 @@ let AudioSettings;
       clip = new Audio(url);
       clip.volume = settings.volume;
       let playing = false,
-        deadline = setTimeout(() => stopEffect(clip), maxStartDelayMs);
+        deadline = setTimeout(() => {
+          if (stopEffect(clip)) onError?.();
+        }, maxStartDelayMs);
       effects.set(clip, () => {
         clearTimeout(deadline);
         clip.onplaying = null;
@@ -210,7 +214,8 @@ let AudioSettings;
           onStop?.(clip);
         } catch {}
       });
-      if (game) gameEffects.add(clip);
+      if (priority) priorityEffects.add(clip);
+      else if (game) gameEffects.add(clip);
       if (
         game &&
         document.body.dataset.gameKind === 'quacks' &&
@@ -251,6 +256,8 @@ let AudioSettings;
     // Reuse the existing short double tone; warning is a distinct once-per-round cue.
     if (kind === 'countdown-warning') kind = 'turn';
     const cues = {
+      'arena-countdown': ['/assets/game-sounds/arena-countdown-tick.mp3', 480],
+      'arena-countdown-bell': ['/assets/game-sounds/arena-countdown-bell.mp3', 820],
       'ping-ping': ['/assets/game-sounds/ping-ping.wav', 1126],
       'ping-attention': ['/assets/game-sounds/ping-attention.wav', 2613],
       'ping-question': ['/assets/game-sounds/ping-question.wav', 1131],
@@ -343,6 +350,7 @@ let AudioSettings;
           : null;
       const clip = playClip(cue[0], cue[1], {
         onError: options.onError,
+        priority: kind.startsWith('arena-countdown'),
         onStop: (item) => {
           release?.();
           options.onStop?.(item);
@@ -357,7 +365,9 @@ let AudioSettings;
                 ? 5000
                 : ['ingredient-draw', 'quacks-draw', 'quacks-stop'].includes(kind)
                   ? 3000
-                  : 1000,
+                  : kind.startsWith('arena-countdown')
+                    ? 350
+                    : 1000,
       });
       if (!clip) release?.();
       return clip;
@@ -418,7 +428,7 @@ let AudioSettings;
   });
   persist();
   AudioSettings = {
-    canPlayGameEffect: () => effects.size < 4 && gameEffects.size < 2,
+    canPlayGameEffect: () => effects.size - priorityEffects.size < 4 && gameEffects.size < 2,
     get,
     set,
     subscribe,

@@ -33,6 +33,8 @@ let GameSounds;
     'quacks-ruby',
     'quacks-witch',
     'countdown-warning',
+    'arena-countdown',
+    'arena-countdown-bell',
   ]);
   const quietCues = new Set(['shot', 'slam', 'nitro', 'skid']);
   function create({ now = () => Date.now(), maxSeen = 256, maxGapMs = 5000 } = {}) {
@@ -96,7 +98,13 @@ let GameSounds;
     function play(
       cue,
       key,
-      { live: eligible = live, epoch: token = epoch, quiet = quietCues.has(cue), onStop } = {},
+      {
+        live: eligible = live,
+        epoch: token = epoch,
+        quiet = quietCues.has(cue),
+        onStop,
+        retryIfUnavailable = false,
+      } = {},
     ) {
       if (destroyed || !known.has(cue) || key == null) return;
       key = String(key);
@@ -114,7 +122,11 @@ let GameSounds;
       const at = now();
       if (quiet && at - lastQuietAt < 250) return;
       let ended = false;
+      const allowRetry = () => {
+        if (retryIfUnavailable && token === epoch) seen.delete(key);
+      };
       const clip = AudioSettings?.playEffect?.(cue, {
+        onError: allowRetry,
         onStop: (item) => {
           ended = true;
           clips.delete(item);
@@ -123,6 +135,7 @@ let GameSounds;
           } catch {}
         },
       });
+      if (!clip) allowRetry();
       if (clip && !ended) {
         clips.add(clip);
         if (quiet) lastQuietAt = at;

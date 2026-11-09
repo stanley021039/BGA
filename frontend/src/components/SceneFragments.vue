@@ -8,9 +8,13 @@ defineProps<{ visitors: LobbyVisitor[] }>();
     <div
       v-if="owner.fragment"
       class="scene-fragment"
+      :class="{ 'is-stealable': owner.fragment.stealable }"
       :style="{ left: owner.fragment.x + '%', top: owner.fragment.y + '%' }"
       role="img"
-      :aria-label="owner.name + '的下半身，本人走近可拾回'"
+      :aria-label="
+        owner.name +
+        (owner.fragment.stealable ? '的下半身，其他玩家拾取回 30 能量' : '的下半身，本人可拾回')
+      "
     >
       <div class="scene-fragment-crop"
         ><img :src="sizedImage(owner.image, 128)" alt="" draggable="false"
@@ -29,6 +33,9 @@ defineProps<{ visitors: LobbyVisitor[] }>();
   transform: translate(-50%, -50%);
   width: 64px;
   pointer-events: none;
+}
+.scene-fragment.is-stealable {
+  filter: drop-shadow(0 0 4px var(--stitch-info-ink));
 }
 .scene-fragment-crop {
   height: 32px;

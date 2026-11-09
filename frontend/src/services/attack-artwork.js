@@ -49,6 +49,10 @@ export function createAttackScene(context, options) {
   const ctx = palette?.ctx ?? context;
   if (base)
     options = { ...options, effect: base.id, color: roseBarrage ? variant.color : base.color };
+  const readCaster = options.readCaster;
+  let casterSample;
+  if (readCaster)
+    options = { ...options, readCaster: () => (casterSample ??= readCaster() || options.from) };
   const fx = options.fx || FULL_DETAIL;
   // Previews use the same phase schedule; real scenes only show server-settled hits.
   if (options.preview && !options.readHits && !['shield', 'sphere'].includes(options.effect)) {
@@ -202,10 +206,10 @@ export function createAttackScene(context, options) {
       y: y - 20 + (Math.random() - 0.5) * 24,
       vx: (Math.random() - 0.5) * 3.5,
       vy: -(Math.random() * 4 + 4.5),
-      text: textStr,
+      text: authoritative.weakened ? textStr + ' (WEAK)' : textStr,
       alpha: 1,
       scale: isCrit ? 1.35 : 1.0,
-      color: isCrit ? '#ffd556' : '#ffffff',
+      color: authoritative.weakened ? '#8edcff' : isCrit ? '#ffd556' : '#ffffff',
     });
     state.dpsWindow += dmg * state.damageMult;
     state.combo++;
@@ -622,7 +626,12 @@ export function createAttackScene(context, options) {
   }
   function draw(now) {
     if (stopped) return false;
-    if (now - start > 4200) {
+    casterSample = undefined;
+    const anchor = options.readAnchor?.();
+    if (
+      now - start > 4200 ||
+      (options.readAnchor && (!anchor || now - start >= combatRules.shield.durationMs))
+    ) {
       dispose();
       return false;
     }
@@ -636,6 +645,8 @@ export function createAttackScene(context, options) {
     ])
       if (pool.length > poolLimit) pool.splice(0, pool.length - poolLimit);
     ctx.save();
+    for (const clip of options.coverClips || []) ctx.clip(clip, 'evenodd');
+    if (anchor) ctx.translate(anchor.x - from.x, anchor.y - from.y);
     advanced?.(now - start);
     for (const hit of options.readHits?.() || []) {
       const key = hit.toId + ':' + hit.phase;
@@ -873,7 +884,8 @@ export function createAttackScene(context, options) {
           projectiles.splice(i, 1);
         }
       } else if (p.type === 'burning_bow') {
-        ctx.translate(p.x, p.y);
+        const caster = options.readCaster?.();
+        ctx.translate(caster?.x ?? p.x, caster?.y ?? p.y);
         ctx.scale(Math.min(1, height / 240), Math.min(1, height / 240));
         ctx.globalAlpha = Math.min(1, p.life / 12);
         ctx.shadowColor = '#ff5a24';
@@ -1193,12 +1205,13 @@ const SLOW_FRAME_MS = 34,
   SLOW_FRAMES_TO_DROP = 5;
 // Every attack in a scene shares one canvas and one frame loop, so three
 // concurrent attacks cost one clear and one composited layer instead of three.
-export function createAttackStage(surface) {
+export function createAttackStage(surface, { readCamera } = {}) {
   const ctx = surface.getContext('2d');
   const scenes = new Map(),
     fx = { density: 1, glow: 1 };
   let width = 0,
     height = 0,
+    quality = 1,
     tier = 0,
     frame = 0,
     last = -Infinity,
@@ -1215,10 +1228,25 @@ export function createAttackStage(surface) {
       set: (value) => blur.set.call(ctx, value * fx.glow),
     });
   function fit() {
-    const quality = Math.min(1, 1280 / width, 900 / height) * DEVICE_DETAIL[tier].scale;
-    surface.width = Math.max(1, Math.round(width * quality));
-    surface.height = Math.max(1, Math.round(height * quality));
+    const viewportWidth = readCamera ? width / 2 : width;
+    const viewportHeight = readCamera ? height / 2 : height;
+    quality = Math.min(1, 1280 / viewportWidth, 900 / viewportHeight) * DEVICE_DETAIL[tier].scale;
+    surface.width = Math.max(1, Math.round(viewportWidth * quality));
+    surface.height = Math.max(1, Math.round(viewportHeight * quality));
     ctx.setTransform(quality, 0, 0, quality, 0, 0);
+  }
+  function clearFrame() {
+    if (!readCamera) {
+      ctx.clearRect(0, 0, width, height);
+      return;
+    }
+    const camera = readCamera();
+    const x = camera.x * width;
+    const y = camera.y * height;
+    surface.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, surface.width, surface.height);
+    ctx.setTransform(quality, 0, 0, quality, -x * quality, -y * quality);
   }
   function settle(count = scenes.size) {
     const load = LOAD_DETAIL[Math.min(LOAD_DETAIL.length, Math.max(1, count)) - 1],
@@ -1231,7 +1259,7 @@ export function createAttackStage(surface) {
     frame = 0;
     releaseMotion?.();
     releaseMotion = null;
-    if (ctx) ctx.clearRect(0, 0, width, height);
+    if (ctx) clearFrame();
   }
   function clear() {
     for (const scene of scenes.values()) scene.dispose();
@@ -1258,7 +1286,7 @@ export function createAttackStage(surface) {
     measure(now);
     if (now - last >= 1000 / 60 - 1) {
       last = now;
-      ctx.clearRect(0, 0, width, height);
+      clearFrame();
       for (const [id, scene] of scenes) if (!scene.draw(now)) scenes.delete(id);
       settle();
     }

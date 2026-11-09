@@ -57,9 +57,7 @@ function owned(store, userId) {
         ),
       ],
       openings: ['home-family', ...ids('openings')],
-      pingIcons: require('./redemption').grants(store.db, userId).pings
-        ? Object.keys(require('../../frontend/src/engines/ping-model.js').default.types)
-        : [],
+      pingIcons: [],
     };
   }
   const ids = new Set(store.find.all(userId).map((row) => row.achievement_id));
@@ -67,20 +65,10 @@ function owned(store, userId) {
   const starter = require('./starter-rewards').receipt(store.db, userId)?.grants || {};
   return {
     attacks: require('./attack-rewards').ownedAttacks(store.db, userId),
-    sounds: [
-      ...new Set(
-        pairs
-          .filter(([id]) => grants.pings || ids.has(id))
-          .flatMap(([, , sounds]) => sounds.map((name) => 'ping-voice-' + name))
-          .concat(starter.sounds || []),
-      ),
-    ],
+    sounds: ownedSounds(store.db, userId),
     entrances: require('./entrance-rewards')
       .rewards.filter(
-        (reward) =>
-          grants.entrances ||
-          ids.has(reward.achievementId) ||
-          starter.entrances?.includes(reward.id),
+        (reward) => ids.has(reward.achievementId) || starter.entrances?.includes(reward.id),
       )
       .map((reward) => reward.id),
     backgrounds: require('../../public/shared/lobby-backgrounds.json')
@@ -92,13 +80,8 @@ function owned(store, userId) {
           starter.backgrounds?.includes(background.id),
       )
       .map((background) => background.id),
-    openings: [
-      'home-family',
-      ...(grants.entrances || ids.has('all-three-games') ? ['soul-world'] : []),
-    ],
-    pingIcons: grants.pings
-      ? Object.keys(require('../../frontend/src/engines/ping-model.js').default.types)
-      : [],
+    openings: ['home-family', ...(ids.has('all-three-games') ? ['soul-world'] : [])],
+    pingIcons: [],
   };
 }
 function ownedSounds(db, userId) {
@@ -110,11 +93,10 @@ function ownedSounds(db, userId) {
       .all(userId)
       .map((row) => row.achievement_id),
   );
-  const all = !!require('./redemption').redeemedAt(db, userId, 'pings');
   return [
     ...new Set(
       pairs
-        .filter(([id]) => all || ids.has(id))
+        .filter(([id]) => ids.has(id))
         .flatMap(([, , sounds]) => sounds.map((name) => 'ping-voice-' + name))
         .concat(require('./starter-rewards').owned(db, userId, 'sounds')),
     ),

@@ -226,7 +226,7 @@ class GachaStore {
           if (!duplicate) {
             this.db
               .prepare(
-                "INSERT INTO gacha_ownership(user_id,kind,reward_id,source,acquired_at) VALUES(?,?,?,'draw',?)",
+                "INSERT INTO gacha_ownership(user_id,kind,reward_id,source,acquired_at) VALUES(?,?,?,'draw',?) ON CONFLICT(user_id,kind,reward_id) DO UPDATE SET source=excluded.source, acquired_at=excluded.acquired_at WHERE gacha_ownership.source='legacy'",
               )
               .run(userId, item.kind, item.id, at);
             owned[item.kind].add(item.id);
@@ -287,7 +287,7 @@ class GachaStore {
       );
       this.db
         .prepare(
-          "INSERT INTO gacha_ownership(user_id,kind,reward_id,source,acquired_at) VALUES(?,?,?,'exchange',?)",
+          "INSERT INTO gacha_ownership(user_id,kind,reward_id,source,acquired_at) VALUES(?,?,?,'exchange',?) ON CONFLICT(user_id,kind,reward_id) DO UPDATE SET source=excluded.source, acquired_at=excluded.acquired_at WHERE gacha_ownership.source='legacy'",
         )
         .run(userId, item.kind, item.id, at);
       return {

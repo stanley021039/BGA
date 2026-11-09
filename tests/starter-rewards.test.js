@@ -93,7 +93,10 @@ test('starter excludes previously earned rewards, handles exhausted pools and ne
     users: [a, b],
     store,
   } = fixture(t);
-  for (const code of ['我愛少華', '我愛其學', '我愛士憲', '我愛作者']) store.redeem(a, code);
+  store.redeem(a, '我愛作者');
+  const add = db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'draw',?)");
+  for (const item of require('../src/gacha/catalog').catalog)
+    if (!item.gachaExclusive) add.run(a, item.kind, item.id, new Date().toISOString());
   const before = require('../src/achievements/redemption').grants(db, a);
   const full = store.redeem(a, '新手大禮包');
   assert.ok(full.redemption.rewards.every((r) => r.items.length === 0));

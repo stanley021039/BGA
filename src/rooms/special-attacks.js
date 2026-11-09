@@ -58,11 +58,16 @@ function failHoming(event, caster, time) {
     caster.lastHitAt = caster.regenAt = time;
   }
 }
-function advanceSpecial(combat, event, state, job, bodies, map) {
+function advanceSpecial(combat, event, state, job, bodies, map, walls) {
   const s = state.special,
     origin = s.self;
-  const caster = map.get(origin.id) === origin && origin.lifeId === s.lifeId && origin.health > 0;
-  const settle = (actor, phase, delayMs) => {
+  const caster =
+    map.get(origin.id) === origin &&
+    origin.lifeId === s.lifeId &&
+    origin.health > 0 &&
+    combat.canContinueCast(state.source, origin, job.at);
+  const eligible = (actor) => combat.canHit(state.source, actor, job.at, event.effect);
+  const settle = (actor, phase, delayMs, hitSource = state.source) => {
     const hit = {
       toId: actor.id,
       toX: actor.x,
@@ -70,8 +75,9 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
       phase,
       delayMs,
       pending: false,
-      ...combat.hit(state.source, actor, job.at, event.effect),
+      ...combat.hit(hitSource, actor, job.at, event.effect),
     };
+    if (hit.blocked) return;
     event.hits.push(hit);
     combat.applyEffect(
       state.source,
@@ -85,6 +91,7 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
     if (event.damage === 0) {
       event.damage = hit.damage;
       event.critical = hit.critical;
+      if (hit.weakened) event.weakened = true;
     }
   };
   if (s.kind === 'gate_of_heroes') {
@@ -104,6 +111,7 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
           a !== origin &&
           a.ownerId !== origin.id &&
           a.health > 0 &&
+          eligible(a) &&
           sceneDistance(point, a, event.aspectRatio) <= rules.heroLanding.radius,
       )
       .slice(0, rules.maximumAreaTargets))
@@ -120,11 +128,17 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
     !s.target ||
     map.get(s.target.id) !== s.target ||
     s.target.lifeId !== s.targetLife ||
-    s.target.health <= 0
+    s.target.health <= 0 ||
+    !eligible(s.target)
   ) {
     s.target = [...map.values()]
       .filter(
-        (a) => a !== origin && a.kind !== 'fragment' && a.ownerId !== origin.id && a.health > 0,
+        (a) =>
+          a !== origin &&
+          a.kind !== 'fragment' &&
+          a.ownerId !== origin.id &&
+          a.health > 0 &&
+          eligible(a),
       )
       .sort(
         (a, b) => sceneDistance(h, a, event.aspectRatio) - sceneDistance(h, b, event.aspectRatio),
@@ -134,6 +148,8 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
   }
   const target = s.target;
   const elapsed = job.at - event.at;
+  const clearPath = !walls || !target || walls.clear(h, target);
+  if (h.contactAt && !clearPath) h.contactAt = h.biteAt = 0;
   const biting = target && h.contactAt && elapsed >= h.biteAt;
   if (elapsed >= rules.shaohua.lifetimeMs && !biting) {
     failHoming(event, origin, job.at);
@@ -157,17 +173,37 @@ function advanceSpecial(combat, event, state, job, bodies, map) {
     h.x = target.x;
     h.y = target.y;
     if (biting) {
-      settle(target, 'bite', h.biteAt);
+      const biteSource = walls ? { ...state.source, originX: h.x, originY: h.y } : state.source;
+      settle(target, 'bite', h.biteAt, biteSource);
       h.finished = true;
       event.until = Math.min(event.until, job.at + 1000);
     }
     return;
   }
   // Use the character's movement clock so every direction and aspect stays slower.
-  const step = sceneWalk(h, target, dt * 1000 * rules.shaohua.speedMultiplier);
+  let destination = target;
+  if (clearPath) s.route = null;
+  else {
+    if (
+      !s.route?.length ||
+      !walls.clear(h, s.route[0]) ||
+      Math.hypot(target.x - s.routeTarget.x, target.y - s.routeTarget.y) >= 2
+    ) {
+      s.route = walls.route(h, target);
+      s.routeTarget = { x: target.x, y: target.y };
+    }
+    destination = s.route[0];
+    h.targetX = destination.x;
+    h.targetY = destination.y;
+  }
+  const step = sceneWalk(h, destination, dt * 1000 * rules.shaohua.speedMultiplier);
   h.x = step.x;
   h.y = step.y;
-  if (sceneDistance(h, target, event.aspectRatio) <= rules.shaohua.contactRadius) {
+  if (!step.remainingMs) s.route?.shift();
+  if (
+    sceneDistance(h, target, event.aspectRatio) <= rules.shaohua.contactRadius &&
+    (!walls || walls.clear(h, target))
+  ) {
     h.x = target.x;
     h.y = target.y;
     h.contactAt = elapsed;

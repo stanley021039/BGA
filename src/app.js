@@ -393,12 +393,15 @@ function initializeApp(config, dataLock, acquired) {
   };
   const authorCombatBonus = (userId) =>
     !!userId && !!require('./achievements/redemption').redeemedAt(db, userId, 'other');
-  const lobby = createLobby(
-    undefined,
-    (userId) => portraitUrl(userId),
-    undefined,
-    authorCombatBonus,
-  );
+  const makeLobby = (requireReady = false) =>
+    createLobby(undefined, (userId) => portraitUrl(userId), undefined, authorCombatBonus, {
+      attackLoadout: (userId) => require('./profiles/settings').getAttackSettings(db, userId),
+      startDelayMs: 5000,
+      requireReady,
+      expandedMap: requireReady,
+      practiceBots: config.achievementPurpose === 'test' ? config.arenaPracticeBots : undefined,
+    });
+  const lobby = makeLobby();
   const roomSpace = createRoomSpace(undefined, undefined, (playerId, room) => {
     // Room seats use game-local IDs, never trust client-supplied account IDs.
     const account = [...(seats.get(room.code) || [])].find(([, seatId]) => seatId === playerId);
@@ -1188,20 +1191,33 @@ function initializeApp(config, dataLock, acquired) {
   const entranceAllowed = (user, id) =>
     freeEntrances.has(id) ||
     require('./achievements/bonus-rewards').owned(achievementStore, user.id).entrances.includes(id);
-  const lobbyHandlers = createLobbyHandlers({
-    attackLoadout: (user) => require('./profiles/settings').getAttackSettings(db, user.id),
-    entranceAllowed,
-    backgroundAllowed: (user, id) =>
-      require('./achievements/bonus-rewards')
-        .owned(achievementStore, user.id)
-        .backgrounds.includes(id),
-    assertFrame: (user, id) => achievementStore.assertFrame(user.id, id),
-    lobby,
-    withLobbyMedia,
-    lobbyCharacter,
-    expressionLabels,
-    characterMedia,
-  });
+  const lobbyPractice = require('./tutorials/lobby-arena').createLobbyPractice();
+  acquired.push(() => lobbyPractice.clear());
+  const makeLobbyHandlers = (lobby, media = withLobbyMedia) =>
+    createLobbyHandlers({
+      attackLoadout: (user) => require('./profiles/settings').getAttackSettings(db, user.id),
+      entranceAllowed,
+      backgroundAllowed: (user, id) =>
+        require('./achievements/bonus-rewards')
+          .owned(achievementStore, user.id)
+          .backgrounds.includes(id),
+      assertFrame: (user, id) => achievementStore.assertFrame(user.id, id),
+      lobby,
+      withLobbyMedia: media,
+      lobbyCharacter,
+      expressionLabels,
+      characterMedia,
+    });
+  const lobbyHandlers = makeLobbyHandlers(lobby);
+  const arenaRooms = require('./rooms/arena-rooms').createArenaRooms(
+    () => makeLobby(true),
+    (roomLobby) =>
+      makeLobbyHandlers(roomLobby, (user, view) => ({
+        ...view,
+        serverNow: Date.now(),
+        arenaRoom: arenaRooms.view(user.id),
+      })),
+  );
   // Pushes each lobby visitor's view when the lobby changes (#322) instead of
   // every client polling twice a second. Reading the view also keeps a visitor
   // present, so the sweep doubles as presence; it runs often enough for hits
@@ -1209,7 +1225,11 @@ function initializeApp(config, dataLock, acquired) {
   // lobby to about two views a second per visitor, like the old polling.
   const LOBBY_CHANNEL = { code: '__LOBBY__' };
   const lobbyStream = createStateStream({
-    project: (_channel, _playerId, entry) => lobbyHandlers.view(entry.user, entry.context),
+    project: (_channel, _playerId, entry) =>
+      (entry.context?.arena ? arenaRooms.handlers(entry.user.id) : lobbyHandlers).view(
+        entry.user,
+        entry.context?.entrance,
+      ),
     valid: (entry) => !!auth.sessionFrom(entry.req),
     sweepMs: 250,
     minGapMs: 400,
@@ -1763,32 +1783,66 @@ function initializeApp(config, dataLock, acquired) {
           throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作不支援此方法');
         if (url.pathname === '/api/lobby/events' && req.method === 'GET') {
           limitRate(roomRate, 'lobby-events:' + user.id, 30);
-          const entrance = url.searchParams.get('entrance');
-          if (!lobbyStream.subscribe(LOBBY_CHANNEL, { req, res, user, context: entrance }))
+          const context = {
+            entrance: url.searchParams.get('entrance'),
+            arena: url.searchParams.has('arena'),
+          };
+          if (!lobbyStream.subscribe(LOBBY_CHANNEL, { req, res, user, context }))
             throw new HttpError(429, 'STREAM_LIMIT', '大廳連線太多，請關閉舊分頁');
           return lobbyChanged();
         }
+        if (url.pathname === '/api/lobby/arena-room' && req.method === 'POST') {
+          limitRate(roomRate, 'arena-room:' + user.id, 60);
+          arenaRooms.command(user, data);
+          return send(lobbyChanged(arenaRooms.handlers(user.id).view(user)));
+        }
+        const arenaBot =
+          url.pathname.startsWith('/api/lobby') &&
+          config.achievementPurpose === 'test' &&
+          config.arenaPracticeBots?.some((bot) => bot.id === user.id);
+        if (arenaBot && url.pathname === '/api/lobby/arena-bot-rooms' && req.method === 'GET')
+          return send({ rooms: arenaRooms.botRooms(user.id).map((room) => room.id) });
+        const botRoomId = arenaBot ? url.searchParams.get('botRoom') : null;
+        const botRoom = botRoomId
+          ? arenaRooms.botRooms(user.id).find((room) => room.id === botRoomId)
+          : null;
+        if (botRoomId && !botRoom) throw new HttpError(404, 'ARENA_ROOM_GONE', '這場試玩已結束');
+        const scopedLobby =
+          botRoom?.handlers ||
+          (url.searchParams.has('arena') && url.pathname.startsWith('/api/lobby')
+            ? arenaRooms.handlers(user.id)
+            : lobbyHandlers);
         if (url.pathname === '/api/lobby' && req.method === 'GET')
-          return send(lobbyChanged(lobbyHandlers.view(user, url.searchParams.get('entrance'))));
+          return send(lobbyChanged(scopedLobby.view(user, url.searchParams.get('entrance'))));
+        if (url.pathname === '/api/lobby/practice' && req.method === 'POST') {
+          limitRate(roomRate, 'lobby-practice:' + user.id, 120);
+          return send(lobbyPractice.command(user, data));
+        }
+        if (url.pathname === '/api/lobby/arena' && req.method === 'POST') {
+          limitRate(roomRate, 'lobby-arena:' + user.id, 90);
+          if (url.searchParams.has('arena') && !arenaRooms.view(user.id).currentId)
+            throw new HttpError(409, 'ARENA_ROOM_REQUIRED', '請先加入競技場房間');
+          return send(lobbyChanged(scopedLobby.arena(user, data)));
+        }
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
-          return send(lobbyChanged(lobbyHandlers.move(user, data)));
+          return send(lobbyChanged(scopedLobby.move(user, data)));
         if (url.pathname === '/api/lobby/attack' && req.method === 'POST') {
           limitRate(socialRate, 'lobby-attack:' + user.id, 80);
-          return send(lobbyChanged(lobbyHandlers.attack(user, data)));
+          return send(lobbyChanged(scopedLobby.attack(user, data)));
         }
         if (url.pathname === '/api/lobby/teleport' && req.method === 'POST') {
           limitAccount(user);
-          return send(lobbyChanged(lobbyHandlers.teleport(user, data)));
+          return send(lobbyChanged(scopedLobby.teleport(user, data)));
         }
         if (url.pathname === '/api/lobby/background' && req.method === 'POST')
-          return send(lobbyChanged(lobbyHandlers.background(user, data)));
+          return send(lobbyChanged(scopedLobby.background(user, data)));
         if (url.pathname === '/api/lobby/emotes' && req.method === 'GET')
           return send(lobbyHandlers.emotes(user));
         if (url.pathname === '/api/lobby/emote' && req.method === 'POST')
-          return send(lobbyChanged(lobbyHandlers.emote(user, data)));
+          return send(lobbyChanged(scopedLobby.emote(user, data)));
         if (url.pathname === '/api/lobby/barrage' && req.method === 'POST') {
           limitRate(socialRate, 'lobby-barrage:' + user.id, 30);
-          return send(lobbyChanged(lobbyHandlers.barrage(user, data)));
+          return send(lobbyChanged(scopedLobby.barrage(user, data)));
         }
         if (url.pathname === '/api/music' && req.method === 'GET')
           return send({ tracks: musicStore.list(), me: user.id, admin: user.role === 'admin' });
@@ -3231,6 +3285,10 @@ function initializeApp(config, dataLock, acquired) {
         return sendImage(req, res, url, image, url.searchParams.get('v') === image.version);
       }
       const files = {
+        '/assets/arena/pickup-health.svg': 'assets/arena/pickup-health.svg',
+        '/assets/arena/pickup-speed.svg': 'assets/arena/pickup-speed.svg',
+        '/assets/arena/pickup-shield.svg': 'assets/arena/pickup-shield.svg',
+        '/assets/arena/pickup-sword.svg': 'assets/arena/pickup-sword.svg',
         '/assets/stitch/room-brand.svg': 'assets/stitch/room-brand.svg',
         '/assets/stitch/draw-waiting.jpg': 'assets/stitch/draw-waiting.jpg',
         '/assets/stitch/telephone-waiting.svg': 'assets/stitch/telephone-waiting.svg',
@@ -3281,6 +3339,14 @@ function initializeApp(config, dataLock, acquired) {
         '/market': 'market.html',
         '/assets/game-sounds/entrance-soul-world.mp3': 'assets/game-sounds/entrance-soul-world.mp3',
         '/assets/game-sounds/turn.wav': 'assets/game-sounds/turn.wav',
+        '/assets/game-sounds/arena-countdown-tick.mp3':
+          'assets/game-sounds/arena-countdown-tick.mp3',
+        '/assets/game-sounds/arena-countdown-bell.mp3':
+          'assets/game-sounds/arena-countdown-bell.mp3',
+        '/assets/game-sounds/arena-ost.mp3': 'assets/game-sounds/arena-ost.mp3',
+        '/assets/game-sounds/arena-ost-2.mp3': 'assets/game-sounds/arena-ost-2.mp3',
+        '/assets/game-sounds/arena-ost-3.mp3': 'assets/game-sounds/arena-ost-3.mp3',
+        '/assets/arena/pickup-energy.svg': 'assets/arena/pickup-energy.svg',
         '/assets/game-sounds/dice-roll.wav': 'assets/game-sounds/dice-roll.wav',
         '/assets/game-sounds/shot.wav': 'assets/game-sounds/shot.wav',
         '/assets/game-sounds/slam.wav': 'assets/game-sounds/slam.wav',
@@ -3311,6 +3377,7 @@ function initializeApp(config, dataLock, acquired) {
         '/gifts': 'gifts.html',
         '/gifts.css': 'gifts.css',
         '/': 'index.html',
+        '/arena': 'arena.html',
         '/poker': 'poker.html',
         '/race': 'race.html',
         '/ceo': 'ceo.html',
@@ -3486,6 +3553,7 @@ function initializeApp(config, dataLock, acquired) {
           res.writeHead(302, {
             Location:
               roomPath ||
+              file === 'arena.html' ||
               file === 'market.html' ||
               file === 'trpg.html' ||
               file === 'coc.html' ||

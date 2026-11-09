@@ -1,5 +1,6 @@
 const { HttpError } = require('../http/errors');
-const rules = require('../../public/shared/scene-rules.json').energy;
+const { profile } = require('./archetypes');
+const { energy: rules, authorBonus } = require('../../public/shared/scene-rules.json');
 const effects = require('../../public/shared/attack-effects.json');
 const multi = new Set(
   effects.filter((effect) => effect.area || effect.ultimate).map((effect) => effect.id),
@@ -11,12 +12,17 @@ const ordinary = new Set(
 function fitsSlot(slot, effect) {
   return slot === 'r' ? multi.has(effect) : ['q', 'e'].includes(slot) && ordinary.has(effect);
 }
-function gain(actor, amount) {
-  actor.energy = Math.min(rules.maximum, (actor.energy || 0) + amount);
+function maximum(actor) {
+  return actor.energyMaximum ?? rules.maximum;
+}
+function gain(actor, amount, multiplier = profile(actor).energyGain ?? 1) {
+  const author = actor.authorBonus ? authorBonus.energyMultiplier : 1;
+  const next = (actor.energy || 0) + amount * multiplier * author;
+  actor.energy = Math.min(maximum(actor), Math.round(next * 10) / 10);
 }
 function walk(actor, durationMs) {
   if (!actor.health || durationMs <= 0) return;
-  if ((actor.energy || 0) >= rules.maximum) {
+  if ((actor.energy || 0) >= maximum(actor)) {
     actor.energyWalkMs = 0;
     return;
   }
@@ -24,16 +30,16 @@ function walk(actor, durationMs) {
   const seconds = Math.floor((elapsed + 1e-7) / 1000);
   actor.energyWalkMs = elapsed - seconds * 1000;
   gain(actor, seconds * rules.movementPerSecond);
-  if (actor.energy === rules.maximum) actor.energyWalkMs = 0;
+  if (actor.energy === maximum(actor)) actor.energyWalkMs = 0;
 }
 function check(actor, slot, effect) {
   if (!fitsSlot(slot, effect))
     throw new HttpError(400, 'INVALID_ATTACK_SLOT', 'Q、E 請配裝普通招式，R 請配裝大招');
-  if (slot === 'r' && (actor.energy || 0) < rules.maximum)
+  if (slot === 'r' && (actor.energy || 0) < maximum(actor))
     throw new HttpError(
       409,
       'INSUFFICIENT_SCENE_ENERGY',
-      `大招能量不足（${actor.energy || 0}／${rules.maximum}）`,
+      `大招能量不足（${actor.energy || 0}／${maximum(actor)}）`,
     );
 }
 function spend(actor, slot) {
@@ -52,9 +58,11 @@ function hit(from, to, effect, damage) {
     (!from.energyActor || owner.lifeId === from.energyLifeId)
   ) {
     const remaining = from.ordinaryEnergyRemaining;
-    const amount = Math.min(remaining ?? rules.ordinaryHit, rules.ordinaryHit);
+    const perHit = owner.ordinaryHitEnergy ?? rules.ordinaryHit;
+    const amount = Math.min(remaining ?? perHit, perHit);
     if (remaining !== undefined) from.ordinaryEnergyRemaining -= amount;
-    gain(owner, amount);
+    const multiplier = owner.archetype === 'energy' ? rules.energyArchetypeHit / perHit : 1;
+    gain(owner, amount, multiplier);
   }
 }
-module.exports = { fitsSlot, gain, walk, check, spend, hit };
+module.exports = { fitsSlot, maximum, gain, walk, check, spend, hit };
