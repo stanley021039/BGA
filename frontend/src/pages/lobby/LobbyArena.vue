@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { playActionFeedback } from '../../services/action-sounds';
 import {
   arenaZonePoints,
   type ArenaCover,
@@ -386,6 +387,27 @@ const allReady = computed(() => roster.value.length > 0 && roster.value.every((p
 const ownReady = computed(() =>
   roster.value.some((p) => p.id === lobby.snapshot?.selfId && p.ready),
 );
+watch(
+  [roomId, allReady, ownReady],
+  ([id, ready, selfReady], [previousId, previouslyReady, previousSelfReady]) => {
+    if (!id || id !== previousId || !lobby.connected || playing.value) return;
+    if (ready && !previouslyReady) playActionFeedback('ready');
+    else if (selfReady && !previousSelfReady) playActionFeedback();
+  },
+);
+const validInvitation = computed(
+  () => lobby.connected && !!invitedId && roomList.value.some((room) => room.id === invitedId),
+);
+let invitationAnnounced = false;
+watch(
+  validInvitation,
+  (available) => {
+    if (!available || invitationAnnounced || roomId.value === invitedId) return;
+    invitationAnnounced = true;
+    AudioSettings?.playEffect?.('invitation');
+  },
+  { immediate: true },
+);
 const inviteStatus = ref('');
 const inviteLink = computed(() => {
   const url = new URL('/arena', location.origin);
@@ -412,7 +434,7 @@ function start(mode: string) {
 }
 </script>
 <template>
-  <LobbyBackdrop v-if="playing" arena-page />
+  <LobbyBackdrop v-if="playing" arena-page :arena-warmup="openingSeconds > 0" />
   <section class="arena-page" aria-label="戰鬥競技場">
     <header v-if="!playing" class="arena-page-heading">
       <h1

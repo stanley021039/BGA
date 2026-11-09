@@ -1,3 +1,4 @@
+import { playActionFeedback } from '../services/action-sounds';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useRoomStore } from './room';
@@ -66,6 +67,14 @@ export const usePartyActionsStore = defineStore('party-actions', () => {
       if (disposed || attempt.scope !== room.scope || controller !== request) return false;
       room.accept(value);
       if (room.terminal) return false;
+      const action = attempt.payload.action;
+      if (
+        (room.type === 'second-wind' &&
+          (action === 'draft' || action === 'select' || action === 'choice')) ||
+        (room.type === 'ceo' &&
+          (action === 'acquire' || action === 'buyStock' || action === 'dividend'))
+      )
+        playActionFeedback();
       notice.value = '';
       return true;
     } catch (cause) {

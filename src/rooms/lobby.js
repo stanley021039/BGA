@@ -214,9 +214,40 @@ function createLobby(
         map || buildMap(layoutId, wide, expanded ? rollArenaRegions(random) : undefined);
       ({ walls, hazards, bushes } = terrain);
       activePortals = map?.entrances || (wide ? portals : []);
+      const gap = wide ? 6 : 12;
+      const starts = [];
+      const occupied = [];
+      const safeStart = (point) =>
+        walls.clear(point, point) &&
+        !hazards.at(point) &&
+        !bushAt(bushes, point) &&
+        activePortals.every(({ x, y }) => Math.hypot(point.x - x, point.y - y) > portalRadius);
+      if (expanded) {
+        for (let y = 8; y <= 92; y += gap / 2)
+          for (let x = 8; x <= 92; x += gap / 2) {
+            const point = { x, y };
+            if (safeStart(point)) starts.push(point);
+          }
+      }
       for (const p of players) {
-        const actor = visitors.get(p.id),
-          point = walls.safePoint(wide ? center(actor) : actor);
+        const actor = visitors.get(p.id);
+        const origin = walls.safePoint(wide ? center(actor) : actor);
+        let point = origin;
+        if (expanded) {
+          const spaced = (candidate) =>
+            occupied.every(({ x, y }) => Math.hypot(candidate.x - x, candidate.y - y) >= gap);
+          if (!safeStart(origin) || !spaced(origin)) {
+            let bestDistance = Infinity;
+            for (const candidate of starts) {
+              const distance = Math.hypot(candidate.x - origin.x, candidate.y - origin.y);
+              if (distance < bestDistance && spaced(candidate)) {
+                point = candidate;
+                bestDistance = distance;
+              }
+            }
+          }
+          occupied.push(point);
+        }
         actor.x = actor.targetX = point.x;
         actor.y = actor.targetY = point.y;
         actor.wallRoute = [];

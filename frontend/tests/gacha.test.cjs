@@ -151,6 +151,7 @@ test('uncertain draw keeps one request across retry and blocks a second purchase
       './session': { useSessionStore: () => session },
       '../services/validation': validation,
       '../contracts/gacha': contract,
+      '../services/action-sounds': { playActionFeedback() {} },
       '../services/http': {
         ApiError,
         async requestJson(url, opts) {

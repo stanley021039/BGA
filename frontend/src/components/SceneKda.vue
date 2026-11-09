@@ -231,6 +231,7 @@ const groups = computed(() => [
 .scene-kda {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--stitch-space-8);
   align-items: center;
   font-variant-numeric: tabular-nums;

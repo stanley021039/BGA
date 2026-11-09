@@ -4,10 +4,11 @@ const { test } = require('node:test'),
   fs = require('../../tests/helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
-const vue = require('../node_modules/vue'),
+const vue = require('vue'),
   pinia = require('pinia'),
-  ts = require('../node_modules/typescript');
+  ts = require('typescript');
 function fixture(request) {
+  const sounds = [];
   const instance = pinia.createPinia();
   pinia.setActivePinia(instance);
   const session = vue.reactive({ user: { id: 'a' } }),
@@ -29,7 +30,9 @@ function fixture(request) {
               ? { default: require('../../public/shared/attack-effects.json') }
               : id.includes('/session')
                 ? { useSessionStore: () => session }
-                : { requestJson: request },
+                : id.endsWith('/action-sounds')
+                  ? { playActionFeedback: () => sounds.push(true) }
+                  : { requestJson: request },
       AbortController,
       Error,
     }),
@@ -37,6 +40,7 @@ function fixture(request) {
   return {
     store: module.exports.useAttackLoadoutStore(),
     session,
+    sounds,
     close: () => pinia.disposePinia(instance),
   };
 }
@@ -55,6 +59,7 @@ test('Q/E loadout saves only after server acceptance and preserves the other slo
     await f.store.choose('e', 'frost_spikes');
     assert.equal(f.store.loadout.q, 'blade_aura');
     assert.equal(f.store.loadout.e, 'frost_spikes');
+    assert.equal(f.sounds.length, 2);
   } finally {
     f.close();
   }

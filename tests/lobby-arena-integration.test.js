@@ -339,3 +339,35 @@ test('arena teleport spends the same twenty energy as the lobby', () => {
   assert.equal(after.energy, before.energy - 20);
   assert.equal(after.teleportId, before.teleportId + 1);
 });
+
+test('arena starts keep a full roster apart even when initial lobby positions coincide', () => {
+  for (const [mapId, durationSeconds, gap] of [
+    [1, 60, 12],
+    [3, 120, 6],
+  ]) {
+    const lobby = createLobby(
+      () => 1000,
+      undefined,
+      () => 0.5,
+      undefined,
+      {
+        expandedMap: true,
+        requireReady: true,
+      },
+    );
+    const users = Array.from({ length: 16 }, (_, index) => ({
+      id: 'a'.repeat(index) + 'b' + 'a'.repeat(15 - index),
+      display_name: 'Player ' + index,
+    }));
+    for (const [index, user] of users.entries()) {
+      lobby.view(user);
+      lobby.arena(user, { action: 'team', team: index < 8 ? 'red' : 'blue' });
+      lobby.arena(user, { action: 'ready', ready: true });
+    }
+    const state = lobby.arena(users[0], { action: 'start', mode: 'team', mapId, durationSeconds });
+    assert.equal(state.visitors.length, 16);
+    for (const [i, visitor] of state.visitors.entries())
+      for (const previous of state.visitors.slice(0, i))
+        assert.ok(Math.hypot(visitor.x - previous.x, visitor.y - previous.y) >= gap);
+  }
+});

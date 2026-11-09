@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { playActionFeedback } from '../../services/action-sounds';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useProfileStore } from '../../stores/profile';
 import { useMusicStore } from '../../stores/libraries';
@@ -147,13 +148,13 @@ async function runAction(key: string, operation: Parameters<typeof run>[0], succ
   if (pending.value) return;
   activeAction.value = key;
   try {
-    await run(operation, success);
+    return await run(operation, success);
   } finally {
     activeAction.value = '';
   }
 }
 async function useAvatar(avatar: Avatar) {
-  await runAction(
+  const applied = await runAction(
     'avatar:' + avatarKey(avatar),
     async (request) => {
       const current = readSettings(await request('/api/profile/settings'));
@@ -165,9 +166,10 @@ async function useAvatar(avatar: Avatar) {
     },
     '頭像已套用。',
   );
+  if (applied) playActionFeedback();
 }
 async function useCharacter(id: string) {
-  await runAction(
+  const applied = await runAction(
     'character:' + id,
     async (request) => {
       await request('/api/profile/appearance', {
@@ -181,6 +183,7 @@ async function useCharacter(id: string) {
     },
     '角色已套用。',
   );
+  if (applied) playActionFeedback();
 }
 async function share(kind: 'avatar' | 'character', id: string, name: string, shared: boolean) {
   if (
@@ -226,6 +229,7 @@ async function remove(kind: 'avatar' | 'character' | 'music', id: string, name: 
   });
 }
 function frameSelected(id: string) {
+  playActionFeedback();
   message.value = (prefs.frames.find((f) => f.id === id)?.label || '彈幕框') + '已套用。';
   failed.value = false;
 }

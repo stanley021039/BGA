@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { playActionFeedback } from '../services/action-sounds';
 import { computed, onScopeDispose, ref, watch } from 'vue';
 import { useSessionStore } from './session';
 import { ApiError, requestJson } from '../services/http';
@@ -127,6 +128,7 @@ export const useGachaStore = defineStore('gacha', () => {
           keys.has(i.key) ? { ...i, owned: true } : i,
         );
       }
+      if (receipt.operation === 'exchange') playActionFeedback();
       window.dispatchEvent(new CustomEvent('achievement-rewards-updated'));
       return receipt;
     } catch (e) {

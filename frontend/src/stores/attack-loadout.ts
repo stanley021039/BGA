@@ -1,3 +1,4 @@
+import { playActionFeedback } from '../services/action-sounds';
 import { computed, onScopeDispose, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useSessionStore } from './session';
@@ -73,6 +74,7 @@ export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
       if (epoch !== generation) return;
       if (!valid(result)) throw Error('攻擊設定格式不正確');
       loadout.value = result;
+      playActionFeedback();
     } catch (e) {
       if (epoch === generation) message.value = e instanceof Error ? e.message : '儲存失敗';
     } finally {

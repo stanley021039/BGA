@@ -441,6 +441,7 @@
       border: 1px solid var(--stitch-line);
       border-radius: 999px;
       background: var(--stitch-surface-subtle);
+      color: var(--stitch-ink);
       font-size: 14px;
       line-height: 21px;
     }
@@ -1133,7 +1134,7 @@
   #majority-app
   .vue-majority-result-group.is-winner {
   color: var(--stitch-selected-ink);
-  :is(h1, h2, h3, h4, strong, p, span, small) {
+  :is(h1, h2, h3, h4, strong, p, small) {
     color: var(--stitch-selected-ink);
   }
 }

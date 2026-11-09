@@ -253,6 +253,7 @@ function showAllResults() {
   forgetUnrevealedDraw();
   reveal();
   announceReveal();
+  if (result.value?.operation === 'draw') AudioSettings?.playEffect?.('settlement');
   void nextTick(() => {
     cardBoard.value?.scrollTo(0, 0);
     resultSummary.value?.focus({ preventScroll: true });
@@ -260,7 +261,6 @@ function showAllResults() {
 }
 function skipReveal() {
   showAllResults();
-  playCinematicSound('card-draw');
 }
 function announceReveal() {
   if (!announcementId) return;
@@ -388,6 +388,8 @@ async function show(receipt: GachaReceipt, { animate = false, announce = false }
   await nextTick();
   await resultDialog.value?.open();
   if (!animating.value && revealItem.value) focusCardStatus();
+  else if (receipt.operation === 'draw' && revealIndex.value === null)
+    AudioSettings?.playEffect?.('settlement');
 }
 function unrevealedDrawKey(userId: string) {
   return 'bga:gacha:unrevealed:' + userId;
