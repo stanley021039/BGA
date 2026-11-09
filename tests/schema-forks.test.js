@@ -117,7 +117,7 @@ for (const kind of ['achievement17', 'market17', 'market18'])
       const db = openDatabase(f.file);
       try {
         assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
-        assert.equal(SCHEMA_VERSION, 22);
+        assert.equal(SCHEMA_VERSION, 23);
         const after = rows(db);
         for (const name of Object.keys(before))
           assert.deepEqual(

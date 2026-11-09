@@ -9,13 +9,13 @@ const { WORDS, TOPICS, topicLabels } = require('../src/games/draw-guess-words');
 const { DrawWordStore, validateWord } = require('../src/games/draw-guess-store');
 const { openDatabase, SCHEMA_VERSION } = require('../src/db/index');
 
-test('all 1000 drawing words are unique, drawable-length prompts in nine thematic categories', () => {
-  assert.equal(WORDS.length, 1000);
+test('all drawing words are unique, drawable-length prompts in nine thematic categories', () => {
+  assert.equal(WORDS.length, 1018);
   assert.equal(TOPICS.length, 9);
   assert.equal(new Set(TOPICS.map((topic) => topic.id)).size, 9);
   const { normalize } = require('../src/games/draw-guess');
-  assert.equal(new Set(WORDS.map((word) => normalize(word.title))).size, 1000);
-  assert.equal(new Set(WORDS.map((word) => word.id)).size, 1000);
+  assert.equal(new Set(WORDS.map((word) => normalize(word.title))).size, WORDS.length);
+  assert.equal(new Set(WORDS.map((word) => word.id)).size, WORDS.length);
   for (const word of WORDS) {
     assert.ok(
       TOPICS.some((topic) => topic.id === word.topic),

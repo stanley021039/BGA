@@ -285,6 +285,7 @@ function createLobby(
     arenaOptions.startDelayMs,
     arenaOptions.requireReady,
     () => mapChoices,
+    arenaOptions.onFinish,
   );
   const combat = createSceneCombat(random, authorBonus, arena);
   const pickups = createLobbyPickups(now, random, arena, () => geometry.covers, expanded);

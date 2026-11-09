@@ -207,7 +207,7 @@ test('HTTP draw awards only a normally completed round and preserves its frozen 
     if (seat !== artist)
       await f.api(seat, 'action', { code, action: 'guess', answer: drawing.question.title });
   const collection = await f.api(artist, 'achievements');
-  assert.equal(collection.achievements.length, 70);
+  assert.equal(collection.achievements.length, 88);
   assert.ok(unlocked(collection).includes('draw-soul-artist'));
   assert.ok(unlocked(collection).includes('draw-first-round'));
   assert.equal(JSON.stringify(collection).includes('user_id'), false);

@@ -6,7 +6,12 @@ const { rewards } = require('./rewards');
 const Challenges = require('./challenges');
 const { resetCutoff } = require('./reset-cutoff');
 const { normalizeUnit, effectiveParticipants, UUID } = require('./units');
-const MATCH_GAMES = new Set(['quacks', 'musicquiz', 'bluff', 'minimal', 'telephone', 'trpg']);
+const milestoneIds = new Set(
+  require('./catalog')
+    .definitions.filter((d) => /-(regular|veteran)$/.test(d.id))
+    .map((d) => d.id),
+);
+const MATCH_GAMES = new Set(Object.keys(Challenges.match));
 const bad = () => {
   throw new HttpError(400, 'INVALID_ACHIEVEMENT_MATCH', '成就完局資料不正確');
 };
@@ -17,7 +22,7 @@ function normalizeMatch(input) {
     !MATCH_GAMES.has(input.game) ||
     !['production', 'test', 'tutorial'].includes(input.purpose) ||
     !Array.isArray(input.participants) ||
-    input.participants.length > 12 ||
+    input.participants.length > (input.game === 'arena' ? 16 : 12) ||
     !input.participants.length ||
     !Number.isFinite(Date.parse(input.completed_at)) ||
     new Date(input.completed_at).toISOString() !== input.completed_at
@@ -161,7 +166,7 @@ function refreshMilestones(store, userId, at = new Date().toISOString()) {
       [3, 'regular'],
       [10, 'veteran'],
     ])
-      if (n >= threshold)
+      if (n >= threshold && milestoneIds.has(game + '-' + suffix))
         store.insert.run(userId, game + '-' + suffix, 'milestone:' + game + ':' + threshold, at);
   if (Object.values(counts).filter((n) => n > 0).length >= 2)
     store.insert.run(userId, 'all-two-tables', 'milestone:all:2', at);

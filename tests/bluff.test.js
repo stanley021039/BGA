@@ -28,9 +28,9 @@ function discuss(r) {
   for (const p of r.players.filter((p) => p.id !== r.thinkerId)) act(r, p.id, 'spoken');
 }
 test('expanded catalog keeps stable legacy IDs, unique questions, complete explanations and source provenance', () => {
-  assert.equal(QUESTIONS.length, 160);
+  assert.equal(QUESTIONS.length, 190);
   for (const field of ['id', 'title'])
-    assert.equal(new Set(QUESTIONS.map((q) => q[field])).size, 160);
+    assert.equal(new Set(QUESTIONS.map((q) => q[field])).size, 190);
   const legacy = QUESTIONS.slice(0, 60);
   assert.deepEqual(
     legacy.map((q) => q.id),
@@ -45,7 +45,9 @@ test('expanded catalog keeps stable legacy IDs, unique questions, complete expla
     assert.ok(q.explanation.example);
     assert.ok(q.explanation.clarification);
     assert.equal(new URL(q.source.url).protocol, 'https:');
-    assert.ok(['2026-10-09', '2026-10-12', '2026-10-15'].includes(q.source.checkedAt));
+    assert.ok(
+      ['2026-10-09', '2026-10-12', '2026-10-15', '2026-11-09'].includes(q.source.checkedAt),
+    );
     assert.ok(Object.isFrozen(q) && Object.isFrozen(q.explanation));
   }
 });

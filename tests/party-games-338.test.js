@@ -133,6 +133,43 @@ test('戲精酒吧只在交卷後揭曉，部分猜對、全錯與全對都能�
   assert.equal(room.view(a).question, null);
 });
 
+test('戲精酒吧同一句在新局重新抽六個情境，恢復房間時保留原選項和答案', () => {
+  const {
+    room,
+    seats: [host, guest],
+    advance,
+    action,
+  } = table(DramaBarRoom, 3);
+  const { dramaQuestions } = require('../src/games/voice-party-questions');
+  assert.equal(dramaQuestions.length, 32);
+  assert.ok(
+    dramaQuestions.every(({ options }) => options.length === 9 && new Set(options).size === 9),
+  );
+  room.start();
+  const first = room.view(host);
+  assert.equal(new Set(first.question.options).size, 6);
+  assert.deepEqual(room.view(guest).question, first.question);
+  assert.equal(room.view(guest).correct, null);
+  const { room: restored } = restoreRoom(
+    captureRoom(room),
+    () => new DramaBarRoom('ABCDEF', '測試房間'),
+  );
+  assert.deepEqual(restored.view(host).question, first.question);
+  assert.equal(restored.view(host).correct, first.correct);
+
+  while (room.phase !== 'finished') {
+    if (room.phase === 'reveal') action(host, 'next');
+    else advance();
+  }
+  returnToWaiting(room, host);
+  room.rng = (size) => (size >= 4 && size <= 9 ? size - 1 : 0);
+  room.start();
+  const second = room.view(host);
+  assert.equal(second.question.phrase, first.question.phrase);
+  assert.equal(new Set(second.question.options).size, 6);
+  assert.notDeepEqual(second.question.options.toSorted(), first.question.options.toSorted());
+});
+
 for (const count of [2, 3, 4, 8]) {
   test('塗鴉神諭 ' + count + ' 人正確發題、鎖畫與輪流淘汰', () => {
     const { room, seats, action } = table(DrawGuessRoom, count);

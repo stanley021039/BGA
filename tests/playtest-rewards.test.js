@@ -35,7 +35,7 @@ test('isolated playtests unlock only rewards and preserve real achievement progr
     JSON.stringify({ purpose: 'isolated-playtest' }),
   );
   const result = unlockPlaytestRewards(file);
-  assert.equal(result.achievementDefinitions, 70);
+  assert.equal(result.achievementDefinitions, 88);
   assert.equal(result.frames, 24);
   const check = openDatabase(file),
     store = new AchievementStore(check),

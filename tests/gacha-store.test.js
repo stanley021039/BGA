@@ -38,7 +38,7 @@ function fund(store, db, user, coins = 2000, fragments = 1000) {
 }
 test('gacha schema enforces safe nonnegative balances and complete schema shape', (t) => {
   const { db, user, store } = fixture(t);
-  assert.equal(SCHEMA_VERSION, 22);
+  assert.equal(SCHEMA_VERSION, 23);
   for (const name of GACHA_TABLES)
     assert.ok(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name));
   store.wallet(user);
@@ -343,7 +343,7 @@ test('schema21 migration snapshots legacy ownership exactly once; later achievem
   db.close();
   db = openDatabase(file);
   assert.deepEqual(db.prepare('SELECT * FROM coc_receipts').all(), priorCoc);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 22);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
   assert.ok(Ownership.ownedIds(db, user, 'attacks').includes(old.id));
   db.prepare(
     'INSERT INTO user_achievements(user_id,achievement_id,source_key,unlocked_at) VALUES(?,?,?,?)',
