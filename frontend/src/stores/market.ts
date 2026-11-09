@@ -1,3 +1,4 @@
+import { playActionFeedback } from '../services/action-sounds';
 import { defineStore } from 'pinia';
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue';
 import { useRequests } from '../composables/requests';
@@ -210,7 +211,10 @@ export const useMarketStore = defineStore('market', () => {
         throw Error('操作已確認，但畫面更新失敗。請確認同一筆操作以更新狀態。');
       if (job.userId !== state.value?.me.id) return false;
       if (attempt.value === job) attempt.value = null;
-      if (job.path === '/api/market/vote') resetDraft();
+      if (job.path === '/api/market/vote') {
+        resetDraft();
+        playActionFeedback();
+      }
       message.value = job.label;
       return true;
     } catch (error) {

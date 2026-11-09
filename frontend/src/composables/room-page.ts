@@ -1,3 +1,4 @@
+import { rememberRoomEntryFeedback } from '../services/action-sounds';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoomStore } from '../stores/room';
 import { useSessionStore } from '../stores/session';
@@ -201,6 +202,7 @@ export function useRoomPage(
           }
         }),
       );
+      rememberRoomEntryFeedback(seat);
       if (seat.type !== type) {
         location.assign('/' + gamePath(seat.type) + '/' + seat.code);
         return;

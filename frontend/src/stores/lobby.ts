@@ -1,3 +1,4 @@
+import { playActionFeedback, rememberRoomEntryFeedback } from '../services/action-sounds';
 import { preloadAllowed, warm, whenIdle } from '../services/preload';
 import { sizedImage } from '../services/image-size';
 import { computed, markRaw, onScopeDispose, ref, shallowRef, watch } from 'vue';
@@ -351,7 +352,10 @@ export const useLobbyStore = defineStore('lobby', () => {
         ? '/api/lobby/arena-room'
         : '/api/lobby/arena';
       const result = await request(path, body.action === 'leaveRoom' ? { action: 'leave' } : body);
-      if (current(epoch, account)) consume(result);
+      if (current(epoch, account)) {
+        consume(result);
+        if (body.action === 'join' || body.action === 'create') playActionFeedback();
+      }
     } catch (error) {
       if (current(epoch, account))
         arenaStatus.value = error instanceof Error ? error.message : '對戰操作失敗';
@@ -523,6 +527,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       );
       if (!current(epoch, account)) return false;
       remember(seat);
+      rememberRoomEntryFeedback(seat);
       location.assign('/' + gamePath(seat.type) + '/' + seat.code);
       return true;
     } catch (cause) {

@@ -40,7 +40,7 @@ import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // the site header, painted surfaces (background, border, shadow) and text.
 const INTERACTIVE =
   'a, button, input, select, textarea, label, summary, dialog, [role="button"], [contenteditable], .game-tile, [data-site-header]';
-const props = defineProps<{ arenaPage?: boolean }>();
+const props = defineProps<{ arenaPage?: boolean; arenaWarmup?: boolean }>();
 const expressionNoticeKey = ref(0);
 const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
@@ -97,16 +97,16 @@ const sceneSnapshot = computed(() => {
 });
 const controls = useSceneControls({
   teleportCost: sceneRules.energy.lobbyTeleportCost,
-  context: () => lobby.snapshot?.selfId || '',
-  enabled: () => sceneEnabled.value,
+  context: () => [lobby.snapshot?.selfId, lobby.snapshot?.arena?.match?.id].join(':'),
+  enabled: () => sceneEnabled.value && !props.arenaWarmup,
   snapshot: () => lobby.snapshot,
-  send: async (action) => {
+  send: async (action, direction) => {
     if (action === 'q' || action === 'e' || action === 'r') return lobby.attack(action);
     if (action === 'c') {
       closeDialogs();
       return lobby.teleport();
     }
-    const [dx, dy] = sceneDirections[action];
+    const [dx, dy] = direction || sceneDirections[action];
     lobby.step(dx, dy);
     return true;
   },
@@ -398,7 +398,7 @@ defineExpose({ openChat });
   <MobileSceneControls
     :controls="controls"
     :enabled="sceneEnabled"
-    :placement="battlePlaying ? 'top' : 'bottom'"
+    :battle="battlePlaying"
     :locked-loadout="
       battlePlaying
         ? lobby.snapshot?.arena?.match?.players.find((p) => p.id === lobby.snapshot?.selfId)

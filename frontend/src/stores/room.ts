@@ -1,3 +1,4 @@
+import { playRoomEntryFeedback } from '../services/action-sounds';
 import { computed, onScopeDispose, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
 import { ApiError, requestJson } from '../services/http';
@@ -212,6 +213,7 @@ export const useRoomStore = defineStore('room', () => {
     lastReceivedAt.value = Date.now();
     disconnected.value = false;
     error.value = '';
+    if (!previous && seat.value) playRoomEntryFeedback(seat.value);
     return true;
   }
   async function restore(): Promise<boolean> {

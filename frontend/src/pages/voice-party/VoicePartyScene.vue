@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AudioSettings from '../../engines/audio-settings.js';
+import { playActionFeedback } from '../../services/action-sounds';
 import { computed, ref, watch } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import type { RoomSnapshot } from '../../contracts/room';
@@ -46,6 +48,24 @@ const props = defineProps<{ type: 'brainwave' | 'drama-bar'; tutorial?: boolean 
 const drawing = computed(() => props.type === 'brainwave');
 const room = useRoomStore();
 const state = computed(() => room.snapshot as VoicePartyState | null);
+watch(state, (next, previous) => {
+  if (
+    !next?.roundId ||
+    next.roundId !== previous?.roundId ||
+    next.code !== previous.code ||
+    next.interrupted
+  )
+    return;
+  if (
+    ['reveal', 'finished'].includes(next.phase) &&
+    !['reveal', 'finished'].includes(previous.phase) &&
+    next.latest
+  ) {
+    AudioSettings?.playEffect?.('settlement');
+  } else if (next.me === previous.me && next.myGuesses.length > previous.myGuesses.length) {
+    playActionFeedback();
+  }
+});
 const phaseLabels: Record<string, string> = {
   waiting: '等待玩家',
   prepare: '領圖者選題',

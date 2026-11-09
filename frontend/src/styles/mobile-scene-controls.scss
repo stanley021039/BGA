@@ -13,10 +13,6 @@
     overscroll-behavior: contain;
   }
 }
-.mobile-scene-controls-top {
-  inset-block-start: max(var(--stitch-space-16), env(safe-area-inset-top));
-  inset-block-end: auto;
-}
 .mobile-scene-actions,
 .mobile-scene-directions {
   display: grid;
@@ -42,4 +38,60 @@
   font-size: var(--stitch-text-label);
   overflow-wrap: anywhere;
   margin: var(--stitch-space-8) 0;
+}
+
+.arena-touch-stick,
+.arena-touch-skills {
+  position: fixed;
+  inset-block-end: max(var(--stitch-space-16), env(safe-area-inset-bottom));
+  z-index: 1900;
+}
+.arena-touch-stick {
+  inset-inline-start: max(var(--stitch-space-16), env(safe-area-inset-left));
+  display: grid;
+  place-items: center;
+  inline-size: var(--arena-touch-stick-size);
+  aspect-ratio: 1;
+  border: var(--stitch-border);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--stitch-surface) 70%, transparent);
+  touch-action: none;
+  user-select: none;
+  > span {
+    inline-size: 42%;
+    aspect-ratio: 1;
+    border: var(--stitch-border);
+    border-radius: inherit;
+    background: var(--stitch-surface-hover);
+    pointer-events: none;
+  }
+}
+.arena-touch-skills {
+  inset-inline-end: max(var(--stitch-space-16), env(safe-area-inset-right));
+  display: grid;
+  grid-template-columns: repeat(2, 3rem);
+  gap: var(--stitch-space-8);
+  .vue-button {
+    min-inline-size: 0;
+    min-block-size: 3rem;
+    padding-inline: 0;
+    touch-action: manipulation;
+  }
+}
+.arena-touch-rotate {
+  position: fixed;
+  inset-inline-start: 50%;
+  inset-block-end: calc(7rem + max(var(--stitch-space-16), env(safe-area-inset-bottom)));
+  translate: -50% 0;
+  z-index: 1900;
+}
+
+.vue-lobby-battle {
+  --arena-touch-stick-size: clamp(5rem, 26dvh, 7rem);
+  &:has(.arena-touch-stick) .arena-field-guide {
+    inset-block-end: calc(
+      var(--arena-touch-stick-size) + var(--stitch-space-8) +
+        max(var(--stitch-space-16), env(safe-area-inset-bottom))
+    );
+  }
 }

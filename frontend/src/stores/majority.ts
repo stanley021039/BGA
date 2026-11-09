@@ -1,3 +1,4 @@
+import { playActionFeedback } from '../services/action-sounds';
 import { majorityCues, useRoomEventSounds } from '../composables/room-event-sounds';
 import AudioSettings from '../engines/audio-settings.js';
 import { defineStore } from 'pinia';
@@ -262,7 +263,10 @@ export const useMajorityStore = defineStore('majority', () => {
         !document.hidden
       ) {
         AudioSettings?.stopEffect(sound);
-        sound = AudioSettings?.playEffect?.('confirm');
+        sound = playActionFeedback();
+      } else if (action === 'score') {
+        AudioSettings?.stopEffect(sound);
+        sound = playActionFeedback();
       }
       return true;
     } catch (error) {

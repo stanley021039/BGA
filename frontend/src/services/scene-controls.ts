@@ -3,6 +3,7 @@ import type { LobbySnapshot } from '../contracts/lobby';
 import combatRules from '../../../public/shared/scene-rules.json';
 
 export type SceneAction = 'q' | 'e' | 'r' | 'c' | 'up' | 'down' | 'left' | 'right';
+export type SceneDirection = readonly [number, number];
 export const sceneDirections = {
   up: [0, -1],
   down: [0, 1],
@@ -27,7 +28,7 @@ export function useSceneControls(options: {
   enabled: () => boolean;
   snapshot: () => LobbySnapshot | null;
   teleportCost?: number;
-  send: (action: SceneAction) => Promise<boolean>;
+  send: (action: SceneAction, direction?: SceneDirection) => Promise<boolean>;
 }) {
   const pending = reactive<Record<string, boolean>>({});
   const until = reactive<Record<string, number>>({});
@@ -70,14 +71,14 @@ export function useSceneControls(options: {
       (action === 'r' && energy.value < energyMaximum.value)
     );
   }
-  async function run(action: SceneAction) {
+  async function run(action: SceneAction, direction?: SceneDirection) {
     tick();
     if (disposed || sceneInputBlocked() || disabled(action)) return false;
     const epoch = generation,
       key = group(action);
     pending[key] = true;
     try {
-      const ok = await options.send(action);
+      const ok = await options.send(action, direction);
       if (ok && epoch === generation && !disposed) {
         until[key] = Math.max(
           until[key] || 0,

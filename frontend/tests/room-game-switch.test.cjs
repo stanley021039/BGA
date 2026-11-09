@@ -37,6 +37,7 @@ async function fixture() {
         require(id) {
           if (id === 'vue') return vue;
           if (id === 'pinia') return pinia;
+          if (id.endsWith('/action-sounds')) return { playRoomEntryFeedback() {} };
           if (id.endsWith('/http'))
             return {
               ApiError: class extends Error {},
