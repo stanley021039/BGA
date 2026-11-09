@@ -1,6 +1,9 @@
 @use 'tokens' as t;
 // Lobby and settings share the header shell; settings content keeps its own width.
 @media (min-width: 960px) and (min-height: 560px) and (pointer: fine) {
+  :root body[data-visual-theme]:not(.ui-large-text) {
+    --stitch-site-header-gutter: var(--stitch-space-24);
+  }
   :root body[data-visual-theme]:not(.ui-large-text) .club.vue-site-shell {
     max-width: none;
     padding-inline: var(--stitch-space-24);
@@ -356,16 +359,18 @@ $c03: 'body[data-visual-theme] [data-site-header].site-header.vue-site-header:ha
   font-family: var(--stitch-font-family);
   display: block;
   box-sizing: border-box;
-  inline-size: 100%;
+  // Header alignment is independent of the width of the page or game document.
+  --_site-header-gutter: var(--stitch-site-header-gutter, var(--stitch-space-16));
+  inline-size: calc(100vw - 2 * var(--_site-header-gutter));
   min-block-size: 0;
   margin-block: 0;
-  margin-inline: 0;
+  margin-inline: calc((100% - 100vw) / 2 + var(--_site-header-gutter));
   padding-block: t.space(2);
   padding-inline: 0;
   border: 0;
-  border-block-end: 1px solid var(--stitch-line, var(--play-line));
+  border-block-end: 1px solid transparent;
   color: var(--stitch-ink, var(--play-ink));
-  background: var(--stitch-surface, var(--play-surface));
+  background: transparent;
   .vue-site-header-content.vue-site-header-c03 {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
