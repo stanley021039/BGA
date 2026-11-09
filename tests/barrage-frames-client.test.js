@@ -138,8 +138,8 @@ test('all header entry points load the same frame preference module and shared f
       html: fs.readFileSync(path.join(__dirname, '../frontend/pages', id, 'index.html'), 'utf8'),
     }))
     .filter((page) => page.html.includes('data-site-header'));
-  assert.equal(pages.length, 33);
-  for (const id of ['coc', 'brainwave', 'drama-bar', 'decrypto'])
+  assert.equal(pages.length, 34);
+  for (const id of ['arena', 'coc', 'brainwave', 'drama-bar', 'decrypto'])
     assert.ok(
       pages.some((page) => page.name === id),
       id,

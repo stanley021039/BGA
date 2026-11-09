@@ -2107,13 +2107,12 @@ test('legacy community issues and comments are imported on the restored copy; ad
   }
 });
 
-test('claimed achievement cosmetics and canonical match receipts survive encrypted backup and restore', async (t) => {
+test('historical cosmetic claim records survive encrypted restore without restoring retired access', async (t) => {
   const f = await fixture(t, { minimal: true }),
     db = openDatabase(f.source.dbFile),
     { AchievementStore } = require('../src/achievements/store'),
     store = new AchievementStore(db);
-  // This historical claim existed before schema21; migrate that real ownership
-  // before validating the new encrypted transfer format.
+  // Migrate the historical claim before testing encrypted transfer.
   require('./helpers/pre-gacha-schema.cjs').preGachaSchema(db);
   store.recordMatch({
     id: crypto.randomUUID(),
@@ -2141,15 +2140,15 @@ test('claimed achievement cosmetics and canonical match receipts survive encrypt
   try {
     const next = new AchievementStore(target);
     assert.equal(
-      next.list(f.adminId).rewards.find((r) => r.frameId === 'vinyl').claimedAt,
+      target
+        .prepare('SELECT claimed_at FROM user_cosmetic_rewards WHERE user_id=? AND frame_id=?')
+        .get(f.adminId, 'vinyl').claimed_at,
       claimed,
     );
-    next.assertFrame(f.adminId, 'vinyl');
+    assert.equal(next.list(f.adminId).rewards.find((r) => r.frameId === 'vinyl').claimedAt, null);
+    assert.throws(() => next.assertFrame(f.adminId, 'vinyl'), { code: 'FRAME_LOCKED' });
+    assert.throws(() => next.claim(f.adminId, 'vinyl'), { code: 'FRAME_LOCKED' });
     assert.equal(target.prepare('SELECT COUNT(*) n FROM achievement_match_events').get().n, 1);
-    assert.equal(
-      next.claim(f.adminId, 'vinyl').rewards.find((r) => r.frameId === 'vinyl').claimedAt,
-      claimed,
-    );
   } finally {
     target.close();
   }
