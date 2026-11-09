@@ -56,8 +56,8 @@ test('appearance follows system by default, reacts live and boots before styles 
         html: fs.readFileSync(path.join(directory, id, 'index.html'), 'utf8'),
       }))
       .filter((page) => page.html.includes('data-visual-theme="playful"'));
-  assert.equal(pages.length, 35);
-  for (const id of ['coc', 'brainwave', 'drama-bar', 'decrypto'])
+  assert.equal(pages.length, 36);
+  for (const id of ['arena', 'coc', 'brainwave', 'drama-bar', 'decrypto'])
     assert.ok(
       pages.some((page) => page.name === id),
       id,

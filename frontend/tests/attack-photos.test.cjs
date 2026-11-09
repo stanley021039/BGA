@@ -107,6 +107,7 @@ test('reaper draws a ground seal for every real victim before impact and extract
     delayMs: 2600,
     pending: true,
   }));
+  let caster = { x: 100, y: 450 };
   const draw = scope.create(c, {
     effect: 'reaper_seal',
     width: 1000,
@@ -115,6 +116,7 @@ test('reaper draws a ground seal for every real victim before impact and extract
     to: { x: 320, y: 400 },
     preview: false,
     readHits: () => targets,
+    readCaster: () => caster,
   });
   draw(1600);
   for (const h of targets)
@@ -125,7 +127,9 @@ test('reaper draws a ground seal for every real victim before impact and extract
   assert.ok(calls.length < 6000, 'bounded 32-victim drawing budget');
   targets = targets.map((h) => ({ ...h, pending: false, damage: 400000 }));
   calls.length = 0;
+  caster = { x: 200, y: 420 };
   draw(2800);
+  assert.ok(calls.some((a) => a[0] === 'translate' && a[1] === 220 && a[2] === 375));
   for (const h of targets)
     assert.ok(
       calls.some((a) => a[0] === 'moveTo' && a[1] === h.x && a[2] === h.y),

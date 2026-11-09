@@ -1,13 +1,5 @@
 'use strict';
-const codeGroups = {
-  frames: 'frames',
-  media: 'frames',
-  entrances: 'entrances',
-  openings: 'entrances',
-  attacks: 'other',
-  backgrounds: 'other',
-  sounds: 'pings',
-};
+const retiredAchievementKinds = new Set(['frames', 'media', 'entrances', 'openings', 'sounds']);
 const validAt = (at) =>
   typeof at === 'string' && Number.isFinite(Date.parse(at)) && new Date(at).toISOString() === at;
 function enabled(db) {
@@ -28,15 +20,15 @@ function ownedIds(db, userId, kind, saved = appearance(db, userId)) {
   const result = new Set();
   if (enabled(db))
     for (const row of db
-      .prepare('SELECT reward_id FROM gacha_ownership WHERE user_id=? AND kind=?')
+      .prepare('SELECT reward_id,source FROM gacha_ownership WHERE user_id=? AND kind=?')
       .all(userId, kind))
-      result.add(row.reward_id);
-  const group = codeGroups[kind],
-    codes = saved.achievementRewardCodes || {};
-  if (validAt(codes[group]) || validAt(saved.achievementRewardCodeAt)) {
+      if (row.source !== 'legacy' || !retiredAchievementKinds.has(kind)) result.add(row.reward_id);
+  if (
+    (kind === 'attacks' || kind === 'backgrounds') &&
+    (validAt(saved.achievementRewardCodes?.other) || validAt(saved.achievementRewardCodeAt))
+  ) {
     for (const i of require('./catalog').catalog)
       if (i.kind === kind && !i.gachaExclusive) result.add(i.id);
-    if (kind === 'openings') result.add('soul-world');
   }
   const starter = saved.starterRewardPack;
   if (starter?.version === 1 && validAt(starter.redeemedAt)) {

@@ -15,6 +15,9 @@ const props = defineProps<{
   controls: ReturnType<typeof useSceneControls>;
   enabled: boolean;
   message?: string;
+  placement?: 'top' | 'bottom';
+  disableTeleport?: boolean;
+  lockedLoadout?: { q: string; e: string; r?: string } | null;
 }>();
 const loadout = useAttackLoadoutStore();
 const expanded = ref(false),
@@ -30,10 +33,12 @@ const directions = [
   { action: 'down', label: '向下移動', caption: '下' },
   { action: 'right', label: '向右移動', caption: '右' },
 ] as const;
+const activeLoadout = computed(() => props.lockedLoadout || loadout.loadout);
+const loadoutReady = computed(() => !!props.lockedLoadout || loadout.ready);
 function effect(slot: 'q' | 'e' | 'r') {
   return (
-    attackEffects.find((effect) => effect.id === loadout.loadout[slot])?.label ||
-    (loadout.ready ? '尚未配裝' : '載入配裝中')
+    attackEffects.find((effect) => effect.id === activeLoadout.value[slot])?.label ||
+    (loadoutReady.value ? '尚未配裝' : '載入配裝中')
   );
 }
 function cooldown(action: SceneAction) {
@@ -96,6 +101,7 @@ onBeforeUnmount(() => {
     <div
       v-if="visible"
       class="mobile-scene-controls"
+      :class="{ 'mobile-scene-controls-top': placement === 'top' }"
       @click.stop
       @pointerdown.stop
       @keydown.stop="key"
@@ -110,11 +116,12 @@ onBeforeUnmount(() => {
             :key="slot"
             :label="`${slot === 'r' ? '大招 R' : '普通攻擊 ' + slot.toUpperCase()}：${effect(slot)}`"
             :caption="slot === 'r' ? '大招 R' : '普通 ' + slot.toUpperCase()"
-            :disabled="!loadout.ready || !loadout.loadout[slot] || controls.disabled(slot)"
+            :disabled="!loadoutReady || !activeLoadout[slot] || controls.disabled(slot)"
             :pending="controls.pending[slot]"
             @click="controls.run(slot)"
           />
           <UiButton
+            v-if="!disableTeleport"
             label="瞬移：隨機換位並播放進場特效"
             caption="瞬移 C"
             icon="refresh"
@@ -123,15 +130,17 @@ onBeforeUnmount(() => {
             @click="controls.run('c')"
           />
           <span
-            v-for="action in ['q', 'e', 'r', 'c'] as const"
+            v-for="action in disableTeleport
+              ? (['q', 'e', 'r'] as const)
+              : (['q', 'e', 'r', 'c'] as const)"
             :key="action"
             class="mobile-scene-cooldown"
           >
             {{ action.toUpperCase() }}：{{
               controls.pending[action]
                 ? '送出中'
-                : action === 'r' && controls.energy.value < 100
-                  ? `能量 ${controls.energy.value}／100`
+                : action === 'r' && controls.energy.value < controls.energyMaximum.value
+                  ? `能量 ${controls.energy.value}／${controls.energyMaximum.value}`
                   : cooldown(action)
             }}
           </span>

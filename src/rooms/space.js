@@ -5,7 +5,7 @@ const energy = require('./scene-energy');
 const { versionedAsset } = require('../http/asset-version');
 const { HttpError } = require('../http/errors');
 const { randomBytes } = require('node:crypto');
-const { createSceneCombat } = require('./scene-combat');
+const { createSceneCombat, authorSpeed } = require('./scene-combat');
 const { createAttackTimeline } = require('./attack-timeline');
 const {
   sceneWalk,
@@ -22,7 +22,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     attacks = new WeakMap();
   const spaces = new WeakMap();
   const timeline = createAttackTimeline(combat);
-  function advance(position, time) {
+  function advance(position, time, positions) {
     combat.advance(position, time);
     if (!position.health) return;
     const start = { x: position.x, y: position.y };
@@ -36,6 +36,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       {
         slowMs: Math.max(0, (position.slowUntil || 0) - walkFrom),
         hasteMs: Math.max(0, (position.hasteUntil || 0) - walkFrom),
+        speed: authorSpeed(position),
       },
     );
     position.x = step.x;
@@ -53,7 +54,13 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       }
     }
     position.at = time;
-    combat.collect(position, wrapped ? undefined : start);
+    combat.collect(
+      position,
+      wrapped || step.crossed ? undefined : start,
+      positions.values(),
+      time,
+      Math.min(time, walkFrom),
+    );
   }
   function reconcile(room, time) {
     let positions = spaces.get(room);
@@ -79,7 +86,9 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       const position = positions.get(player.id);
       eligibility.set(position, !!authorBonus(player.id, room));
     });
-    timeline.advance(attacks.get(room) || [], positions.values(), time, advance);
+    timeline.advance(attacks.get(room) || [], positions.values(), time, (position, at) =>
+      advance(position, at, positions),
+    );
     return positions;
   }
   function view(room, playerId, players = room.players, expressions = []) {
@@ -99,7 +108,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
             expression = current.get(player.id);
           const remainingMs = Math.ceil(
             sceneWalk(position, { x: position.targetX, y: position.targetY }, 0, position.passage)
-              .remainingMs,
+              .remainingMs / authorSpeed(position),
           );
           return {
             ...combat.view(position, position.id === playerId),

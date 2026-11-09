@@ -74,18 +74,26 @@ test('own HUD reacts to health, regeneration and buff changes, without moving st
       host.querySelector('.scene-bonuses [data-status="frost"]').getAttribute('aria-label'),
       /移動減速 -20%，剩餘 0.6 秒/,
     );
-    assert.equal(host.querySelector('[data-status="haste"]'), null);
     assert.match(host.textContent, /格擋 \+5 能量/);
     const groups = host.querySelectorAll('.scene-bonuses .scene-effect-group');
     assert.deepEqual(
       [...groups[0].querySelectorAll('[data-status]')].map((badge) => badge.dataset.status),
-      ['health-up', 'attack-up', 'regen-up'],
+      ['health-up', 'attack-up', 'regen-up', 'regen-up', 'haste'],
+    );
+    assert.match(
+      groups[0].querySelectorAll('[data-status="regen-up"]')[1].getAttribute('aria-label'),
+      /回能 \+10%/,
+    );
+    assert.match(
+      groups[0].querySelector('[data-status="haste"]').getAttribute('aria-label'),
+      /移速 \+15%/,
     );
     assert.ok(groups[1].querySelector('[data-status="frost"]'));
+    assert.equal(groups[1].querySelector('[data-status="haste"]'), null);
     state.self.slowMs = 0;
     await vue.nextTick();
     assert.match(
-      host.querySelector('.scene-bonuses [data-status="haste"]').getAttribute('aria-label'),
+      groups[1].querySelector('[data-status="haste"]').getAttribute('aria-label'),
       /劍氣加速 \+15%，剩餘 0.5 秒/,
     );
     assert.ok(groups[1].querySelector('[data-status="haste"]'));

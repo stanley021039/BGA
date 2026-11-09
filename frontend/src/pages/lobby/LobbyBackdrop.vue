@@ -1,13 +1,28 @@
 <script setup lang="ts">
+import sceneRules from '../../../../public/shared/scene-rules.json';
+import { arenaPortalLabels, arenaZonePoints, type ArenaCover } from '../../contracts/lobby-arena';
+const bushOutline = (bush: ArenaCover) =>
+  arenaZonePoints(bush.shape, 'bush')
+    .map(([x, y]) => x * 1.2 + ',' + y * 0.7)
+    .join(' ');
+const bushClip = (bush: ArenaCover) =>
+  'polygon(' +
+  arenaZonePoints(bush.shape, 'bush')
+    .map(([x, y]) => x + '% ' + y + '%')
+    .join(',') +
+  ')';
+import SceneHazards from '../../components/SceneHazards.vue';
 import MobileSceneControls from '../../components/MobileSceneControls.vue';
 import { sceneDirections, useSceneControls } from '../../services/scene-controls';
+import ScenePickups from '../../components/ScenePickups.vue';
+import SceneCovers from '../../components/SceneCovers.vue';
 import SceneFragments from '../../components/SceneFragments.vue';
 import ExpressionSounds from '../../engines/expression-sounds.js';
 import MotionPolicy from '../../engines/motion-policy.js';
 
 import { sizedImage } from '../../services/image-size';
 import { focusFromPointer } from '../../services/pointer-focus';
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { useLobbyBackgroundStore } from '../../stores/lobby-background';
 import UiDialog from '../../components/UiDialog.vue';
@@ -25,6 +40,7 @@ import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // the site header, painted surfaces (background, border, shadow) and text.
 const INTERACTIVE =
   'a, button, input, select, textarea, label, summary, dialog, [role="button"], [contenteditable], .game-tile, [data-site-header]';
+const props = defineProps<{ arenaPage?: boolean }>();
 const expressionNoticeKey = ref(0);
 const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
@@ -33,9 +49,56 @@ const lobby = useLobbyStore(),
   opened = ref(false),
   selfHover = ref(false),
   arrivals = ref(new Set<string>());
+const inMatch = computed(
+  () =>
+    lobby.snapshot?.arena?.match?.phase === 'running' &&
+    lobby.snapshot.arena.match.players.some((p) => p.id === lobby.snapshot?.selfId && !p.forfeited),
+);
+const battlePlaying = computed(() => props.arenaPage && inMatch.value);
+const expanded = computed(() => battlePlaying.value && !!lobby.snapshot?.arena?.expanded);
+const world = ref<HTMLElement | null>(null);
+const camera = { x: 0, y: 0 };
+const readCamera = () => camera;
+function moveCamera(x: number, y: number) {
+  if (!expanded.value || !world.value) return;
+  const offset = (value: number) => Math.max(0, Math.min(50, value - 25)) / 100;
+  camera.x = offset(x);
+  camera.y = offset(y);
+  world.value.style.transform = `translate3d(${-camera.x * 100}%, ${-camera.y * 100}%, 0)`;
+}
+watch(
+  [world, expanded],
+  ([element, active]) => {
+    if (!element) return;
+    if (!active) {
+      element.style.removeProperty('transform');
+      return;
+    }
+    const me = lobby.snapshot?.visitors.find((visitor) => visitor.id === lobby.snapshot?.selfId);
+    if (me) moveCamera(me.x, me.y);
+  },
+  { flush: 'post' },
+);
+const sceneEnabled = computed(() => lobby.connected && (!inMatch.value || props.arenaPage));
+const sceneSnapshot = computed(() => {
+  const snapshot = lobby.snapshot;
+  if (!snapshot) return null;
+  const match = snapshot.arena?.match;
+  const contestants = new Set(
+    match?.phase === 'running' ? match.players.filter((p) => !p.forfeited).map((p) => p.id) : [],
+  );
+  const visible = (id: string) =>
+    id === snapshot.selfId || contestants.has(id) === !!props.arenaPage;
+  return {
+    ...snapshot,
+    visitors: snapshot.visitors.filter((v) => visible(v.id)),
+    attacks: snapshot.attacks.filter((a) => visible(a.fromId) && visible(a.toId)),
+  };
+});
 const controls = useSceneControls({
+  teleportCost: sceneRules.energy.lobbyTeleportCost,
   context: () => lobby.snapshot?.selfId || '',
-  enabled: () => lobby.connected,
+  enabled: () => sceneEnabled.value,
   snapshot: () => lobby.snapshot,
   send: async (action) => {
     if (action === 'q' || action === 'e' || action === 'r') return lobby.attack(action);
@@ -202,7 +265,7 @@ function click(event: MouseEvent) {
   }
   const visitors = stage.value?.querySelector<HTMLElement>('.lobby-visitors'),
     rect = visitors?.getBoundingClientRect();
-  if (!lobby.connected || !rect?.width || !rect.height) return;
+  if (!sceneEnabled.value || !rect?.width || !rect.height) return;
   focusFromPointer(stage.value);
   lobby.move({
     x: ((event.clientX - rect.left) / rect.width) * 100,
@@ -229,19 +292,35 @@ const directions: Record<string, [number, number]> = {
   w: [0, -1],
   s: [0, 1],
 };
+function keyName(event: KeyboardEvent) {
+  return (
+    (
+      {
+        KeyW: 'w',
+        KeyA: 'a',
+        KeyS: 's',
+        KeyD: 'd',
+        KeyQ: 'q',
+        KeyE: 'e',
+        KeyR: 'r',
+        KeyC: 'c',
+      } as Record<string, string>
+    )[event.code] || event.key.toLowerCase()
+  );
+}
 function release(event: KeyboardEvent) {
-  held.delete(event.key.toLowerCase());
+  held.delete(keyName(event));
 }
 function clearKeys() {
   held.clear();
 }
 function key(event: KeyboardEvent) {
   if (
-    !lobby.connected ||
+    !sceneEnabled.value ||
     event.ctrlKey ||
     event.metaKey ||
     event.altKey ||
-    event.isComposing ||
+    (event.isComposing && !event.code.startsWith('Key')) ||
     document.hidden ||
     (event.target instanceof Element &&
       event.target.closest(
@@ -250,7 +329,7 @@ function key(event: KeyboardEvent) {
     document.querySelector('dialog[open]')
   )
     return;
-  const name = event.key.toLowerCase();
+  const name = keyName(event);
   if (name === 'q' || name === 'e' || name === 'r' || name === 'c') {
     if (event.repeat) return;
     event.preventDefault();
@@ -318,7 +397,14 @@ defineExpose({ openChat });
 <template>
   <MobileSceneControls
     :controls="controls"
-    :enabled="lobby.connected"
+    :enabled="sceneEnabled"
+    :placement="battlePlaying ? 'top' : 'bottom'"
+    :locked-loadout="
+      battlePlaying
+        ? lobby.snapshot?.arena?.match?.players.find((p) => p.id === lobby.snapshot?.selfId)
+            ?.loadout
+        : undefined
+    "
     :message="
       (lobby.attackStatus === '已向最近玩家發射特效' ? '' : lobby.attackStatus) ||
       lobby.presenceStatus
@@ -329,30 +415,102 @@ defineExpose({ openChat });
       ref="stage"
       class="lobby-backdrop"
       :data-background="background.visible ? background.selected : 'default'"
-      :class="{ 'is-self-hover': selfHover }"
+      :class="{ 'is-self-hover': selfHover, 'arena-expanded-stage': expanded }"
       tabindex="0"
-      aria-label="好友大廳：點擊空白處或用 WASD、方向鍵移動，點自己的角色發表情；C 瞬移，Q、E 普通招式，能量滿後按 R 施放多人招式"
+      :aria-label="
+        battlePlaying
+          ? '戰鬥競技場：點地面或用方向鍵移動，C 瞬移'
+          : `好友大廳：點擊空白處或用 WASD、方向鍵移動，點自己的角色發表情；C 瞬移（${sceneRules.energy.lobbyTeleportCost} 能量），Q、E 普通招式，能量滿後按 R 施放多人招式`
+      "
       aria-keyshortcuts="Q E R C"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
-      ><LobbyAttackLayer
-        :snapshot="lobby.snapshot"
-        :connected="lobby.connected" /><LobbyBackgroundArt
-        v-if="background.visible"
-        :id="background.selected" /><div class="lobby-visitors"
-        ><SceneFragments :visitors="lobby.snapshot?.visitors || []" /><LobbyVisitor
-          v-for="visitor in lobby.snapshot?.visitors || []"
-          :key="visitor.id"
-          :visitor="visitor"
-          :message="lobby.speeches[visitor.id]"
-          :self="visitor.id === lobby.snapshot?.selfId"
-          :reset="lobby.positionReset"
-          :open="opened"
-          :connected="lobby.connected"
-          :arrive="arrivals.has(visitor.id)"
-          @select="open"
-          @arrived="arrived(visitor.id)" /></div></div
-    ><div v-if="lobby.presenceStatus" class="vue-lobby-presence"
+      ><div ref="world" class="arena-camera-world" :class="{ 'is-expanded': expanded }">
+        <LobbyAttackLayer
+          :snapshot="sceneSnapshot"
+          :read-camera="expanded ? readCamera : undefined"
+          :connected="lobby.connected" /><LobbyBackgroundArt
+          v-if="background.visible"
+          :id="background.selected" /><div class="lobby-visitors"
+          ><div v-if="expanded" class="arena-map-boundary" aria-hidden="true"></div>
+          <div
+            v-for="portal in lobby.snapshot?.arena?.portals || []"
+            :key="portal.id"
+            class="arena-wormhole"
+            :data-pair="portal.id === 'east' || portal.id === 'west' ? 'lateral' : 'vertical'"
+            :style="{
+              left: portal.x + '%',
+              top: portal.y + '%',
+              width: 2 * (lobby.snapshot?.arena?.portalRadius || 2) + '%',
+              height: 2 * (lobby.snapshot?.arena?.portalRadius || 2) + '%',
+            }"
+            :aria-label="arenaPortalLabels[portal.id] + '側蟲洞'"
+          ></div>
+          <div v-if="battlePlaying" class="arena-bushes" aria-label="可遮蔽敵方視野的草叢">
+            <svg
+              v-for="bush in lobby.snapshot?.arena?.bushes || []"
+              :key="bush.id"
+              class="arena-bush"
+              viewBox="0 0 120 70"
+              preserveAspectRatio="none"
+              :style="{
+                left: bush.x + '%',
+                top: bush.y + '%',
+                width: bush.width + '%',
+                height: bush.height + '%',
+                clipPath: bushClip(bush),
+              }"
+            >
+              <ellipse class="arena-bush-shadow" cx="60" cy="56" rx="57" ry="12" />
+              <polygon class="arena-bush-understory" :points="bushOutline(bush)" />
+              <g
+                v-for="leaf in 18"
+                :key="leaf"
+                :transform="
+                  'translate(' +
+                  (9 + ((leaf * 31) % 101)) +
+                  ' ' +
+                  (16 + ((leaf * 17) % 40)) +
+                  ') rotate(' +
+                  (((leaf * 37) % 110) - 55) +
+                  ')'
+                "
+              >
+                <path
+                  class="arena-bush-leaf"
+                  :class="{ 'is-light': leaf % 3 === 0 }"
+                  d="M0 13Q-12 0 0-12Q12 0 0 13Z"
+                />
+                <path class="arena-bush-vein" d="M0 10V-7" />
+              </g>
+            </svg> </div
+          ><SceneHazards
+            v-if="battlePlaying"
+            :zones="lobby.snapshot?.arena?.hazards || []" /><ScenePickups
+            v-if="battlePlaying"
+            :items="lobby.snapshot?.arena?.pickups || []" /><SceneCovers
+            v-if="battlePlaying"
+            :covers="lobby.snapshot?.arena?.covers || []" /><SceneFragments
+            :visitors="sceneSnapshot?.visitors || []" /><LobbyVisitor
+            v-for="visitor in sceneSnapshot?.visitors || []"
+            :key="visitor.id"
+            :visitor="visitor"
+            :team="
+              battlePlaying
+                ? lobby.snapshot?.arena?.teams.find((p) => p.id === visitor.id)?.team
+                : undefined
+            "
+            :message="lobby.speeches[visitor.id]"
+            :self="visitor.id === lobby.snapshot?.selfId"
+            :follow-camera="expanded && visitor.id === lobby.snapshot?.selfId"
+            @position="moveCamera"
+            :reset="lobby.positionReset"
+            :open="opened"
+            :connected="lobby.connected"
+            :arrive="arrivals.has(visitor.id)"
+            @select="open"
+            @arrived="arrived(visitor.id)" /></div></div></div
+    ><div v-if="lobby.presenceStatus && !props.arenaPage" class="vue-lobby-presence"
       ><StatusSlot
         :message="lobby.presenceStatus"
         persistent

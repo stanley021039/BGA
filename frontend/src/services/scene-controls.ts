@@ -26,6 +26,7 @@ export function useSceneControls(options: {
   context: () => string;
   enabled: () => boolean;
   snapshot: () => LobbySnapshot | null;
+  teleportCost?: number;
   send: (action: SceneAction) => Promise<boolean>;
 }) {
   const pending = reactive<Record<string, boolean>>({});
@@ -50,10 +51,12 @@ export function useSceneControls(options: {
     const own = snapshot?.visitors.find((v) => v.id === snapshot.selfId);
     return !!own && own.health === 0;
   });
-  const energy = computed(() => {
+  const own = computed(() => {
     const snapshot = options.snapshot();
-    return snapshot?.visitors.find((v) => v.id === snapshot.selfId)?.energy || 0;
+    return snapshot?.visitors.find((v) => v.id === snapshot.selfId);
   });
+  const energy = computed(() => own.value?.energy ?? 0);
+  const energyMaximum = computed(() => own.value?.energyMaximum ?? combatRules.energy.maximum);
   function disabled(action: SceneAction) {
     return (
       !options.enabled() ||
@@ -62,8 +65,9 @@ export function useSceneControls(options: {
       seconds(action) > 0 ||
       (until.flight || 0) > now.value ||
       (!(action in sceneDirections) && (until.seal || 0) > now.value) ||
-      (action === 'c' && (until.teleportBlocked || 0) > now.value) ||
-      (action === 'r' && energy.value < combatRules.energy.maximum)
+      (action === 'c' &&
+        ((until.teleportBlocked || 0) > now.value || energy.value < (options.teleportCost ?? 0))) ||
+      (action === 'r' && energy.value < energyMaximum.value)
     );
   }
   async function run(action: SceneAction) {
@@ -128,5 +132,5 @@ export function useSceneControls(options: {
     clearTimeout(timer);
     document.removeEventListener('visibilitychange', tick);
   });
-  return { run, pending, seconds, disabled, knockedOut, energy };
+  return { run, pending, seconds, disabled, knockedOut, energy, energyMaximum };
 }

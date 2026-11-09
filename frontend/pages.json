@@ -4,6 +4,7 @@
     "document": "index.html",
     "route": "/"
   },
+  { "id": "arena", "document": "arena.html", "route": "/arena" },
   {
     "id": "login",
     "document": "login.html",

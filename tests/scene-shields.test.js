@@ -51,7 +51,7 @@ test('each protected hit rolls again and mitigation follows critical and author 
   values = [0.5, 0.5, 0.999999];
   assert.equal(combat.hit(from, to, 200).damage, 115000);
   values = [0, 0, 0.5];
-  assert.deepEqual(combat.hit(from, to, 300), { damage: 170775, critical: true });
+  assert.deepEqual(combat.hit(from, to, 300), { damage: 170775, critical: true, weakened: true });
 });
 
 test('recasting refreshes two full seconds plus three half-strength seconds; death clears both', () => {
@@ -101,21 +101,27 @@ for (const effect of ['shield', 'sphere'])
       const event = lobby.attack(a, offense).attacks.at(-1);
       assert.equal(event.damage, 0, 'no damage before beam arrival');
       now += 450;
-      lobby.view(a);
-      assert.equal(event.damage, author ? 110000 : 130000);
+      assert.equal(
+        lobby.view(a).attacks.find((attack) => attack.id === event.id).damage,
+        author ? 110000 : 130000,
+      );
       now += 2100;
       const expired = lobby.attack(a, { ...offense, requestId: 'shield-hit-002' }).attacks.at(-1);
       now += 450;
-      lobby.view(a);
-      assert.equal(expired.damage, author ? 155000 : 165000);
+      assert.equal(
+        lobby.view(a).attacks.find((attack) => attack.id === expired.id).damage,
+        author ? 155000 : 165000,
+      );
       // Replaying the old cast must not grant another shield.
       lobby.attack(b, defensive);
       const replayed = lobby
         .attack(a, { ...offense, slot: 'e', requestId: 'shield-hit-003' })
         .attacks.at(-1);
       now += 450;
-      lobby.view(a);
-      assert.equal(replayed.damage, author ? 155000 : 165000);
+      assert.equal(
+        lobby.view(a).attacks.find((attack) => attack.id === replayed.id).damage,
+        author ? 155000 : 165000,
+      );
 
       const space = createRoomSpace(
           () => now,

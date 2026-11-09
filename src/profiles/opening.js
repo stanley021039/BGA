@@ -16,7 +16,7 @@ function openingTheme(db, store, userId, input) {
     if (!['default', 'soul-world', 'home-family'].includes(input?.theme))
       throw new HttpError(400, 'INVALID_OPENING', '請選擇可用的網站開場');
     if (input.theme !== 'default' && !owned.includes(input.theme))
-      throw new HttpError(403, 'OPENING_LOCKED', '完成三款不同遊戲後解鎖屍魂界開場');
+      throw new HttpError(403, 'OPENING_LOCKED', '此開場動畫尚未解鎖');
     db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
       JSON.stringify({ ...defaults, ...selected(db, userId), entryIntroTheme: input.theme }),
       userId,

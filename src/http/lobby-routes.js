@@ -18,6 +18,9 @@ function createLobbyHandlers({
     if (!entranceAllowed(user, entrance)) entrance = 'classic';
     return withLobbyMedia(user, lobby.view(user, { entrance }));
   }
+  function arena(user, data) {
+    return withLobbyMedia(user, lobby.arena(user, data));
+  }
   function move(user, data) {
     return withLobbyMedia(user, lobby.move(user, data));
   }
@@ -29,9 +32,7 @@ function createLobbyHandlers({
     )
       throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
     const effect = attackLoadout(user)[data.slot || 'q'];
-    if (data.slot === 'r' && !effect)
-      throw new HttpError(409, 'NO_MULTI_ATTACK_LOADOUT', '請先在設定配裝 R 鍵多人招式');
-    return withLobbyMedia(user, lobby.attack(user, { ...data, effect }));
+    return withLobbyMedia(user, lobby.attack(user, { ...data, effect: effect || undefined }));
   }
   function teleport(user, data) {
     const entrance = entranceAllowed(user, data?.entrance) ? data?.entrance : 'classic';
@@ -80,6 +81,6 @@ function createLobbyHandlers({
       throw new HttpError(403, 'BACKGROUND_LOCKED', '請先完成對應成就以解鎖這個背景');
     return withLobbyMedia(user, lobby.changeBackground(user, data));
   }
-  return { view, move, emotes, emote, barrage, background, teleport, attack };
+  return { view, move, emotes, emote, barrage, background, teleport, attack, arena };
 }
 module.exports = { createLobbyHandlers };

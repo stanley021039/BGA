@@ -1,10 +1,16 @@
 {
+  "fragment": { "ownerOnlyMs": 3000, "stealEnergy": 30 },
   "energy": {
     "maximum": 100,
+    "lobbyInitial": 20,
+    "lobbyMaximum": 150,
+    "lobbyTeleportCost": 20,
     "ordinaryHit": 10,
+    "lobbyOrdinaryHit": 12,
+    "energyArchetypeHit": 14,
     "missileCastCap": 30,
     "receivedHit": 5,
-    "movementPerSecond": 1
+    "movementPerSecond": 2
   },
   "frost": { "durationMs": 1000, "speedMultiplier": 0.8 },
   "singularityPull": 5,
@@ -45,7 +51,9 @@
   "authorBonus": {
     "healthMultiplier": 1.5,
     "damageMultiplier": 1.15,
-    "regenerationMultiplier": 1.5
+    "regenerationMultiplier": 1.5,
+    "energyMultiplier": 1.1,
+    "speedMultiplier": 1.15
   },
   "attackCooldownMs": 1600,
   "maximumAreaTargets": 32,

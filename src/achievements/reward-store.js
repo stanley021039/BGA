@@ -229,18 +229,9 @@ function rewardList(store, userId) {
         .all(userId)
         .map((r) => [r.kind + ':' + r.reward_id, r.acquired_at]),
     );
-    const code = require('./redemption').redeemedAt(store.db, userId, 'frames');
     const pack = require('./starter-rewards').receipt(store.db, userId);
-    const legacyClaims = new Map(
-      store.db
-        .prepare('SELECT frame_id,claimed_at FROM user_cosmetic_rewards WHERE user_id=?')
-        .all(userId)
-        .map((row) => [row.frame_id, row.claimed_at]),
-    );
     const at = (kind, id) =>
-      legacyClaims.get(id) ||
       timestamps.get(kind + ':' + id) ||
-      code ||
       (pack?.grants[kind]?.includes(id) ? pack.redeemedAt : null);
     return rewards.map((r) => ({
       ...r,
@@ -277,7 +268,7 @@ function assertFrame(store, userId, id) {
       rewards.some((r) => r.frameId === id) &&
       !gacha.ownedIds(store.db, userId, 'frames').includes(id)
     )
-      throw new HttpError(403, 'FRAME_LOCKED', '請先從獎勵抽卡機或兌換碼取得這個彈幕框');
+      throw new HttpError(403, 'FRAME_LOCKED', '請先從獎勵抽卡機或新手大禮包取得這個彈幕框');
     return;
   }
   const reward = rewards.find((r) => r.frameId === id);
@@ -297,7 +288,7 @@ function claimReward(store, userId, frameId) {
     if (!rewards.some((r) => r.frameId === frameId))
       throw new HttpError(400, 'INVALID_REWARD', '找不到這個獎勵');
     if (!gacha.ownedIds(store.db, userId, 'frames').includes(frameId))
-      throw new HttpError(403, 'FRAME_LOCKED', '請從獎勵抽卡機或兌換碼取得獎勵');
+      throw new HttpError(403, 'FRAME_LOCKED', '請從獎勵抽卡機或新手大禮包取得獎勵');
     return store.list(userId);
   }
   const reward = rewards.find((r) => r.frameId === frameId);

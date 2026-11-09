@@ -17,6 +17,10 @@ test('independent avatar and character settings validate ownership, persist, and
     };
   const db = openDatabase(config.dbFile);
   await createAuth(db).bootstrap('settingsadmin', 'test-password-123');
+  const owner = db.prepare('SELECT id FROM users WHERE username=?').get('settingsadmin').id;
+  const addSound = db.prepare("INSERT INTO gacha_ownership VALUES(?, 'sounds', ?, 'draw', ?)");
+  for (const name of ['senior'])
+    addSound.run(owner, 'ping-voice-' + name, new Date().toISOString());
   db.close();
   let app = createApp(config);
   try {
@@ -41,7 +45,6 @@ test('independent avatar and character settings validate ownership, persist, and
     const host = (
       await post('auth/login', null, { username: 'settingsadmin', password: 'test-password-123' })
     ).cookie;
-    await post('achievements/redeem', host, { code: '我愛士憲' });
     const invite = (await post('admin/invites', host, { days: 1 })).data.code;
     const friend = (
       await post('auth/register', null, {

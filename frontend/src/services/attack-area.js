@@ -31,6 +31,7 @@ export function createAreaAttack(ctx, options, onImpact) {
     sin = Math.sin(angle);
   const range = options.range || 65,
     scale = range / 760;
+  const casterOffset = { x: 0, y: 0 };
   const caster = { x: 0, y: 0 },
     reducedMotion = false;
   const convertTargets = (hits) =>
@@ -215,7 +216,7 @@ export function createAreaAttack(ctx, options, onImpact) {
     if (tProgress < 0.3) {
       const prog = tProgress / 0.3;
       ctx.save();
-      ctx.translate(cx, cy);
+      ctx.translate(cx + casterOffset.x, cy + casterOffset.y);
 
       // Galaxy Spiral Arms behind Caster
       ctx.rotate(time * 0.005);
@@ -348,7 +349,10 @@ export function createAreaAttack(ctx, options, onImpact) {
 
   const renderers = [
     (_phase, p) => {
+      ctx.save();
+      ctx.translate(casterOffset.x, casterOffset.y);
       drawUltimateRevision(ctx, 'guanyin_barrage', p);
+      ctx.restore();
       drawAreaRefinement(ctx, 'guanyin_barrage', p, targets);
     },
     (_phase, p) => {
@@ -366,6 +370,8 @@ export function createAreaAttack(ctx, options, onImpact) {
         p,
         Math.hypot(ax, ay) / scale,
         targets.length ? targets.slice(0, 3) : undefined,
+        0,
+        casterOffset,
       ),
     renderGigaDrill,
     (_phase, p) =>
@@ -376,9 +382,10 @@ export function createAreaAttack(ctx, options, onImpact) {
         Math.hypot(ax, ay) / scale,
         targets.length ? targets : undefined,
         angle,
+        casterOffset,
       ),
     (_phase, p) => {
-      drawFateAttack(ctx, 'excalibur', p);
+      drawFateAttack(ctx, 'excalibur', p, casterOffset);
       if (p >= 0.5) {
         const extent = Math.min(1, (p - 0.5) / 0.12),
           span = width / mx / scale;
@@ -433,6 +440,11 @@ export function createAreaAttack(ctx, options, onImpact) {
       ctx.clip();
     }
     ctx.scale(scale, scale);
+    const currentCaster = options.readCaster?.() || from;
+    const dx = (currentCaster.x - from.x) / mx / scale;
+    const dy = (currentCaster.y - from.y) / my / scale;
+    casterOffset.x = dx * cos + dy * sin;
+    casterOffset.y = dy * cos - dx * sin;
     renderers[index](0, progress, elapsed);
     for (let n = particles.length - 1; n >= 0; n--) {
       const p = particles[n];

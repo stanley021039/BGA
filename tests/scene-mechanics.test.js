@@ -213,3 +213,33 @@ for (const kind of ['lobby', 'room'])
     time = catAt + 3570;
     assert.doesNotThrow(() => move(1));
   });
+
+test('other players can collect a lower body once after three seconds and gain capped energy', () => {
+  const { combat, a, b } = actors();
+  combat.applyEffect(a, b, 100, 'dimension_cleave', a);
+  const part = b.fragment;
+  const health = b.health;
+  a.x = part.x;
+  a.y = part.y;
+  a.energy = 80;
+  combat.collect(a, undefined, [b], 3099);
+  assert.equal(b.fragment, part);
+  assert.equal(a.energy, 80);
+  a.combatEpoch = 'different-match';
+  combat.collect(a, undefined, [b], 3100);
+  assert.equal(b.fragment, part);
+  a.combatEpoch = 0;
+  a.energy = 55;
+  combat.collect(a, undefined, [b], 3100);
+  assert.equal(a.energy, 85);
+  assert.equal(b.fragment, null);
+  assert.equal(b.health, health);
+  combat.collect(a, undefined, [b], 4100);
+  assert.equal(a.energy, 85);
+  b.severed = false;
+  combat.applyEffect(a, b, 4200, 'dimension_cleave', a);
+  a.x = b.fragment.x;
+  a.y = b.fragment.y;
+  combat.collect(a, undefined, [b], 7200);
+  assert.equal(a.energy, 100);
+});

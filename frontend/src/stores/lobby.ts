@@ -118,7 +118,11 @@ export const useLobbyStore = defineStore('lobby', () => {
       10000,
     );
     try {
-      const value = await requestJson(path, {
+      const scopedPath =
+        location.pathname === '/arena' && path.startsWith('/api/lobby')
+          ? path + (path.includes('?') ? '&' : '?') + 'arena=1'
+          : path;
+      const value = await requestJson(scopedPath, {
         method: body ? 'POST' : 'GET',
         body,
         signal: controller.signal,
@@ -176,7 +180,10 @@ export const useLobbyStore = defineStore('lobby', () => {
       consume(await request('/api/lobby/teleport', { entrance: entranceEffect.value }));
       return current(epoch, account);
     } catch (error) {
-      if (current(epoch, account))
+      if (
+        current(epoch, account) &&
+        !(error instanceof ApiError && error.code === 'INSUFFICIENT_SCENE_ENERGY')
+      )
         presenceStatus.value = error instanceof Error ? error.message : '暫時無法隨機移動';
     } finally {
       teleportPending.value = false;
@@ -196,7 +203,9 @@ export const useLobbyStore = defineStore('lobby', () => {
     const epoch = generation,
       account = identity.value,
       source = new EventSource(
-        '/api/lobby/events?entrance=' + encodeURIComponent(entranceEffect.value),
+        '/api/lobby/events?entrance=' +
+          encodeURIComponent(entranceEffect.value) +
+          (location.pathname === '/arena' ? '&arena=1' : ''),
       );
     stream = source;
     source.addEventListener('open', () => {
@@ -291,11 +300,12 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
   function move(target: { x: number; y: number }) {
-    if (connected.value)
-      void sync({
-        x: Math.max(6, Math.min(94, target.x)),
-        y: Math.max(12, Math.min(97, target.y)),
-      });
+    if (!connected.value) return;
+    const expanded = snapshot.value?.arena?.expanded;
+    void sync({
+      x: Math.max(expanded ? 1 : 6, Math.min(expanded ? 99 : 94, target.x)),
+      y: Math.max(expanded ? 1 : 12, Math.min(expanded ? 99 : 97, target.y)),
+    });
   }
   function step(dx: number, dy: number) {
     if (connected.value) void sync({ dx, dy });
@@ -327,6 +337,27 @@ export const useLobbyStore = defineStore('lobby', () => {
       }
     }
     return false;
+  }
+  const arenaPending = ref(false),
+    arenaStatus = ref('');
+  async function arenaCommand(body: Record<string, unknown>) {
+    if (arenaPending.value || !connected.value) return;
+    const epoch = generation,
+      account = identity.value;
+    arenaPending.value = true;
+    arenaStatus.value = '';
+    try {
+      const path = ['create', 'join', 'leaveRoom'].includes(String(body.action))
+        ? '/api/lobby/arena-room'
+        : '/api/lobby/arena';
+      const result = await request(path, body.action === 'leaveRoom' ? { action: 'leave' } : body);
+      if (current(epoch, account)) consume(result);
+    } catch (error) {
+      if (current(epoch, account))
+        arenaStatus.value = error instanceof Error ? error.message : '對戰操作失敗';
+    } finally {
+      if (current(epoch, account)) arenaPending.value = false;
+    }
   }
   async function warmExpressions() {
     if (!preloadAllowed()) return;
@@ -531,6 +562,8 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
   function reset() {
+    arenaPending.value = false;
+    arenaStatus.value = '';
     speeches.value = {};
     generation++;
     expressionRevision++;
@@ -628,6 +661,9 @@ export const useLobbyStore = defineStore('lobby', () => {
     },
   };
   return {
+    arenaCommand,
+    arenaPending,
+    arenaStatus,
     snapshot,
     speeches,
     showSpeech,

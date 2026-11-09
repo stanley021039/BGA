@@ -1,5 +1,11 @@
 // Lobby entrance effects (see pages/lobby/apparition.ts). Overlays are placed in
 // layer coordinates; the arriving character animates via [data-entrance].
+.lobby-fx-follow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+}
 .lobby-fx {
   position: absolute;
   pointer-events: none;

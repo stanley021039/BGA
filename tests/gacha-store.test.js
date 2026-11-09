@@ -414,3 +414,21 @@ test('every new palette is an independent draw and exchange reward with the orig
   setAttackSettings(db, user, loadout);
   assert.deepEqual(getAttackSettings(db, user), loadout);
 });
+
+test('retired achievement ownership can be reacquired through the prize machine', (t) => {
+  const { db, user, other, store } = fixture(t, { choose: () => 0 });
+  const item = poolItems('frames')[0];
+  const seed = db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'legacy',?)");
+  for (const id of [user, other]) {
+    seed.run(id, item.kind, item.id, store.at());
+    assert.ok(!Ownership.ownedIds(db, id, item.kind).includes(item.id));
+    fund(store, db, id);
+  }
+  store.draw(user, { pool: 'frames', count: 1, requestId: randomUUID() });
+  store.exchange(other, { key: item.key, requestId: randomUUID() });
+  const source = db.prepare(
+    'SELECT source FROM gacha_ownership WHERE user_id=? AND kind=? AND reward_id=?',
+  );
+  assert.equal(source.get(user, item.kind, item.id).source, 'draw');
+  assert.equal(source.get(other, item.kind, item.id).source, 'exchange');
+});

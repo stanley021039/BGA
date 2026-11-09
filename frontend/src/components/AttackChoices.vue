@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import sceneRules from '../../../public/shared/scene-rules.json';
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { attackEffectGroups } from '../services/effect-variants';
 import { requestJson } from '../services/http';
@@ -17,7 +18,9 @@ import UiChoiceCard from './UiChoiceCard.vue';
 import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
 import UiTabs from './UiTabs.vue';
-withDefaults(defineProps<{ showCurrent?: boolean }>(), { showCurrent: false });
+withDefaults(defineProps<{ showCurrent?: boolean; disableTeleport?: boolean }>(), {
+  showCurrent: false,
+});
 const currentRevision = ref({ q: 0, e: 0, r: 0 });
 const previewTabs: { id: 'normal' | 'ultimate'; label: string }[] = [
   { id: 'normal', label: '一般招式' },
@@ -134,14 +137,24 @@ function play(id: string) {
           @click="currentRevision[slot]++"
         />
       </UiPanel> </div
-    ><p
-      >Q、E 配裝普通招式；R 配裝大招，滿 100 能量消耗整條施放；C 瞬移。普通命中 +10、受傷
-      +5、實際移動每秒 +1，大招施放者不靠該招命中回能。普通招式整套傷害：單段 100%、兩段 90%、三段
-      80%、四段 70%；多段每段命中均回能。不影響桌遊勝負。</p
-    ><div class="attack-loadout"
+    ><div class="attack-guide">
+      <p
+        ><strong>操作</strong>　Q／E 普通招式，R 大招（大廳與競技場消耗
+        {{ sceneRules.energy.lobbyMaximum }} 能量）<span v-if="!disableTeleport">，C 瞬移</span
+        >。</p
+      >
+      <p
+        ><strong>回能</strong>　普通招式每段命中 +{{ sceneRules.energy.lobbyOrdinaryHit }}（能量型
+        +{{ sceneRules.energy.energyArchetypeHit }}），受傷 +{{
+          sceneRules.energy.receivedHit
+        }}，移動每秒 +{{ sceneRules.energy.movementPerSecond }}。大招命中不回能給施放者。</p
+      >
+      <p><strong>普通招式總傷害</strong>　1 段 100% · 2 段 90% · 3 段 80% · 4 段 70%。</p> </div
+    ><div class="attack-loadout" :class="{ 'has-confirm': $slots.confirm }"
       ><UiField
         v-for="slot in ['q', 'e', 'r'] as const"
         :key="slot"
+        :class="{ 'attack-normal-slot': slot !== 'r' }"
         control="select"
         :label="slot.toUpperCase() + (slot === 'r' ? ' 鍵大招' : ' 鍵普通招式')"
         :model-value="selection[slot]"
@@ -162,7 +175,7 @@ function play(id: string) {
             >{{ effect.label + (allowed(effect.id) ? '' : '（未解鎖）') }}</option
           ></optgroup
         ></UiField
-      ></div
+      ><div v-if="$slots.confirm" class="attack-confirm"><slot name="confirm" /></div></div
     ><div class="attack-feedback"
       ><StatusSlot
         :message="
@@ -180,7 +193,7 @@ function play(id: string) {
           label="重新讀取攻擊設定"
           :pending="loadPending"
           @click="loadLoadout" /></div></div
-    ><UiTabs
+    ><slot name="rules" /><UiTabs
       v-model="previewMode"
       :items="previewTabs"
       label="招式預覽分類"
@@ -264,6 +277,17 @@ function play(id: string) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--stitch-gap-controls);
 }
+.attack-guide {
+  display: grid;
+  gap: var(--stitch-space-8);
+}
+.attack-confirm {
+  align-self: end;
+}
+.attack-confirm :deep(.vue-button) {
+  inline-size: 100%;
+  min-block-size: calc(var(--stitch-control-height) + var(--stitch-space-8));
+}
 .attack-feedback {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--stitch-control-height);
@@ -326,6 +350,12 @@ function play(id: string) {
   border-radius: var(--stitch-radius-pill);
 }
 @media (max-width: 600px) {
+  .attack-loadout.has-confirm {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .attack-loadout.has-confirm .attack-normal-slot {
+    grid-column: 1 / -1;
+  }
   .attack-loadout,
   .attack-effect-grid {
     grid-template-columns: minmax(0, 1fr);

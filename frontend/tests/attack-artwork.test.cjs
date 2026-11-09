@@ -490,10 +490,11 @@ test('three explicit bijuu directions remain three beams even when many victims 
 });
 
 // Shared lobby stage (#322): a context whose shadowBlur is a prototype accessor, like the real one.
-function stageHarness() {
+function stageHarness(options) {
   const callbacks = new Map(),
     blurs = [],
-    clears = [];
+    clears = [],
+    transforms = [];
   let nextFrame = 0;
   class FakeContext {
     set shadowBlur(value) {
@@ -529,13 +530,14 @@ function stageHarness() {
     'setLineDash',
   ])
     FakeContext.prototype[name] = () => {};
+  FakeContext.prototype.setTransform = (...args) => transforms.push(args);
   FakeContext.prototype.clearRect = () => clears.push(1);
   FakeContext.prototype.measureText = () => ({ width: 120 });
   FakeContext.prototype.createRadialGradient = FakeContext.prototype.createLinearGradient = () => ({
     addColorStop() {},
   });
   const context = new FakeContext(),
-    canvas = { width: 0, height: 0, getContext: () => context };
+    canvas = { width: 0, height: 0, style: {}, getContext: () => context };
   const sandbox = {
     attackTiming: require('../../public/shared/attack-timing.json'),
     combatRules: require('../../public/shared/scene-rules.json'),
@@ -574,7 +576,7 @@ function stageHarness() {
       source,
     sandbox,
   );
-  const stage = sandbox.createAttackStage(canvas);
+  const stage = sandbox.createAttackStage(canvas, options);
   const attack = (effect) => ({
     effect,
     color: '#00f0ff',
@@ -589,7 +591,7 @@ function stageHarness() {
     for (const [, fn] of pending) fn(now);
     return pending.length;
   }
-  return { stage, attack, frame, canvas, blurs, clears, callbacks };
+  return { stage, attack, frame, canvas, blurs, clears, callbacks, transforms };
 }
 
 test('three lobby attacks share one canvas, one frame loop and one clear per frame', () => {
@@ -639,4 +641,26 @@ test('a device that keeps missing frames draws attacks at a lower resolution', (
   assert.equal(h.stage.detail().tier, 1);
   assert.ok(h.canvas.width < full);
   h.stage.clear();
+});
+
+test('the shield artwork follows the live anchor from frame to frame', () => {
+  let x = 120;
+  const { transforms } = run('shield', '#63f5ff', 8, Math.random, {
+    readAnchor: () => ({ x: (x += 15), y: 240 }),
+  });
+  assert.ok(transforms.some((point) => point.x === 15 && point.y === 0));
+  assert.ok(transforms.some((point) => point.x === 45 && point.y === 0));
+});
+
+test('expanded arena renders the camera viewport at lobby pixel density', () => {
+  const lobby = stageHarness();
+  const arena = stageHarness({ readCamera: () => ({ x: 0.25, y: 0.5 }) });
+  const attack = lobby.attack('barrage');
+  lobby.stage.add('lobby', attack);
+  arena.stage.add('arena', { ...attack, width: attack.width * 2, height: attack.height * 2 });
+  assert.equal(arena.canvas.width, lobby.canvas.width);
+  assert.equal(arena.canvas.height, lobby.canvas.height);
+  arena.frame(17);
+  assert.equal(arena.canvas.style.transform, 'translate3d(720px, 900px, 0)');
+  assert.deepEqual(arena.transforms.at(-1).slice(4), [-640, -800]);
 });

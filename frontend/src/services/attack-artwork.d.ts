@@ -1,6 +1,9 @@
 export type AttackArtworkOptions = {
   effect: string;
   ageMs?: number;
+  coverClips?: readonly Path2D[];
+  readCaster?: () => { x: number; y: number } | null;
+  readAnchor?: () => { x: number; y: number } | null;
   rays?: { x: number; y: number }[];
   readHits?: () => {
     toId: string;
@@ -37,7 +40,10 @@ export function createAttackScene(
   options: AttackArtworkOptions & { fx?: { density: number; glow: number } },
 ): { draw(now: number): boolean; dispose(): void };
 
-export function createAttackStage(canvas: HTMLCanvasElement): {
+export function createAttackStage(
+  canvas: HTMLCanvasElement,
+  options?: { readCamera?: () => { x: number; y: number } },
+): {
   add(id: string, options: AttackArtworkOptions): boolean;
   remove(id: string): void;
   clear(): void;

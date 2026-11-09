@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import sceneRules from '../../../public/shared/scene-rules.json';
 import type { LobbyVisitor } from '../contracts/lobby';
-defineProps<{ visitor?: LobbyVisitor; connected: boolean }>();
+const props = defineProps<{ visitor?: LobbyVisitor; connected: boolean }>();
+const maximum = computed(() => props.visitor?.energyMaximum ?? sceneRules.energy.maximum);
 </script>
 <template>
   <div
@@ -8,11 +11,11 @@ defineProps<{ visitor?: LobbyVisitor; connected: boolean }>();
     role="progressbar"
     aria-label="多人招式能量"
     aria-valuemin="0"
-    :aria-valuemax="100"
+    :aria-valuemax="maximum"
     :aria-valuenow="visitor?.energy || 0"
     :aria-busy="!connected"
   >
-    <div :style="{ width: (visitor?.energy || 0) + '%' }" />
+    <div :style="{ width: ((visitor?.energy || 0) / maximum) * 100 + '%' }" />
   </div>
 </template>
 <style scoped>

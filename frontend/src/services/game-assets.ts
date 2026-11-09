@@ -68,6 +68,20 @@ const decryptoSounds = [
   sound('quacks-settlement-user.wav'),
 ];
 
+export function warmArenaCountdown(): void {
+  if (!preloadAllowed()) return;
+  whenIdle(() => {
+    const effects = AudioSettings?.get()?.effects;
+    if (effects?.enabled && effects.volume && !document.hidden)
+      warm(
+        [
+          '/assets/game-sounds/arena-countdown-tick.mp3',
+          '/assets/game-sounds/arena-countdown-bell.mp3',
+        ],
+        { idle: false },
+      );
+  });
+}
 export function warmGame(type: GameType): void {
   warm([sceneTombstone, ...(inGame[type] || [])]);
   if (type === 'decrypto' && preloadAllowed())

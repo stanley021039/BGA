@@ -80,7 +80,13 @@ export function sceneWalk(from, target, elapsedMs, box = null) {
   };
 }
 
-export function sceneWalkWithSpeed(from, target, elapsedMs, box, { slowMs = 0, hasteMs = 0 }) {
+export function sceneWalkWithSpeed(
+  from,
+  target,
+  elapsedMs,
+  box,
+  { slowMs = 0, hasteMs = 0, speed = 1 },
+) {
   const slowed = Math.min(elapsedMs, slowMs);
   const hasted = Math.max(0, Math.min(elapsedMs, hasteMs) - slowed);
   const slowFactor = rules.frost.speedMultiplier;
@@ -88,12 +94,12 @@ export function sceneWalkWithSpeed(from, target, elapsedMs, box, { slowMs = 0, h
   const slowDistance = slowed * slowFactor;
   const hasteDistance = hasted * hasteFactor;
   const effective = slowDistance + hasteDistance + (elapsedMs - slowed - hasted);
-  const step = sceneWalk(from, target, effective, box);
+  const step = sceneWalk(from, target, effective * speed, box);
   if (step.remainingMs > 0) return { ...step, walkedMs: elapsedMs };
 
   // The destination may be reached inside either speed interval. Energy counts
   // real time spent walking, excluding both idle time and the portal jump.
-  const distance = sceneWalk(from, target, 0, box).remainingMs;
+  const distance = sceneWalk(from, target, 0, box).remainingMs / speed;
   const walkedMs =
     Math.min(distance, slowDistance) / slowFactor +
     Math.min(Math.max(0, distance - slowDistance), hasteDistance) / hasteFactor +

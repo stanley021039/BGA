@@ -253,6 +253,25 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
     };
   const db = openDatabase(config.dbFile);
   await createAuth(db).bootstrap('pinghost', 'synthetic-password');
+  const owner = db.prepare('SELECT id FROM users WHERE username=?').get('pinghost').id;
+  const addSound = db.prepare("INSERT INTO gacha_ownership VALUES(?, 'sounds', ?, 'draw', ?)");
+  for (const name of [
+    'amazing',
+    'bad',
+    'card-check',
+    'sleep',
+    'look',
+    'legacy',
+    'no-bluff',
+    'cry',
+    'coward',
+    'goodnight',
+    'senior',
+    'practice',
+    'huh',
+    'what',
+  ])
+    addSound.run(owner, 'ping-voice-' + name, new Date().toISOString());
   db.close();
   const app = createApp(config),
     aborts = [];
@@ -414,7 +433,6 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
       ).status,
       403,
     );
-    assert.equal((await post('achievements/redeem', host, { code: '我愛士憲' })).status, 200);
     for (const name of [
       'amazing',
       'bad',

@@ -150,9 +150,10 @@ export function createStitchAttack(ctx, options, onImpact) {
     const travel = 850,
       charge = 450,
       fireStart = travel + charge;
+    const returnTo = t >= 2550 ? options.readCaster?.() || from : from;
     DRAGOONS.forEach(([dx, dy], n) => {
-      const sx = from.x + (n % 2 ? 24 : -24) * size;
-      const sy = from.y + (n - 2.5) * 14 * size;
+      const sx = returnTo.x + (n % 2 ? 24 : -24) * size;
+      const sy = returnTo.y + (n - 2.5) * 14 * size;
       const ex = clamp(target.x + dx * radius, 24, width - 24);
       const ey = clamp(target.y + dy * radius, 24, height - 24);
       let x, y, angle;

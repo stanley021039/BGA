@@ -52,6 +52,18 @@ function statBoosts(state: NonNullable<LobbyVisitor['combatStatus']>): Indicator
     boosts.push({ icon: 'attack-up', label: '攻擊 +' + percent(attack) + '%', tone: 'primary' });
   if (hp > 1)
     boosts.push({ icon: 'regen-up', label: '回復 +' + percent(hp) + '%', tone: 'success' });
+  if (state.authorBonus) {
+    boosts.push({
+      icon: 'regen-up',
+      label: '回能 +' + percent(rules.authorBonus.energyMultiplier) + '%',
+      tone: 'success',
+    });
+    boosts.push({
+      icon: 'haste',
+      label: '移速 +' + percent(rules.authorBonus.speedMultiplier) + '%',
+      tone: 'success',
+    });
+  }
   return boosts;
 }
 const newAilments = computed<Indicator[]>(() => {

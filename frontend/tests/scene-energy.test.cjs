@@ -25,16 +25,7 @@ test('energy meter tracks accessible progress without visible text or numbers', 
       module,
       exports: module.exports,
       require: (id) =>
-        id === 'vue'
-          ? vue
-          : {
-              default: vue.defineComponent({
-                setup:
-                  (_p, { slots }) =>
-                  () =>
-                    vue.h('span', slots.default?.()),
-              }),
-            },
+        id === 'vue' ? vue : { default: require('../../public/shared/scene-rules.json') },
     },
   );
   const state = vue.reactive({ visitor: { energy: 0 }, connected: true });
@@ -45,6 +36,7 @@ test('energy meter tracks accessible progress without visible text or numbers', 
   try {
     const meter = host.querySelector('[role="progressbar"]');
     assert.equal(meter.getAttribute('aria-valuenow'), '0');
+    assert.equal(meter.getAttribute('aria-valuemax'), '100');
     assert.equal(host.textContent, '');
     state.visitor.energy = 99;
     await vue.nextTick();
@@ -55,6 +47,11 @@ test('energy meter tracks accessible progress without visible text or numbers', 
     assert.equal(meter.getAttribute('aria-valuenow'), '100');
     assert.equal(host.textContent, '');
     assert.equal(meter.firstElementChild.style.width, '100%');
+    state.visitor = { energy: 75, energyMaximum: 150 };
+    await vue.nextTick();
+    assert.equal(meter.getAttribute('aria-valuemax'), '150');
+    assert.equal(meter.getAttribute('aria-valuenow'), '75');
+    assert.equal(meter.firstElementChild.style.width, '50%');
     state.connected = false;
     await vue.nextTick();
     assert.equal(meter.getAttribute('aria-busy'), 'true');

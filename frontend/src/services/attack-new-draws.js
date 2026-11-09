@@ -58,6 +58,15 @@ function frame(c, o, fn) {
     c.restore();
   }
 }
+function followCaster(c, o) {
+  c.save();
+  const caster = o.readCaster?.();
+  if (!caster) return;
+  const x = caster.x - o.from.x;
+  const y = caster.y - o.from.y;
+  const angle = Math.atan2(o.to.y - o.from.y, o.to.x - o.from.x);
+  c.translate(x * Math.cos(angle) + y * Math.sin(angle), y * Math.cos(angle) - x * Math.sin(angle));
+}
 function impact(c, o, t, col, phase) {
   const hits = typeof o.readHits === 'function' ? o.readHits() : [];
   for (const h of hits.slice(0, 32)) {
@@ -287,7 +296,7 @@ function drawShaohua(c, o, t) {
 function drawReaper(c, o, t) {
   if (!alive(t, 4050)) return;
   const col = color(o, 'reaper'),
-    f = o.from,
+    f = o.readCaster?.() || o.from,
     scale = o.scale || 1;
   const alpha = Math.min(clamp(t / 600), clamp((4050 - t) / 500));
   const reveal = clamp(t / 1600);
@@ -541,6 +550,7 @@ function drawRailgun(c, o, t) {
   try {
     frame(c, o, (L) => {
       const w = Math.min(80, L * 0.3);
+      followCaster(c, o);
       gun(c, w, col);
       c.fillStyle = '#1a2d3b';
       c.fillRect(2, -6, w, 12);
@@ -554,6 +564,7 @@ function drawRailgun(c, o, t) {
       }
       c.globalAlpha = 1;
       glow(c, w, 0, 28 * clamp(t / 550), col + '99');
+      c.restore();
       const p = (t - 550) / 400;
       if (p >= 0 && p <= 1) {
         const x = mix(w, L, p);
@@ -575,6 +586,7 @@ function drawPlasma(c, o, t) {
   try {
     frame(c, o, (L) => {
       const w = Math.min(63, L * 0.25);
+      followCaster(c, o);
       gun(c, w, col);
       for (let k = 0; k < 3; k++) {
         c.save();
@@ -585,6 +597,7 @@ function drawPlasma(c, o, t) {
         c.restore();
       }
       glow(c, w, 0, 25, col + '77');
+      c.restore();
       for (const at of [650, 1050]) {
         const p = (t - at + 380) / 380;
         if (p < 0 || p > 1) continue;
@@ -613,12 +626,16 @@ function drawMissiles(c, o, t) {
   try {
     frame(c, o, (L) => {
       const w = Math.min(46, L * 0.18);
+      followCaster(c, o);
       gun(c, w, col);
+      c.restore();
       for (let k = 0; k < 4; k++) {
         const y = (k - 1.5) * 11;
+        followCaster(c, o);
         c.fillStyle = '#35475b';
         c.fillRect(-10, y - 4, w, 8);
         circle(c, w, y, 4, '#101b25', col);
+        c.restore();
         const p = (t - [850, 1100, 1350, 1600][k] + 700) / 700;
         if (p < 0 || p > 1) continue;
         const bend = (k - 1.5) * 25,
@@ -669,10 +686,12 @@ function drawSniper(c, o, t) {
   try {
     frame(c, o, (L) => {
       const w = Math.min(95, L * 0.32);
+      followCaster(c, o);
       gun(c, w, col, 1);
       c.fillStyle = '#9aadb9';
       c.fillRect(w - 15, -5, 45, 10);
       line(c, w + 10, -6, w + 30, -6, col, 2);
+      c.restore();
       const p = clamp(t / 1250),
         r = 45 - 25 * p;
       c.lineWidth = 1.5;

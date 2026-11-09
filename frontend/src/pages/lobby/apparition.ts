@@ -1,5 +1,5 @@
 import { entranceVariant, type EntranceEffectId } from '../../services/entrance-effects';
-import { playEntranceBody } from '../../services/entrance-body';
+import { playEntranceBackdrop, playEntranceBody } from '../../services/entrance-body';
 import {
   acquireEffectContext,
   motionAllowed,
@@ -379,12 +379,14 @@ export function apparate(
   if (!motionAllowed() || activeEntrances.size >= MAX_ENTRANCES) return () => {};
   const variant = entranceVariant(kind);
   const base = variant?.variantOf ?? kind;
+  const duration = entranceDuration(kind);
+  const follow = document.createElement('div');
   const img = anchor.querySelector('img'),
     origin = layer.getBoundingClientRect(),
     box = (img || anchor).getBoundingClientRect(),
     scene: Scene = {
       anchor,
-      layer,
+      layer: follow,
       variantId: variant?.id,
       palette: variant && entrancePalette(variant),
       img,
@@ -394,11 +396,24 @@ export function apparate(
       width: box.width,
       height: box.height,
     };
+  const anchorStart = anchor.getBoundingClientRect();
+  let followFrame = 0;
+  follow.className = 'lobby-fx-follow';
+  follow.setAttribute('aria-hidden', 'true');
+  layer.append(follow);
+  const track = () => {
+    if (!anchor.isConnected || !layer.isConnected) return finish();
+    const current = anchor.getBoundingClientRect();
+    const currentLayer = layer.getBoundingClientRect();
+    follow.style.transform = `translate(${current.left - anchorStart.left - currentLayer.left + origin.left}px, ${current.top - anchorStart.top - currentLayer.top + origin.top}px)`;
+    followFrame = requestAnimationFrame(track);
+  };
+  followFrame = requestAnimationFrame(track);
   anchor.dataset.entrance = base;
   anchor.classList.add('is-apparating');
   const cancel = (effects[base] || classic)(scene);
-  const duration = entranceDuration(kind);
   const cancelBody = playEntranceBody(anchor, img, base, duration);
+  const cancelBackdrop = base.startsWith('stitch-') ? playEntranceBackdrop(follow, duration) : null;
   let done = false,
     releaseMotion = () => {};
   const timer = setTimeout(finish, duration);
@@ -408,10 +423,13 @@ export function apparate(
     if (done) return;
     done = true;
     clearTimeout(timer);
+    cancelAnimationFrame(followFrame);
+    follow.remove();
     activeEntrances.delete(finish);
     releaseMotion();
     cancel();
     cancelBody();
+    cancelBackdrop?.();
     anchor.classList.remove('is-apparating');
     delete anchor.dataset.entrance;
   }

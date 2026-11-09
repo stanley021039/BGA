@@ -29,7 +29,6 @@ test('author code activates the bonus in existing lobby and room scenes without 
   const roomBefore = await request('state?code=' + code);
   const roomMax = self(roomBefore.roomSpace).maxHealth;
   const achievements = await request('achievements');
-  await request('achievements/redeem', { code: '我愛士憲' });
   assert.equal(self(await request('lobby')).maxHealth, normalMax);
   await request('achievements/redeem', { code: '我愛作者' });
   assert.equal(self(await request('lobby')).maxHealth, normalMax * 1.5);

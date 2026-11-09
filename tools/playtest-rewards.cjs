@@ -1,7 +1,8 @@
 'use strict';
 const fs = require('node:fs'),
   path = require('node:path');
-const { openDatabase } = require('../src/db');
+const { catalog } = require('../src/gacha/catalog');
+const { openDatabase, transaction } = require('../src/db');
 const { AchievementStore, definitions } = require('../src/achievements/store');
 const { rewards } = require('../src/achievements/rewards');
 function unlockPlaytestRewards(dbFile) {
@@ -19,9 +20,19 @@ function unlockPlaytestRewards(dbFile) {
     const store = new AchievementStore(db),
       users = db.prepare('SELECT id FROM users WHERE disabled=0').all();
     // Preview all rewards without inserting fabricated gameplay achievements.
-    for (const user of users)
-      for (const item of require('../src/achievements/redemption').codes)
-        store.redeem(user.id, item.code);
+    const grant = db.prepare(
+      "INSERT INTO gacha_ownership(user_id,kind,reward_id,source,acquired_at) VALUES(?,?,?,'draw',?) ON CONFLICT(user_id,kind,reward_id) DO UPDATE SET source='draw' WHERE gacha_ownership.source='legacy'",
+    );
+    const kinds = new Set(['frames', 'media', 'entrances', 'sounds']);
+    const rewardsToGrant = catalog.filter((item) => kinds.has(item.kind) && !item.gachaExclusive);
+    const at = new Date().toISOString();
+    for (const user of users) store.redeem(user.id, '我愛作者');
+    transaction(db, () => {
+      for (const user of users) {
+        for (const item of rewardsToGrant) grant.run(user.id, item.kind, item.id, at);
+        grant.run(user.id, 'openings', 'soul-world', at);
+      }
+    });
     return {
       players: users.length,
       achievementDefinitions: definitions.length,
