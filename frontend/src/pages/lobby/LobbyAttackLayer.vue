@@ -171,7 +171,8 @@ function play(event: LobbyAttack) {
     ...options,
     coverClips: wallClips(event, width, height),
     readCaster,
-    ...(isDefensiveAttack(event.effect) && { readAnchor: readCaster }),
+    ...(isDefensiveAttack(event.effect) &&
+      attackArtworkKind(event.effect) !== 'crystal_reflection' && { readAnchor: readCaster }),
   });
   if (added && event.effect.replace(/_alt$/, '') === 'gate_of_heroes') {
     const node = [
