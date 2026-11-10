@@ -2,7 +2,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const { ACHIEVEMENT_TABLES, ACHIEVEMENT_SQL } = require('../achievements/schema');
-const { REWARD_TABLES, REWARD_SQL, MATCH_EVENT_SQL } = require('../achievements/reward-schema');
+const {
+  REWARD_TABLES,
+  REWARD_SQL,
+  MATCH_EVENT_SQL,
+  MATCH_EVENT_SQL_V22,
+} = require('../achievements/reward-schema');
 const { GACHA_TABLES, GACHA_SQL } = require('../gacha/schema');
 const { COC_TABLES, COC_SQL } = require('../coc/schema');
 const SCHEMA_VERSION = 23;
@@ -153,6 +158,18 @@ function tableShape(db, name) {
     .sort();
   return JSON.stringify({ columns, foreignKeys, uniqueKeys });
 }
+// Until the schema 23 step rebuilds achievement_match_events, a database may
+// still carry its schema 20-22 definition, which is valid at those versions.
+function legacyMatchEvents(db, name, version) {
+  if (version >= 23 || name !== 'achievement_match_events') return false;
+  const reference = new DatabaseSync(':memory:');
+  try {
+    reference.exec(MATCH_EVENT_SQL_V22);
+    return schemaDefinition(db, name) === schemaDefinition(reference, name);
+  } finally {
+    reference.close();
+  }
+}
 function validateFeatureSchema(db, version) {
   const tables = new Set(
     db
@@ -259,7 +276,10 @@ function validateFeatureSchema(db, version) {
     ]) {
       if (tableShape(db, name) !== tableShape(reference, name))
         throw Error(`Invalid ${name} schema`);
-      if (schemaDefinition(db, name) !== schemaDefinition(reference, name))
+      if (
+        schemaDefinition(db, name) !== schemaDefinition(reference, name) &&
+        !legacyMatchEvents(db, name, version)
+      )
         throw Error(`Invalid ${name} constraints`);
     }
     if (version < 14 && hasSound && db.prepare('SELECT COUNT(*) n FROM character_sounds').get().n)
