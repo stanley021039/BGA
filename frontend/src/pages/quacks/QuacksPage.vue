@@ -135,12 +135,15 @@ function status(player: RoomPlayer) {
           ><UiCheckbox
             v-model="game.draft.witches"
             label="草藥女巫"
+            variant="prominent"
             @change="game.queueSettings()" /><UiCheckbox
             v-model="game.draft.alchemists"
             label="煉金術士"
+            variant="prominent"
             @change="game.queueSettings()" /><UiCheckbox
             v-model="game.draft.hiddenProgress"
             label="隱藏他人大釜進度"
+            variant="prominent"
             @change="game.queueSettings()" /></fieldset
         ><p>各色書面可在舞台「藥典」選擇；全桌採用最後一次選擇。開始後鎖定。</p
         ><StatusSlot

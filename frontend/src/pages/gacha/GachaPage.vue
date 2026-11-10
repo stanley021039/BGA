@@ -233,6 +233,13 @@ const revealItem = computed(() =>
     ? result.value.results[revealIndex.value]
     : undefined,
 );
+const drawBonus = computed(() => {
+  const receipt = result.value;
+  if (receipt?.operation !== 'draw' || receipt.drawCount === undefined) return;
+  const number = receipt.drawCount - (receipt.drawCount % economy.bonusInterval);
+  const position = receipt.results.length - (receipt.drawCount - number);
+  if (number > 0 && position > 0) return { number, position };
+});
 const canAdvance = computed(
   () => revealIndex.value !== null && faceUp.value && !spotlight.value && !animating.value,
 );
@@ -485,7 +492,7 @@ function chooseExchange(item: GachaItem) {
   exchangeItem.value = item;
   void confirmation.value?.open();
 }
-async function previewExchange(item: GachaItem, event: MouseEvent) {
+async function previewReward(item: GachaItem, event: MouseEvent) {
   const trigger = event.currentTarget;
   captureTrader();
   exchangePreview.value = rewardSpotlight(item);
@@ -497,7 +504,7 @@ watch(tab, (value) => {
   if (value === 'history') void store.loadHistory();
   if (value === 'odds' && session.user?.role === 'admin') void store.loadOdds();
 });
-const weights = ref({ common: 75, rare: 18, epic: 5, legendary: 2 });
+const weights = ref({ common: 70, rare: 20, epic: 7, legendary: 3 });
 const rarities = [
   { id: 'legendary', label: '傳說' },
   { id: 'epic', label: '史詩' },
@@ -720,8 +727,8 @@ const newCount = computed(() =>
               @play-voice="playRewardVoice"
             />
             <div class="gacha-draw-controls">
-              <UiCheckbox v-model="skip" label="略過抽卡演出" />
-              <UiCheckbox v-model="openSpectate" label="開放觀看" />
+              <UiCheckbox v-model="skip" variant="prominent" label="略過抽卡演出" />
+              <UiCheckbox v-model="openSpectate" variant="prominent" label="開放觀看" />
               <p class="gacha-mobile-rules"
                 >聖潔石：每日登入 +{{ number(economy.dailyCoins) }}，登入每
                 {{ economy.dailyLoginBonuses.length }} 次循環（{{
@@ -765,6 +772,7 @@ const newCount = computed(() =>
             <div class="gacha-filters"
               ><UiField v-model="search" label="搜尋外觀" placeholder="輸入名稱" /><UiCheckbox
                 v-model="unowned"
+                variant="prominent"
                 label="只看未擁有"
             /></div>
             <p aria-live="polite">共 {{ filtered.length }} 項</p>
@@ -777,7 +785,7 @@ const newCount = computed(() =>
                     :caption="item.label"
                     variant="ghost"
                     aria-haspopup="dialog"
-                    @click="previewExchange(item, $event)"
+                    @click="previewReward(item, $event)"
                   />
                   <div class="gacha-item-meta">
                     <UiBadge :tone="rarityTone[item.rarity]">{{ item.rarityLabel }}</UiBadge>
@@ -862,8 +870,13 @@ const newCount = computed(() =>
           <UiList
             ><UiListRow v-for="item in poolItems" :key="item.key">
               <div class="gacha-item-copy"
-                ><strong>{{ item.label }}</strong
-                ><div class="gacha-item-meta">
+                ><UiButton
+                  class="gacha-exchange-name"
+                  :label="'預覽 ' + item.label"
+                  :caption="item.label"
+                  variant="ghost"
+                  @click="previewReward(item, $event)"
+                /><div class="gacha-item-meta">
                   <UiBadge :tone="rarityTone[item.rarity]">{{ item.rarityLabel }}</UiBadge>
                   <span>{{ kindNames[item.kind] }}・重複 +{{ item.duplicateFragments }} 片</span>
                 </div></div
@@ -931,7 +944,7 @@ const newCount = computed(() =>
     </UiDialog>
     <UiDialog
       ref="exchangePreviewDialog"
-      title="兌換獎品預覽"
+      title="獎品預覽"
       class="gacha-result-dialog"
       full-viewport
       title-hidden
@@ -1014,13 +1027,18 @@ const newCount = computed(() =>
             role="status"
             tabindex="-1"
             :aria-keyshortcuts="canAdvance ? 'Enter Space' : undefined"
-            >第 {{ revealIndex + 1 }}／{{ result.results.length }} 張</p
+            >第 {{ revealIndex + 1 }}／{{ result.results.length }} 張<span
+              v-if="drawBonus?.position === revealIndex + 1"
+              >・第 {{ drawBonus.number }} 抽加成</span
+            ></p
           >
           <p v-else ref="resultSummary" class="gacha-result-summary" role="status" tabindex="-1"
             >{{ result.results.length }} 項獎勵・{{ newCount }} 新獲得・{{
               result.results.length - newCount
             }}
-            重複・共 +{{ result.fragmentsGained }} 碎片</p
+            重複・共 +{{ result.fragmentsGained }} 碎片<span v-if="drawBonus"
+              >・第 {{ drawBonus.position }} 張為第 {{ drawBonus.number }} 抽加成</span
+            ></p
           >
           <div
             ref="cardBoard"

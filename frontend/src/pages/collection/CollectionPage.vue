@@ -565,7 +565,7 @@ onBeforeUnmount(() => {
     role="tabpanel"
     aria-labelledby="collection-tab-attack"
     ><template #heading><h2>攻擊特效</h2></template
-    ><AttackChoices
+    ><AttackChoices expanded-list
   /></ResourcePanel>
   <ConfirmDialog ref="confirmation" />
 </template>

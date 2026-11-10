@@ -4,12 +4,14 @@ import { useRoomStore } from '../stores/room';
 import { useChatStore } from '../stores/chat';
 import RoomBackground from './RoomBackground.vue';
 import RoomSidePanel from './RoomSidePanel.vue';
+import SpectatorRoster from './SpectatorRoster.vue';
 import '../styles/room-space.scss';
 
 const props = withDefaults(
   defineProps<{
     connected: boolean;
     focused: boolean;
+    observer?: boolean;
     rosterClass?: string;
     mainClass?: string;
     sideClass?: string;
@@ -64,7 +66,8 @@ watch(
 </script>
 <template>
   <div class="vue-game-grid">
-    <RoomBackground :connected="connected" :focused="focused" :inert="drawerOpen" />
+    <div v-if="observer" v-show="!focused" class="vue-room-background" aria-hidden="true" inert />
+    <RoomBackground v-else :connected="connected" :focused="focused" :inert="drawerOpen" />
     <Teleport to="body">
       <div
         v-if="drawerOpen"
@@ -87,6 +90,11 @@ watch(
       @close="closePanels"
     >
       <slot name="roster" />
+      <SpectatorRoster
+        v-if="!observer && room.snapshot?.viewerNames"
+        :names="room.snapshot.viewerNames"
+        inline
+      />
     </RoomSidePanel>
     <main class="vue-game-main" :class="mainClass" :inert="drawerOpen"><slot /></main>
     <RoomSidePanel
@@ -95,7 +103,7 @@ watch(
       side="right"
       title="聊天室"
       :open="chatOpen"
-      :unread="chat.unread"
+      :unread="observer ? undefined : chat.unread"
       :mobile="mobile"
       :focused="focused"
       @toggle="togglePanel('right')"

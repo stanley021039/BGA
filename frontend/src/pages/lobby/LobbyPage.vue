@@ -42,7 +42,7 @@ const backdrop = ref<InstanceType<typeof LobbyBackdrop> | null>(null);
 const create = ref<InstanceType<typeof UiDialog> | null>(null),
   join = ref<InstanceType<typeof UiDialog> | null>(null),
   lounge = ref<InstanceType<typeof UiDialog> | null>(null),
-  codeInput = ref<HTMLInputElement | null>(null),
+  codeForm = ref<HTMLFormElement | null>(null),
   roomName = ref(''),
   code = ref(params.get('room') || ''),
   // ?join=1 opens the join dialog with the room code focused.
@@ -63,8 +63,7 @@ const feedback = computed(() =>
 const drawingCreate = computed(() => selected.value === 'draw');
 const pairCreate = computed(() => ['majority', 'draw'].includes(selected.value));
 const roomCreate = computed(() => ['quacks', 'thunder', 'bluff'].includes(selected.value));
-const resumes = computed(() => lobby.rooms.filter((room) => room.seated)),
-  lounges = computed(() => lobby.rooms.filter((room) => room.type === 'lounge'));
+const lounges = computed(() => lobby.rooms.filter((room) => room.type === 'lounge'));
 function roomGameTitle(room: PublicRoom) {
   if (room.playMode === 'oracle') return '塗鴉神諭';
   if (room.playMode === 'unselected') return '畫畫天堂 · 尚未選玩法';
@@ -77,7 +76,6 @@ function open() {
   opened.value = true;
   void create.value?.open();
 }
-// 找一桌加入 lives in its own dialog, opened from beside 開一桌.
 async function openJoin(focusCode = false) {
   void lobby.refreshRooms();
   await join.value?.open();
@@ -91,9 +89,12 @@ function openLounge() {
 }
 // The entrance intro may start just after the dialog opens and restores its own
 // saved focus when it ends, so focus the code now and again once it finishes.
+function focusCode() {
+  codeForm.value?.querySelector<HTMLInputElement>('#lobbyCode')?.focus();
+}
 function focusCodeAfterIntro() {
   const root = document.documentElement,
-    focus = () => requestAnimationFrame(() => codeInput.value?.focus());
+    focus = () => requestAnimationFrame(focusCode);
   focus();
   let introSeen = root.classList.contains('entry-intro-active');
   const observer = new MutationObserver(() => {
@@ -165,28 +166,12 @@ onBeforeUnmount(() => {
           :disabled="!lobby.connected"
           @click="backdrop?.openChat()" /><UiLink href="/gacha" label="獎勵抽卡機" icon="gift"
       /></template>
-      <template #lobby-resume
-        ><div class="vue-lobby-resume" aria-label="已入座的房間"
-          ><span v-if="!resumes.length">{{
-            lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'
-          }}</span
-          ><UiButton
-            v-for="room in resumes"
-            :key="room.code"
-            icon="replay"
-            :label="'返回' + roomGameTitle(room) + ' ' + room.code"
-            :caption="'返回' + roomGameTitle(room)"
-            :disabled="lobby.entryPending || lobby.roomsLoading"
-            @click="lobby.resume(room)" /><StatusSlot
-            :message="feedback"
-            :error="!!lobby.entryStatus" /></div
-      ></template>
     </GameCarousel>
     <LobbyBackdrop ref="backdrop" /><StatusSlot
       :message="lobby.attackStatus"
       :error="!!lobby.attackStatus"
     />
-    <UiDialog ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
+    <UiDialog ref="join" class="vue-lobby-join-dialog" title="正在進行的遊戲"
       ><div class="vue-lobby-join"
         ><section class="vue-lobby-room-browser" data-ping-anchor="room-list" aria-label="目前房間"
           ><header
@@ -202,6 +187,11 @@ onBeforeUnmount(() => {
           ><StatusSlot
             :message="lobby.roomsLoading ? '正在更新房間列表…' : lobby.roomsStatus"
             :error="!!lobby.roomsStatus && !lobby.roomsLoading" />
+          <StatusSlot
+            :message="feedback"
+            :error="!!lobby.entryStatus"
+            :notice-key="entryNoticeKey"
+            :persistent="lobby.entryPending" />
           <div
             class="vue-lobby-room-list"
             :aria-busy="lobby.roomsLoading"
@@ -250,20 +240,23 @@ onBeforeUnmount(() => {
                             ? '人數已滿'
                             : '已開始'
                   "
-                  :disabled="!room.joinable || lobby.entryPending"
-                  @click="lobby.enter({ code: room.code })" /><UiLink
+                  :disabled="
+                    lobby.entryPending || (room.seated ? lobby.roomsLoading : !room.joinable)
+                  "
+                  @click="
+                    room.seated ? lobby.resume(room) : lobby.enter({ code: room.code })
+                  " /><UiLink
                   v-if="!room.seated && !room.kicked"
                   :href="'/' + gamePath(room.type) + '/' + room.code + '?watch=1'"
                   label="觀戰"
                   icon="play" /></div></article></div></section
         ><section class="vue-lobby-code"
           ><h2>朋友已經開桌？</h2
-          ><form @submit.prevent="lobby.enter({ code })"
-            ><label for="lobbyCode">輸入 6 碼房間代碼</label
+          ><form ref="codeForm" @submit.prevent="lobby.enter({ code })"
             ><div class="vue-lobby-code-entry"
-              ><input
+              ><UiField
                 id="lobbyCode"
-                ref="codeInput"
+                label="輸入 6 碼房間代碼"
                 v-model="code"
                 maxlength="6"
                 autocomplete="off"
@@ -290,13 +283,8 @@ onBeforeUnmount(() => {
                 @click="
                   code = '';
                   lobby.entryStatus = '';
-                  codeInput?.focus();
-                " /></div></form
-          ><StatusSlot
-            :message="feedback"
-            :error="!!lobby.entryStatus"
-            :notice-key="entryNoticeKey"
-            :persistent="lobby.entryPending" /></section></div
+                  focusCode();
+                " /></div></form></section></div
     ></UiDialog>
     <UiDialog ref="lounge" class="vue-lobby-lounge-dialog" :title="loungeCard.title"
       ><div class="vue-lobby-lounge"

@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useCeoStore } from '../../stores/ceo';
 import { usePartyActionsStore } from '../../stores/party-actions';
-import { industries, scoreText } from '../../contracts/ceo';
+import { industries, scoreText, type CeoSnapshot } from '../../contracts/ceo';
 import UiPanel from '../../components/UiPanel.vue';
 import UiStatistic from '../../components/UiStatistic.vue';
 import UiButton from '../../components/UiButton.vue';
@@ -11,16 +11,30 @@ import UiNotice from '../../components/UiNotice.vue';
 import UiHeading from '../../components/UiHeading.vue';
 import UiList from '../../components/UiList.vue';
 import UiListRow from '../../components/UiListRow.vue';
-const ceo = useCeoStore(),
-  actions = usePartyActionsStore();
+const props = defineProps<{ observer?: CeoSnapshot }>();
+const live = props.observer ? null : useCeoStore();
+const actions = props.observer
+  ? { notice: '', pending: false, canRetry: false, retrySame() {} }
+  : usePartyActionsStore();
+const ceo = computed(
+  () =>
+    live ?? {
+      state: props.observer!,
+      game: props.observer!.game,
+      me: props.observer!.game?.players.find((player) => player.id === props.observer!.me),
+      canAct: false,
+      act: (_action: string, _data?: Record<string, unknown>) => false,
+    },
+);
 const log = computed(() =>
-  Array.isArray(ceo.state?.log)
-    ? ceo.state.log.filter((entry: unknown): entry is string => typeof entry === 'string')
+  Array.isArray(ceo.value.state?.log)
+    ? ceo.value.state.log.filter((entry: unknown): entry is string => typeof entry === 'string')
     : [],
 );
-const game = computed(() => ceo.game),
-  ownGroup = computed(() => game.value?.groups.find((g) => g.playerId === ceo.state?.me));
-const name = (id: string | null) => ceo.state?.players.find((p) => p.id === id)?.name || 'NPC';
+const game = computed(() => ceo.value.game),
+  ownGroup = computed(() => game.value?.groups.find((g) => g.playerId === ceo.value.state?.me));
+const name = (id: string | null) =>
+  ceo.value.state?.players.find((p) => p.id === id)?.name || 'NPC';
 const groupName = (id: string) => game.value?.groups.find((g) => g.id === id)?.card.name || id;
 const cardName = (id: string) =>
   game.value?.groups.flatMap((g) => [g.card, ...g.companies]).find((c) => c.id === id)?.name || id;
@@ -51,7 +65,9 @@ function held(playerId: string, groupId: string) {
     <template v-else>
       <UiPanel v-if="game.phase === 'playing'" title="經營動態" density="compact">
         <UiHeading :level="3">{{
-          game.turnId === ceo.state?.me ? '輪到你行動' : `等待 ${name(game.turnId)} 行動`
+          !observer && game.turnId === ceo.state?.me
+            ? '輪到你行動'
+            : `等待 ${name(game.turnId)} 行動`
         }}</UiHeading>
         <div class="ceo-status">
           <span>第 {{ game.round }} 輪</span

@@ -4,6 +4,6 @@
   "matchCoins": 300,
   "winnerCoins": 200,
   "bonusInterval": 50,
-  "bonusPercent": { "epic": 65, "legendary": 35 },
+  "bonusPercent": { "common": 1, "rare": 4, "epic": 55, "legendary": 40 },
   "exchangeCosts": { "common": 40, "rare": 160, "epic": 320, "legendary": 560 }
 }

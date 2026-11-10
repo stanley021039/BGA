@@ -115,15 +115,19 @@ function status(player: RoomPlayer) {
             :options="timeOptions"
             :disabled="!telephone.settingsEditable || room.busy"
             @update:model-value="setTextSeconds" /></div
-        ><fieldset :disabled="!telephone.settingsEditable || room.busy"
-          ><legend>空白主題的備援題庫（至少一種）</legend
+        ><fieldset
+          :disabled="!telephone.settingsEditable || room.busy"
+          aria-describedby="telephone-bank-note"
+          ><legend>備援題庫</legend
           ><UiCheckbox
             v-for="source in state?.sources"
             :key="source.id"
             v-model="telephone.sources"
+            variant="prominent"
             :value="source.id"
             :label="source.label"
             @update:model-value="telephone.queueSources()" /></fieldset
+        ><p id="telephone-bank-note">主題留白時使用，至少選一種。</p
         ><StatusSlot
           :message="telephone.settingsPending ? '正在儲存遊戲設定…' : telephone.settingsError || ''"
           :error="!!telephone.settingsError" /><UiButton

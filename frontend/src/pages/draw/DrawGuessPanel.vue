@@ -4,7 +4,7 @@ import { useRoomStore } from '../../stores/room';
 import type { DrawSnapshot } from '../../contracts/drawing';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
-const props = defineProps<{ snapshot: DrawSnapshot }>(),
+const props = defineProps<{ snapshot: DrawSnapshot; observer?: boolean }>(),
   room = useRoomStore();
 const draft = ref(''),
   input = ref<HTMLInputElement | null>(null),
@@ -14,6 +14,7 @@ const draft = ref(''),
   composing = ref(false);
 const eligible = computed(
   () =>
+    !props.observer &&
     props.snapshot.phase === 'drawing' &&
     props.snapshot.participantIds.includes(props.snapshot.me) &&
     !props.snapshot.guessedIds.includes(props.snapshot.me),
@@ -73,7 +74,9 @@ async function submit() {
       aria-live="polite"
       aria-relevant="additions"
       tabindex="0"
-      ><p v-if="!snapshot.guesses.length">還沒有猜測。第一個想法也可以送出！</p
+      ><p v-if="!snapshot.guesses.length">{{
+        observer ? '還沒有猜測。' : '還沒有猜測。第一個想法也可以送出！'
+      }}</p
       ><p
         v-for="guess in snapshot.guesses"
         :key="`${snapshot.canvasEpoch}:${guess.at}:${guess.id}:${guess.correct}:${guess.answer}`"
@@ -84,11 +87,11 @@ async function submit() {
             : `${guess.name}：${guess.answer}`
         }}</p
       ></div
-    ><p class="vue-draw-guess-hint">{{ hint }}</p
-    ><form @submit.prevent="submit"
+    ><p v-if="!observer" class="vue-draw-guess-hint">{{ hint }}</p
+    ><form v-if="!observer" @submit.prevent="submit"
       ><label for="vue-draw-guess">你猜這是什麼？</label
       ><div
-        ><input
+        ><!-- ui-check-allow raw-control: 保留既有猜題輸入框與輸入法組字處理。 --><input
           id="vue-draw-guess"
           ref="input"
           v-model="draft"

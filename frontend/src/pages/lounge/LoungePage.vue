@@ -5,7 +5,7 @@ import { useMediaStore } from '../../stores/media';
 import { readLoungeSnapshot } from '../../contracts/lounge';
 import type { RoomPlayer } from '../../contracts/room';
 import GameRoomPage from '../../components/GameRoomPage.vue';
-import UiIcon from '../../components/UiIcon.vue';
+import LoungeStage from './LoungeStage.vue';
 // 場外休憩區 (#277): no match, only shared media, backgrounds and chat.
 const room = useRoomStore(),
   media = useMediaStore(),
@@ -29,17 +29,8 @@ function status(player: RoomPlayer) {
     :show-metrics="false"
     panels-open
     media-stage="#lounge-stage"
-    ><section class="vue-lounge" aria-label="共看畫面"
-      ><div id="lounge-stage" class="vue-lounge-stage"
-        ><div v-if="current?.type !== 'video'" class="vue-lounge-idle"
-          ><UiIcon :name="current ? 'sound' : 'video'" /><p>{{
-            current
-              ? '正在播放「' + current.title + '」'
-              : '目前沒有影片。打開聊天室的「媒體」點播，大家一起看。'
-          }}</p></div
-        ></div
-      ></section
-    ><template #help>
+    ><LoungeStage :title="current?.title" :video="current?.type === 'video'" />
+    <template #help>
       ><p>房主或管理者可在聊天室的「媒體」點播及調整進度。背景可從上方功能列更換。</p></template
     >
   </GameRoomPage>

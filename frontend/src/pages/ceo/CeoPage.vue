@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useCeoStore } from '../../stores/ceo';
 import { readCeoSnapshot } from '../../contracts/ceo';
 import GameRoomPage from '../../components/GameRoomPage.vue';
-import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
+import CeoWaiting from './CeoWaiting.vue';
 import CeoScene from './CeoScene.vue';
 const ceo = useCeoStore();
 const phase = computed(() =>
@@ -34,22 +34,7 @@ const phase = computed(() =>
     :start-label="ceo.state?.phase === 'finished' ? '再玩一局' : '開始經營'"
     @start="ceo.start()"
   >
-    <RoomWaitingTemplate
-      v-if="ceo.state?.phase === 'waiting'"
-      flow
-      type="ceo"
-      title="王牌執行長"
-      description="每回合收購公司、買進他人股票或發放股利，讓自己的投資組合獲得最高總分。"
-      :facts="[
-        { label: '人數', value: '3–6 人' },
-        { label: '起始現金', value: '30 元' },
-        { label: '牌庫', value: '48 張本站替代公司' },
-        { label: '終局', value: '公開資產 100 後再兩輪' },
-      ]"
-      notice="替代牌庫的卡片與原版不同；可加入電腦玩家試玩。"
-    >
-      <template #art><strong>1st CEO</strong></template>
-    </RoomWaitingTemplate>
+    <CeoWaiting v-if="ceo.state?.phase === 'waiting'" />
     <CeoScene v-else-if="ceo.state" />
     <p v-else>正在讀取執行長房間…</p>
     <template #settings><p>本局使用本站替代牌庫。</p></template>

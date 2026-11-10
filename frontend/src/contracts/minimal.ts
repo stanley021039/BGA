@@ -104,7 +104,7 @@ function drawing(value: unknown): MinimalDrawing {
   if (!text(row.name) || !integer(row.count) || row.count !== shapes.length) return invalid();
   return { name: text(row.name), count: row.count, shapes };
 }
-export function readMinimalSnapshot(value: unknown): MinimalSnapshot {
+export function readMinimalSnapshot(value: unknown, observer = false): MinimalSnapshot {
   const room = readRoomSnapshot(value),
     row = record(value);
   if (
@@ -129,7 +129,12 @@ export function readMinimalSnapshot(value: unknown): MinimalSnapshot {
   if (row.prompt !== null && typeof row.prompt !== 'string') return invalid();
   if (row.prompt !== null && (room.phase !== 'drawing' || row.guesserId === room.me))
     return invalid();
-  if (room.phase === 'drawing' && row.guesserId !== room.me && !text(row.prompt)) return invalid();
+  if (
+    observer
+      ? row.prompt !== null
+      : room.phase === 'drawing' && row.guesserId !== room.me && !text(row.prompt)
+  )
+    return invalid();
   const readyIds = array(row.readyIds);
   if (!readyIds.every((id) => typeof id === 'string') || new Set(readyIds).size !== readyIds.length)
     return invalid();

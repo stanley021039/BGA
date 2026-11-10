@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
-import { computed, ref, watch, onBeforeUnmount } from 'vue';
+import { computed, reactive, ref, watch, onBeforeUnmount } from 'vue';
 import { useGiftStore } from '../../stores/gift';
 import { useRoomStore } from '../../stores/room';
-import { giftRankKeys, giftRankLabels } from '../../contracts/gift';
+import { giftRankKeys, giftRankLabels, type GiftSnapshot } from '../../contracts/gift';
 import { useGiftPresentation } from './useGiftPresentation';
 import { usePreferencesStore } from '../../stores/preferences';
 import GiftArt from './GiftArt.vue';
@@ -11,12 +11,41 @@ import UiButton from '../../components/UiButton.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import PlayerAvatar from '../../components/PlayerAvatar.vue';
+const props = defineProps<{ observer?: GiftSnapshot; following?: string }>();
 const stage = ref<HTMLElement | null>(null),
-  { focus, replay, stop, achievementNotice } = useGiftPresentation(stage),
+  { focus, replay, stop, achievementNotice } = props.observer
+    ? {
+        focus: ref<NonNullable<GiftSnapshot['result']>['entries'][number]>(),
+        replay() {},
+        stop() {},
+        achievementNotice: ref(''),
+      }
+    : useGiftPresentation(stage),
   preferences = usePreferencesStore();
-const gift = useGiftStore(),
+const gift = props.observer
+    ? reactive({
+        assignments: {} as Record<string, string>,
+        likes: [] as string[],
+        panel: 'give' as 'give' | 'wish',
+        recipient: '',
+        resultRecipient: '',
+        recipients: [] as GiftSnapshot['players'],
+        chosen: {} as Record<string, string>,
+        ranking: [] as string[],
+        canEdit: false,
+        canGive: false,
+        canWish: false,
+        notice: '',
+        uncertain: false,
+        refreshing: false,
+        chooseGift(_id: string) {},
+        chooseWish(_id: string) {},
+        action(_action: 'give' | 'wish' | 'accept' | 'next') {},
+        refresh() {},
+      })
+    : useGiftStore(),
   room = useRoomStore(),
-  state = computed(() => gift.state!),
+  state = computed(() => props.observer ?? ('state' in gift ? gift.state! : props.observer!)),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 const title = computed(
     () =>
@@ -36,6 +65,13 @@ const title = computed(
   );
 const card = (id: string) => state.value.gifts.find((g) => g.id === id),
   name = (id: string) => state.value.players.find((p) => p.id === id)?.name || '已離席的玩家';
+watch(
+  () => props.following,
+  (id) => {
+    if (props.observer) gift.resultRecipient = id || state.value.players[0]?.id || '';
+  },
+  { immediate: true },
+);
 watch(
   [
     () => room.scope,
@@ -101,7 +137,15 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
       ></header
     >
     <div class="vue-gift-live">
-      <template v-if="state.phase === 'choosing'">
+      <section v-if="observer && state.phase === 'choosing'" class="vue-gift-delivery">
+        <h2>本輪禮物</h2>
+        <div class="vue-gift-delivery-grid">
+          <article v-for="value in state.gifts" :key="value.id">
+            <GiftArt :gift="value" /><h3>{{ value.title }}</h3>
+          </article>
+        </div>
+      </section>
+      <template v-else-if="state.phase === 'choosing'">
         <section class="vue-gift-summaries" aria-label="自己的秘密送禮與心願摘要" data-private
           ><div
             ><h2>送禮{{ state.ownAssignments ? ' · 已鎖定' : ' · 尚未鎖定' }}</h2
@@ -134,7 +178,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           ><template v-if="gift.panel === 'give'"
             ><h2>送給 {{ name(gift.recipient) }} 的禮物</h2
             ><div class="vue-gift-tabs" role="group" aria-label="選擇收禮朋友"
-              ><button
+              ><!-- ui-check-allow raw-control: 保留收禮朋友頁籤的既有樣式及選取提示。 --><button
                 v-for="person in gift.recipients"
                 :key="person.id"
                 type="button"
@@ -148,7 +192,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
                 : '每位朋友選一件不同禮物；選用別人的禮物會移交給目前朋友，再點一次可取消。'
             }}</p
             ><div class="vue-gift-card-grid"
-              ><button
+              ><!-- ui-check-allow raw-control: 保留整張禮物卡的點選範圍。 --><button
                 v-for="value in state.gifts"
                 :key="value.id"
                 type="button"
@@ -180,7 +224,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
               }}
               沒標記的禮物 −1 分。</p
             ><div class="vue-gift-card-grid"
-              ><button
+              ><!-- ui-check-allow raw-control: 保留整張心願卡的點選範圍及排序提示。 --><button
                 v-for="value in state.gifts"
                 :key="value.id"
                 type="button"
@@ -248,6 +292,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           ><template v-else
             ><p>本輪揭曉 {{ state.result.entries.length }} 件禮物。</p
             ><UiButton
+              v-if="!observer"
               icon="replay"
               label="重播焦點禮物"
               :disabled="!preferences.motion?.enabled || preferences.motion?.reduced"
@@ -323,7 +368,8 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         :error="gift.uncertain"
     /></div>
     <footer class="vue-gift-actions"
-      ><template v-if="state.phase === 'choosing'"
+      ><span v-if="observer">觀戰中</span
+      ><template v-else-if="state.phase === 'choosing'"
         ><UiButton
           icon="lock"
           :label="state.ownAssignments ? '送禮已鎖定' : '鎖定送禮'"

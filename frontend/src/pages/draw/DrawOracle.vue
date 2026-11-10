@@ -24,13 +24,25 @@ interface OracleState {
   terms: { id: string; word: string; eliminated: boolean; artist?: string | null }[];
   summary: { mistakes: number; round: number } | null;
 }
-const props = defineProps<{ snapshot: DrawSnapshot; tutorial?: boolean }>();
+const props = defineProps<{
+  snapshot: DrawSnapshot;
+  tutorial?: boolean;
+  observer?: boolean;
+  following?: string;
+}>();
 const room = useRoomStore();
 const oracle = computed(() => props.snapshot.oracle as OracleState);
 const selected = ref('');
 const viewBoard = ref('');
-const activeBoard = computed(() =>
-  oracle.value.boards[viewBoard.value] ? viewBoard.value : Object.keys(oracle.value.boards)[0],
+const activeBoard = computed(() => {
+  const focused = viewBoard.value || props.following || '';
+  return oracle.value.boards[focused] ? focused : Object.keys(oracle.value.boards)[0];
+});
+watch(
+  () => props.following,
+  () => {
+    viewBoard.value = '';
+  },
 );
 const person = (id: string | null) =>
   props.snapshot.players.find((player) => player.id === id)?.name || '玩家';
@@ -45,6 +57,7 @@ watch(
   },
 );
 function act(action: string, data: Record<string, unknown> = {}) {
+  if (props.observer) return;
   return room.command('action', {
     action: 'oracle-' + action,
     roundId: oracle.value.roundId,
@@ -62,7 +75,9 @@ async function eliminate() {
     <UiPanel title="塗鴉神諭" :note="'第 ' + snapshot.round + '／4 輪'" density="compact">
       <div class="vue-draw-oracle-status">
         <span>全隊錯誤 {{ oracle.errors }}／{{ oracle.maxErrors }}，超過上限即結束。</span>
-        <span v-if="oracle.board">已交畫 {{ oracle.readyCount }}／{{ oracle.maxErrors }} 人</span>
+        <span v-if="oracle.board || (observer && snapshot.phase === 'oracle-drawing')"
+          >已交畫 {{ oracle.readyCount }}／{{ oracle.maxErrors }} 人</span
+        >
       </div>
       <PartyCountdown
         v-if="oracle.deadline && !tutorial"

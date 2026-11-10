@@ -243,7 +243,7 @@ onBeforeUnmount(() => {
         ><UiButton
           variant="secondary"
           icon="users"
-          label="找一桌加入"
+          label="正在進行的遊戲"
           aria-haspopup="dialog"
           @click="emit('join')" /><slot name="lobby-action" /><a
           v-if="chosen.id === 'market'"
@@ -254,7 +254,7 @@ onBeforeUnmount(() => {
           v-else
           icon="add"
           :label="chosen.id === 'lounge' ? '開啟場外休憩區' : '開一桌' + chosen.title"
-          @click="emit('create')" /><slot name="lobby-resume" /></div
+          @click="emit('create')" /></div
     ></div>
   </section>
 </template>

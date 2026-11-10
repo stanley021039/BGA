@@ -387,9 +387,28 @@ class BluffRoom extends PartyRoom {
     return p;
   }
   view(id) {
-    const base = this.baseView(id),
+    return this.snapshot(this.baseView(id), id);
+  }
+  observerView() {
+    return this.snapshot(
+      {
+        round: this.round,
+        roundLimit: this.roundLimit,
+        roundId: this.roundId,
+        results: this.results,
+        winner: this.winner,
+        interrupted: this.interrupted,
+      },
+      null,
+    );
+  }
+  snapshot(base, id) {
+    const observer = id === null,
       active = ['preparing', 'discussion'].includes(this.phase),
-      role = this.phase === 'preparing' && this.now() < this.deadline ? this.roles[id] : null,
+      role =
+        !observer && this.phase === 'preparing' && this.now() < this.deadline
+          ? this.roles[id]
+          : null,
       q = this.question;
     return clone({
       ...base,
@@ -462,11 +481,11 @@ class BluffRoom extends PartyRoom {
       readyIds: this.readyIds,
       spokenIds: this.spokenIds,
       challenges: this.challenges,
-      botStatements: this.botStatements,
+      botStatements: observer && this.phase !== 'discussion' ? {} : this.botStatements,
       // Answers are open to the table once given; the thinker's marks are a live draft.
       answers: this.phase === 'discussion' ? { ...this.botStatements, ...this.answers } : {},
       draft:
-        this.phase === 'discussion'
+        !observer && this.phase === 'discussion'
           ? { challenges: this.draft.challenges, honestId: this.draft.honestId }
           : { challenges: [], honestId: null },
       canGuess:

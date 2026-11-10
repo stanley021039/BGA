@@ -124,7 +124,11 @@ const rarityTone = { legendary: 'primary', epic: 'epic', rare: 'info', common: '
   >
     <div v-if="item" class="gacha-card-content">
       <span class="gacha-card-number">第 {{ number }} 張</span>
-      <div class="gacha-reward-art" :aria-hidden="item.kind === 'sounds' ? undefined : true">
+      <div
+        class="gacha-reward-art"
+        :data-kind="item.kind"
+        :aria-hidden="item.kind === 'sounds' ? undefined : true"
+      >
         <UiHeading
           v-if="item.kind === 'sounds'"
           class="gacha-card-voice-name"
@@ -397,6 +401,11 @@ const rarityTone = { legendary: 'primary', epic: 'epic', rare: 'info', common: '
   background: var(--stitch-artwork-preview-bg);
   color: var(--gacha-card-glow);
   box-shadow: 0 0 var(--gacha-card-glow-size) color-mix(in srgb, currentColor 38%, transparent);
+}
+.gacha-reward-art[data-kind='entrances'] {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .is-compact .gacha-reward-art {
   inline-size: min(100%, 160px);

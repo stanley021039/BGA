@@ -14,6 +14,7 @@ const props = withDefaults(
     showClose?: boolean;
     avoidAnchor?: boolean;
     manual?: boolean;
+    keepMounted?: boolean;
   }>(),
   { placement: 'bottom', compact: false, autofocus: true, contentSized: false, showClose: true },
 );
@@ -159,7 +160,7 @@ defineExpose({ open, close, visible });
       @toggle="toggled"
       @keydown.esc.stop.prevent="close()"
     >
-      <template v-if="visible">
+      <template v-if="visible || keepMounted">
         <header v-if="!compact" class="vue-social-popover-header"
           ><slot name="header"
             ><h2>{{ title }}</h2></slot

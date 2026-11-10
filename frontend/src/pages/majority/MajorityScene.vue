@@ -15,20 +15,70 @@ import PrepareDialog from './PrepareDialog.vue';
 import MajorityTeams from './MajorityTeams.vue';
 import MajorityResults from './MajorityResults.vue';
 import MajoritySetup from './MajoritySetup.vue';
-import { majorityKindLabels } from '../../contracts/majority';
+import {
+  majorityKindLabels,
+  type MajoritySnapshot,
+  type MajorityKind,
+} from '../../contracts/majority';
 import { useMajorityPresentation } from './useMajorityPresentation';
+const props = defineProps<{
+  observer?: MajoritySnapshot;
+  observerNow?: number;
+  observerClockOffset?: number;
+}>();
 const room = useRoomStore(),
-  game = useMajorityStore(),
-  s = computed(() => game.state),
+  game = props.observer
+    ? {
+        canAsk: false,
+        participant: false,
+        pending: false,
+        uncertain: false,
+        failed: false,
+        message: '',
+        expired: false,
+        context: '',
+        offset: 0,
+        clock: Date.now(),
+        reactions: [],
+        choice: null as number | null,
+        kind: 'two' as MajorityKind,
+        topic: '',
+        draft: '',
+        source: 'bank' as 'bank' | 'custom',
+        mergeFrom: '',
+        mergeTo: '',
+        custom: { type: 'two' as MajorityKind, prompt: '', topic: '', options: ['', '', ''] },
+        act(_action: string, _data?: Record<string, unknown>, _context?: string) {},
+        answer() {},
+        askCustom() {},
+        changeTopic() {},
+        refresh() {},
+      }
+    : useMajorityStore(),
+  s = computed(() => props.observer ?? ('state' in game ? game.state : null)),
   root = ref<HTMLElement | null>(null),
   live = ref<HTMLElement | null>(null),
   composing = ref(false),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
   prepare = ref<InstanceType<typeof PrepareDialog> | null>(null),
   reactor = ref<InstanceType<typeof UiPopover> | null>(null);
-const presentation = useMajorityPresentation(root),
+const presentation = props.observer
+    ? {
+        focus: ref<MajoritySnapshot['groups'][number]>(),
+        focusId: ref(''),
+        achievementNotice: ref(''),
+        replay() {},
+        stop() {},
+      }
+    : useMajorityPresentation(root),
   blocked = computed(
-    () => !room.connected || room.busy || game.pending || game.uncertain || !!room.terminal,
+    () =>
+      !!props.observer ||
+      !room.connected ||
+      room.busy ||
+      game.pending ||
+      game.uncertain ||
+      !!room.terminal,
   ),
   spectator = computed(
     () => !!s.value?.players.find((p) => p.id === s.value?.me)?.waitingForNextRound,
@@ -119,13 +169,13 @@ onBeforeUnmount(() => {
     ]"
     ><template #hero-actions
       ><UiButton
-        v-if="!s.cruel && !s.tournament"
+        v-if="!observer && !s.cruel && !s.tournament"
         icon="book"
         :label="`預備題目（我 ${s.ownQueue.length}/5）`"
         :disabled="blocked"
         @click="prepare?.open($event.currentTarget as HTMLElement)" /></template
-    ><template #summary-extra><MajorityTeams /></template
-    ><template #settings><MajoritySetup /></template
+    ><template #summary-extra><MajorityTeams :observer="observer" /></template
+    ><template #settings><MajoritySetup v-if="!observer" /></template
   ></RoomWaitingTemplate>
 
   <section v-else-if="s" ref="root" class="vue-majority-scene" :data-phase="s.phase"
@@ -144,9 +194,9 @@ onBeforeUnmount(() => {
       ><RoomCountdown
         :deadline="s.phase === 'answering' ? s.deadline : null"
         :duration="120000"
-        :offset="game.offset"
-        :now="game.clock"
-        :epoch="game.context"
+        :offset="observerClockOffset ?? game.offset"
+        :now="observerNow ?? game.clock"
+        :epoch="observer ? String(s.round) : game.context"
         caption="本題作答時間"
         :empty-value="
           s.phase === 'review'
@@ -215,11 +265,17 @@ onBeforeUnmount(() => {
               :draft="game.custom"
               :topics="s.topics"
               :disabled="blocked" /></form></template
-        ><p v-else>等待出題人選題；你也會一起回答。</p></template
+        ><p v-else>{{
+          observer ? '等待出題人選題。' : '等待出題人選題；你也會一起回答。'
+        }}</p></template
       >
       <template v-else-if="s.phase === 'answering'"
         ><p v-if="!game.participant">{{
-          s.cruel ? '本局已開始，下一局一起參與。' : '本題已開始，下一題一起參與。'
+          observer
+            ? '等待玩家作答。'
+            : s.cruel
+              ? '本局已開始，下一局一起參與。'
+              : '本題已開始，下一題一起參與。'
         }}</p
         ><template v-if="s.question"
           ><div
@@ -277,7 +333,7 @@ onBeforeUnmount(() => {
               typeof s.ownAnswer === 'number' ? s.question.options[s.ownAnswer] : s.ownAnswer
             }}。等大家一起揭曉。</p
           ></template
-        ><MajorityTeams
+        ><MajorityTeams :observer="observer"
       /></template>
       <template v-else-if="s.phase === 'review' || s.phase === 'reveal'"
         ><div class="vue-majority-spotlight"
@@ -285,8 +341,8 @@ onBeforeUnmount(() => {
             ><strong>{{ presentation.focus.value.label }}</strong> ·
             {{ presentation.focus.value.count }} 人選擇</p
           ></div
-        ><MajorityResults :focus-id="presentation.focusId.value" /><div
-          v-if="s.phase === 'reveal' && !s.cruel"
+        ><MajorityResults :observer="observer" :focus-id="presentation.focusId.value" /><div
+          v-if="!observer && s.phase === 'reveal' && !s.cruel"
           class="vue-majority-actions"
           ><UiButton icon="replay" label="重播答案焦點" @click="presentation.replay()" /><UiButton
             v-if="presentation.focus.value"
@@ -320,7 +376,9 @@ onBeforeUnmount(() => {
         ></template
       >
       <template v-else-if="s.phase === 'finished'"
-        ><MajorityTeams /><div v-if="!s.cruel?.solo" class="vue-majority-standings"
+        ><MajorityTeams :observer="observer" /><div
+          v-if="!s.cruel?.solo"
+          class="vue-majority-standings"
           ><p
             v-for="player in [...s.players]
               .filter((p) => !p.waitingForNextRound)
@@ -329,7 +387,7 @@ onBeforeUnmount(() => {
             ><strong>{{ player.name }}</strong
             ><span>{{ player.score }} 分</span></p
           ></div
-        ><MajorityResults :recap="!!s.cruel" /></template
+        ><MajorityResults :observer="observer" :recap="!!s.cruel" /></template
     ></div>
     <div class="vue-majority-feedback"
       ><StatusSlot
@@ -434,13 +492,13 @@ onBeforeUnmount(() => {
           @click="reactor?.open($event.currentTarget as HTMLElement)" /></div
     ></footer>
     <div class="vue-majority-reactions" aria-hidden="true"
-      ><p v-for="reaction in game.reactions" :key="reaction.id"
+      ><p v-for="reaction in observer?.reactions || game.reactions" :key="reaction.id"
         >{{ reaction.emoji }} <small>{{ name(reaction.player) }}</small></p
       ></div
     >
-    <UiPopover id="majority-game-reactions" ref="reactor" title="同頻表情互動"
+    <UiPopover v-if="!observer" id="majority-game-reactions" ref="reactor" title="同頻表情互動"
       ><div class="vue-majority-reaction-buttons"
-        ><button
+        ><!-- ui-check-allow raw-control: 保留表情面板內既有的圖示按鈕。 --><button
           v-for="emoji in ['👍', '❤️', '😂', '😮', '😭', '🔥', '👏', '🤔']"
           :key="emoji"
           type="button"
@@ -452,5 +510,5 @@ onBeforeUnmount(() => {
       ></UiPopover
     ><ConfirmDialog ref="confirm" />
   </section>
-  <PrepareDialog ref="prepare" />
+  <PrepareDialog v-if="!observer" ref="prepare" />
 </template>

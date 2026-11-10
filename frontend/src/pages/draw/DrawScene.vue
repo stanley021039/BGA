@@ -17,7 +17,13 @@ import StatusSlot from '../../components/StatusSlot.vue';
 import ResultCanvas from '../../components/ResultCanvas.vue';
 import DrawVote from '../../components/DrawVote.vue';
 import DrawHighlights from './DrawHighlights.vue';
-const props = defineProps<{ snapshot: DrawSnapshot }>();
+import SpectatorCanvas from '../../components/SpectatorCanvas.vue';
+import type { SpectatorSnapshot } from '../../contracts/spectator';
+const props = defineProps<{
+  snapshot: DrawSnapshot;
+  observerDrawing?: SpectatorSnapshot['drawing'];
+}>();
+const observer = computed(() => props.observerDrawing !== undefined);
 const emit = defineEmits<{
   start: [];
   next: [];
@@ -103,6 +109,7 @@ function pointsLabel(value: number | undefined) {
 let generation = 0,
   disposed = false;
 async function loadPreview() {
+  if (observer.value) return;
   const id = ['reveal', 'finished'].includes(props.snapshot.phase)
       ? props.snapshot.result?.resultId
       : null,
@@ -143,6 +150,7 @@ function rank(index: number) {
   <RoomWaitingTemplate
     v-if="snapshot.phase === 'waiting'"
     type="draw"
+    flow
     :title="pendingMode ? '畫畫天堂' : oracleMode ? '塗鴉神諭' : '你畫我猜'"
     :hero-title="pendingMode ? '先集合，再選畫畫玩法。' : undefined"
     :description="
@@ -157,7 +165,7 @@ function rank(index: number) {
     art-alt="你畫我猜的畫室插畫"
     :facts="waitingFacts"
     :quick-action="
-      pendingMode
+      observer || pendingMode
         ? undefined
         : room.gameManager
           ? { href: '#room-waiting-start-draw', label: '前往開局' }
@@ -165,10 +173,10 @@ function rank(index: number) {
             ? { href: '#draw-waiting-ready', label: '前往就緒' }
             : undefined
     "
-    ><template #mode-picker><DrawingModePicker /></template>
+    ><template #mode-picker><DrawingModePicker v-if="!observer" /></template>
     <template #summary-extra>
       <div
-        v-if="!pendingMode && !oracleMode"
+        v-if="!observer && !pendingMode && !oracleMode"
         id="draw-waiting-ready"
         tabindex="-1"
         class="vue-waiting-ready"
@@ -276,7 +284,11 @@ function rank(index: number) {
           }}
           的作品</h2
         ><small>本輪畫作</small></header
-      ><ResultCanvas v-if="preview" :snapshot="preview" compact /><div
+      ><SpectatorCanvas
+        v-if="observerDrawing"
+        :epoch="observerDrawing.epoch"
+        :strokes="observerDrawing.strokes"
+        label="本輪公開畫作" /><ResultCanvas v-else-if="preview" :snapshot="preview" compact /><div
         v-else
         class="vue-draw-result-empty"
         >{{ loading ? '正在讀取本輪畫作…' : '畫作尚未載入。'
@@ -288,8 +300,8 @@ function rank(index: number) {
           @click="loadPreview" /></div
       ><StatusSlot :message="error" :error="!!error"
     /></section>
-    <DrawVote :result-id="snapshot.result?.resultId || null" />
-    <footer class="vue-draw-scene-actions"
+    <DrawVote v-if="!observer" :result-id="snapshot.result?.resultId || null" />
+    <footer v-if="!observer" class="vue-draw-scene-actions"
       ><UiButton
         v-if="snapshot.result"
         variant="secondary"
@@ -323,7 +335,7 @@ function rank(index: number) {
       ><span class="vue-draw-scene-badge"><UiIcon name="crown" />本局結束</span
       ><h1>今晚的畫猜回顧</h1><p>{{ snapshot.winner?.reason || '每位畫者都已完成。' }}</p></header
     >
-    <DrawHighlights :snapshot="snapshot" @review="emit('review', $event)" />
+    <DrawHighlights v-if="!observer" :snapshot="snapshot" @review="emit('review', $event)" />
     <section class="vue-draw-final-standings" aria-label="本局排名"
       ><header><h2>本局成績</h2><span>依總分排名 · 同分並列</span></header
       ><ol class="vue-draw-ranking"
@@ -344,7 +356,14 @@ function rank(index: number) {
     >
     <details v-if="snapshot.result" class="vue-draw-final-art"
       ><summary>最後一幅畫 · {{ snapshot.result.answer || '未選定題目' }}</summary
-      ><ResultCanvas v-if="preview" :snapshot="preview" compact /><StatusSlot
+      ><SpectatorCanvas
+        v-if="observerDrawing"
+        :epoch="observerDrawing.epoch"
+        :strokes="observerDrawing.strokes"
+        label="最後一幅公開畫作" /><ResultCanvas
+        v-else-if="preview"
+        :snapshot="preview"
+        compact /><StatusSlot
         :message="error || (loading ? '正在讀取畫作…' : '')"
         :error="!!error" /><UiButton
         v-if="error"
@@ -353,7 +372,7 @@ function rank(index: number) {
         label="重新載入畫作"
         @click="loadPreview"
     /></details>
-    <footer class="vue-draw-scene-actions"
+    <footer v-if="!observer" class="vue-draw-scene-actions"
       ><a class="ui-button" href="/">返回大廳</a
       ><UiButton
         variant="secondary"

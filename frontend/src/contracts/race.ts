@@ -133,6 +133,8 @@ export interface RaceDomain {
   now: number;
   offset: number;
   lesson: boolean;
+  spectator?: boolean;
+  spectatorDiceTitle?: string;
   lessonInlineDice?: boolean;
   run(action: string, data?: Record<string, unknown>): Promise<boolean>;
   lessonGoal?: RacePoint | null;
@@ -229,6 +231,70 @@ function diceCheck(value: unknown): RaceDiceCheck | null {
     ...(result ? { result } : {}),
   };
 }
+function readRaceCars(value: unknown) {
+  const cars = array(value).map((value) => {
+    const c = record(value);
+    if (
+      !text(c.id) ||
+      (c.owner !== null && typeof c.owner !== 'string') ||
+      !integer(c.size, 0, 2) ||
+      (c.x !== null && !integer(c.x, -64, 64)) ||
+      !integer(c.y, -1000000) ||
+      !Array.isArray(c.damage) ||
+      c.damage.length > 2 ||
+      !c.damage.every((v) => v === true) ||
+      typeof c.dead !== 'boolean'
+    )
+      return invalid();
+    return {
+      ...c,
+      id: text(c.id),
+      owner: typeof c.owner === 'string' ? c.owner : null,
+      size: c.size,
+      x: typeof c.x === 'number' ? c.x : null,
+      y: c.y,
+      damage: c.damage as boolean[],
+      dead: c.dead,
+      wreck: c.wreck === true,
+      moved: c.moved === true,
+      burning: c.burning === true,
+      coasts: integer(c.coasts, 0, 2) ? c.coasts : 0,
+    } as RaceCar;
+  });
+  if (cars.length > 16 || new Set(cars.map((c) => c.id)).size !== cars.length) return invalid();
+  return cars;
+}
+
+function readRaceTiles(value: unknown) {
+  const tiles = array(value).map((value) => {
+    const t = record(value);
+    if (
+      !integer(t.start) ||
+      !integer(t.map, 0, 9) ||
+      !integer(t.side, 0, 1) ||
+      !Array.isArray(t.cells) ||
+      t.cells.length !== 6
+    )
+      return invalid();
+    const cells = t.cells.map((value) => {
+      if (!Array.isArray(value) || value.length !== 8) return invalid();
+      return value.map((value) => {
+        const c = record(value);
+        if (!['R', 'O', 'M', 'X', 'G', 'V', 'J', 'F', 'S'].includes(text(c.kind))) return invalid();
+        if (c.hazard == null) return { kind: text(c.kind) };
+        const h = record(c.hazard);
+        if (typeof h.face !== 'boolean' || !text(h.kind) || (!h.face && h.kind !== 'unknown'))
+          return invalid();
+        return { kind: text(c.kind), hazard: { face: h.face, kind: text(h.kind) } };
+      });
+    });
+    return { start: t.start, name: required(t.name), map: t.map, side: t.side, cells };
+  });
+  if (tiles.length > 3 || tiles.some((t, i) => i > 0 && t.start !== tiles[i - 1]!.start + 8))
+    return invalid();
+  return tiles;
+}
+
 export function readRaceSnapshot(value: unknown, _local = false): RaceSnapshot {
   const base = readRoomSnapshot(value),
     s = record(value),
@@ -271,62 +337,8 @@ export function readRaceSnapshot(value: unknown, _local = false): RaceSnapshot {
     };
   });
   if (!players.length || players.length > 4) return invalid();
-  const cars = array(s.cars).map((value) => {
-    const c = record(value);
-    if (
-      !text(c.id) ||
-      (c.owner !== null && typeof c.owner !== 'string') ||
-      !integer(c.size, 0, 2) ||
-      (c.x !== null && !integer(c.x, -64, 64)) ||
-      !integer(c.y, -1000000) ||
-      !Array.isArray(c.damage) ||
-      c.damage.length > 2 ||
-      !c.damage.every((v) => v === true) ||
-      typeof c.dead !== 'boolean'
-    )
-      return invalid();
-    return {
-      ...c,
-      id: text(c.id),
-      owner: typeof c.owner === 'string' ? c.owner : null,
-      size: c.size,
-      x: typeof c.x === 'number' ? c.x : null,
-      y: c.y,
-      damage: c.damage as boolean[],
-      dead: c.dead,
-      wreck: c.wreck === true,
-      moved: c.moved === true,
-      burning: c.burning === true,
-      coasts: integer(c.coasts, 0, 2) ? c.coasts : 0,
-    } as RaceCar;
-  });
-  if (cars.length > 16 || new Set(cars.map((c) => c.id)).size !== cars.length) return invalid();
-  const tiles = array(s.tiles).map((value) => {
-    const t = record(value);
-    if (
-      !integer(t.start) ||
-      !integer(t.map, 0, 9) ||
-      !integer(t.side, 0, 1) ||
-      !Array.isArray(t.cells) ||
-      t.cells.length !== 6
-    )
-      return invalid();
-    const cells = t.cells.map((value) => {
-      if (!Array.isArray(value) || value.length !== 8) return invalid();
-      return value.map((value) => {
-        const c = record(value);
-        if (!['R', 'O', 'M', 'X', 'G', 'V', 'J', 'F', 'S'].includes(text(c.kind))) return invalid();
-        if (c.hazard == null) return { kind: text(c.kind) };
-        const h = record(c.hazard);
-        if (typeof h.face !== 'boolean' || !text(h.kind) || (!h.face && h.kind !== 'unknown'))
-          return invalid();
-        return { kind: text(c.kind), hazard: { face: h.face, kind: text(h.kind) } };
-      });
-    });
-    return { start: t.start, name: required(t.name), map: t.map, side: t.side, cells };
-  });
-  if (tiles.length > 3 || tiles.some((t, i) => i > 0 && t.start !== tiles[i - 1]!.start + 8))
-    return invalid();
+  const cars = readRaceCars(s.cars),
+    tiles = readRaceTiles(s.tiles);
   let active: RaceActive | null = null;
   if (s.active != null) {
     const a = record(s.active);
@@ -450,6 +462,68 @@ export interface RaceVisual {
   tiles: RaceTile[];
   cars: RaceCar[];
   players: RacePlayer[];
+}
+type RaceBoardPlayer = Pick<RacePlayer, 'id' | 'name' | 'color' | 'chopper'>;
+export type RaceBoardVisual = Omit<RaceVisual, 'players'> & { players: RaceBoardPlayer[] };
+export type RaceBoardState = Pick<RaceSnapshot, 'cars' | 'finishAt' | 'legalMoves' | 'targets'> & {
+  phase: string;
+  active: { car: string } | null;
+  players: RaceBoardPlayer[];
+};
+
+export function readPublicRaceBoard(value: unknown, phase: string) {
+  const board = record(value);
+  const tiles = readRaceTiles(board.tiles);
+  const cars = readRaceCars(board.cars);
+  const players = array(board.players).map((value) => {
+    const player = record(value);
+    return {
+      id: required(player.id),
+      name: required(player.name),
+      color: color(player.color),
+      chopper: player.chopper === null ? null : point(player.chopper),
+      dice:
+        player.dice === undefined
+          ? []
+          : array(player.dice).map((value) => {
+              const die = record(value);
+              if (!integer(die.value, 1, 6) || typeof die.used !== 'boolean') return invalid();
+              return { value: die.value, used: die.used };
+            }),
+      commandUsed: player.commandUsed === true,
+    };
+  });
+  const { finishAt, activeCar } = board;
+  if (
+    !tiles.length ||
+    players.length > 4 ||
+    (finishAt !== null && !integer(finishAt)) ||
+    (activeCar !== null && typeof activeCar !== 'string')
+  )
+    return invalid();
+  const state: RaceBoardState = {
+    phase,
+    cars,
+    players,
+    finishAt,
+    active: activeCar ? { car: activeCar } : null,
+    legalMoves: [],
+    targets: [],
+  };
+  const visual: RaceBoardVisual = { min: tiles[0]!.start, tiles, cars, players };
+  const winner = board.winner == null ? null : record(board.winner);
+  return {
+    state,
+    visual,
+    players,
+    actorId: text(board.actorId) || null,
+    roadDie: integer(board.roadDie, 1, 6) ? board.roadDie : null,
+    activeRemaining: integer(board.activeRemaining, 0, 32) ? board.activeRemaining : 0,
+    diceTitle: text(board.diceTitle),
+    winner: winner
+      ? { id: text(winner.id) || null, name: text(winner.name), reason: text(winner.reason) }
+      : null,
+  };
 }
 export interface RaceMovementOwner {
   prepare(

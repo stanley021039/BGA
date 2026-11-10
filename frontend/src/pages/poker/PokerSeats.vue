@@ -4,7 +4,7 @@ import type { PokerSnapshot } from '../../contracts/poker';
 import PokerCard from './PokerCard.vue';
 import PlayerAvatar from '../../components/PlayerAvatar.vue';
 import PlayerName from '../../components/PlayerName.vue';
-const props = defineProps<{ state: PokerSnapshot }>();
+const props = defineProps<{ state: PokerSnapshot; observer?: boolean }>();
 const layouts: Record<number, readonly number[]> = {
   1: [0],
   2: [0, 3],
@@ -47,12 +47,14 @@ const seats = computed(() => {
       }"
       :data-poker-seat="seat.player.id"
       :data-seat-slot="seat.slot"
-      :data-private="seat.player.id === state.me ? '' : undefined"
+      :data-private="!observer && seat.player.id === state.me ? '' : undefined"
       :aria-label="seat.player.name + (seat.acting ? '，目前行動' : '')"
     >
       <div
         class="vue-poker-seat-cards"
-        :aria-label="seat.player.id === state.me ? '你的私人底牌' : seat.player.name + '的底牌'"
+        :aria-label="
+          !observer && seat.player.id === state.me ? '你的私人底牌' : seat.player.name + '的底牌'
+        "
       >
         <PokerCard v-for="(card, index) in seat.player.cards" :key="index" :card="card" />
         <span v-if="!seat.player.cards.length" class="vue-poker-seat-no-hand">本手未入局</span>

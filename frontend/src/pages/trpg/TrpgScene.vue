@@ -7,11 +7,35 @@ import UiButton from '../../components/UiButton.vue';
 import UiHeading from '../../components/UiHeading.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import TrpgResult from './TrpgResult.vue';
-const trpg = useTrpgStore(),
-  room = useRoomStore(),
-  state = computed(() => trpg.state!),
-  composing = ref(false),
-  latest = computed(() => state.value.results.at(-1));
+import type { TrpgSnapshot, TrpgStance } from '../../contracts/trpg';
+const props = defineProps<{ observer?: TrpgSnapshot }>();
+const live = props.observer ? null : useTrpgStore();
+const room = useRoomStore();
+const trpg = computed(
+  () =>
+    live ?? {
+      state: props.observer!,
+      me: props.observer!.players.find((player) => player.id === props.observer!.me),
+      leader: props.observer!.players.find((player) => player.id === props.observer!.leaderId),
+      isLeader: false,
+      draft: { stance: 'assist' as TrpgStance, approach: '', note: '' },
+      currentApproach: undefined,
+      editable: false,
+      dirty: false,
+      pending: false,
+      canRetry: false,
+      failed: false,
+      notice: '',
+      changeNote(_value: string) {},
+      plan() {},
+      resolve() {},
+      next() {},
+      retrySame() {},
+    },
+);
+const state = computed(() => trpg.value.state!);
+const composing = ref(false);
+const latest = computed(() => state.value.results.at(-1));
 const readiness = computed(() =>
   state.value.phase === 'planning'
     ? `已準備 ${state.value.readyCount}／${state.value.players.length} · ` +
@@ -23,8 +47,8 @@ const readiness = computed(() =>
     : '每幕輪流領隊，所有人都能參與行動。',
 );
 const skill = computed(() =>
-  trpg.draft.stance === 'assist' &&
-  trpg.currentApproach?.skill === state.value.roles[trpg.me?.role || '']?.skill
+  trpg.value.draft.stance === 'assist' &&
+  trpg.value.currentApproach?.skill === state.value.roles[trpg.value.me?.role || '']?.skill
     ? 2
     : 0,
 );
@@ -34,8 +58,8 @@ watch([() => state.value.sceneId, () => state.value.phase], () => {
 function input(event: Event) {
   if (composing.value) return;
   const target = event.target as HTMLInputElement;
-  trpg.changeNote(target.value);
-  target.value = trpg.draft.note;
+  trpg.value.changeNote(target.value);
+  target.value = trpg.value.draft.note;
 }
 </script>
 <template>
@@ -171,7 +195,11 @@ function input(event: Event) {
               " /></label
           ><p id="trpgNoteCount">{{ [...trpg.draft.note].length }}／160 字 · 不能換行</p
           ><p>{{
-            trpg.dirty ? '尚有行動待送出；更新後才能檢定。' : '你的行動已送出；仍可在檢定前修改。'
+            observer
+              ? '觀戰中 · 遊戲操作停用'
+              : trpg.dirty
+                ? '尚有行動待送出；更新後才能檢定。'
+                : '你的行動已送出；仍可在檢定前修改。'
           }}</p></template
         >
         <template v-else-if="state.phase === 'reveal'"

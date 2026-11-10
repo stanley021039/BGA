@@ -16,9 +16,11 @@ const props = withDefaults(
     loading?: boolean;
     showMetric?: boolean;
     scoreLabel?: string;
+    followedId?: string;
   }>(),
   { loading: false, showMetric: true, title: '這桌的朋友', scoreLabel: '分' },
 );
+const emit = defineEmits<{ view: [id: string] }>();
 const players = computed(() => (props.snapshot?.players || []).filter((player) => !player.kicked));
 const waiting = computed(() => props.snapshot?.phase === 'waiting');
 const heading = useId();
@@ -108,6 +110,8 @@ const rows = computed(() =>
           :progress="row.complete ? 'complete' : 'pending'"
           :score="row.score"
           :score-label="scoreLabel"
+          :view-selected="followedId === undefined ? undefined : row.player.id === followedId"
+          @view="emit('view', row.player.id)"
         >
           <template v-if="$slots.avatar" #avatar
             ><slot name="avatar" :player="row.player"

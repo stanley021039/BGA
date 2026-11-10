@@ -50,7 +50,7 @@
   min-inline-size: 0;
   min-block-size: 2.75rem;
 }
-.vue-draw-settings :is(input[type='radio'], input[type='checkbox']) {
+.vue-draw-settings :is(input[type='radio'], input[type='checkbox']:not(.ui-checkbox-input)) {
   flex: none;
   inline-size: 1.25rem;
   block-size: 1.25rem;

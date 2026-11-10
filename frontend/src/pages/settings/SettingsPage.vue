@@ -692,10 +692,13 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         ><UiPanel
           class="settings-attack-panel"
           title="攻擊特效"
-          description="Q／E 普通招式，R 多人招式。"
+          description="Q／E 普通招式，R 大招。"
           note="立即套用"
           ><template #actions><a href="/collection?section=attack">前往收藏庫 ↗</a></template
-          ><AttackChoices v-if="activePanel === 'attack'" show-current /></UiPanel></section
+          ><AttackChoices
+            v-if="activePanel === 'attack'"
+            show-current
+            expanded-list /></UiPanel></section
       ><section
         v-show="activePanel === 'barrage'"
         id="settings-panel-barrage"

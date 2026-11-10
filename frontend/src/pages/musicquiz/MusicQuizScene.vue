@@ -14,19 +14,36 @@ import UiCheckbox from '../../components/UiCheckbox.vue';
 import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FramePreview from '../../components/FramePreview.vue';
+import MusicTimeline from './MusicTimeline.vue';
 import GameSongClip from '../../components/GameSongClip.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiIcon from '../../components/UiIcon.vue';
 import '../../styles/stitch-party-content.scss';
 const emit = defineEmits<{ dirty: [value: boolean] }>();
+const props = defineProps<{
+  observer?: MusicQuizSnapshot;
+  following?: string;
+  observerClockOffset?: number;
+}>();
 const room = useRoomStore(),
   prefs = usePreferencesStore(),
-  actions = usePartyActionsStore(),
-  s = computed(() => room.snapshot as MusicQuizSnapshot),
+  actions = props.observer
+    ? {
+        pending: false,
+        canRetry: false,
+        notice: '',
+        command(_action: string, _payload?: Record<string, unknown>): boolean {
+          return false;
+        },
+        retrySame() {},
+      }
+    : usePartyActionsStore(),
+  s = computed(() => props.observer ?? (room.snapshot as MusicQuizSnapshot)),
   setup = computed(() => ['waiting', 'finished'].includes(s.value.phase)),
-  blocked = computed(() => !room.connected || room.busy || actions.pending),
+  blocked = computed(() => !!props.observer || !room.connected || room.busy || actions.pending),
   dj = computed(() => s.value.players.find((p) => p.id === s.value.djId)),
-  me = computed(() => s.value.me === s.value.djId),
+  perspective = computed(() => s.value.players.find((p) => p.id === props.following) || dj.value),
+  me = computed(() => !props.observer && s.value.me === s.value.djId),
   banks = ref<string[]>([]),
   genres = ref<string[]>([]),
   target = ref(10),
@@ -253,7 +270,12 @@ const canSlot = (i: number) =>
   <section
     v-show="s.phase !== 'waiting'"
     class="vue-game-panel vue-musicquiz-stage stitch-music-content"
-    ><template v-if="setup"
+    ><template v-if="setup && observer">
+      <h1 v-if="s.phase === 'finished'">本場結果</h1>
+      <p v-if="s.winner"
+        >年代冠軍：{{ s.winner.names.join('、') }} · {{ s.winner.score }} 張</p
+      > </template
+    ><template v-else-if="setup"
       ><Teleport
         :to="s.phase === 'waiting' ? '#room-waiting-settings-content-musicquiz' : 'body'"
         :disabled="s.phase !== 'waiting'"
@@ -279,6 +301,7 @@ const canSlot = (i: number) =>
                 v-for="bank in s.banks"
                 :key="bank.id"
                 class="mq-bank"
+                variant="compact"
                 v-model="banks"
                 :value="bank.id"
                 :label="bank.label"
@@ -304,6 +327,7 @@ const canSlot = (i: number) =>
                 v-for="genre in s.genres"
                 :key="genre"
                 v-model="genres"
+                variant="prominent"
                 :value="genre"
                 :label="genre" /></details
             ><div class="stitch-settings-grid"
@@ -318,7 +342,14 @@ const canSlot = (i: number) =>
                 ><strong>{{ s.settings.introSeconds }} 秒試聽前奏</strong></div
               ><div><small>年代排序規則</small><strong>依年代排列，同年可相鄰</strong></div
               ><div><small>歌王插歌起始標記</small><strong>每人起始 2 枚標記</strong></div></div
-            ><UiCheckbox v-model="obscure" label="混入冷門挑戰（最多約10%）" /><details
+            ><div
+              ><UiCheckbox
+                v-model="obscure"
+                variant="prominent"
+                label="混入冷門挑戰"
+                aria-describedby="musicquiz-obscure-note"
+              /><p id="musicquiz-obscure-note">冷門曲目最多約佔 10%。</p></div
+            ><details
               ><summary>自己的題庫</summary
               ><p>每行：歌名 | 歌手 | 首發年 | YouTube網址或ID | 前奏起點 | 精華起點</p
               ><UiField
@@ -363,7 +394,7 @@ const canSlot = (i: number) =>
             ? s.song.title + ' · ' + s.song.artist + ' · ' + s.song.year
             : '先聽音樂，答案揭曉前隱藏歌名與年份'
         }}</p
-        ><MusicKingTokens v-if="s.me" :count="s.mine.tokens" /></header
+        ><MusicKingTokens v-if="!observer && s.me" :count="s.mine.tokens" /></header
       ><div class="mq-current-dj" :class="{ 'is-me': me }"
         ><span>{{ me ? '你是本輪 DJ' : '本輪 DJ' }}</span
         ><strong>{{ dj?.name || '等待 DJ' }}</strong></div
@@ -399,7 +430,7 @@ const canSlot = (i: number) =>
         v-if="s.deadline"
         :deadline="s.deadline"
         :duration="s.phase === 'intro' ? 30000 : s.phase === 'timeline' ? 60000 : 15000"
-        :offset="room.clockOffset"
+        :offset="observerClockOffset ?? room.clockOffset"
         :now="now"
         :epoch="s.roundId + ':' + s.phase"
         caption="本階段剩餘時間"
@@ -407,7 +438,7 @@ const canSlot = (i: number) =>
         v-if="s.playback"
         :key="s.roundId + ':' + s.playback.stage"
         :playback="s.playback"
-        :active="room.connected && !preparing"
+        :active="(!!observer || room.connected) && !preparing"
         @playing="songPlaying = $event" />
       <template v-if="s.phase === 'pick'"
         ><UiButton
@@ -436,11 +467,11 @@ const canSlot = (i: number) =>
             >{{ choice.title }}</button
           ></div
         ><UiButton
-          v-if="!s.submitted"
+          v-if="!observer && !s.submitted"
           label="略過前奏"
           :disabled="blocked"
           @click="actions.command('guess', { pass: true })"
-        /><p v-else
+        /><p v-else-if="!observer"
           >已選：{{ s.myAnswer?.text || '略過' }} ·
           {{
             s.myAnswer?.titleCorrect === true
@@ -452,40 +483,32 @@ const canSlot = (i: number) =>
           · 等待大家作答</p
         ></template
       >
-      <template v-if="['timeline', 'challenge'].includes(s.phase)"
+      <template v-if="observer && perspective">
+        <h2>{{ perspective.name }} 的年代時間軸</h2>
+        <MusicTimeline :cards="perspective.timeline" :frame="perspective.musicCardFrame.id" />
+        <p v-if="s.phase === 'challenge' && s.placement !== null"
+          >DJ 放置於第 {{ s.placement + 1 }} 槽</p
+        >
+      </template>
+      <template v-else-if="['timeline', 'challenge'].includes(s.phase)"
         ><h2>{{ dj?.name }} 的年代時間軸</h2
-        ><div class="mq-timeline"
-          ><template v-for="i in (dj?.timeline.length || 0) + 1" :key="i"
-            ><UiButton
+        ><MusicTimeline :cards="dj?.timeline || []" :frame="dj?.musicCardFrame?.id">
+          <template #insert="{ index }">
+            <UiButton
               :label="
-                s.placement === i - 1
+                s.placement === index
                   ? 'DJ放置點'
                   : s.phase === 'timeline'
-                    ? '插槽 ' + i + ' · 放在這裡'
-                    : '插槽 ' + i + ' · 插歌這裡'
+                    ? '插槽 ' + (index + 1) + ' · 放在這裡'
+                    : '插槽 ' + (index + 1) + ' · 插歌這裡'
               "
-              :disabled="!canSlot(i - 1)"
-              :aria-pressed="s.placement === i - 1 || s.challenges[s.me] === i - 1"
+              :disabled="!canSlot(index)"
+              :aria-pressed="s.placement === index || s.challenges[s.me] === index"
               @click="
-                actions.command(s.phase === 'timeline' ? 'place' : 'challenge', { slot: i - 1 })
-              " /><article
-              v-if="dj?.timeline[i - 1]"
-              class="mq-timeline-card"
-              :title="translated(dj.timeline[i - 1]!.title, dj.timeline[i - 1]!.language)"
-              :data-ui-hint="
-                translated(dj.timeline[i - 1]!.title, dj.timeline[i - 1]!.language) ? '' : undefined
+                actions.command(s.phase === 'timeline' ? 'place' : 'challenge', { slot: index })
               "
-              tabindex="0"
-              ><FramePreview
-                portrait
-                :frame="dj.musicCardFrame?.id || 'default'"
-                :name="String(dj.timeline[i - 1]!.year)"
-                :message="dj.timeline[i - 1]!.title"
-                :lines="[
-                  String(dj.timeline[i - 1]!.year),
-                  dj.timeline[i - 1]!.title,
-                  dj.timeline[i - 1]!.artist,
-                ]" /></article></template></div
+            />
+          </template> </MusicTimeline
         ><UiButton
           v-if="
             s.phase === 'challenge' &&
@@ -503,7 +526,7 @@ const canSlot = (i: number) =>
         ><p v-for="answer in s.results.at(-1)?.answers || []" :key="answer.id"
           >{{ answer.name }}：前奏 +{{ answer.bonus }}分</p
         ><UiButton
-          v-if="room.host || me"
+          v-if="!observer && (room.host || me)"
           icon="next"
           label="下一首"
           :disabled="blocked || resultReading"
@@ -534,8 +557,8 @@ const canSlot = (i: number) =>
   /></section>
   <section v-if="s.phase !== 'waiting'" class="vue-game-panel"
     ><h2>大家的音樂卡</h2
-    ><label
-      >我的音樂卡外觀<select
+    ><label v-if="!observer"
+      >我的音樂卡外觀<!-- ui-check-allow raw-control: 保留年代卡區的既有外觀選單。 --><select
         :value="s.players.find((p) => p.id === s.me)?.musicCardFrame?.id || 'default'"
         :disabled="blocked"
         @change="selectCardFrame"
@@ -547,7 +570,10 @@ const canSlot = (i: number) =>
           >{{ frame.label }}</option
         ></select
       ></label
-    ><details v-for="player in s.players" :key="player.id" :open="player.id === s.me"
+    ><details
+      v-for="player in s.players"
+      :key="player.id"
+      :open="player.id === (observer ? perspective?.id : s.me)"
       ><summary
         >{{ player.name }} · {{ player.timeline.length }}張 · 前奏{{ player.bonus }}分
         <MusicKingTokens :count="player.tokens" /></summary

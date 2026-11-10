@@ -420,7 +420,7 @@ defineExpose({ openChat });
       :aria-label="
         battlePlaying
           ? '戰鬥競技場：點地面或用方向鍵移動，C 瞬移'
-          : `好友大廳：點擊空白處或用 WASD、方向鍵移動，點自己的角色發表情；C 瞬移（${sceneRules.energy.lobbyTeleportCost} 能量），Q、E 普通招式，能量滿後按 R 施放多人招式`
+          : `好友大廳：點擊空白處或用 WASD、方向鍵移動，點自己的角色發表情；C 瞬移（${sceneRules.energy.lobbyTeleportCost} 能量），Q、E 普通招式，能量滿後按 R 施放大招`
       "
       aria-keyshortcuts="Q E R C"
       data-ping-anchor="lobby-stage"

@@ -437,6 +437,33 @@ class MusicQuizRoom extends PartyRoom {
     if (roundId !== this.roundId) fail('STALE_ROUND', '已換輪');
     fail('PLAYER_UPDATED', '猜歌已改為公開影片片段，請重新整理', 410);
   }
+  observerView() {
+    const visible = ['reveal', 'finished'].includes(this.phase);
+    return clone({
+      round: this.round,
+      roundId: this.roundId,
+      roundLimit: this.roundLimit,
+      interrupted: this.interrupted,
+      settings: this.settings,
+      availableCount: this.pool().length,
+      players: this.activePlayers().map((p) => ({
+        id: p.id,
+        timeline: (p.timeline || []).map(card),
+        tokens: p.tokens ?? 2,
+        bonus: p.bonus || 0,
+        musicCardFrame: p.musicCardFrame || builtinFrameDescriptor('default'),
+      })),
+      djId: this.players.length ? this.dj().id : null,
+      deadline: this.deadline,
+      introChoices: this.phase === 'intro' ? this.introChoices : [],
+      readyIds: Object.keys(this.answers),
+      challenges: ['challenge', 'reveal', 'finished'].includes(this.phase) ? this.challenges : {},
+      placement: ['challenge', 'reveal', 'finished'].includes(this.phase) ? this.placement : null,
+      song: visible && this.current ? card(this.current) : null,
+      results: this.results,
+      winner: this.winner,
+    });
+  }
   view(id) {
     const base = this.baseView(id),
       p = this.player(id),

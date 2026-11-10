@@ -2,6 +2,7 @@
 import { computed, ref, watch, useId } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useDecryptoStore } from '../../stores/decrypto';
+import type { DecryptoSnapshot } from '../../contracts/decrypto';
 import UiPanel from '../../components/UiPanel.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiField from '../../components/UiField.vue';
@@ -11,9 +12,16 @@ import UiListRow from '../../components/UiListRow.vue';
 import UiHeading from '../../components/UiHeading.vue';
 import UiTabs from '../../components/UiTabs.vue';
 import '../../styles/decrypto.scss';
+const props = defineProps<{ observer?: DecryptoSnapshot; focus?: string }>();
 const room = useRoomStore(),
-  game = useDecryptoStore(),
-  s = computed(() => game.state!);
+  game = props.observer ? null : useDecryptoStore(),
+  s = computed(() => {
+    if (!props.observer) return game!.state!;
+    const team = props.observer.teams.findIndex((entry) =>
+      entry.members.includes(props.focus || ''),
+    );
+    return { ...props.observer, myTeam: Math.max(0, team) };
+  });
 const clues = ref(['', '', '']),
   digits = ref(['', '', '']),
   words = ref(['', '', '', '']);
@@ -25,7 +33,9 @@ watch(context, () => {
   digits.value = ['', '', ''];
   words.value = ['', '', '', ''];
 });
-const active = computed(() => !!s.value && !room.busy && room.connected && !s.value.interrupted);
+const active = computed(
+  () => !props.observer && !!s.value && !room.busy && room.connected && !s.value.interrupted,
+);
 const myRole = computed(() =>
   !s.value
     ? ''
@@ -74,6 +84,8 @@ const phaseHint = computed(() => {
   const v = s.value;
   if (!v) return '';
   if (v.interrupted) return '本場已中止，可由房主返回等待室重新分隊。';
+  if (props.observer && v.phase === 'clues') return '等待兩隊準備線索。';
+  if (props.observer && v.phase === 'guessing') return '雙方鎖定答案後一起揭曉。';
   if (v.phase === 'clues')
     return v.secretCode && !v.clueReady[v.myTeam]
       ? '輪到你出題：依密碼順序，用三條線索描述本隊詞卡。'
@@ -96,11 +108,11 @@ const phaseHint = computed(() => {
 });
 const name = (id: string) => s.value?.players.find((p) => p.id === id)?.name || '等待玩家';
 async function sendClues() {
-  await game.act('clues', { clues: clues.value.slice() });
+  await game?.act('clues', { clues: clues.value.slice() });
 }
 async function sendGuess() {
   if (!active.value || !canGuess.value || !validDigits.value) return;
-  await game.act(guessing.value, { digits: digits.value.map(Number) });
+  await game?.act(guessing.value, { digits: digits.value.map(Number) });
 }
 const digitOptions = [
   { value: '', label: '請選' },
@@ -110,7 +122,7 @@ const digitOptions = [
 <template>
   <div v-if="s" class="decrypto-scene" :data-phase="s.phase">
     <div class="decrypto-summary"
-      ><UiBadge>{{ s.teams[s.myTeam].name }} · {{ myRole }}</UiBadge
+      ><UiBadge>{{ s.teams[s.myTeam].name }} · {{ observer ? '觀戰視角' : myRole }}</UiBadge
       ><span v-if="s.round">第 {{ s.round }}／8 輪</span
       ><span v-if="s.round === 1">第一輪不截碼</span></div
     >
@@ -128,7 +140,16 @@ const digitOptions = [
       <UiPanel
         v-for="(team, t) in s.teams"
         :key="t"
-        :title="team.name + (t === s.myTeam ? '（本隊）' : '（對手）')"
+        :title="
+          team.name +
+          (observer
+            ? t === s.myTeam
+              ? '（跟隨中）'
+              : ''
+            : t === s.myTeam
+              ? '（本隊）'
+              : '（對手）')
+        "
         density="compact"
       >
         <div class="decrypto-summary"
@@ -145,14 +166,14 @@ const digitOptions = [
           >出題：{{ name(s.encryptors[t]) }} · 猜碼代表：{{ name(s.decoders[t]) }}</span
         >
         <UiButton
-          v-if="s.phase === 'waiting'"
+          v-if="!observer && s.phase === 'waiting'"
           :label="t === s.myTeam ? '目前隊伍' : '加入' + team.name"
           :disabled="
             !active ||
             t === s.myTeam ||
             team.members.filter((id) => s.players.some((p) => p.id === id)).length >= 4
           "
-          @click="game.act('team', { team: t })"
+          @click="game?.act('team', { team: t })"
         />
       </UiPanel>
     </div>
@@ -164,7 +185,13 @@ const digitOptions = [
     <template v-else>
       <UiPanel
         class="decrypto-secret"
-        :title="s.phase === 'finished' && !s.interrupted ? '雙方關鍵詞' : '本隊秘密關鍵詞'"
+        :title="
+          s.phase === 'finished' && !s.interrupted
+            ? '雙方關鍵詞'
+            : observer
+              ? '關鍵詞'
+              : '本隊秘密關鍵詞'
+        "
         density="compact"
       >
         <div
@@ -283,11 +310,11 @@ const digitOptions = [
         }}</p>
         <p>雙方都完成本輪才判定勝負。</p
         ><UiButton
-          v-if="room.host"
+          v-if="!observer && room.host"
           variant="primary"
           :label="s.turn === 0 ? '繼續黑隊通訊' : '完成本輪'"
           :disabled="!active"
-          @click="game.act('next')"
+          @click="game?.act('next')"
         /><p v-else>等待房主繼續。</p>
       </UiPanel>
       <UiPanel v-if="s.phase === 'tiebreak'" class="decrypto-action" title="平手決勝：猜對方關鍵詞">
@@ -297,7 +324,7 @@ const digitOptions = [
         <form
           v-if="s.decoders[s.myTeam] === s.me && !s.tieReady[s.myTeam]"
           class="decrypto-form"
-          @submit.prevent="game.act('keywords', { words: words.slice() })"
+          @submit.prevent="game?.act('keywords', { words: words.slice() })"
         >
           <UiField
             v-for="(_, i) in words"

@@ -185,7 +185,7 @@
       padding: 4px;
     }
   }
-  .vue-draw-approved-settings input:is([type='radio'], [type='checkbox']) {
+  .vue-draw-approved-settings input:is([type='radio'], [type='checkbox']):not(.ui-checkbox-input) {
     width: 16px;
     height: 16px;
     accent-color: var(--stitch-primary);

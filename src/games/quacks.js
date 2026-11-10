@@ -1911,18 +1911,15 @@ class QuacksRoom extends PartyRoom {
       o.ops.every((x) => x.op !== 'sixPick' || p.sixPool.some((c) => c.id === x.chipId))
     );
   }
-  view(id) {
-    const base = this.baseView(id),
-      p = this.player(id),
-      revealed = ['settlement', 'between', 'finished'].includes(this.phase),
-      books = this.availableBooks();
-    const recipes = this.activePlayers().map((q) => {
+  recipes(id) {
+    const revealed = ['settlement', 'between', 'finished'].includes(this.phase);
+    return this.activePlayers().map((q) => {
       const show = q.id === id || !this.options.hiddenProgress || q.exploded || revealed;
       return {
         id: q.id,
         name: q.name,
         alchemy:
-          this.options.alchemists && q.alchemy
+          this.options.alchemists && q.alchemy && (id !== null || show)
             ? {
                 patientId: q.alchemy.patientId,
                 essence: q.alchemy.essence,
@@ -1956,6 +1953,37 @@ class QuacksRoom extends PartyRoom {
         draws: show ? q.draws : null,
       };
     });
+  }
+  observerView() {
+    return clone({
+      round: this.round,
+      roundLimit: this.roundLimit,
+      roundId: this.roundId,
+      interrupted: this.interrupted,
+      maxPlayers: this.max,
+      options: this.options,
+      step: this.step,
+      stage: this.stage,
+      nextRoundAt: this.phase === 'round-intro' ? this.nextRoundAt : null,
+      fortune: this.fortune,
+      fortuneRevealId: this.fortuneRevealId,
+      fortuneDrawnAt: this.fortuneDrawnAt,
+      roundStarterId: this.roundStarterId,
+      market: this.marketView(),
+      recipes: this.recipes(null),
+      potColors: POT_COLORS,
+      board: BOARD,
+      books: this.availableBooks(),
+      bookSelection: this.bookSelection().map(({ key, ...b }) => b),
+      witches: this.witches,
+      visitingWitch: this.visitingWitch || null,
+      results: this.results,
+      winner: this.winner,
+    });
+  }
+  view(id) {
+    const base = this.baseView(id),
+      p = this.player(id);
     return clone({
       ...base,
       market: this.marketView(),
@@ -1978,8 +2006,8 @@ class QuacksRoom extends PartyRoom {
         ? Alchemy.catalog().filter((p) => this.patientChoices?.includes(p.id))
         : [],
       board: BOARD,
-      books,
-      recipes,
+      books: this.availableBooks(),
+      recipes: this.recipes(id),
       mine: p.bag
         ? {
             drawEvents: p.drawEvents || [],

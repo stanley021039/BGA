@@ -6,6 +6,7 @@ import { useTelephoneStore } from '../../stores/telephone';
 import { useRoomStore } from '../../stores/room';
 import { usePartyActionsStore } from '../../stores/party-actions';
 import type { DrawingTool } from '../../contracts/drawing';
+import type { TelephoneSnapshot, TelephoneStroke } from '../../contracts/telephone';
 import TelephoneCanvas from '../../components/TelephoneCanvas.vue';
 import DrawingToolbar from '../../components/DrawingToolbar.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
@@ -14,10 +15,40 @@ import UiHeading from '../../components/UiHeading.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 
-const telephone = useTelephoneStore(),
+const props = defineProps<{
+  observer?: TelephoneSnapshot;
+  observerClockOffset?: number;
+  observerNow?: number;
+}>();
+const telephone = props.observer
+    ? {
+        acceptedCount: 0,
+        activeStroke: false,
+        canReveal: false,
+        dirty: false,
+        editable: false,
+        expired: false,
+        finishing: false,
+        notice: '',
+        now: undefined,
+        offset: 0,
+        saving: false,
+        storageNotice: '',
+        strokes: [] as TelephoneStroke[],
+        text: '',
+        changeStrokes(_strokes: TelephoneStroke[]) {},
+        changeText(_text: string) {},
+        clear() {},
+        reveal() {},
+        submit() {},
+        undo() {},
+      }
+    : useTelephoneStore(),
   room = useRoomStore(),
   actions = usePartyActionsStore(),
-  state = computed(() => telephone.state!),
+  state = computed(
+    () => props.observer ?? ('state' in telephone ? telephone.state! : props.observer!),
+  ),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
   tool = ref<DrawingTool>('brush'),
   filled = ref(false),
@@ -133,7 +164,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     hero-description="先各自想一個主題，交給下一位畫圖，再交替猜詞與作畫。只看上一棒，最後由房主逐頁揭曉故事演變。"
     art="/assets/stitch/telephone-waiting.svg"
     :facts="waitingFacts"
-    ><template #mode-picker><DrawingModePicker /></template
+    ><template #mode-picker><DrawingModePicker v-if="!observer" /></template
   ></RoomWaitingTemplate>
   <section
     v-else
@@ -187,10 +218,26 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         :duration="(drawing ? state.options.drawingSeconds : state.options.textSeconds) * 1000"
         :offset="telephone.offset"
         :epoch="state.stepId || 'waiting'"
-        :now="telephone.now"
+        :now="observerNow ?? telephone.now ?? Date.now()"
         :caption="prompting ? '出題剩餘' : '本頁剩餘'"
         :empty-value="`每頁 ${drawing ? state.options.drawingSeconds : state.options.textSeconds} 秒`"
         urgent
+      />
+    </header>
+    <header v-else-if="observer && playing" class="vue-telephone-hud">
+      <div class="vue-telephone-hud-prompt">
+        <h1 id="telephoneHeading">{{ prompting ? '玩家正在出題' : '玩家正在傳頁' }}</h1>
+        <p>題目和作品會在對局結束後揭曉。</p>
+      </div>
+      <RoomCountdown
+        :deadline="state.deadline"
+        :duration="
+          (state.round % 2 ? state.options.drawingSeconds : state.options.textSeconds) * 1000
+        "
+        :offset="observerClockOffset || 0"
+        :now="observerNow ?? Date.now()"
+        :epoch="state.stepId || ''"
+        :caption="prompting ? '出題剩餘' : '本頁剩餘'"
       />
     </header>
     <header v-else-if="state.phase === 'finished'" class="vue-telephone-finished-heading">
@@ -388,12 +435,12 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         <span class="vue-telephone-action-note">{{
           state.review.index >= state.review.total - 1
             ? '所有故事已播放完畢。'
-            : room.host
+            : !observer && room.host
               ? '按一下揭曉下一個片段。'
               : '等待房主播放下一頁。'
         }}</span>
         <UiButton
-          v-if="state.review.index < state.review.total - 1 && room.host"
+          v-if="state.review.index < state.review.total - 1 && !observer && room.host"
           variant="primary"
           :icon="state.review.index < 0 ? 'play' : 'next'"
           :label="state.review.index < 0 ? '開始播放故事' : '播放下一頁'"

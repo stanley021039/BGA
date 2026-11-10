@@ -154,7 +154,7 @@ onBeforeUnmount(() => {
       <template v-if="showing">
         <div class="gacha-spotlight-badges">
           <UiBadge :tone="tones[item.rarity]">{{ item.rarityLabel }}</UiBadge>
-          <UiBadge v-if="area">多人招式</UiBadge>
+          <UiBadge v-if="area">範圍招式</UiBadge>
         </div>
         <UiHeading :level="2" kind="card">{{ item.label }}</UiHeading>
       </template>
@@ -162,6 +162,7 @@ onBeforeUnmount(() => {
     <div
       ref="stage"
       class="gacha-spotlight-stage"
+      :data-kind="item.kind"
       :aria-label="showing ? item.label + '效果演示' : '獎品演出'"
       role="group"
       tabindex="-1"
@@ -192,6 +193,7 @@ onBeforeUnmount(() => {
         <EntrancePreview
           v-else-if="moving && entrance"
           :effect="entrance"
+          frameless
           :image="image || '/assets/characters/traveler-neutral.png'"
           :name="name"
           :size="128"
@@ -288,6 +290,11 @@ onBeforeUnmount(() => {
       transparent 65%
     ),
     var(--stitch-artwork-preview-bg);
+}
+.gacha-spotlight-stage[data-kind='entrances'] {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 .gacha-spotlight-ring {
   grid-area: 1 / 1;

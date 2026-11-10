@@ -138,18 +138,23 @@ test('majority votes, gift assignments, minimal drafts, bluff roles and trpg pla
   minimal.question.title = SECRET;
   minimal.drafts[minimal.players[1].id] = [{ kind: 'line', x1: 1, y1: 2, x2: 3, y2: 4 }];
   assert.deepEqual(spectatorView(minimal).drawings, []);
+  assert.equal(spectatorView(minimal).minimalScene.currentDrawing, null);
   hidden(minimal);
   minimal.phase = 'guessing';
   minimal.order = [minimal.players[1].id];
   minimal.shown = 0;
   hidden(minimal);
   assert.equal(spectatorView(minimal).drawings.length, 1);
+  assert.equal(spectatorView(minimal).minimalScene.currentDrawing.count, 1);
   const bluff = make('bluff', true);
   bluff.phase = 'preparing';
   bluff.question = { title: '公開題目', answer: SECRET, explanation: SECRET };
   bluff.roles = { [bluff.players[1].id]: SECRET };
   bluff.draft = { honestId: SECRET };
   hidden(bluff);
+  bluff.phase = 'discussion';
+  hidden(bluff);
+  assert.deepEqual(spectatorView(bluff).bluffScene.draft, { challenges: [], honestId: null });
   const trpg = make('trpg', true);
   trpg.plans = { [trpg.players[0].id]: { note: SECRET, stance: SECRET } };
   hidden(trpg);
@@ -171,6 +176,10 @@ test('musicquiz masks song identity/year and private guesses while keeping publi
   hidden(r);
   let v = spectatorView(r);
   assert.equal(v.clips[0].playback.stage, 'intro');
+  assert.equal(
+    v.sections.find((section) => section.title.endsWith('的年代軸')).playerId,
+    v.players[0].id,
+  );
   assert.equal(JSON.stringify(v).includes('2345'), false);
   r.phase = 'reveal';
   assert.ok(JSON.stringify(spectatorView(r)).includes(SECRET));
@@ -191,7 +200,9 @@ test('quacks honors hidden-progress and never exposes bag order, peek or private
   p.stopped = false;
   let v = spectatorView(r);
   assert.equal(v.pots[0].hidden, true);
+  assert.equal(v.pots[0].playerId, v.players[0].id);
   assert.deepEqual(v.pots[0].chips, []);
+  assert.equal(v.quacksScene.recipes[0].pot, null);
   hidden(r);
   p.exploded = true;
   v = spectatorView(r);
@@ -209,10 +220,16 @@ test('thunder masks hidden hazards and pending round dice, then shows only face-
   r.diceCheck = { kind: 'round', owner: r.players[0].id };
   hidden(r);
   assert.equal(spectatorView(r).track.cells[0].label, '?');
+  assert.deepEqual(spectatorView(r).raceBoard.tiles[0].cells[0][0].hazard, {
+    face: false,
+    kind: 'unknown',
+  });
+  assert.equal(spectatorView(r).raceBoard.activeCar, null);
   r.players[0].dice = [];
   r.diceCheck = null;
   r.tiles[0].cells[0][0].hazard.face = true;
   assert.equal(spectatorView(r).track.cells[0].label, SECRET);
+  assert.equal(spectatorView(r).raceBoard.tiles[0].cells[0][0].hazard.kind, SECRET);
 });
 
 test('CEO and Second Wind expose neutral game projections and clear them on rematch', () => {

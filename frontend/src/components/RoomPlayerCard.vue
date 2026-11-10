@@ -18,16 +18,20 @@ withDefaults(
     score?: number | string;
     scoreLabel?: string;
     highInfo?: boolean;
+    viewSelected?: boolean;
   }>(),
-  { actorLabel: '目前行動', status: '', scoreLabel: '分' },
+  { actorLabel: '目前行動', status: '', scoreLabel: '分', viewSelected: undefined },
 );
+const emit = defineEmits<{ view: [] }>();
 const hint = useId();
 </script>
 <template>
   <div
     class="vue-player-card"
     tabindex="0"
-    :aria-label="player.name"
+    :role="viewSelected === undefined ? undefined : 'button'"
+    :aria-pressed="viewSelected"
+    :aria-label="viewSelected === undefined ? player.name : '觀看' + player.name + '的視角'"
     :aria-describedby="status ? hint : undefined"
     :data-progress="progress"
     :data-high-info="highInfo"
@@ -35,6 +39,9 @@ const hint = useId();
     :data-self="self"
     :data-player-id="player.id"
     :data-ping-player="player.id"
+    @click="viewSelected !== undefined && emit('view')"
+    @keydown.enter.self="viewSelected !== undefined && emit('view')"
+    @keydown.space.self="viewSelected !== undefined && ($event.preventDefault(), emit('view'))"
   >
     <div class="vue-player-card-heading">
       <div class="vue-player-card-avatar"

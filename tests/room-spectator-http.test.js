@@ -78,7 +78,27 @@ test('seated players see distinct live viewer nicknames for their room', async (
   assert.deepEqual((await state()).viewerNames, []);
 });
 
-test('every room type exposes GET-only authenticated observation without seats, player commands or private controller state', async (t) => {
+test('observers share text with players without joining or receiving player state', async (t) => {
+  const { request } = await fixture(t);
+  const { code } = await request('host', 'create', { type: 'poker' });
+  const route = 'watch/chat';
+  const body = { code, message: '這局好看', requestId: randomUUID() };
+  await request('none', route, body, 401);
+  await request('host', route, body, 409);
+  const reply = await request('guest', route, body);
+  assert.equal(reply.roomState, undefined);
+  assert.equal(reply.messages[0].name, '觀戰朋友（觀戰）');
+  assert.equal(reply.messages[0].message, body.message);
+  assert.deepEqual((await request('guest', route, body)).messages, reply.messages);
+  assert.deepEqual((await request('guest', 'watch?code=' + code)).messages, reply.messages);
+  assert.deepEqual(
+    (await request('host', 'chat?channel=table&code=' + code)).messages,
+    reply.messages,
+  );
+  assert.equal((await request('host', 'state?code=' + code)).players.length, 1);
+});
+
+test('every room type exposes GET-only game observation without seats, player commands or private controller state', async (t) => {
   const f = await fixture(t),
     call = f.request;
   for (const type of Object.keys(games))

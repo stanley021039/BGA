@@ -503,7 +503,7 @@ test('gacha HTTP authenticates, grants daily once, settles/replays ten pulls and
       Object.fromEntries(
         Object.entries(bonusWeights).map(([tier, weight]) => [tier, weight / total]),
       ),
-      { common: 0, rare: 0, epic: 0.65, legendary: 0.35 },
+      { common: 0.01, rare: 0.04, epic: 0.55, legendary: 0.4 },
     );
   }
   assert.deepEqual(

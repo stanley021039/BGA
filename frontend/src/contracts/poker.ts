@@ -36,7 +36,7 @@ const card = (value: unknown): value is number => integer(value) && value < 52;
 function invalid(): never {
   throw Error('德州撲克牌桌資料格式不正確。');
 }
-export function readPokerSnapshot(value: unknown): PokerSnapshot {
+export function readPokerSnapshot(value: unknown, observer = false): PokerSnapshot {
   const base = readRoomSnapshot(value),
     r = record(value);
   if (
@@ -66,7 +66,7 @@ export function readPokerSnapshot(value: unknown): PokerSnapshot {
     )
       return invalid();
     if (
-      p.id !== base.me &&
+      (observer || p.id !== base.me) &&
       (base.phase !== 'showdown' || p.folded || base.players.filter((q) => !q.folded).length < 2) &&
       cards.some((c) => c !== null)
     )
@@ -86,15 +86,17 @@ export function readPokerSnapshot(value: unknown): PokerSnapshot {
     players.length > 8 ||
     r.button >= players.length ||
     r.turn >= players.length ||
-    !players.some((p) => p.id === base.me) ||
-    r.pot !== players.reduce((sum, p) => sum + p.total, 0)
+    (!observer && !players.some((p) => p.id === base.me)) ||
+    (observer
+      ? r.pot < players.reduce((sum, p) => sum + p.total, 0)
+      : r.pot !== players.reduce((sum, p) => sum + p.total, 0))
   )
     return invalid();
   const active = !['waiting', 'showdown'].includes(base.phase);
   if (
     active &&
     (r.hand < 1 ||
-      r.turn < 0 ||
+      (!observer && r.turn < 0) ||
       !Number.isFinite(r.deadline) ||
       players[r.turn]?.folded ||
       players[r.turn]?.stack === 0)

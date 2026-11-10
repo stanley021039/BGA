@@ -24,6 +24,7 @@ function open() {
   <section class="vue-preference-group lobby-background-preference" aria-label="大廳背景設定">
     <UiCheckbox
       label="顯示大廳背景"
+      variant="prominent"
       :model-value="background.visible"
       :aria-describedby="visibilityNoteId"
       @update:model-value="background.setVisible($event === true)"
