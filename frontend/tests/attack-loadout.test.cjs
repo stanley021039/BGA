@@ -44,7 +44,7 @@ function fixture(request) {
     close: () => pinia.disposePinia(instance),
   };
 }
-test('Q/E loadout saves only after server acceptance and preserves the other slot', async () => {
+test('Q/E loadout saves silently after server acceptance and preserves the other slot', async () => {
   const calls = [],
     f = fixture(async (route, options) => {
       calls.push({ route, ...options });
@@ -59,7 +59,7 @@ test('Q/E loadout saves only after server acceptance and preserves the other slo
     await f.store.choose('e', 'frost_spikes');
     assert.equal(f.store.loadout.q, 'blade_aura');
     assert.equal(f.store.loadout.e, 'frost_spikes');
-    assert.equal(f.sounds.length, 2);
+    assert.equal(f.sounds.length, 0);
   } finally {
     f.close();
   }

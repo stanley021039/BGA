@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import '../styles/entrance-preview.scss';
-import { playActionFeedback } from '../services/action-sounds';
 import MotionPolicy from '../engines/motion-policy.js';
 
 import { onBeforeUnmount, onMounted, ref } from 'vue';
@@ -50,10 +49,7 @@ function play(groupId: string, id: EntranceEffectId) {
   stop = apparate(actor, stage, id);
 }
 function choose(groupId: string, id: EntranceEffectId) {
-  if (allowed(id) && entranceEffect.value !== id) {
-    setEntranceEffect(id);
-    playActionFeedback();
-  }
+  if (allowed(id) && entranceEffect.value !== id) setEntranceEffect(id);
   play(groupId, id);
 }
 onBeforeUnmount(() => stop?.());
