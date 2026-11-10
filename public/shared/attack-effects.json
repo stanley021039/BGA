@@ -1,7 +1,7 @@
 [
   {
     "id": "barrage",
-    "label": "連射／散射能量彈",
+    "label": "能量光子彈",
     "color": "#63f5ff",
     "description": "亮彩能量彈與銀白、鋼藍、淺金的金屬色彈交錯連射。",
     "achievementId": null,
@@ -9,7 +9,7 @@
   },
   {
     "id": "beam",
-    "label": "超人力霸王十字光線",
+    "label": "斯派修姆光線",
     "color": "#7df4ff",
     "description": "蓄力十字手勢幾何電光、高能集束貫通射線、連續震顫衝擊。",
     "achievementId": null,
@@ -17,7 +17,7 @@
   },
   {
     "id": "shield",
-    "label": "六角形能量護盾",
+    "label": "六角能量護盾",
     "color": "#00f0ff",
     "description": "六角能量護盾展開，先維持2秒完整減傷，再接2秒半幅減傷，重施只刷新時間。完整護盾首次實際減傷時，額外回復5能量。",
     "achievementId": "gift-first-gift",
@@ -41,7 +41,7 @@
   },
   {
     "id": "orbital",
-    "label": "天降光柱",
+    "label": "聖別光柱",
     "color": "#ffd556",
     "description": "天基軌道幾何符文鎖定、超高能天頂垂直降臨光束、地面熔岩焦痕。首次有效命中有30%機率封鎖瞬移1秒。",
     "achievementId": "thunder-first-drive",
@@ -81,7 +81,7 @@
   },
   {
     "id": "chain_lightning",
-    "label": "連鎖雷霆／天頂落雷",
+    "label": "天暴雷霆",
     "color": "#00f0ff",
     "description": "九天折線電弧劈裂、高壓等離子電漿光芒、強烈震屏暴擊。",
     "achievementId": "musicquiz-rescue",
@@ -89,7 +89,7 @@
   },
   {
     "id": "frost_spikes",
-    "label": "寒冰結晶／極地霜刺",
+    "label": "極地霜凍",
     "color": "#7df4ff",
     "description": "錯落冰川破地，深藍晶面襯出白亮冰鋒、裂紋與側生碎晶。首次有效命中使對手移速降低20%，持續1秒。",
     "achievementId": "telephone-first-match",
@@ -97,7 +97,7 @@
   },
   {
     "id": "arrow_volley",
-    "label": "光輝天降箭雨",
+    "label": "光輝箭雨",
     "color": "#ff5a24",
     "description": "橘紅焰尾箭雨密集落下，白熱箭鏃、箭身與箭羽清楚可辨。首次有效命中有30%機率造成持續傷害，每秒一次，共2次。",
     "achievementId": "minimal-three-shapes",
@@ -105,7 +105,7 @@
   },
   {
     "id": "flame_vortex",
-    "label": "炎獄烈焰龍捲",
+    "label": "炎獄龍捲",
     "color": "#ff3366",
     "description": "一大三小烈焰龍捲錯落捲升，金紅火流環繞主風暴旋轉。首次有效命中有30%機率造成持續傷害，每秒一次，共2次。",
     "achievementId": "quacks-fifty-points",
@@ -287,7 +287,7 @@
   },
   {
     "id": "micro_missiles",
-    "label": "微型飛彈齊射",
+    "label": "微型飛彈",
     "color": "#ffad54",
     "description": "四枚弧形導彈分段命中，每次施放最多回復30能量。",
     "gachaOnly": true,
@@ -295,7 +295,7 @@
   },
   {
     "id": "micro_missiles_alt",
-    "label": "微型飛彈齊射（異色）",
+    "label": "微型飛彈（異色）",
     "color": "#b388ff",
     "description": "四枚弧形導彈分段命中，每次施放最多回復30能量。",
     "gachaOnly": true,
@@ -344,7 +344,7 @@
   },
   {
     "id": "barrage_alt",
-    "label": "連射／散射能量彈（玫紅異色）",
+    "label": "能量光子彈（玫紅異色）",
     "color": "#fa4298",
     "description": "亮玫紅能量彈穿插深莓紅、鐵灰與咖啡色彈，淺色外環勾勒深色彈身。",
     "gachaOnly": true,
@@ -354,7 +354,7 @@
   },
   {
     "id": "beam_alt",
-    "label": "超人力霸王十字光線（紅黑異色）",
+    "label": "斯派修姆光線（紅黑異色）",
     "color": "#fa294a",
     "description": "十字電光蓄力，赤紅電弧包住漆黑束芯貫穿目標。",
     "gachaOnly": true,
@@ -364,7 +364,7 @@
   },
   {
     "id": "shield_alt",
-    "label": "六角形能量護盾（翡翠異色）",
+    "label": "六角能量護盾（翡翠異色）",
     "color": "#42faa4",
     "description": "異色特效，招式效果與原版相同。六角能量護盾展開，先維持2秒完整減傷，再接2秒半幅減傷，重施只刷新時間。完整護盾首次實際減傷時，額外回復5能量。",
     "gachaOnly": true,
@@ -394,7 +394,7 @@
   },
   {
     "id": "orbital_alt",
-    "label": "天降光柱（紫晶異色）",
+    "label": "聖別光柱（紫晶異色）",
     "color": "#ad42fa",
     "description": "異色特效，招式效果與原版相同。天基軌道幾何符文鎖定、超高能天頂垂直降臨光束、地面熔岩焦痕。首次有效命中有30%機率封鎖瞬移1秒。",
     "gachaOnly": true,
@@ -424,7 +424,7 @@
   },
   {
     "id": "chain_lightning_alt",
-    "label": "連鎖雷霆／天頂落雷（金雷異色）",
+    "label": "天暴雷霆（金雷異色）",
     "color": "#fad842",
     "description": "異色特效，招式效果與原版相同。九天折線電弧劈裂、高壓等離子電漿光芒、強烈震屏暴擊。",
     "gachaOnly": true,
@@ -434,7 +434,7 @@
   },
   {
     "id": "frost_spikes_alt",
-    "label": "寒冰結晶／極地霜刺（緋晶異色）",
+    "label": "極地霜凍（緋晶異色）",
     "color": "#fa428f",
     "description": "異色特效，招式效果與原版相同。錯落冰川破地，深藍晶面襯出白亮冰鋒、裂紋與側生碎晶。首次有效命中使對手移速降低20%，持續1秒。",
     "gachaOnly": true,
@@ -444,7 +444,7 @@
   },
   {
     "id": "arrow_volley_alt",
-    "label": "光輝天降箭雨（蒼藍異色）",
+    "label": "光輝箭雨（蒼藍異色）",
     "color": "#42a4fa",
     "description": "異色特效，招式效果與原版相同。橘紅焰尾箭雨密集落下，白熱箭鏃、箭身與箭羽清楚可辨。首次有效命中有30%機率造成持續傷害，每秒一次，共2次。",
     "gachaOnly": true,
@@ -454,7 +454,7 @@
   },
   {
     "id": "flame_vortex_alt",
-    "label": "炎獄烈焰龍捲（幽紫異色）",
+    "label": "炎獄龍捲（幽紫異色）",
     "color": "#9242fa",
     "description": "異色特效，招式效果與原版相同。一大三小烈焰龍捲錯落捲升，金紅火流環繞主風暴旋轉。首次有效命中有30%機率造成持續傷害，每秒一次，共2次。",
     "gachaOnly": true,
@@ -636,7 +636,7 @@
   },
   {
     "id": "venom_thorn",
-    "label": "雙鞭",
+    "label": "奴鬼之鞭",
     "color": "#915b38",
     "description": "雙鞭手左右錯拍甩鞭，連續抽擊同一目標。",
     "gachaOnly": true,
@@ -644,7 +644,7 @@
   },
   {
     "id": "venom_thorn_alt",
-    "label": "雙鞭（靛藍琥珀異色）",
+    "label": "奴鬼之鞭（靛藍琥珀異色）",
     "color": "#f59e0b",
     "description": "雙鞭手左右錯拍甩鞭，連續抽擊同一目標。",
     "gachaOnly": true,
@@ -744,7 +744,7 @@
   },
   {
     "id": "crystal_reflection",
-    "label": "晶體反彈",
+    "label": "晶能叱返",
     "color": "#69e3f4",
     "description": "晶體屏障維持 0.8 秒，擋下期間命中的可反彈投射物。鎖定第一位攻擊者，將該玩家命中的各段以原招式與配色慢速彈回。彈回的攻擊無法再次反彈。",
     "gachaOnly": true,
@@ -752,7 +752,7 @@
   },
   {
     "id": "crystal_reflection_alt",
-    "label": "晶體反彈（琥珀異色）",
+    "label": "晶能叱返（琥珀異色）",
     "color": "#ffc361",
     "description": "晶體屏障維持 0.8 秒，擋下期間命中的可反彈投射物。鎖定第一位攻擊者，將該玩家命中的各段以原招式與配色慢速彈回。彈回的攻擊無法再次反彈。",
     "gachaOnly": true,
