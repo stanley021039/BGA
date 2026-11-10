@@ -294,6 +294,7 @@ $typography: (
   // Panel padding: regular 24, compact 16 (dense sidebars, settings cards).
   --stitch-panel-padding: var(--stitch-space-24);
   --stitch-panel-padding-compact: var(--stitch-space-16);
+  --stitch-panel-translucent-bg: color-mix(in srgb, var(--stitch-surface) 75%, transparent);
   // Controls share a minimum height; buttons/labels are 14, input text is 16.
   --stitch-control-padding-block: var(--stitch-space-8);
   --stitch-control-padding-inline: var(--stitch-space-12);

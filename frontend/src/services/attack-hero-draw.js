@@ -1,3 +1,4 @@
+import { heroFlightArc } from './hero-flight-path.js';
 import { drawHeroFlyingStatue, drawHeroLandedStatue } from './attack-colossus.js';
 /* Adapted from actual Stitch 14297655819267599636 / 4c267cf915084dfea662d2d6071a62af.
  * UI and driver removed. No fallback targets or fake caster, real receipts only. */
@@ -184,39 +185,13 @@ export function drawGateOfHeroes(ctx, options, elapsedMs) {
 
       ctx.restore();
 
-      // 2. 羽翼光翼 (不遮擋本體，向兩側大範圍伸展)
-      const wingSpread = Math.min(1, elapsedMs / 450);
-      ctx.save();
-      ctx.translate(0, -40);
-      ctx.globalAlpha = gateAlpha * 0.85;
-
-      [-1, 1].forEach((dir) => {
+      if (elapsedMs < 600) {
         ctx.save();
-        ctx.scale(dir * wingSpread, wingSpread);
-        // 主羽
-        ctx.beginPath();
-        ctx.moveTo(15, 0);
-        ctx.quadraticCurveTo(55, -45, 110, -25);
-        ctx.quadraticCurveTo(80, 5, 20, 20);
-        ctx.closePath();
-        ctx.fillStyle = pal.goldGlow;
-        ctx.strokeStyle = pal.goldLight;
-        ctx.lineWidth = 2;
-        ctx.fill();
-        ctx.stroke();
-
-        // 輔羽層次
-        ctx.beginPath();
-        ctx.moveTo(18, 5);
-        ctx.quadraticCurveTo(70, -25, 95, 15);
-        ctx.quadraticCurveTo(50, 25, 18, 25);
-        ctx.closePath();
-        ctx.fillStyle = pal.goldGlow;
-        ctx.stroke();
-        ctx.fill();
+        ctx.translate(0, -70);
+        ctx.globalAlpha = gateAlpha;
+        drawHeroFlyingStatue(ctx, pal, 0);
         ctx.restore();
-      });
-      ctx.restore();
+      }
     }
     ctx.restore();
   }
@@ -310,10 +285,10 @@ export function drawGateOfHeroes(ctx, options, elapsedMs) {
     const endY = to.y;
 
     // 向上衝起再極速下墜
-    const apexHeight = Math.min(240, Math.max(30, Math.min(startY, endY) - 170));
+    const apexHeight = opt.flightLift;
     const currentX = startX + (endX - startX) * flightNorm;
     const baseLinearY = startY + (endY - startY) * flightNorm;
-    const arcOffset = 4 * apexHeight * flightNorm * (1 - flightNorm);
+    const arcOffset = apexHeight * heroFlightArc(flightNorm);
     const currentY = baseLinearY - arcOffset;
 
     // 尾跡金色流光與羽毛 (≤ 16 顆)
@@ -324,7 +299,7 @@ export function drawGateOfHeroes(ctx, options, elapsedMs) {
       const ty =
         startY +
         (endY - startY) * trailNorm -
-        4 * apexHeight * trailNorm * (1 - trailNorm) +
+        apexHeight * heroFlightArc(trailNorm) +
         Math.cos(i * 1.5) * 6;
       const alpha = (1 - i / 14) * 0.6;
       ctx.beginPath();
@@ -337,10 +312,17 @@ export function drawGateOfHeroes(ctx, options, elapsedMs) {
 
     // 繪製空中的飛躍石像姿態 (迎風下撲傾角)
     ctx.save();
-    ctx.translate(currentX, currentY);
-    const angle = Math.atan2(endY - startY, endX - startX) * 0.6 + (flightNorm > 0.6 ? 0.4 : -0.2);
-    ctx.rotate(angle);
-    drawHeroFlyingStatue(ctx, pal);
+    const visibleY = Math.max(105, currentY);
+    const flightSize = Math.min(1, visibleY / 224);
+    ctx.translate(currentX, visibleY);
+    ctx.scale(flightSize, flightSize);
+    const angle = Math.atan2(endY - startY, Math.abs(endX - startX) + 1) * 0.38;
+    const opening = Math.min(1, Math.max(0, (flightNorm - 0.07) / 0.27));
+    const spread = opening * opening * (3 - 2 * opening);
+    const dive = Math.max(0, (flightNorm - 0.62) / 0.38);
+    const lean = Math.sign(endX - startX) * (angle - 0.16 + dive * 0.56);
+    ctx.rotate(lean);
+    drawHeroFlyingStatue(ctx, pal, spread * (1 - dive * 0.35));
     ctx.restore();
   }
 

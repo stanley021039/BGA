@@ -48,6 +48,8 @@ function owned(store, userId) {
       attacks: require('./attack-rewards').ownedAttacks(store.db, userId),
       sounds: ids('sounds'),
       entrances: ids('entrances'),
+      frames: ids('frames'),
+      media: ids('media'),
       backgrounds: [
         ...new Set(
           require('../../public/shared/lobby-backgrounds.json')

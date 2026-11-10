@@ -7,7 +7,10 @@ import {
   drawSniper,
 } from './attack-new-draws.js';
 import { drawGateOfHeroes } from './attack-hero-draw.js';
+import { heroFlightLift, heroFlightArc } from './hero-flight-path.js';
 import { drawUltimateTitle } from './attack-revision.js';
+import { createSingleUltimate } from './attack-single-ultimates.js';
+import { createExtraUltimate } from './attack-ultimate-extra.js';
 const draws = {
   shaohua_devour: drawShaohua,
   reaper_seal: drawReaper,
@@ -30,6 +33,9 @@ function picture(url) {
   return img.complete && img.naturalWidth ? img : null;
 }
 export function createNewAttack(ctx, options) {
+  const extra =
+    createExtraUltimate(ctx, options, picture) || createSingleUltimate(ctx, options, picture);
+  if (extra) return extra;
   const kind = options.effect.replace(/_alt$/, '');
   if (!draws[kind] && kind !== 'gate_of_heroes') return null;
   const scale = Math.min(1.1, Math.max(0.38, options.height / 700), options.width / 550);
@@ -105,6 +111,7 @@ export function createNewAttack(ctx, options) {
     }
     if (options.cancelled?.()) return;
     const point = (p) => ({ x: p.x / scale, y: p.y / scale });
+    const flightLift = heroFlightLift(options.height, options.from.y, options.to.y);
     ctx.save();
     try {
       ctx.scale(scale, scale);
@@ -114,6 +121,7 @@ export function createNewAttack(ctx, options) {
           ...settings,
           from: point(options.from),
           to: point(options.to),
+          flightLift: flightLift / scale,
           images: {},
           readHits: () => hits().map((h) => ({ ...h, ...point(h) })),
         },
@@ -149,10 +157,7 @@ export function createNewAttack(ctx, options) {
     if (options.preview && avatar && elapsed >= 600 && elapsed < 2100) {
       const p = (elapsed - 600) / 1500;
       const x = options.from.x + (options.to.x - options.from.x) * p,
-        y =
-          options.from.y +
-          (options.to.y - options.from.y) * p -
-          Math.sin(p * Math.PI) * Math.min(180, options.height * 0.35);
+        y = options.from.y + (options.to.y - options.from.y) * p - heroFlightArc(p) * flightLift;
       const size = 52 * scale;
       ctx.drawImage(avatar, x - size / 2, y - size / 2, size, size);
     }

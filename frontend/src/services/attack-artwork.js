@@ -6,8 +6,9 @@ import attackEffects from '../../../public/shared/attack-effects.json';
 import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
 import { createStitchAttack } from './attack-stitch.js';
 import { createNewAttack } from './attack-new.js';
+import { createOrdinaryAttack } from './attack-ordinary.js';
 import combatRules from '../../../public/shared/scene-rules.json';
-import { attackVariant, attackPalette } from './attack-variants.js';
+import { attackVariant, attackPalette, attackArtworkKind } from './attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
 // Full detail for one attack on its own canvas; a shared stage lowers these by load.
 const FULL_DETAIL = { density: 1, glow: 1 };
@@ -38,24 +39,143 @@ function glowSprite(color) {
   glowSprites.set(color, sprite);
   return sprite;
 }
+function drawSacredArrow(ctx, x, y, angle, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  // Dark outline keeps the shaft, broad head and split fletching
+  // legible inside the orange-red glow.
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 9;
+  ctx.strokeStyle = '#7f1d1d';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(-44, 0);
+  ctx.lineTo(0, 0);
+  ctx.stroke();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(10, 0);
+  ctx.lineTo(-6, -6);
+  ctx.lineTo(-2, 0);
+  ctx.lineTo(-6, 6);
+  ctx.closePath();
+  ctx.fillStyle = '#fff1dc';
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(-43, side * 7);
+    ctx.lineTo(-38, 0);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+const nativePalettes = new Set([
+  'barrage_alt',
+  'giga_drill_alt',
+  'starburst_stream_alt',
+  'bell_shockwave_alt',
+  'quicksand_trap_alt',
+  'shadow_lunge_alt',
+  'seeking_talismans_alt',
+  'sakura_swarm_alt',
+  'venom_thorn_alt',
+]);
+
+function createReturnArtwork(context, options, hit, from) {
+  const id = hit.reflectedEffect;
+  const effect = attackArtworkKind(id);
+  if (!combatRules.crystalReflection.projectiles.includes(effect)) return;
+  const phase = attackTiming[effect]?.find((stage) => stage[2] === hit.reflectedPhase);
+  if (!phase) return;
+  const definition = attackEffects.find((entry) => entry.id === effect);
+  const variant = attackVariant(id);
+  const rose = id === 'barrage_alt';
+  const customPalette = nativePalettes.has(id);
+  const ctx =
+    variant && !customPalette
+      ? attackPalette(context, variant.paletteHue, definition.color).ctx
+      : context;
+  const to = { x: hit.x, y: hit.y };
+  const { travelMs } = combatRules.crystalReflection;
+  if (effect === 'arrow_volley') {
+    return (elapsed, target) => {
+      const dx = target.x - from.x,
+        dy = target.y - from.y;
+      if (elapsed <= travelMs)
+        drawSacredArrow(
+          ctx,
+          from.x + (dx * elapsed) / travelMs,
+          from.y + (dy * elapsed) / travelMs,
+          Math.atan2(dy, dx),
+          '#ff5a24',
+        );
+    };
+  }
+  const returned = {
+    effect: rose ? id : effect,
+    from,
+    to,
+    width: options.width,
+    height: options.height,
+    color: customPalette && variant ? variant.color : definition.color,
+    reflectedPhase: hit.reflectedPhase,
+  };
+  const ordinary = createOrdinaryAttack(ctx, returned);
+  const renderer =
+    ordinary ||
+    createNewAttack(ctx, returned) ||
+    createRevisionAttack(ctx, returned, () => {}) ||
+    createStitchAttack(ctx, returned, () => {});
+  if (!renderer) return;
+  const arrival = phase[0];
+  const lead = Math.min(arrival, 700);
+  return (elapsed, target) => {
+    to.x = target.x;
+    to.y = target.y;
+    renderer(ordinary ? elapsed : arrival + ((elapsed - travelMs) * lead) / travelMs);
+  };
+}
+
 // One attack drawn into a context owned by the caller: draw(now) paints a frame
 // (without clearing) and returns false once the attack has finished.
 export function createAttackScene(context, options) {
+  if (attackArtworkKind(options.effect) === 'susanoo') {
+    options = { ...options, effect: 'susanoo' };
+  }
   const variant = attackVariant(options.effect);
   const base = variant && attackEffects.find((effect) => effect.id === variant.variantOf);
-  // The rose barrage draws its own light and dark shots on the shared canvas.
+  // These alternate effects paint their own materials and highlights.
   const roseBarrage = variant?.id === 'barrage_alt';
-  const palette = base && !roseBarrage && attackPalette(context, variant.paletteHue, base.color);
+  const customPalette = nativePalettes.has(variant?.id);
+  const palette = base && !customPalette && attackPalette(context, variant.paletteHue, base.color);
   const ctx = palette?.ctx ?? context;
   if (base)
-    options = { ...options, effect: base.id, color: roseBarrage ? variant.color : base.color };
+    options = {
+      ...options,
+      effect: base.id,
+      color: customPalette ? variant.color : base.color,
+      alternatePalette: customPalette ? variant.id : undefined,
+    };
   const readCaster = options.readCaster;
   let casterSample;
   if (readCaster)
     options = { ...options, readCaster: () => (casterSample ??= readCaster() || options.from) };
   const fx = options.fx || FULL_DETAIL;
   // Previews use the same phase schedule; real scenes only show server-settled hits.
-  if (options.preview && !options.readHits && !['shield', 'sphere'].includes(options.effect)) {
+  if (
+    options.preview &&
+    !options.readHits &&
+    !['shield', 'sphere', 'crystal_reflection'].includes(options.effect)
+  ) {
     const effect = attackEffects.find((effect) => effect.id === options.effect);
     const area = effect?.area;
     const base =
@@ -66,7 +186,9 @@ export function createAttackScene(context, options) {
       (options.effect === 'explosion' ? 1.5 : 1);
     const points = options.hits?.length
       ? options.hits
-      : options.effect.replace(/_alt$/, '') === 'reaper_seal'
+      : ['reaper_seal', 'black_coffin', 'world_stasis', 'human_malice', 'susanoo'].includes(
+            options.effect.replace(/_alt$/, ''),
+          )
         ? [-1, 0, 1].map((i) => ({
             x: Math.max(
               18,
@@ -593,7 +715,8 @@ export function createAttackScene(context, options) {
     }
   };
   const advanced =
-    createNewAttack(ctx, { ...options, label: definition?.label }) ||
+    createOrdinaryAttack(ctx, options) ||
+    createNewAttack(ctx, { ...options, area, label: definition?.label }) ||
     createAreaAttack(
       ctx,
       { ...options, area, label: definition?.label, range: combatRules.areaAttackRange },
@@ -615,6 +738,15 @@ export function createAttackScene(context, options) {
       );
     });
   if (!advanced) fireVfxNode(ids[options.effect], from.x, from.y, to.x, to.y);
+  const returns = new Map();
+  function reflect(hit, origin, elapsed) {
+    const index = hit.reflectionIndex ?? 0;
+    if (!returns.has(index)) returns.set(index, createReturnArtwork(context, options, hit, origin));
+    const drawReturn = returns.get(index);
+    if (!drawReturn) return false;
+    drawReturn(elapsed, hit);
+    return true;
+  }
   const start = performance.now() - Math.max(0, Math.min(4100, options.ageMs || 0));
   const emitted = new Set();
   const poolLimit = Math.round(220 * fx.density);
@@ -647,12 +779,13 @@ export function createAttackScene(context, options) {
     ctx.save();
     for (const clip of options.coverClips || []) ctx.clip(clip, 'evenodd');
     if (anchor) ctx.translate(anchor.x - from.x, anchor.y - from.y);
-    advanced?.(now - start);
+    advanced?.(now - start, options.effect === 'crystal_reflection' ? reflect : undefined);
     for (const hit of options.readHits?.() || []) {
-      const key = hit.toId + ':' + hit.phase;
+      const key = hit.reflectionIndex ?? hit.toId + ':' + hit.phase;
       if (emitted.has(key) || hit.pending || hit.missed || !hit.damage || now - start < hit.delayMs)
         continue;
       emitted.add(key);
+      if (options.effect === 'starburst_stream') continue;
       triggerShockwave(hit.x, hit.y, 80, options.color, 4);
       spawnImpactSparks(hit.x, hit.y, 8, options.color);
       spawnDamageText(hit.x, hit.y, 1, hit.critical, null, hit);
@@ -912,42 +1045,7 @@ export function createAttackScene(context, options) {
         p.x += Math.cos(angle) * p.speed;
         p.y += Math.sin(angle) * p.speed;
 
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(angle);
-        // Dark outline keeps the shaft, broad head and split fletching
-        // legible inside the orange-red glow.
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 9;
-        ctx.strokeStyle = '#7f1d1d';
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.moveTo(-44, 0);
-        ctx.lineTo(0, 0);
-        ctx.stroke();
-        ctx.strokeStyle = p.color;
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(10, 0);
-        ctx.lineTo(-6, -6);
-        ctx.lineTo(-2, 0);
-        ctx.lineTo(-6, 6);
-        ctx.closePath();
-        ctx.fillStyle = '#fff1dc';
-        ctx.fill();
-        ctx.strokeStyle = p.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        for (const side of [-1, 1]) {
-          ctx.beginPath();
-          ctx.moveTo(-30, 0);
-          ctx.lineTo(-43, side * 7);
-          ctx.lineTo(-38, 0);
-          ctx.fillStyle = p.color;
-          ctx.fill();
-        }
-        ctx.restore();
+        drawSacredArrow(ctx, p.x, p.y, angle, p.color);
 
         const dist = Math.hypot(p.x - p.tx, p.y - p.ty);
         if (dist < 18 || p.life <= 0) {

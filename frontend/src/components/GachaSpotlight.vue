@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { GachaItem } from '../contracts/gacha';
 import { entranceVariant, isEntranceEffect } from '../services/entrance-effects';
+import effects from '../../../public/shared/attack-effects.json';
 import { motionAllowed, watchMotionCancellation } from '../services/motion-lifetime.js';
 import AudioSettings from '../engines/audio-settings.js';
 import AttackArtwork from './AttackArtwork.vue';
@@ -11,6 +12,7 @@ import GachaRewardThumbnail from './GachaRewardThumbnail.vue';
 import LobbyBackgroundArt from './LobbyBackgroundArt.vue';
 import UiBadge from './UiBadge.vue';
 import UiButton from './UiButton.vue';
+import UiField from './UiField.vue';
 import UiHeading from './UiHeading.vue';
 import UiIcon from './UiIcon.vue';
 
@@ -47,8 +49,21 @@ const attackChants: Partial<Record<string, readonly [string, string]>> = {
   shaohua_devour: ['聞到獵物的氣息了。', '有什麼巨獸，正從暗處靠近'],
   reaper_seal: ['以絲絲的黑線，換那道門開啟。', '伸出手來，把未竟之事一併封存。'],
   gate_of_heroes: ['以萬丈光芒，點亮此座標。', '跨過門扉，讓落地的震聲響徹戰場。'],
+  black_coffin: ['以無光為壁，以長夜為棺。', '合上吧，讓最後一絲光也沉下去。'],
+  world_stasis: ['指針，停在這一刻。', '等我走過之後，時間才准繼續。'],
+  human_malice: ['所有炮口，都轉過來。', '笑一個。最後一發，就在我腳下。'],
+  susanoo: ['以查克拉之焰，披上武神的甲。', '此身所在，我才是最強！'],
+  starburst_stream: ['幫我撐10秒，雙刃已出鞘。', '在星光熄滅前，數完這十六刀。'],
+  rainbow_bear: ['彩虹那端，有誰張開了雙臂？', '抓到你囉♡，接住這個大擁抱！'],
+  zero_equation: ['將未知數交給我。', '當最後一道等式成立，一切歸零。'],
 };
 const rewardChants: Partial<Record<string, readonly [string, string]>> = {
+  'frames:observatory': ['把星座對準刻度。', '讓這句話沿著天球的軌道飛去。'],
+  'media:observatory': ['星儀轉到正北。', '讓每一次跳動，接上同一條星軌。'],
+  'frames:abyssal-glass': ['把話說給沉海的珊瑚聽。', '看那道光，從深處浮上來。'],
+  'media:abyssal-glass': ['氣泡在海床升起。', '讓旋律沿著潮流，一層層穿過琉璃。'],
+  'frames:eclipse-theatre': ['請把最後一盞燈留給我。', '帷幕下沉，讓這句話登場。'],
+  'media:eclipse-theatre': ['弦聲已起，日輪沉入黑幕。', '掌聲之前，請聽完這段序曲。'],
   'frames:mask': ['藏起真容，讓下一副面孔登場。', '字句掠過，滿座都是戲。'],
   'frames:dragon': ['舊金在餘燼裡閃動。', '讓每一行字，拖著一尾火光飛過。'],
   'frames:royal': ['帷幕拉開，讓燈光追上來。', '今晚的台詞，由你寫在半空。'],
@@ -66,6 +81,18 @@ const rewardChants: Partial<Record<string, readonly [string, string]>> = {
   'entrances:stitch-chibaku-tensei': ['碎石浮起，地平線開始彎折。', '萬物歸向一點，天星自此成形。'],
   'backgrounds:aurora': ['風雪停歇，群峰沒入深夜。', '天邊升起流光，整片雪地跟著亮了。'],
 };
+const summonStyles = computed(() =>
+  props.preview && props.item.kind === 'attacks'
+    ? effects.filter(
+        (effect) => 'summonStyle' in effect && (effect.rewardOf ?? effect.id) === props.item.id,
+      )
+    : [],
+);
+const selectedStyle = ref('');
+const shownAttack = computed(() => selectedStyle.value || props.item.id);
+function selectStyle(id: string | number | null | undefined) {
+  if (summonStyles.value.some((style) => style.id === id)) selectedStyle.value = String(id);
+}
 const shaohua = computed(() => props.attackId === 'shaohua_devour');
 const chant = computed(() => {
   if (props.attackId && attackChants[props.attackId]) return attackChants[props.attackId];
@@ -73,7 +100,7 @@ const chant = computed(() => {
   return rewardChants[variant ? 'entrances:' + variant.variantOf : props.item.key];
 });
 const chantMs = 6800;
-const showcaseMs = 4880;
+const showcaseMs = computed(() => (props.attackId === 'susanoo' ? 5300 : 4880));
 const chantCues = [
   'gacha-chant-you-say-run',
   'gacha-chant-il-vento-doro',
@@ -137,7 +164,7 @@ onMounted(() => {
     showReward();
   }
   if (!props.spectator)
-    end = setTimeout(() => emit('close'), showcaseMs + (chant.value ? chantMs : 0));
+    end = setTimeout(() => emit('close'), showcaseMs.value + (chant.value ? chantMs : 0));
   release = watchMotionCancellation(stopMotion);
 });
 onBeforeUnmount(() => {
@@ -187,7 +214,7 @@ onBeforeUnmount(() => {
         /></span>
         <AttackArtwork
           v-if="moving && item.kind === 'attacks'"
-          :effect="item.id"
+          :effect="shownAttack"
           :play-key="item.key"
         />
         <EntrancePreview
@@ -212,6 +239,18 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <div class="gacha-spotlight-actions">
+      <UiField
+        v-if="summonStyles.length > 1"
+        control="select"
+        label="須佐能乎造型"
+        label-hidden
+        :model-value="shownAttack"
+        @update:model-value="selectStyle"
+      >
+        <option v-for="style in summonStyles" :key="style.id" :value="style.id">{{
+          style.styleLabel
+        }}</option>
+      </UiField>
       <UiButton
         v-if="
           preview && moving && (item.kind === 'attacks' || entrance || item.kind === 'backgrounds')

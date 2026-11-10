@@ -51,6 +51,7 @@ export interface RoomSnapshot extends Record<string, unknown> {
   hostId?: string;
   players: RoomPlayer[];
   viewerNames?: string[];
+  matchReward?: { id: string; coins: number; winner: boolean };
 }
 const validCode = (value: unknown): value is string =>
   typeof value === 'string' && /^[a-f0-9]{6}$/i.test(value);
@@ -100,8 +101,19 @@ export function readRoomSnapshot(value: unknown): RoomSnapshot {
     (!Number.isSafeInteger(row.gameRevision) || (row.gameRevision as number) < 0)
   )
     throw Error('遊戲版本資料格式不正確');
+  const { matchReward, ...fields } = row;
+  const reward = matchReward === undefined ? undefined : record(matchReward);
+  if (
+    reward &&
+    (!text(reward.id) ||
+      typeof reward.coins !== 'number' ||
+      !Number.isSafeInteger(reward.coins) ||
+      reward.coins < 0 ||
+      typeof reward.winner !== 'boolean')
+  )
+    throw Error('對局獎勵資料格式不正確');
   return {
-    ...row,
+    ...fields,
     code: row.code.toUpperCase(),
     type,
     me: text(row.me),
@@ -111,6 +123,7 @@ export function readRoomSnapshot(value: unknown): RoomSnapshot {
     host: typeof row.host === 'string' ? row.host : row.host === true,
     hostId: typeof row.hostId === 'string' ? row.hostId : undefined,
     players,
+    ...(reward ? { matchReward: reward } : {}),
   } as RoomSnapshot;
 }
 function instance(snapshot: RoomSnapshot, path: 'media' | 'watch') {

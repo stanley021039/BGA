@@ -27,11 +27,17 @@ const BUILTIN_FRAME_OPTIONS = Object.freeze([
   Object.freeze({ id: 'steam', label: '蒸汽郵件' }),
   Object.freeze({ id: 'burst', label: '漫畫爆擊' }),
   Object.freeze({ id: 'royal', label: '皇家劇院' }),
+  Object.freeze({ id: 'observatory', label: '星儀觀測台' }),
+  Object.freeze({ id: 'abyssal-glass', label: '深海琉璃' }),
+  Object.freeze({ id: 'eclipse-theatre', label: '日蝕劇院' }),
   ...require('../achievements/rewards').rewards.map((r) =>
     Object.freeze({ id: r.frameId, label: r.label, achievementId: r.achievementId }),
   ),
 ]);
 const ids = new Set(BUILTIN_FRAME_OPTIONS.map((option) => option.id));
+const maxIdLength = Math.max(...[...ids].map((id) => id.length));
+const gachaOnlyFrames = new Set(['observatory', 'abyssal-glass', 'eclipse-theatre']);
+const isGachaOnlyFrame = (id) => gachaOnlyFrames.has(id);
 const descriptors = Object.freeze(
   Object.fromEntries(
     BUILTIN_FRAME_OPTIONS.map(({ id }) => [id, Object.freeze({ kind: 'builtin', id, version: 1 })]),
@@ -40,7 +46,7 @@ const descriptors = Object.freeze(
 
 function normalizeBuiltinFrameId(input) {
   if (input === undefined || input === null) return 'default';
-  if (typeof input !== 'string' || input.length > 7 || !ids.has(input))
+  if (typeof input !== 'string' || input.length > maxIdLength || !ids.has(input))
     throw new HttpError(400, 'INVALID_BARRAGE_FRAME', '請選擇有效的內建彈幕框');
   return input;
 }
@@ -48,4 +54,9 @@ function builtinFrameDescriptor(input) {
   return descriptors[normalizeBuiltinFrameId(input)];
 }
 
-module.exports = { BUILTIN_FRAME_OPTIONS, normalizeBuiltinFrameId, builtinFrameDescriptor };
+module.exports = {
+  BUILTIN_FRAME_OPTIONS,
+  normalizeBuiltinFrameId,
+  builtinFrameDescriptor,
+  isGachaOnlyFrame,
+};

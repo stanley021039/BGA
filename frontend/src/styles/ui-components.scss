@@ -37,6 +37,9 @@
   &[data-tone='subtle'] {
     background: var(--stitch-surface-subtle);
   }
+  &[data-tone='translucent'] {
+    background: var(--stitch-panel-translucent-bg);
+  }
   &[data-tone='selected'] {
     --surface-muted: var(--stitch-selected-muted);
     --surface-link: var(--stitch-selected-link);

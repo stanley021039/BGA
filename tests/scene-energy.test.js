@@ -348,3 +348,44 @@ test('new lobby visitors start at 20 and each successful teleport costs 20', () 
   assert.equal(after.energy, 0);
   assert.equal(after.teleportId, before.teleportId);
 });
+for (const kind of ['lobby', 'room']) {
+  test(kind + ': equation challenge belongs to the target and gates both step and teleport', () => {
+    const f = fixture(kind);
+    f.charge();
+    f.attack('r', 'zero_equation');
+    f.tick(require('../public/shared/attack-timing.json').zero_equation[0][0]);
+    const target = f.view('b').visitors.find((actor) => actor.id === 'b');
+    assert.ok(target.equation.id);
+    assert.equal(target.equation.options.length, 5);
+    assert.equal(f.actor('b').equationLocked, true);
+    assert.equal(f.actor('b').equation, undefined);
+    assert.equal(target.equation.answer, undefined);
+    assert.throws(() => f.move('b', { x: 55, y: 50 }), { code: 'SCENE_EQUATION_LOCKED' });
+    const teleport = () =>
+      kind === 'lobby'
+        ? f.scene.teleport({ id: 'b', display_name: 'b' }, 'classic')
+        : f.move('b', { action: 'teleport' });
+    assert.throws(teleport, { code: 'SCENE_EQUATION_LOCKED' });
+    const attempt = { action: 'solve-equation', id: target.equation.id };
+    assert.throws(() => f.move('b', { ...attempt, answer: 999 }), {
+      code: 'INVALID_EQUATION_ANSWER',
+    });
+    assert.equal(f.actor('b').health, target.health);
+    const wrong = target.equation.options.find((option) => option !== 30);
+    for (let i = 0; i < 2; i++) {
+      assert.throws(() => f.move('b', { ...attempt, answer: wrong }), {
+        code: 'SCENE_EQUATION_WRONG',
+      });
+      assert.equal(f.actor('b').health, target.health - Math.ceil(target.maxHealth * 0.05));
+      assert.equal(f.actor('b').equationLocked, true);
+    }
+    assert.deepEqual(
+      f.view('b').visitors.find((actor) => actor.id === 'b').equation.rejectedOptions,
+      [wrong],
+    );
+    f.move('b', { ...attempt, answer: 30 });
+    assert.equal(f.view('b').visitors.find((actor) => actor.id === 'b').equation, undefined);
+    f.move('b', { x: 55, y: 50 });
+    teleport();
+  });
+}

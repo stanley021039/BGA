@@ -9,6 +9,7 @@ import { useRoomStore } from '../stores/room';
 import { record } from '../services/validation';
 import { readLobbySnapshot } from '../contracts/lobby';
 import LobbyVisitor from '../pages/lobby/LobbyVisitor.vue';
+import { visibleSummons } from '../services/attack-placement';
 import SceneKda from './SceneKda.vue';
 import StatusSlot from './StatusSlot.vue';
 import MobileSceneControls from './MobileSceneControls.vue';
@@ -98,6 +99,7 @@ const projection = computed(() => {
   }
 });
 const snapshot = computed(() => projection.value.snapshot);
+const summons = computed(() => visibleSummons(snapshot.value));
 const self = computed(() =>
   snapshot.value?.visitors.find((visitor) => visitor.id === snapshot.value?.selfId),
 );
@@ -309,7 +311,12 @@ onBeforeUnmount(() => {
     :aria-busy="!connected"
     @click="click"
   >
-    <LobbyAttackLayer :snapshot="snapshot" :connected="connected" />
+    <LobbyAttackLayer
+      :snapshot="snapshot"
+      :connected="connected"
+      :room-code="room.code"
+      :puzzle-enabled="!focused && !inert"
+    />
     <UiMoveMarker v-if="destination" :key="markerKey" :point="destination" />
     <div class="lobby-visitors">
       <SceneFragments :visitors="snapshot?.visitors || []" />
@@ -317,6 +324,7 @@ onBeforeUnmount(() => {
         v-for="visitor in snapshot?.visitors || []"
         :key="visitor.id"
         :visitor="visitor"
+        :show-summon="summons.has(visitor.id)"
         :self="visitor.id === snapshot?.selfId"
         :reset="room.scope"
         :open="!!picker?.visible"

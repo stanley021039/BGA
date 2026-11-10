@@ -74,6 +74,19 @@ const source = fs
   .replace(/^import .*attack-new.js';\n/m, () =>
     require('../../tests/helpers/new-attack-module.cjs')(),
   )
+  .replace(/^import .*attack-ordinary.js';\n/m, () => {
+    const ordinary = fs
+      .readFileSync(path.join(__dirname, '../src/services/attack-ordinary.js'), 'utf8')
+      .replace(/^import .*\n/gm, '')
+      .replace(/^export /gm, '');
+    return (
+      `const createOrdinaryAttack = (() => {
+      const timing = attackTiming, { crystalReflection } = combatRules;
+      ${ordinary}
+      return createOrdinaryAttack;
+    })();` + '\n'
+    );
+  })
   .replace(/^import .*attack-area.js';\n/m, '')
   .replace(/^import .*attack-revision.js';\n/m, '')
   .replace(/^import attackEffects .*attack-effects.json';\n/m, '')
@@ -224,6 +237,68 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
   assert.equal(timers.size, 0);
   return { colors, arcs, lines, transforms, scales, texts, positions, rotations };
 }
+test('crystal closes after 800 ms and reflects each supported projectile with its own art', () => {
+  const { crystalReflection } = require('../../public/shared/scene-rules.json');
+  const timing = require('../../public/shared/attack-timing.json');
+  const reflect = (reflectedEffect, reflectedPhase, pending = true) =>
+    run('crystal_reflection', '#69e3f4', 70, () => 0.5, {
+      ageMs: 880,
+      readHits: () => [
+        {
+          x: 640,
+          y: 380,
+          pathX: 120,
+          pathY: 240,
+          toId: 'enemy',
+          phase: 'reflection',
+          reflectedEffect,
+          reflectedPhase,
+          delayMs: 450 + crystalReflection.travelMs,
+          pending,
+          damage: 43210,
+          critical: false,
+        },
+      ],
+    });
+  const idle = run('crystal_reflection', '#69e3f4', 40, () => 0.5, {
+    ageMs: 880,
+    readHits: () => [],
+  });
+  assert.equal(idle.arcs.length, 0);
+  for (const effect of crystalReflection.projectiles) {
+    const art = reflect(effect, timing[effect][0][2]);
+    assert.ok(art.lines.length || art.arcs.length, effect);
+    assert.ok(!art.texts.includes('43,210'), effect);
+  }
+  const arrow = reflect('arrow_volley', 'hit1');
+  assert.ok(arrow.colors.includes('#ff5a24'));
+  assert.ok(arrow.lines.some(({ x }) => x === -44));
+  const alternate = reflect('tidal_blades_alt', 'hit1', false);
+  const original = reflect('tidal_blades', 'hit1', false);
+  assert.ok(alternate.colors.some((paint) => paint.startsWith('hsla(')));
+  assert.notDeepEqual(alternate.colors, original.colors);
+  assert.ok(alternate.texts.includes('43,210'));
+  const multiple = run('crystal_reflection', '#69e3f4', 150, () => 0.5, {
+    readHits: () =>
+      ['hit1', 'hit2'].map((reflectedPhase, index) => ({
+        x: 640,
+        y: 380,
+        pathX: 120,
+        pathY: 240,
+        toId: 'enemy',
+        phase: 'reflection',
+        reflectionIndex: index,
+        reflectedEffect: 'tidal_blades',
+        reflectedPhase,
+        delayMs: 430 + index * 360 + crystalReflection.travelMs,
+        damage: 43210 + index,
+        critical: false,
+      })),
+  });
+  assert.ok(multiple.texts.includes('43,210'));
+  assert.ok(multiple.texts.includes('43,211'));
+});
+
 test('original barrage mixes bright colors and metallic shots with white highlights', () => {
   const { colors } = run('barrage', '#63f5ff');
   for (const color of ['#63f5ff', '#ff819c', '#c99aff', '#69f2b5', '#e3edf5', '#95acbf', '#e9cb90'])
@@ -265,9 +340,11 @@ test('red-and-black cross beam paints a dark core and a red outer beam', () => {
 test('every current offensive renderer waits for both authoritative settlement and its arrival clock', () => {
   const timing = require('../../public/shared/attack-timing.json');
   for (const effect of require('../../public/shared/attack-effects.json').filter(
-    (e) => !['shield', 'sphere'].includes(e.variantOf || e.id),
+    (e) => e.damageMultiplier !== 0,
   )) {
-    const [delayMs, , phase] = (timing[effect.id] || timing[effect.variantOf])[0];
+    const [delayMs, , phase] = (timing[effect.id] || timing[effect.variantOf]).find(
+      (stage) => stage[1] > 0,
+    );
     const hit = {
       toId: 'victim',
       x: 640,
@@ -283,19 +360,101 @@ test('every current offensive renderer waits for both authoritative settlement a
       hits: [{ ...hit, pending: true, damage: 0 }],
       readHits: () => [hit],
     };
+    const isDisplay = (text) =>
+      (effect.variantOf ?? effect.id) === 'starburst_stream'
+        ? text === '1'
+        : text.includes('111,111');
     const before = run(effect.id, effect.color, Math.ceil(delayMs / 17) - 1, () => 0.5, options);
-    assert.ok(!before.texts.some((t) => t.includes('111,111')), effect.id + ' early');
+    assert.ok(!before.texts.some(isDisplay), effect.id + ' early');
     const after = run(effect.id, effect.color, Math.ceil(delayMs / 17) + 2, () => 0.5, options);
-    assert.ok(
-      after.texts.some((t) => t.includes('111,111')),
-      effect.id + ' arrived',
-    );
+    assert.ok(after.texts.some(isDisplay), effect.id + ' arrived');
     const pending = run(effect.id, effect.color, Math.ceil(delayMs / 17) + 2, () => 0.5, {
       ...options,
       readHits: () => [{ ...hit, pending: true }],
     });
-    assert.ok(!pending.texts.some((t) => t.includes('111,111')), effect.id + ' pending');
+    assert.ok(!pending.texts.some(isDisplay), effect.id + ' pending');
   }
+});
+test('Starburst shows all sixteen slash numbers in order even after several hits arrive together', () => {
+  const timing = require('../../public/shared/attack-timing.json').starburst_stream;
+  const hits = timing.map(([delayMs, , phase]) => ({
+    toId: 'victim',
+    x: 640,
+    y: 380,
+    damage: 25000,
+    critical: false,
+    delayMs,
+    phase,
+    pending: false,
+  }));
+  const display = run('starburst_stream', '#7bc7ff', 160, () => 0.5, {
+    ageMs: 1460,
+    readHits: () => hits,
+  });
+  const numbers = [...new Set(display.texts.filter((text) => /^\d+$/.test(text)))];
+  assert.deepEqual(
+    numbers,
+    Array.from({ length: 16 }, (_, i) => String(i + 1)),
+  );
+  for (const paint of ['#161a24', '#62c9c6', '#f3fcff']) assert.ok(display.colors.includes(paint));
+  assert.ok(!display.colors.includes('#3776ff'), 'no detached sword energy trail');
+});
+test('Starburst finisher has a separate expanding burst only after its confirmed hit', () => {
+  const hit = {
+    toId: 'victim',
+    x: 640,
+    y: 380,
+    damage: 25000,
+    delayMs: 2320,
+    phase: 'slash16',
+  };
+  const confirmed = run('starburst_stream', '#7bc7ff', 28, () => 0.5, {
+    ageMs: 2320,
+    readHits: () => [hit],
+  });
+  assert.ok(confirmed.arcs.some(({ r }) => r > 130));
+  assert.ok(confirmed.texts.includes('16'));
+  const pending = run('starburst_stream', '#7bc7ff', 28, () => 0.5, {
+    ageMs: 2320,
+    readHits: () => [{ ...hit, pending: true }],
+  });
+  assert.ok(!pending.arcs.some(({ r }) => r > 130));
+});
+test('Starburst alternate keeps both blades and paints purple then white on confirmed hits', () => {
+  const hits = [1, 2].map((count) => ({
+    toId: 'victim',
+    x: 640,
+    y: 380,
+    damage: 25000,
+    delayMs: 760 + (count - 1) * 104,
+    phase: 'slash' + count,
+  }));
+  for (const [index, impact] of ['#bb7eff', '#f2f5ff'].entries()) {
+    const result = run('starburst_stream_alt', '#bf90ff', 1, () => 0.5, {
+      ageMs: hits[index].delayMs,
+      readHits: () => [hits[index]],
+    });
+    for (const paint of ['#6d34b8', '#f4f7ff', impact])
+      assert.ok(result.colors.includes(paint), paint);
+    assert.ok(!result.colors.includes(index === 0 ? '#f2f5ff' : '#bb7eff'));
+  }
+});
+test('Explosion Scholar locks before firing its six different weapon types', () => {
+  const locked = run('human_malice', '#ff7957', 1, () => 0.5, { preview: true, ageMs: 1170 });
+  assert.ok(locked.texts.includes('鎖定'));
+  assert.ok(!locked.colors.includes('#f4bf58'), 'physical bullets appear after lock');
+  const result = run('human_malice', '#ff7957', 1, () => 0.5, { preview: true, ageMs: 1420 });
+  for (const paint of [
+    '#ffd175',
+    '#8eb5e9',
+    '#a5dd63',
+    '#ff6749',
+    '#da9eff',
+    '#64efff',
+    '#f4bf58',
+    '#a5b6cb',
+  ])
+    assert.ok(result.colors.includes(paint), paint);
 });
 test('red and blue obsidian crescents paint independent palettes', () => {
   for (const [id, color, other] of [

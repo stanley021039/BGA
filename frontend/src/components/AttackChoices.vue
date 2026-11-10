@@ -175,7 +175,10 @@ function play(id: string) {
             :key="effect.id"
             :value="effect.id"
             :disabled="!allowed(effect.id)"
-            >{{ effect.label + (allowed(effect.id) ? '' : '（未解鎖）') }}</option
+            >{{
+              (('styleLabel' in effect && effect.styleLabel) || effect.label) +
+              (allowed(effect.id) ? '' : '（未解鎖）')
+            }}</option
           ></optgroup
         ></UiField
       ><div v-if="$slots.confirm" class="attack-confirm"><slot name="confirm" /></div></div

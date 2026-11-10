@@ -11,85 +11,98 @@ function colossusPolygon(c, points, fill, edge, width = 0.65) {
     c.stroke();
   }
 }
-function colossusBody(c, palette, kneeling) {
+function colossusBody(c, palette, kneeling, spread) {
   const alt = palette.stone === '#180b26';
   const p = alt
     ? {
-        light: '#b9a5cb',
-        stone: '#655775',
-        mid: '#3a314d',
+        light: '#d0c2f5',
+        stone: '#6752a1',
+        mid: '#362459',
         shadow: '#161b2c',
         gold: '#bd8be0',
         eye: '#e0a6ff',
       }
     : {
-        light: '#f1f0e8',
-        stone: '#b7c3ca',
-        mid: '#788d9e',
-        shadow: '#2b4054',
-        gold: '#d8b365',
+        light: '#bce5ff',
+        stone: '#3274b4',
+        mid: '#18365e',
+        shadow: '#0e1d37',
+        gold: '#f6b449',
         eye: '#69e7ff',
       };
-  // Five carved stone feathers per wing; dark seams keep the silhouette solid.
   for (const side of [-1, 1]) {
     c.save();
     c.scale(side, 1);
-    colossusPolygon(
-      c,
-      [
-        [12, -21],
-        [31, -38],
-        [67, -49],
-        [87, -35],
-        [70, -11],
-        [43, 7],
-        [17, 10],
-      ],
-      p.shadow,
-      p.gold,
-      1.2,
-    );
-    for (let n = 0; n < 5; n++) {
-      const x = 28 + n * 10,
-        y = -32 - n * 2;
+    c.save();
+    c.translate(15, -21);
+    c.rotate(1.47 * (1 - spread));
+    c.scale(0.53 + 0.47 * spread, 0.74 + 0.26 * spread);
+    const plating = c.createLinearGradient(12, -34, 56, 16);
+    plating.addColorStop(0, p.light);
+    plating.addColorStop(0.32, p.stone);
+    plating.addColorStop(0.72, p.mid);
+    plating.addColorStop(1, p.shadow);
+    for (let panel = 3; panel >= 0; panel--) {
+      c.save();
+      c.translate(panel * 5, panel * 9);
+      const length = 84 - panel * 9;
       colossusPolygon(
         c,
         [
-          [x - 7, y],
-          [x + 17, y - 9],
-          [x + 9, y + 12],
-          [x - 12, y + 26],
+          [-2, 3],
+          [22, -14],
+          [length - 11, -37],
+          [length, -36],
+          [length - 12, -17],
+          [48, 2],
+          [15, 12],
         ],
-        n % 2 ? p.stone : p.light,
-        p.mid,
-        0.7,
+        plating,
+        p.light,
+        0.75,
       );
       colossusPolygon(
         c,
         [
-          [x + 9, y + 12],
-          [x + 17, y - 9],
-          [x + 17, y + 5],
-          [x - 12, y + 26],
+          [17, 4],
+          [43, -4],
+          [length - 11, -20],
+          [length - 18, -13],
+          [46, 4],
         ],
+        p.eye,
         p.mid,
+        0.4,
+      );
+      colossusPolygon(
+        c,
+        [
+          [28, -12],
+          [44, -17],
+          [49, -15],
+          [35, -8],
+        ],
+        p.gold,
         p.shadow,
-        0.45,
+        0.6,
       );
+      c.restore();
     }
     colossusPolygon(
       c,
       [
-        [15, -18],
-        [28, -31],
-        [46, -29],
-        [38, -17],
-        [22, -7],
+        [-9, 2],
+        [1, -11],
+        [22, -17],
+        [28, -10],
+        [18, 6],
+        [1, 11],
       ],
+      p.mid,
       p.gold,
-      p.shadow,
-      0.8,
+      0.9,
     );
+    c.restore();
     // Broad pauldrons with raised ridges and an inset gold lip.
     colossusPolygon(
       c,
@@ -419,16 +432,16 @@ function colossusBody(c, palette, kneeling) {
     0.5,
   );
 }
-export function drawHeroFlyingStatue(c, p) {
+export function drawHeroFlyingStatue(c, p, spread) {
   c.save();
   c.scale(2.8, 2.8);
-  colossusBody(c, p, false);
+  colossusBody(c, p, false, spread);
   c.restore();
 }
 export function drawHeroLandedStatue(c, p) {
   c.save();
   c.translate(0, -76);
   c.scale(3.2, 3.2);
-  colossusBody(c, p, true);
+  colossusBody(c, p, true, 0.58);
   c.restore();
 }

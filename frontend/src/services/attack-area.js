@@ -208,9 +208,10 @@ export function createAreaAttack(ctx, options, onImpact) {
   function renderGigaDrill(phase, tProgress, time) {
     const cx = caster.x;
     const cy = caster.y;
-    const emerald = '#00dbe9';
-    const emeraldLight = '#dbfcff';
-    const goldSpire = '#ffd556';
+    const silver = options.alternatePalette === 'giga_drill_alt';
+    const emerald = silver ? '#8692a5' : '#00dbe9';
+    const emeraldLight = silver ? '#f1f4fa' : '#dbfcff';
+    const goldSpire = silver ? '#cbd4e3' : '#ffd556';
 
     // Phase 1: Emerald Galaxy Vortex & Alloy Drill Synthesis (0.0 -> 0.3)
     if (tProgress < 0.3) {
@@ -221,7 +222,8 @@ export function createAreaAttack(ctx, options, onImpact) {
       // Galaxy Spiral Arms behind Caster
       ctx.rotate(time * 0.005);
       for (let arm = 0; arm < 3; arm++) {
-        ctx.strokeStyle = `rgba(0, 219, 233, ${prog * 0.6})`;
+        ctx.globalAlpha = prog * 0.6;
+        ctx.strokeStyle = emerald;
         ctx.lineWidth = 3;
         ctx.beginPath();
         for (let r = 10; r < 140 * prog; r += 5) {
@@ -231,6 +233,7 @@ export function createAreaAttack(ctx, options, onImpact) {
         ctx.stroke();
       }
 
+      ctx.globalAlpha = 1;
       // Initial Drill Silhouette
       ctx.fillStyle = emerald;
       ctx.beginPath();
@@ -270,30 +273,80 @@ export function createAreaAttack(ctx, options, onImpact) {
         ctx.restore();
       }
 
-      // Massive Rotating Giga Drill Contour
-      const drillGrad = ctx.createLinearGradient(drillBaseX, cy - currentSpread, drillTipX, cy);
-      drillGrad.addColorStop(0, 'rgba(0, 219, 233, 0.3)');
-      drillGrad.addColorStop(0.5, '#00f0ff');
-      drillGrad.addColorStop(0.9, '#ffffff');
-      drillGrad.addColorStop(1, goldSpire);
+      const radius = currentSpread * 0.85;
+      const length = drillTipX - drillBaseX;
+      const metal = ctx.createLinearGradient(0, cy - radius, 0, cy + radius);
+      metal.addColorStop(0, silver ? '#111319' : '#006e85');
+      metal.addColorStop(0.25, silver ? '#242933' : '#07afc9');
+      metal.addColorStop(0.45, silver ? '#667180' : '#69ecfa');
+      metal.addColorStop(0.52, silver ? '#b7c2d2' : '#e7feff');
+      metal.addColorStop(0.64, silver ? '#414955' : '#16b3ce');
+      metal.addColorStop(1, silver ? '#0a0b10' : '#064659');
 
-      ctx.fillStyle = drillGrad;
       ctx.beginPath();
-      ctx.moveTo(drillBaseX, cy - currentSpread * 0.85);
-      ctx.lineTo(drillTipX, cy); // Sharp piercing tip
-      ctx.lineTo(drillBaseX, cy + currentSpread * 0.85);
+      ctx.moveTo(drillBaseX, cy - radius);
+      ctx.lineTo(drillTipX, cy);
+      ctx.lineTo(drillBaseX, cy + radius);
       ctx.closePath();
+      ctx.fillStyle = metal;
       ctx.fill();
+      ctx.lineWidth = silver ? 5 : 3;
+      ctx.strokeStyle = emeraldLight;
+      ctx.stroke();
 
-      // Spiral Alloy Surface Grooves
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 3;
-      for (let g = 0; g < 4; g++) {
+      // The moving bands are clipped to the taper so the thread stays on the metal.
+      ctx.save();
+      ctx.clip();
+      const speed = (time * 0.009) % 1;
+      for (let n = -2; n < 11; n++) {
+        const ridge = (n + speed) / 9;
+        const x = drillBaseX + ridge * length;
+        const depth = radius * (1 - Math.max(0, ridge));
+        const slope = length * 0.14;
         ctx.beginPath();
-        const gx = drillBaseX + (g / 4) * (drillTipX - drillBaseX);
-        ctx.arc(gx, cy, 30 + g * 20, -Math.PI / 2, Math.PI / 2);
+        ctx.moveTo(x - slope * 0.65, cy - depth * 1.06);
+        ctx.bezierCurveTo(
+          x + slope,
+          cy - depth * 0.52,
+          x + slope,
+          cy + depth * 0.57,
+          x - slope * 0.46,
+          cy + depth,
+        );
+        ctx.strokeStyle = silver ? '#070910' : '#004c6a';
+        ctx.lineWidth = 11 * (1.05 - Math.max(0, ridge) * 0.45);
+        ctx.stroke();
+        ctx.strokeStyle = goldSpire;
+        ctx.lineWidth *= 0.37;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x - slope * 0.1, cy - depth * 0.7);
+        ctx.quadraticCurveTo(
+          x + slope * 0.8,
+          cy - depth * 0.24,
+          x + slope * 0.59,
+          cy + depth * 0.23,
+        );
+        ctx.strokeStyle = emeraldLight;
+        ctx.lineWidth = silver ? 2.8 : 1.8;
         ctx.stroke();
       }
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.ellipse(drillBaseX, cy, Math.min(22, length * 0.1), radius, 0, 0, Math.PI * 2);
+      ctx.fillStyle = silver ? '#181d26' : '#006f84';
+      ctx.fill();
+      ctx.strokeStyle = goldSpire;
+      ctx.lineWidth = silver ? 5 : 3;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(drillTipX - 22, cy - radius * 0.065);
+      ctx.lineTo(drillTipX, cy);
+      ctx.lineTo(drillTipX - 22, cy + radius * 0.065);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
 
       ctx.restore();
 

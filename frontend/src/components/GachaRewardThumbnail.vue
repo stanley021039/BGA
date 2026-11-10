@@ -5,6 +5,14 @@ import UiIcon from './UiIcon.vue';
 
 const props = defineProps<{ kind: GachaKind; effect: string; compact?: boolean }>();
 const posters: Readonly<Record<string, readonly [string, string]>> = {
+  'attacks:sakura_swarm': [
+    '/assets/attacks/gacha/sakura_swarm.webp',
+    '/assets/attacks/gacha/sakura_swarm-256.webp',
+  ],
+  'attacks:sakura_swarm_alt': [
+    '/assets/attacks/gacha/sakura_swarm_alt.webp',
+    '/assets/attacks/gacha/sakura_swarm_alt-256.webp',
+  ],
   'attacks:shield': ['/assets/attacks/gacha/shield.webp', '/assets/attacks/gacha/shield-256.webp'],
   'attacks:chains': ['/assets/attacks/gacha/chains.webp', '/assets/attacks/gacha/chains-256.webp'],
   'attacks:sphere': ['/assets/attacks/gacha/sphere.webp', '/assets/attacks/gacha/sphere-256.webp'],
@@ -92,6 +100,142 @@ const posters: Readonly<Record<string, readonly [string, string]>> = {
   'attacks:reaper_seal_alt': [
     '/assets/attacks/gacha/reaper_seal_alt.webp',
     '/assets/attacks/gacha/reaper_seal_alt-256.webp',
+  ],
+  'attacks:returning_moon': [
+    '/assets/attacks/gacha/returning_moon.webp',
+    '/assets/attacks/gacha/returning_moon-256.webp',
+  ],
+  'attacks:returning_moon_alt': [
+    '/assets/attacks/gacha/returning_moon_alt.webp',
+    '/assets/attacks/gacha/returning_moon_alt-256.webp',
+  ],
+  'attacks:tidal_blades': [
+    '/assets/attacks/gacha/tidal_blades.webp',
+    '/assets/attacks/gacha/tidal_blades-256.webp',
+  ],
+  'attacks:tidal_blades_alt': [
+    '/assets/attacks/gacha/tidal_blades_alt.webp',
+    '/assets/attacks/gacha/tidal_blades_alt-256.webp',
+  ],
+  'attacks:magnetic_disc': [
+    '/assets/attacks/gacha/magnetic_disc.webp',
+    '/assets/attacks/gacha/magnetic_disc-256.webp',
+  ],
+  'attacks:magnetic_disc_alt': [
+    '/assets/attacks/gacha/magnetic_disc_alt.webp',
+    '/assets/attacks/gacha/magnetic_disc_alt-256.webp',
+  ],
+  'attacks:venom_thorn': [
+    '/assets/attacks/gacha/venom_thorn.webp',
+    '/assets/attacks/gacha/venom_thorn-256.webp',
+  ],
+  'attacks:venom_thorn_alt': [
+    '/assets/attacks/gacha/venom_thorn_alt.webp',
+    '/assets/attacks/gacha/venom_thorn_alt-256.webp',
+  ],
+  'attacks:quicksand_trap': [
+    '/assets/attacks/gacha/quicksand_trap.webp',
+    '/assets/attacks/gacha/quicksand_trap-256.webp',
+  ],
+  'attacks:quicksand_trap_alt': [
+    '/assets/attacks/gacha/quicksand_trap_alt.webp',
+    '/assets/attacks/gacha/quicksand_trap_alt-256.webp',
+  ],
+  'attacks:refracting_prism': [
+    '/assets/attacks/gacha/refracting_prism.webp',
+    '/assets/attacks/gacha/refracting_prism-256.webp',
+  ],
+  'attacks:refracting_prism_alt': [
+    '/assets/attacks/gacha/refracting_prism_alt.webp',
+    '/assets/attacks/gacha/refracting_prism_alt-256.webp',
+  ],
+  'attacks:bell_shockwave': [
+    '/assets/attacks/gacha/bell_shockwave.webp',
+    '/assets/attacks/gacha/bell_shockwave-256.webp',
+  ],
+  'attacks:bell_shockwave_alt': [
+    '/assets/attacks/gacha/bell_shockwave_alt.webp',
+    '/assets/attacks/gacha/bell_shockwave_alt-256.webp',
+  ],
+  'attacks:shadow_lunge': [
+    '/assets/attacks/gacha/shadow_lunge.webp',
+    '/assets/attacks/gacha/shadow_lunge-256.webp',
+  ],
+  'attacks:shadow_lunge_alt': [
+    '/assets/attacks/gacha/shadow_lunge_alt.webp',
+    '/assets/attacks/gacha/shadow_lunge_alt-256.webp',
+  ],
+  'attacks:seeking_talismans': [
+    '/assets/attacks/gacha/seeking_talismans.webp',
+    '/assets/attacks/gacha/seeking_talismans-256.webp',
+  ],
+  'attacks:seeking_talismans_alt': [
+    '/assets/attacks/gacha/seeking_talismans_alt.webp',
+    '/assets/attacks/gacha/seeking_talismans_alt-256.webp',
+  ],
+  'attacks:crystal_reflection': [
+    '/assets/attacks/gacha/crystal_reflection.webp',
+    '/assets/attacks/gacha/crystal_reflection-256.webp',
+  ],
+  'attacks:crystal_reflection_alt': [
+    '/assets/attacks/gacha/crystal_reflection_alt.webp',
+    '/assets/attacks/gacha/crystal_reflection_alt-256.webp',
+  ],
+  'attacks:black_coffin': [
+    '/assets/attacks/gacha/black_coffin.webp',
+    '/assets/attacks/gacha/black_coffin-256.webp',
+  ],
+  'attacks:black_coffin_alt': [
+    '/assets/attacks/gacha/black_coffin_alt.webp',
+    '/assets/attacks/gacha/black_coffin_alt-256.webp',
+  ],
+  'attacks:world_stasis': [
+    '/assets/attacks/gacha/world_stasis.webp',
+    '/assets/attacks/gacha/world_stasis-256.webp',
+  ],
+  'attacks:world_stasis_alt': [
+    '/assets/attacks/gacha/world_stasis_alt.webp',
+    '/assets/attacks/gacha/world_stasis_alt-256.webp',
+  ],
+  'attacks:human_malice': [
+    '/assets/attacks/gacha/human_malice.webp',
+    '/assets/attacks/gacha/human_malice-256.webp',
+  ],
+  'attacks:human_malice_alt': [
+    '/assets/attacks/gacha/human_malice_alt.webp',
+    '/assets/attacks/gacha/human_malice_alt-256.webp',
+  ],
+  'attacks:starburst_stream': [
+    '/assets/attacks/gacha/starburst_stream.webp',
+    '/assets/attacks/gacha/starburst_stream-256.webp',
+  ],
+  'attacks:starburst_stream_alt': [
+    '/assets/attacks/gacha/starburst_stream_alt.webp',
+    '/assets/attacks/gacha/starburst_stream_alt-256.webp',
+  ],
+  'attacks:rainbow_bear': [
+    '/assets/attacks/gacha/rainbow_bear.webp',
+    '/assets/attacks/gacha/rainbow_bear-256.webp',
+  ],
+  'attacks:rainbow_bear_alt': [
+    '/assets/attacks/gacha/rainbow_bear_alt.webp',
+    '/assets/attacks/gacha/rainbow_bear_alt-256.webp',
+  ],
+  'attacks:zero_equation': [
+    '/assets/attacks/gacha/zero_equation.webp',
+    '/assets/attacks/gacha/zero_equation-256.webp',
+  ],
+  'attacks:zero_equation_alt': [
+    '/assets/attacks/gacha/zero_equation_alt.webp',
+    '/assets/attacks/gacha/zero_equation_alt-256.webp',
+  ],
+  'attacks:susanoo': [
+    '/assets/attacks/gacha/susanoo.webp',
+    '/assets/attacks/gacha/susanoo-256.webp',
+  ],
+  'attacks:susanoo_alt': [
+    '/assets/attacks/gacha/susanoo_alt.webp',
+    '/assets/attacks/gacha/susanoo_alt-256.webp',
   ],
   'attacks:railgun': [
     '/assets/attacks/gacha/railgun.webp',

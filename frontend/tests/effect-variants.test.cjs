@@ -24,7 +24,7 @@ test('all effect versions appear once beside their original, including the older
     return { entranceEffects: entrances };
   });
   const { attackEffectGroups: attackGroups, entranceEffectGroups: entranceGroups } = helpers;
-  assert.equal(attackGroups.length, 29);
+  assert.equal(attackGroups.length, 47);
   assert.equal(entranceGroups.length, 31);
   for (const [groups, effects] of [
     [attackGroups, attacks],
@@ -35,8 +35,9 @@ test('all effect versions appear once beside their original, including the older
     assert.deepEqual(new Set(ids), new Set(effects.map((effect) => effect.id)));
     for (const { original, versions } of groups) {
       assert.equal(versions[0], original);
-      assert.equal(versions.length, 2);
-      assert.equal(versions[1].variantOf ?? 'blade_aura', original.id);
+      assert.equal(versions.length, original.id === 'susanoo' ? 5 : 2);
+      for (const version of versions.slice(1))
+        assert.equal(version.variantOf ?? 'blade_aura', original.id);
     }
   }
   const crescent = attackGroups.find((group) => group.original.id === 'blade_aura');

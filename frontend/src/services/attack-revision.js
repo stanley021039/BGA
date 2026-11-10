@@ -792,13 +792,13 @@ export function drawScreenRift(ctx, p, width, height) {
 export function createRevisionAttack(ctx, options, onImpact) {
   if (!['barrage', 'barrage_alt', 'orbital'].includes(options.effect)) return null;
   const { from, to, width, height } = options;
-  const dx = to.x - from.x,
-    dy = to.y - from.y,
-    dist = Math.hypot(dx, dy);
   const unit = Math.min(1.2, Math.max(0.5, height / 600));
   let hit = false;
   return (elapsed) => {
     if (elapsed < 0 || elapsed > 3600) return;
+    const dx = to.x - from.x,
+      dy = to.y - from.y,
+      dist = Math.hypot(dx, dy);
     const p = elapsed / 3600;
     ctx.save();
     ctx.globalAlpha = Math.min(1, (1 - p) / 0.15);

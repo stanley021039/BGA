@@ -11,7 +11,7 @@ withDefaults(
     note?: string;
     as?: 'section' | 'div' | 'article' | 'aside';
     headingLevel?: 2 | 3;
-    tone?: 'surface' | 'subtle' | 'selected' | 'raised';
+    tone?: 'surface' | 'subtle' | 'selected' | 'raised' | 'translucent';
     density?: 'regular' | 'compact';
   }>(),
   { as: 'section', headingLevel: 2, tone: 'surface', density: 'regular' },

@@ -202,7 +202,12 @@ test('existing non-achievement styles and the castle enter their pools as separa
       const item = styles.find((candidate) => candidate.key === kind + ':' + id);
       if (id === 'default') assert.equal(item, undefined);
       else {
-        assert.equal(item.rarity, upgradedStyles[id] ?? 'common');
+        assert.equal(
+          item.rarity,
+          ['observatory', 'abyssal-glass', 'eclipse-theatre'].includes(id)
+            ? 'legendary'
+            : (upgradedStyles[id] ?? 'common'),
+        );
         assert.deepEqual(item.achievementIds, []);
       }
     }

@@ -321,7 +321,7 @@
   },
   {
     "id": "gate_of_heroes",
-    "label": "英靈之門・英雄降臨",
+    "label": "英靈之門・帥哥登場",
     "color": "#ffca28",
     "description": "自身護盾，鎖定落點後躍升，2.1秒落地範圍傷害並擊飛1秒。",
     "gachaOnly": true,
@@ -332,7 +332,7 @@
   },
   {
     "id": "gate_of_heroes_alt",
-    "label": "英靈之門・英雄降臨（異色）",
+    "label": "英靈之門・帥哥登場（異色）",
     "color": "#b388ff",
     "description": "自身護盾，鎖定落點後躍升，2.1秒落地範圍傷害並擊飛1秒。",
     "gachaOnly": true,
@@ -529,12 +529,12 @@
   },
   {
     "id": "giga_drill_alt",
-    "label": "天元突破・巨鑽爆擊（赤紅異色）",
-    "color": "#fa4258",
-    "description": "異色特效，招式效果與原版相同。翡翠巨鑽貫穿多人，命中將角色擊飛，之後每秒追加傷害，持續3秒。",
+    "label": "天元突破・巨鑽爆擊（黑銀異色）",
+    "color": "#aeb7c5",
+    "description": "異色特效，招式效果與原版相同。黑銀巨鑽貫穿多人，命中將角色擊飛，之後每秒追加傷害，持續3秒。",
     "gachaOnly": true,
     "variantOf": "giga_drill",
-    "paletteHue": 353,
+    "paletteHue": 0,
     "area": {
       "shape": "cone",
       "angle": 64.39999999999999
@@ -579,5 +579,408 @@
       "shape": "burst",
       "radius": 22.5
     }
+  },
+  {
+    "id": "returning_moon",
+    "label": "迴旋月輪",
+    "color": "#83b9ff",
+    "description": "弧形月刃掠過目標，再折返消散。",
+    "gachaOnly": true,
+    "damageMultiplier": 1
+  },
+  {
+    "id": "returning_moon_alt",
+    "label": "迴旋月輪（赤月異色）",
+    "color": "#fb785a",
+    "description": "弧形月刃掠過目標，再折返消散。",
+    "gachaOnly": true,
+    "damageMultiplier": 1,
+    "variantOf": "returning_moon",
+    "paletteHue": 14
+  },
+  {
+    "id": "tidal_blades",
+    "label": "潮汐水刃",
+    "color": "#25dfcd",
+    "description": "兩道薄浪水刃先後打到目標，撞出扇狀飛沫。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "tidal_blades_alt",
+    "label": "潮汐水刃（暮潮異色）",
+    "color": "#bc87ff",
+    "description": "兩道薄浪水刃先後打到目標，撞出扇狀飛沫。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9,
+    "variantOf": "tidal_blades",
+    "paletteHue": 268
+  },
+  {
+    "id": "magnetic_disc",
+    "label": "磁軌雷盤",
+    "color": "#d994ff",
+    "description": "磁盤高速旋轉飛行，第二圈收束電弧。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "magnetic_disc_alt",
+    "label": "磁軌雷盤（金雷異色）",
+    "color": "#ffd366",
+    "description": "磁盤高速旋轉飛行，第二圈收束電弧。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9,
+    "variantOf": "magnetic_disc",
+    "paletteHue": 45
+  },
+  {
+    "id": "venom_thorn",
+    "label": "雙鞭",
+    "color": "#915b38",
+    "description": "雙鞭手左右錯拍甩鞭，連續抽擊同一目標。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "venom_thorn_alt",
+    "label": "雙鞭（靛藍琥珀異色）",
+    "color": "#f59e0b",
+    "description": "雙鞭手左右錯拍甩鞭，連續抽擊同一目標。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9,
+    "variantOf": "venom_thorn",
+    "paletteHue": 38
+  },
+  {
+    "id": "quicksand_trap",
+    "label": "流沙陷阱",
+    "color": "#ecab58",
+    "description": "地面沙環塌陷成低伏的漩渦，砂粒沿旋臂被吸入沙眼。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "quicksand_trap_alt",
+    "label": "流沙陷阱（紫砂異色）",
+    "color": "#c386ff",
+    "description": "地面沙環塌陷成低伏的漩渦，砂粒沿旋臂被吸入沙眼。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9,
+    "variantOf": "quicksand_trap",
+    "paletteHue": 270
+  },
+  {
+    "id": "refracting_prism",
+    "label": "折射稜鏡",
+    "color": "#ff79bd",
+    "description": "光束經過三枚稜鏡，以三條不同折線命中同一目標。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.8
+  },
+  {
+    "id": "refracting_prism_alt",
+    "label": "折射稜鏡（冰晶異色）",
+    "color": "#59d6ff",
+    "description": "光束經過三枚稜鏡，以三條不同折線命中同一目標。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.8,
+    "variantOf": "refracting_prism",
+    "paletteHue": 194
+  },
+  {
+    "id": "bell_shockwave",
+    "label": "萌寵進擊",
+    "color": "#ffc775",
+    "description": "貓咪、狗狗、兔子、草泥馬與企鵝分兩波飛向目標，拖著愛心尾跡。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9
+  },
+  {
+    "id": "bell_shockwave_alt",
+    "label": "萌寵進擊（薄荷異色）",
+    "color": "#60dfce",
+    "description": "貓咪、狗狗、兔子、草泥馬與企鵝分兩波飛向目標，拖著愛心尾跡。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.9,
+    "variantOf": "bell_shockwave",
+    "paletteHue": 172
+  },
+  {
+    "id": "shadow_lunge",
+    "label": "殘影突刺",
+    "color": "#a891ff",
+    "description": "殘影依序掠出，最後一影以細長刺光命中。",
+    "gachaOnly": true,
+    "damageMultiplier": 1
+  },
+  {
+    "id": "shadow_lunge_alt",
+    "label": "殘影突刺（青白異色）",
+    "color": "#62e4ff",
+    "description": "殘影依序掠出，最後一影以細長刺光命中。",
+    "gachaOnly": true,
+    "damageMultiplier": 1,
+    "variantOf": "shadow_lunge",
+    "paletteHue": 188
+  },
+  {
+    "id": "seeking_talismans",
+    "label": "紙符追擊",
+    "color": "#ff946d",
+    "description": "印有「蘿」「莉」「控」的三張紙符交錯飛向同一目標。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.8
+  },
+  {
+    "id": "seeking_talismans_alt",
+    "label": "紙符追擊（碧焰異色）",
+    "color": "#49e6a6",
+    "description": "印有「蘿」「莉」「控」的三張紙符交錯飛向同一目標。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.8,
+    "variantOf": "seeking_talismans",
+    "paletteHue": 157
+  },
+  {
+    "id": "crystal_reflection",
+    "label": "晶體反彈",
+    "color": "#69e3f4",
+    "description": "晶體屏障維持 0.8 秒，擋下期間命中的可反彈投射物。鎖定第一位攻擊者，將該玩家命中的各段以原招式與配色慢速彈回。彈回的攻擊無法再次反彈。",
+    "gachaOnly": true,
+    "damageMultiplier": 0
+  },
+  {
+    "id": "crystal_reflection_alt",
+    "label": "晶體反彈（琥珀異色）",
+    "color": "#ffc361",
+    "description": "晶體屏障維持 0.8 秒，擋下期間命中的可反彈投射物。鎖定第一位攻擊者，將該玩家命中的各段以原招式與配色慢速彈回。彈回的攻擊無法再次反彈。",
+    "gachaOnly": true,
+    "damageMultiplier": 0,
+    "variantOf": "crystal_reflection",
+    "paletteHue": 37
+  },
+  {
+    "id": "sakura_swarm",
+    "label": "千本櫻",
+    "color": "#ff77b9",
+    "description": "櫻花花瓣從兩側捲向同一個敵人，先後三波命中。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.8
+  },
+  {
+    "id": "sakura_swarm_alt",
+    "label": "千本櫻（幽櫻異色）",
+    "color": "#8d9dff",
+    "description": "櫻花花瓣從兩側捲向同一個敵人，先後三波命中。",
+    "gachaOnly": true,
+    "damageMultiplier": 0.8,
+    "variantOf": "sakura_swarm",
+    "paletteHue": 232
+  },
+  {
+    "id": "black_coffin",
+    "label": "破道之九十九・黑棺",
+    "color": "#bf80ff",
+    "description": "黑棺從目標周圍升起，穿刺與棺體崩裂分兩段命中多人。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "burst",
+      "radius": 26
+    }
+  },
+  {
+    "id": "black_coffin_alt",
+    "label": "破道之九十九・黑棺（赤棺異色）",
+    "color": "#f7658e",
+    "description": "黑棺從目標周圍升起，穿刺與棺體崩裂分兩段命中多人。",
+    "gachaOnly": true,
+    "variantOf": "black_coffin",
+    "paletteHue": 341,
+    "area": {
+      "shape": "burst",
+      "radius": 26
+    }
+  },
+  {
+    "id": "world_stasis",
+    "label": "「世界」・時間暫停",
+    "color": "#f3cf61",
+    "description": "以自身為中心暫停範圍內對手的移動、瞬移及施放，時間恢復時結算傷害。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 34
+    }
+  },
+  {
+    "id": "world_stasis_alt",
+    "label": "「世界」・時間暫停（銀藍異色）",
+    "color": "#72d6ff",
+    "description": "以自身為中心暫停範圍內對手的移動、瞬移及施放，時間恢復時結算傷害。",
+    "gachaOnly": true,
+    "variantOf": "world_stasis",
+    "paletteHue": 197,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 34
+    }
+  },
+  {
+    "id": "human_malice",
+    "label": "人類的惡意・爆炸學",
+    "color": "#ff8852",
+    "description": "展開重裝武器連環掃射，最後在自身周圍引發大爆炸。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 65
+    }
+  },
+  {
+    "id": "human_malice_alt",
+    "label": "人類的惡意・爆炸學（蒼焰異色）",
+    "color": "#56c8ff",
+    "description": "展開重裝武器連環掃射，最後在自身周圍引發大爆炸。",
+    "gachaOnly": true,
+    "variantOf": "human_malice",
+    "paletteHue": 200,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 65
+    }
+  },
+  {
+    "id": "susanoo",
+    "label": "素戔嗚尊・須佐能乎",
+    "styleLabel": "原版・紫（佐助）",
+    "color": "#bc8cff",
+    "summonStyle": "violet",
+    "description": "武神包住並跟隨角色 5 秒，期間揮砍三次，命中當下在範圍內的對手。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 24
+    }
+  },
+  {
+    "id": "susanoo_orange",
+    "label": "素戔嗚尊・須佐能乎（橘・鼬）",
+    "styleLabel": "原版・橘（鼬）",
+    "color": "#ff994f",
+    "summonStyle": "orange",
+    "description": "武神包住並跟隨角色 5 秒，期間揮砍三次，命中當下在範圍內的對手。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 24
+    },
+    "variantOf": "susanoo",
+    "rewardOf": "susanoo"
+  },
+  {
+    "id": "susanoo_alt",
+    "label": "素戔嗚尊・須佐能乎（異色版）",
+    "styleLabel": "異色・綠（止水）",
+    "color": "#52f7a5",
+    "summonStyle": "jade",
+    "description": "武神包住並跟隨角色 5 秒，期間揮砍三次，命中當下在範圍內的對手。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 24
+    },
+    "variantOf": "susanoo",
+    "paletteHue": 151
+  },
+  {
+    "id": "susanoo_blue",
+    "label": "素戔嗚尊・須佐能乎（藍・斑）",
+    "styleLabel": "異色・藍（斑）",
+    "color": "#518aff",
+    "summonStyle": "blue",
+    "description": "武神包住並跟隨角色 5 秒，期間揮砍三次，命中當下在範圍內的對手。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 24
+    },
+    "variantOf": "susanoo",
+    "rewardOf": "susanoo_alt"
+  },
+  {
+    "id": "susanoo_cyan",
+    "label": "素戔嗚尊・須佐能乎（青藍・卡卡西）",
+    "styleLabel": "異色・青藍（卡卡西）",
+    "color": "#48e8fa",
+    "summonStyle": "cyan",
+    "description": "武神包住並跟隨角色 5 秒，期間揮砍三次，命中當下在範圍內的對手。",
+    "gachaOnly": true,
+    "area": {
+      "shape": "selfBurst",
+      "radius": 24
+    },
+    "variantOf": "susanoo",
+    "rewardOf": "susanoo_alt"
+  },
+  {
+    "id": "starburst_stream",
+    "label": "星爆氣流斬",
+    "color": "#7bc7ff",
+    "description": "鎖定一名敵人，雙刀連斬 16 次，首次有效命中扣除敵方當下能量的一半。",
+    "gachaOnly": true,
+    "ultimate": true,
+    "damageMultiplier": 2
+  },
+  {
+    "id": "rainbow_bear",
+    "label": "彩虹獸・熊甲寶貝",
+    "color": "#ff80ba",
+    "description": "召喚五隻熊甲寶貝，其中一隻飛向一名敵人。命中後留下 3 秒唇印，持續扣血並降低該敵人 30% 輸出。",
+    "gachaOnly": true,
+    "ultimate": true,
+    "damageMultiplier": 2
+  },
+  {
+    "id": "zero_equation",
+    "label": "終焉方程・萬物歸零",
+    "color": "#a588ff",
+    "description": "以多色公式纏住一名敵人。從五個選項選出正確答案即可移動，答錯扣 5% 最大 HP。招式傷害與答錯懲罰最低留 1 HP。",
+    "gachaOnly": true,
+    "ultimate": true,
+    "damageMultiplier": 1.6
+  },
+  {
+    "id": "starburst_stream_alt",
+    "label": "星爆氣流斬（紫白異色）",
+    "color": "#bf90ff",
+    "description": "鎖定一名敵人，雙刀連斬 16 次，首次有效命中扣除敵方當下能量的一半。",
+    "gachaOnly": true,
+    "ultimate": true,
+    "damageMultiplier": 2,
+    "variantOf": "starburst_stream",
+    "paletteHue": 269
+  },
+  {
+    "id": "rainbow_bear_alt",
+    "label": "彩虹獸・熊甲寶貝（極光異色）",
+    "color": "#80edfb",
+    "description": "召喚五隻熊甲寶貝，其中一隻飛向一名敵人。命中後留下 3 秒唇印，持續扣血並降低該敵人 30% 輸出。",
+    "gachaOnly": true,
+    "ultimate": true,
+    "damageMultiplier": 2,
+    "variantOf": "rainbow_bear",
+    "paletteHue": 184
+  },
+  {
+    "id": "zero_equation_alt",
+    "label": "終焉方程・萬物歸零（金符異色）",
+    "color": "#ffdf7c",
+    "description": "以多色公式纏住一名敵人。從五個選項選出正確答案即可移動，答錯扣 5% 最大 HP。招式傷害與答錯懲罰最低留 1 HP。",
+    "gachaOnly": true,
+    "ultimate": true,
+    "damageMultiplier": 1.6,
+    "variantOf": "zero_equation",
+    "paletteHue": 50
   }
 ]

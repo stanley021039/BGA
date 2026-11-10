@@ -3,6 +3,7 @@ import MotionPolicy from '../../engines/motion-policy.js';
 import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
+import SummonArtwork from '../../components/SummonArtwork.vue';
 import { sceneWalkWithSpeed } from '../../engines/scene-path.js';
 import { interpolateSceneVisitor } from '../../services/scene-interpolation';
 import { sizedImage } from '../../services/image-size';
@@ -23,6 +24,7 @@ const props = defineProps<{
     connected: boolean;
     arrive?: boolean;
     followCamera?: boolean;
+    showSummon?: boolean;
   }>(),
   emit = defineEmits<{
     select: [element: HTMLElement];
@@ -369,12 +371,43 @@ window.addEventListener('resize', positionBubble);
       }}</div
     >
     <div v-show="visitor.health !== 0" class="scene-avatar-portrait">
+      <SummonArtwork
+        v-if="showSummon && connected && !still && visitor.summon"
+        :key="visitor.summon.until"
+        :effect="visitor.summon.effect"
+        :remaining-ms="visitor.summon.remainingMs"
+      />
       <img
+        class="scene-avatar-image"
         :src="sizedImage(visitor.emote?.image || visitor.image, 256)"
         :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
         alt=""
         draggable="false"
       />
+      <svg
+        v-if="connected && visitor.equationLocked"
+        class="scene-equation-bind"
+        viewBox="0 0 144 110"
+        aria-hidden="true"
+      >
+        <ellipse cx="72" cy="54" rx="64" ry="24" transform="rotate(-25 72 54)" />
+        <ellipse cx="72" cy="61" rx="62" ry="22" transform="rotate(24 72 61)" />
+        <text x="18" y="27" transform="rotate(-12 18 27)">x² + y²</text>
+        <text x="88" y="37" transform="rotate(15 88 37)">Σ n²</text>
+        <text x="3" y="79" transform="rotate(-8 3 79)">∫ f(x) dx</text>
+        <text x="82" y="94" transform="rotate(10 82 94)">√(a² + b²)</text>
+      </svg>
+      <svg
+        v-if="connected && visitor.kissedUntil"
+        class="scene-kiss-mark"
+        viewBox="0 0 100 64"
+        aria-hidden="true"
+      >
+        <path
+          d="M3 31C18 26 28 7 38 9c6 0 9 5 13 9 4-4 8-9 14-9 11 1 20 15 32 22-11 14-24 25-46 25S16 46 3 31Zm16 1c10 7 22 10 32 10s21-3 32-10c-11-1-22-5-32-3-10-2-21 2-32 3Z"
+          fill-rule="evenodd"
+        />
+      </svg>
       <svg
         v-if="guard"
         class="scene-avatar-guard"
@@ -414,6 +447,33 @@ window.addEventListener('resize', positionBubble);
 .scene-avatar-portrait {
   position: relative;
   line-height: 0;
+}
+.scene-avatar-image {
+  position: relative;
+}
+.scene-equation-bind {
+  position: absolute;
+  inset: -10% auto auto 50%;
+  width: 205%;
+  height: 122%;
+  transform: translateX(-50%);
+  overflow: visible;
+  pointer-events: none;
+  color: var(--stitch-primary);
+}
+.scene-equation-bind ellipse {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+.scene-equation-bind text {
+  fill: currentColor;
+  stroke: var(--stitch-artwork-preview-bg);
+  stroke-width: 3;
+  paint-order: stroke;
+  font-size: var(--stitch-text-label);
+  font-weight: 900;
 }
 .scene-avatar-guard {
   position: absolute;
@@ -463,6 +523,16 @@ window.addEventListener('resize', positionBubble);
   stroke-width: 1.5;
   stroke-dasharray: 5 4;
   opacity: 0.65;
+}
+.scene-kiss-mark {
+  position: absolute;
+  width: 82%;
+  inset: 20% auto auto 9%;
+  rotate: -13deg;
+  fill: var(--stitch-artwork-swatch-f43f5e, var(--stitch-danger-ink));
+  stroke: var(--stitch-surface);
+  stroke-width: 1.5;
+  pointer-events: none;
 }
 .scene-dot-number {
   position: absolute;

@@ -431,6 +431,14 @@ function initializeApp(config, dataLock, acquired) {
       [...(seats.get(room.code) || [])].map(([userId, playerId]) => [playerId, userId]),
     );
     const viewerId = accounts.get(view.me);
+    const match = room.gachaMatch?.snapshot();
+    const matchReward =
+      viewerId &&
+      ['finished', 'showdown'].includes(room.phase) &&
+      match?.acknowledged &&
+      match.completed
+        ? gachaStore.matchReward(match.completed, viewerId)
+        : null;
     const savedDrawResults =
       room.type === 'draw' && viewerId
         ? {
@@ -461,6 +469,7 @@ function initializeApp(config, dataLock, acquired) {
     return {
       ...view,
       actionFeedback: require('./rooms/action-feedback').actionFeedback(room),
+      ...(matchReward ? { matchReward } : {}),
       type: room.type || 'poker',
       gameRevision: room.gameRevision || 0,
       ...(Object.hasOwn(spectatorGames, room.type || 'poker')
@@ -1214,7 +1223,9 @@ function initializeApp(config, dataLock, acquired) {
     );
   };
   const freeEntrances = new Set(
-    require('../public/shared/entrance-palette.json').starters.map((e) => e.id),
+    require('../public/shared/entrance-palette.json')
+      .starters.filter((e) => !e.gachaOnly)
+      .map((e) => e.id),
   );
   const entranceAllowed = (user, id) =>
     freeEntrances.has(id) ||
@@ -1454,7 +1465,9 @@ function initializeApp(config, dataLock, acquired) {
         const send = (x) => res.end(JSON.stringify(x));
         if (url.pathname === '/api/auth/login' && req.method === 'POST') {
           limitAuth(req);
-          return send(await auth.login(data, res));
+          const user = await auth.login(data, res);
+          gachaStore.daily(user.id);
+          return send(user);
         }
         if (url.pathname === '/api/auth/register' && req.method === 'POST') {
           limitAuth(req);
@@ -1473,6 +1486,18 @@ function initializeApp(config, dataLock, acquired) {
         }
         const user = auth.requireUser(req);
         gachaStore.daily(user.id);
+        if (url.pathname === '/api/gacha/check-in' && req.method === 'GET')
+          return send(gachaStore.checkin(user.id));
+        if (url.pathname === '/api/gacha/check-in' && req.method === 'POST') {
+          limitRate(roomRate, 'gacha-checkin:' + user.id, 30);
+          if (
+            !data ||
+            !['daily', 'legendary'].includes(data.kind) ||
+            Object.keys(data).length !== 1
+          )
+            throw new HttpError(400, 'INVALID_GACHA_CHECKIN', '請選擇登入獎勵');
+          return send(gachaStore.claimCheckin(user.id, data.kind));
+        }
         const spectatePath = /^\/api\/gacha\/spectate(?:\/([a-f0-9-]{36}))?$/i.exec(url.pathname);
         if (spectatePath && req.method === 'GET') {
           if (!gachaSpectators.subscribe(spectatePath[1], { req, res, user }))
@@ -1852,8 +1877,11 @@ function initializeApp(config, dataLock, acquired) {
             throw new HttpError(409, 'ARENA_ROOM_REQUIRED', '請先加入競技場房間');
           return send(lobbyChanged(scopedLobby.arena(user, data)));
         }
-        if (url.pathname === '/api/lobby/move' && req.method === 'POST')
+        if (url.pathname === '/api/lobby/move' && req.method === 'POST') {
+          if (data?.action === 'solve-equation')
+            limitRate(roomRate, 'lobby-equation:' + user.id, 60);
           return send(lobbyChanged(scopedLobby.move(user, data)));
+        }
         if (url.pathname === '/api/lobby/attack' && req.method === 'POST') {
           limitRate(socialRate, 'lobby-attack:' + user.id, 80);
           return send(lobbyChanged(scopedLobby.attack(user, data)));
@@ -3314,6 +3342,23 @@ function initializeApp(config, dataLock, acquired) {
             'reaper-person-128.webp',
             'reaper-person-256.webp',
             'reaper-person-512.webp',
+            'human-malice-128.webp',
+            'human-malice-256.webp',
+            'human-malice-384.webp',
+            'susanoo-jade-256.webp',
+            'susanoo-jade-384.webp',
+            'susanoo-violet-256.webp',
+            'susanoo-violet-384.webp',
+            'susanoo-orange-256.webp',
+            'susanoo-orange-384.webp',
+            'susanoo-blue-256.webp',
+            'susanoo-blue-384.webp',
+            'susanoo-cyan-256.webp',
+            'susanoo-cyan-384.webp',
+            'rainbow-bear-96.webp',
+            'rainbow-bear-192.webp',
+            'rainbow-bear-squad-96.webp',
+            'rainbow-bear-squad-192.webp',
           ].includes(name)
         )
           throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到招式圖片');

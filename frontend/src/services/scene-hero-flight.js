@@ -1,3 +1,4 @@
+import { heroFlightLift, heroFlightArc } from './hero-flight-path.js';
 import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
 const active = new Set();
 // Move the actual character, including its name, on the same 2100ms server path.
@@ -10,16 +11,16 @@ export function playHeroFlight(node, event) {
   if (age >= 2100) return () => {};
   const dx = ((event.toX - event.fromX) * rect.width) / 100;
   const dy = ((event.toY - event.fromY) * rect.height) / 100;
-  const arc = Math.min(180, rect.height * 0.35);
-  const animation = node.animate(
-    [
-      { translate: '0px 0px', offset: 0 },
-      { translate: '0px 0px', offset: 600 / 2100 },
-      { translate: `${dx / 2}px ${dy / 2 - arc}px`, offset: 1350 / 2100 },
-      { translate: `${dx}px ${dy}px`, offset: 1 },
-    ],
-    { duration: 2100, easing: 'linear' },
-  );
+  const fromY = (event.fromY * rect.height) / 100 - 42;
+  const arc = heroFlightLift(rect.height, fromY, fromY + dy);
+  const path = [0, 0.12, 0.25, 0.43, 0.58, 0.74, 0.88, 1].map((p) => ({
+    translate: `${dx * p}px ${dy * p - heroFlightArc(p) * arc}px`,
+    offset: (600 + p * 1500) / 2100,
+  }));
+  const animation = node.animate([{ translate: '0px 0px', offset: 0 }, ...path], {
+    duration: 2100,
+    easing: 'linear',
+  });
   animation.currentTime = age;
   let live = true,
     release = () => {};

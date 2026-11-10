@@ -34,7 +34,12 @@ function validateGachaDatabase(db) {
       throw Error('Invalid gacha operation receipt');
     const payload =
       row.operation === 'draw'
-        ? { operation: 'draw', pool: response.pool, count: response.results?.length }
+        ? {
+            operation: 'draw',
+            pool: response.pool,
+            count: response.results?.length,
+            ...(response.voucher === true ? { voucher: true } : {}),
+          }
         : { operation: 'exchange', key: response.item?.key };
     if (digest(payload) !== row.fingerprint) throw Error('Invalid gacha receipt fingerprint');
     const ledger = db
@@ -49,6 +54,31 @@ function validateGachaDatabase(db) {
         (row.operation === 'draw' ? response.fragmentsGained : -response.cost)
     )
       throw Error('Gacha receipt disagrees with ledger');
+    if (response.voucher !== undefined) {
+      const events = db
+        .prepare(
+          "SELECT event_id,fingerprint FROM gacha_ledger WHERE user_id=? AND reason='login' AND event_id IN (?,?)",
+        )
+        .all(
+          row.user_id,
+          'checkin-legendary-claim:' + row.user_id,
+          'checkin-legendary-use:' + row.user_id,
+        );
+      if (
+        response.voucher !== true ||
+        row.operation !== 'draw' ||
+        response.cost !== 0 ||
+        response.results?.length !== 1 ||
+        response.results[0]?.rarity !== 'legendary' ||
+        events.length !== 2 ||
+        !events.some(
+          (event) =>
+            event.event_id === 'checkin-legendary-use:' + row.user_id &&
+            event.fingerprint === digest({ requestId: row.request_id }),
+        )
+      )
+        throw Error('Invalid gacha check-in voucher receipt');
+    }
   }
 }
 module.exports = { validateGachaDatabase };

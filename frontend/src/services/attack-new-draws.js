@@ -530,8 +530,29 @@ function gun(c, w, col, style = 0) {
   c.fillStyle = g;
   c.strokeStyle = '#9ba9b3';
   c.lineWidth = 1.2;
-  c.fillRect(-22, -18, w, 36);
-  c.strokeRect(-22, -18, w, 36);
+  c.beginPath();
+  c.moveTo(-28, -12);
+  c.lineTo(-19, -19);
+  c.lineTo(w - 24, -19);
+  c.lineTo(w - 15, -8);
+  c.lineTo(w - 18, 13);
+  c.lineTo(w - 29, 20);
+  c.lineTo(-18, 20);
+  c.lineTo(-28, 11);
+  c.closePath();
+  c.fill();
+  c.stroke();
+  c.fillStyle = '#222b3c';
+  c.fillRect(-15, -7, Math.max(9, w - 14), 13);
+  for (let i = 0; i < 4; i++) {
+    const x = -12 + i * Math.min(9, w / 7);
+    line(c, x, -4, x + 3, 2, '#aab9c9', 1.5);
+  }
+  for (const x of [-20, w - 28]) {
+    circle(c, x, 10, 3.5, '#22303c', '#9ba9b3');
+    circle(c, x, 10, 1.1, col);
+  }
+  line(c, -16, 15, w - 26, 15, '#8296a6', 1.5);
   c.fillStyle = '#1a2430';
   c.fillRect(-35, -12, 20, 24);
   line(c, -26, 22, -8, 22, '#8a9aa9', 7);
@@ -560,7 +581,10 @@ function drawRailgun(c, o, t) {
         const active = clamp((t - k * 65) / 160);
         c.globalAlpha = 0.3 + 0.7 * active;
         c.lineWidth = 3;
-        circle(c, k * (w / 6), 0, 14, null, col);
+        const x = (k * w) / 6;
+        circle(c, x, 0, 14, null, col);
+        line(c, x - 3, -19, x + 3, -19, '#eaf6ff', 2);
+        line(c, x - 3, 19, x + 3, 19, '#788d9f', 2);
       }
       c.globalAlpha = 1;
       glow(c, w, 0, 28 * clamp(t / 550), col + '99');
@@ -568,7 +592,14 @@ function drawRailgun(c, o, t) {
       const p = (t - 550) / 400;
       if (p >= 0 && p <= 1) {
         const x = mix(w, L, p);
+        line(c, Math.max(w, x - 125), 0, x, 0, col + '77', 14);
         line(c, Math.max(w, x - 95), 0, x, 0, col, 6);
+        line(c, Math.max(w, x - 75), 0, x, 0, '#ecfbff', 2);
+        for (let i = 0; i < 8; i++) {
+          const d = Math.max(w, x - i * 11);
+          const y = (i % 2 ? -1 : 1) * (5 + i * 2);
+          line(c, d, y, d + 8, y * 0.65, col, 1.3);
+        }
         c.fillStyle = '#f6f8f4';
         c.fillRect(x - 13, -3, 17, 6);
         glow(c, x, 0, 14, col);
@@ -577,7 +608,7 @@ function drawRailgun(c, o, t) {
   } finally {
     c.restore();
   }
-  impact(c, o, t, col, 'railgun');
+  impact(c, o, t, col);
 }
 function drawPlasma(c, o, t) {
   if (!alive(t, 1550)) return;
@@ -598,13 +629,21 @@ function drawPlasma(c, o, t) {
       }
       glow(c, w, 0, 25, col + '77');
       c.restore();
-      for (const at of [650, 1050]) {
+      for (const [index, at] of [650, 1050].entries()) {
+        if (o.reflectedPhase && o.reflectedPhase !== 'hit' + (index + 1)) continue;
         const p = (t - at + 380) / 380;
         if (p < 0 || p > 1) continue;
         const x = mix(w, L, p),
           r = 12 + Math.sin(t * 0.015) * 2;
         glow(c, x, 0, 30, col + 'aa');
         circle(c, x, 0, r, col + 'bb', '#f4fff9');
+        circle(c, x, 0, r * 0.5, '#f1fff6');
+        for (let i = 0; i < 7; i++) {
+          const phase = t * 0.016 + (i * TAU) / 7;
+          const offset = Math.cos(phase) * 15;
+          const y = Math.sin(phase) * 14;
+          line(c, x - 24 + offset, y * 1.4, x - 14 + offset, y, i % 3 ? col : '#effff8', 2);
+        }
         c.save();
         c.translate(x, 0);
         c.scale(1.5, 0.6);
@@ -634,8 +673,11 @@ function drawMissiles(c, o, t) {
         followCaster(c, o);
         c.fillStyle = '#35475b';
         c.fillRect(-10, y - 4, w, 8);
+        line(c, -10, y - 4, w, y - 4, '#8499ac', 1.3);
+        line(c, -8, y + 4, w, y + 4, '#111c2a', 1.5);
         circle(c, w, y, 4, '#101b25', col);
         c.restore();
+        if (o.reflectedPhase && o.reflectedPhase !== 'hit' + (k + 1)) continue;
         const p = (t - [850, 1100, 1350, 1600][k] + 700) / 700;
         if (p < 0 || p > 1) continue;
         const bend = (k - 1.5) * 25,
@@ -645,7 +687,12 @@ function drawMissiles(c, o, t) {
         c.save();
         c.translate(x, Y);
         c.rotate(angle);
-        line(c, -55, 0, -10, 0, col + '66', 3);
+        line(c, -62, 0, -10, 0, col + '66', 5);
+        for (let i = 0; i < 5; i++) {
+          const tail = -23 - i * 7;
+          circle(c, tail, Math.sin(t * 0.02 + i) * i * 0.8, 1.5 + i * 0.55, col + '66');
+        }
+        line(c, -25, 0, -10, 0, '#fff2d0', 2.5);
         c.fillStyle = col;
         c.beginPath();
         c.moveTo(-11, 0);
@@ -696,6 +743,19 @@ function drawSniper(c, o, t) {
         r = 45 - 25 * p;
       c.lineWidth = 1.5;
       circle(c, L, 0, r, null, col);
+      circle(c, L, 0, r + 8, null, col + '66');
+      for (let i = 0; i < 12; i++) {
+        const a = (i * TAU) / 12;
+        line(
+          c,
+          L + Math.cos(a) * (r + 7),
+          Math.sin(a) * (r + 7),
+          L + Math.cos(a) * (r + 11),
+          Math.sin(a) * (r + 11),
+          col,
+          1,
+        );
+      }
       for (let k = 0; k < 4; k++) {
         const a = (k * Math.PI) / 2;
         line(
@@ -714,7 +774,10 @@ function drawSniper(c, o, t) {
       const fire = (t - 1250) / 220;
       if (fire >= 0 && fire <= 1) {
         c.globalAlpha = 1 - fire;
+        line(c, w + 20, 0, L, 0, col + '66', 17);
         line(c, w + 20, 0, L, 0, col, 7);
+        circle(c, w + 25, 0, 9 + fire * 21, null, col);
+        circle(c, L, 0, 8 + fire * 38, null, '#fff2f9');
         line(c, w + 20, 0, L, 0, '#ffffff', 2);
         glow(c, w + 30, 0, 27, col);
       }

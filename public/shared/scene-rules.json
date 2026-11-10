@@ -14,6 +14,29 @@
   },
   "frost": { "durationMs": 1000, "speedMultiplier": 0.8 },
   "singularityPull": 5,
+  "crystalReflection": {
+    "windowMs": 800,
+    "travelMs": 1500,
+    "settleMs": 500,
+    "maximumReturns": 32,
+    "projectiles": [
+      "barrage",
+      "funnel",
+      "arrow_volley",
+      "railgun",
+      "plasma_pulse",
+      "micro_missiles",
+      "photon_sniper",
+      "returning_moon",
+      "tidal_blades",
+      "magnetic_disc",
+      "seeking_talismans"
+    ]
+  },
+  "humanMalice": { "detonationRadius": 24 },
+  "susanoo": { "durationMs": 5000, "radius": 24 },
+  "rainbowBear": { "durationMs": 3000, "outgoingMultiplier": 0.7 },
+  "zeroEquation": { "wrongAnswerHpFraction": 0.05 },
   "orangeCat": { "immobilizeMs": 1000, "slowMs": 1000 },
   "bladeHaste": { "durationMs": 800, "speedMultiplier": 1.15 },
   "health": {

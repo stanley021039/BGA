@@ -46,8 +46,19 @@ export interface GachaWallet {
   coins: number;
   fragments: number;
 }
+const checkinMilestoneStatuses = ['locked', 'claimable', 'available', 'used'] as const;
+export interface GachaCheckin {
+  day: string;
+  visits: number;
+  cycle: number[];
+  step: number;
+  claimed: boolean;
+  milestone: { days: number; status: (typeof checkinMilestoneStatuses)[number] };
+  wallet?: GachaWallet;
+}
 export interface GachaState {
   wallet: GachaWallet;
+  voucherAvailable: boolean;
   pools: {
     id: string;
     label: string;
@@ -97,6 +108,7 @@ export type GachaReceipt =
       cost: number;
       results: GachaResult[];
       drawCount?: number;
+      voucher?: true;
       fragmentsGained: number;
       wallet: GachaWallet;
       at: string;
@@ -121,6 +133,36 @@ const required = (v: unknown) => {
 export function readWallet(value: unknown): GachaWallet {
   const r = record(value);
   return { coins: integer(r.coins), fragments: integer(r.fragments) };
+}
+export function readGachaCheckin(value: unknown): GachaCheckin {
+  const r = record(value);
+  const day = required(r.day);
+  const cycle = array(r.cycle).map(integer);
+  const step = integer(r.step);
+  const visits = integer(r.visits);
+  const milestone = record(r.milestone);
+  const days = integer(milestone.days);
+  const status = checkinMilestoneStatuses.find((value) => value === milestone.status);
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(day) ||
+    cycle.length !== 5 ||
+    cycle.some((amount) => amount === 0) ||
+    step >= cycle.length ||
+    typeof r.claimed !== 'boolean' ||
+    days === 0 ||
+    !status ||
+    (status === 'locked') !== visits < days
+  )
+    throw Error('登入獎勵格式不正確');
+  return {
+    day,
+    cycle,
+    step,
+    visits,
+    claimed: r.claimed,
+    milestone: { days, status },
+    ...(r.wallet === undefined ? {} : { wallet: readWallet(r.wallet) }),
+  };
 }
 export function readGachaItem(value: unknown): GachaItem {
   const r = record(value),
@@ -175,6 +217,7 @@ export function readGachaState(value: unknown): GachaState {
   const characterImage = text(r.characterImage);
   return {
     wallet: readWallet(r.wallet),
+    voucherAvailable: r.voucherAvailable === true,
     items,
     pools,
     odds: readGachaOdds(r.odds),
@@ -208,7 +251,13 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
     if (typeof p.duplicate !== 'boolean') throw Error('抽卡重複狀態格式不正確');
     return { ...readGachaItem(p), duplicate: p.duplicate, fragments: integer(p.fragments) };
   });
-  if (![1, 10].includes(results.length) || common.cost !== results.length * 100)
+  const voucher = r.voucher === true;
+  if (
+    (r.voucher !== undefined && !voucher) ||
+    ![1, 10].includes(results.length) ||
+    common.cost !== (voucher ? 0 : results.length * 100) ||
+    (voucher && (results.length !== 1 || results[0].rarity !== 'legendary'))
+  )
     throw Error('抽卡結果數量不正確');
   const fragmentsGained = integer(r.fragmentsGained);
   const pool = required(r.pool);
@@ -225,6 +274,7 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
     pool,
     results,
     fragmentsGained,
+    ...(voucher ? { voucher: true } : {}),
     ...(r.drawCount === undefined ? {} : { drawCount: integer(r.drawCount) }),
   };
 }

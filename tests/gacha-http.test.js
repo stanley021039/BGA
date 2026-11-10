@@ -11,6 +11,64 @@ const { GachaStore } = require('../src/gacha/store');
 const { appFixture } = require('./helpers/app-fixture.cjs');
 const { versionFor } = require('../src/http/static-cache');
 
+test('settlement shows only the requesting seat’s actual stone credit', async (t) => {
+  const { base } = await appFixture(t, {
+    seed: async (db) => {
+      await createAuth(db).bootstrap('settlement_host', 'test-password-123');
+      for (const username of ['settlement_peer', 'settlement_watcher'])
+        db.prepare(
+          "INSERT INTO users(id,username,display_name,password_hash,role,created_at) SELECT ?,?,?,password_hash,'member',created_at FROM users WHERE username='settlement_host'",
+        ).run(randomUUID(), username, username);
+    },
+  });
+  const cookies = [];
+  async function call(actor, route, body) {
+    const response = await fetch(base + '/api/' + route, {
+      method: body ? 'POST' : 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(cookies[actor] ? { Cookie: cookies[actor] } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const data = await response.json();
+    assert.equal(response.status, 200, route + ' ' + JSON.stringify(data));
+    if (response.headers.has('set-cookie'))
+      cookies[actor] = response.headers.get('set-cookie').split(';')[0];
+    return data;
+  }
+  for (const [actor, username] of ['host', 'peer', 'watcher'].entries())
+    await call(actor, 'auth/login', {
+      username: 'settlement_' + username,
+      password: 'test-password-123',
+    });
+  const { code } = await call(0, 'create', { type: 'poker' });
+  await call(1, 'join', { code });
+  await call(0, 'start', { code });
+  const state = (actor) => call(actor, 'state?code=' + code);
+  const ids = [(await state(0)).me, (await state(1)).me];
+  let room = await state(0);
+  assert.equal(room.matchReward, undefined);
+  let n = 0;
+  while (room.phase !== 'showdown' && n++ < 30) {
+    const player = room.players[room.turn];
+    await call(ids.indexOf(player.id), 'action', {
+      code,
+      action: player.bet < room.currentBet ? 'call' : 'check',
+    });
+    room = await state(0);
+  }
+  assert.equal(room.phase, 'showdown');
+  for (const actor of [0, 1]) {
+    const { matchReward } = await state(actor);
+    assert.equal(matchReward.coins, matchReward.winner ? 500 : 300);
+    assert.deepEqual(Object.keys(matchReward).sort(), ['coins', 'id', 'winner']);
+    assert.equal((await call(actor, 'gacha')).wallet.coins, matchReward.coins);
+  }
+  assert.equal((await call(2, 'watch?code=' + code)).matchReward, undefined);
+  assert.equal((await call(2, 'gacha')).wallet.coins, 0);
+});
+
 test('opt-in spectator stream follows the owner and exposes only the current revealed card', async (t) => {
   const { base } = await appFixture(t, {
     config: { gachaChoose: () => 0 },
@@ -198,9 +256,40 @@ test('reward thumbnails require authentication and cache only at the content ver
   });
   assert.equal(login.status, 200);
   const Cookie = login.headers.get('set-cookie').split(';')[0];
+  const portraits = [
+    ...[128, 256, 384].map((size) => `/assets/attacks/human-malice-${size}.webp`),
+    ...['violet', 'orange', 'jade', 'blue', 'cyan'].flatMap((style) =>
+      [256, 384].map((size) => `/assets/attacks/susanoo-${style}-${size}.webp`),
+    ),
+  ];
+  portraits.push(
+    ...[96, 192].flatMap((size) => [
+      `/assets/attacks/rainbow-bear-${size}.webp`,
+      `/assets/attacks/rainbow-bear-squad-${size}.webp`,
+    ]),
+  );
+  for (const portrait of portraits) {
+    const bytes = readFileSync(path.join(__dirname, '..', 'public', portrait));
+    const url = base + portrait + '?v=' + versionFor(bytes);
+    assert.equal((await fetch(url)).status, 401);
+    const image = await fetch(url, { headers: { Cookie } });
+    assert.equal(image.status, 200);
+    assert.equal(image.headers.get('content-type'), 'image/webp');
+    assert.equal(image.headers.get('cache-control'), 'private, max-age=31536000, immutable');
+    assert.deepEqual(Buffer.from(await image.arrayBuffer()), bytes);
+  }
   for (const [kind, id] of [
     ['attacks', 'solar_phoenix'],
     ['attacks', 'solar_phoenix_alt'],
+    ['attacks', 'crystal_reflection'],
+    ['attacks', 'crystal_reflection_alt'],
+    ['attacks', 'human_malice'],
+    ['attacks', 'human_malice_alt'],
+    ['attacks', 'susanoo'],
+    ['attacks', 'susanoo_alt'],
+    ['attacks', 'starburst_stream'],
+    ['attacks', 'rainbow_bear_alt'],
+    ['attacks', 'zero_equation'],
     ['entrances', 'stitch-blue-eyes'],
     ['entrances', 'stitch-blue-eyes-alt'],
     ['backgrounds', 'aurora'],
@@ -353,6 +442,7 @@ test('legendary notices reach both online users only once after the drawer revea
   }
   const owner = await login('barrage_owner');
   const viewer = await login('barrage_viewer');
+  assert.equal((await post(owner, '/api/gacha/check-in', { kind: 'daily' })).status, 200);
   assert.equal((await fetch(base + '/api/gacha/events')).status, 401);
   const listeners = await Promise.all([listen(owner), listen(viewer)]);
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -446,7 +536,7 @@ test('only authenticated admins can persist odds and public state exposes matchi
   assert.equal(state.body.odds.updatedBy, undefined);
   for (const item of state.body.items) assert.equal(item.weight, input.weights[item.rarity]);
 });
-test('gacha HTTP authenticates, grants daily once, settles/replays ten pulls and refuses forged payloads', async (t) => {
+test('gacha HTTP authenticates, claims daily once, settles/replays ten pulls and refuses forged payloads', async (t) => {
   const { base } = await appFixture(t, {
     seed: async (db) => {
       const auth = createAuth(db);
@@ -489,7 +579,18 @@ test('gacha HTTP authenticates, grants daily once, settles/replays ten pulls and
   }
   const state = await req('/api/gacha');
   assert.equal(state.status, 200);
-  assert.equal(state.body.wallet.coins, 2000);
+  assert.equal(state.body.wallet.coins, 1000);
+  assert.equal((await req('/api/gacha/check-in')).body.claimed, false);
+  assert.equal((await req('/api/gacha/check-in', { kind: 'legendary' })).status, 409);
+  const claims = await Promise.all([
+    req('/api/gacha/check-in', { kind: 'daily' }),
+    req('/api/gacha/check-in', { kind: 'daily' }),
+  ]);
+  assert.ok(
+    claims.every(
+      ({ status, body }) => status === 200 && body.claimed && body.wallet.coins === 2000,
+    ),
+  );
   assert.equal(state.body.rules.dailyCoins, 1000);
   assert.deepEqual(state.body.rules.dailyLoginBonuses, [0, 0, 500, 0, 1000]);
   assert.equal(state.body.rules.matchCoins, 300);

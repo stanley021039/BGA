@@ -268,14 +268,16 @@ function rewardList(store, userId) {
 }
 function assertFrame(store, userId, id) {
   const gacha = require('../gacha/ownership');
+  const gachaOnly = require('../barrage/builtins').isGachaOnlyFrame(id);
   if (gacha.enabled(store.db)) {
     if (
-      rewards.some((r) => r.frameId === id) &&
+      (gachaOnly || rewards.some((r) => r.frameId === id)) &&
       !gacha.ownedIds(store.db, userId, 'frames').includes(id)
     )
       throw new HttpError(403, 'FRAME_LOCKED', '請先從獎勵抽卡機或新手大禮包取得這個彈幕框');
     return;
   }
+  if (gachaOnly) throw new HttpError(403, 'FRAME_LOCKED', '請先從獎勵抽卡機取得這個彈幕框');
   const reward = rewards.find((r) => r.frameId === id);
   if (
     reward &&

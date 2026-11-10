@@ -14,9 +14,9 @@ test('defensive artwork targets its caster even in an otherwise empty lobby', ()
     ),
     user = { id: 'shield-user', display_name: 'Caster' };
   lobby.view(user);
-  for (const effect of ['shield', 'sphere']) {
+  for (const effect of ['shield', 'sphere', 'crystal_reflection']) {
     const event = lobby.attack(user, {
-      requestId: 'self-' + effect + '-test',
+      requestId: 'self-' + effect.replaceAll('_', '-') + '-test',
       aspectRatio: 1.5,
       effect,
       slot: 'q',
@@ -30,7 +30,10 @@ test('defensive artwork targets its caster even in an otherwise empty lobby', ()
 
 test('both crescent variants are separate selectable persistent artwork IDs', () => {
   const effects = require('../public/shared/attack-effects.json');
-  assert.equal(effects.filter((effect) => !('paletteHue' in effect)).length, 37);
+  assert.equal(
+    effects.filter((effect) => !('paletteHue' in effect) && !effect.rewardOf).length,
+    55,
+  );
   assert.equal(new Set(effects.map((e) => e.id)).size, effects.length);
   assert.ok(!effects.some((e) => e.id === 'flame_kick'));
   const original = effects.find((e) => e.id === 'blade_aura');
@@ -121,7 +124,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.deepEqual(initial.body.bonusRewards.attacks, ['barrage', 'beam']);
   const redeemed = await post('/api/achievements/redeem', { code: '我愛作者' });
   assert.equal(redeemed.status, 200);
-  assert.equal(redeemed.body.bonusRewards.attacks.length, 37);
+  assert.equal(redeemed.body.bonusRewards.attacks.length, 56);
   assert.equal(
     (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: 'bijuu_beam' })).status,
     200,

@@ -8,8 +8,10 @@ import {
 } from './lobby-arena';
 import sceneRules from '../../../public/shared/scene-rules.json';
 import attackEffects from '../../../public/shared/attack-effects.json';
+
 import { attackArtworkKind } from '../services/attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
+import combatRules from '../../../public/shared/scene-rules.json';
 import { validPassage, type Passage } from '../engines/scene-path.js';
 import backgrounds from '../../../public/shared/lobby-backgrounds.json';
 import { readBarrages, type BarrageEvent } from './social';
@@ -17,6 +19,12 @@ import { array, record, text } from '../services/validation';
 import { isGameType, type GameType } from './room';
 import { readPingContext, type PingContext } from './pings';
 import { isEntranceEffect, type EntranceEffectId } from '../services/entrance-effects';
+
+const { windowMs, travelMs, settleMs } = combatRules.crystalReflection;
+const reflectionLifetime = windowMs + travelMs + settleMs;
+const summonEffects = new Set(
+  attackEffects.filter((entry) => 'summonStyle' in entry).map((entry) => entry.id),
+);
 
 export interface PublicRoom {
   code: string;
@@ -52,10 +60,21 @@ export interface SceneCombatStatus {
   ordinaryDotMs?: number;
   regenPerSecond: number;
 }
+export interface SceneEquationPuzzle {
+  id: string;
+  prompt: string;
+  options: number[];
+  rejectedOptions: number[];
+}
 export interface LobbyVisitor {
   concealed?: boolean;
   heroFlightUntil?: number;
   sealedUntil?: number;
+  blackoutUntil?: number;
+  kissedUntil?: number;
+  equationLocked?: boolean;
+  equation?: SceneEquationPuzzle;
+  summon?: { effect: string; until: number; remainingMs: number };
   teleportBlockedUntil?: number;
   energy?: number;
   energyMaximum?: number;
@@ -118,6 +137,9 @@ export interface LobbyAttackHit {
   blocked?: boolean;
   weakened?: boolean;
   coverImpact?: { x: number; y: number };
+  reflectionIndex?: number;
+  reflectedEffect?: string;
+  reflectedPhase?: string;
   aimX?: number;
   aimY?: number;
   phase?: string;
@@ -404,6 +426,49 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       health: finite(item.health) ? item.health : undefined,
       heroFlightUntil: finite(item.heroFlightUntil) ? item.heroFlightUntil : 0,
       sealedUntil: finite(item.sealedUntil) ? item.sealedUntil : 0,
+      ...(finite(item.blackoutUntil) ? { blackoutUntil: item.blackoutUntil } : {}),
+      ...(finite(item.kissedUntil) && item.kissedUntil > Number(row.serverNow)
+        ? { kissedUntil: item.kissedUntil }
+        : {}),
+      ...(item.equationLocked === true ? { equationLocked: true } : {}),
+      ...(item.id === row.selfId && item.equation
+        ? (() => {
+            const { id, prompt, options, rejectedOptions } = record(item.equation);
+            return typeof id === 'string' &&
+              id.length <= 80 &&
+              typeof prompt === 'string' &&
+              prompt.length <= 80 &&
+              Array.isArray(options) &&
+              options.length === 5 &&
+              options.every(Number.isSafeInteger) &&
+              new Set(options).size === 5 &&
+              Array.isArray(rejectedOptions) &&
+              rejectedOptions.length <= 4 &&
+              rejectedOptions.every((value) => options.includes(value))
+              ? {
+                  equation: {
+                    id,
+                    prompt,
+                    options: options.map(Number),
+                    rejectedOptions: rejectedOptions.map(Number),
+                  },
+                }
+              : {};
+          })()
+        : {}),
+      ...(() => {
+        if (item.summon === undefined) return {};
+        const summon = record(item.summon);
+        const { effect, until, remainingMs } = summon;
+        return typeof effect === 'string' &&
+          summonEffects.has(effect) &&
+          finite(until) &&
+          finite(remainingMs) &&
+          remainingMs > 0 &&
+          remainingMs <= 5000
+          ? { summon: { effect, until, remainingMs } }
+          : {};
+      })(),
       teleportBlockedUntil: finite(item.teleportBlockedUntil) ? item.teleportBlockedUntil : 0,
       maxHealth: finite(item.maxHealth) ? item.maxHealth : undefined,
       respawnAt: finite(item.respawnAt) ? item.respawnAt : undefined,
@@ -455,7 +520,10 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           !finite(a.until) ||
           !(a.head && ['shaohua_devour', 'shaohua_devour_alt'].includes(String(a.effect))
             ? Number.isSafeInteger(a.until - a.at) && a.until > a.at
-            : [1800, 4400].includes(a.until - a.at))
+            : kind === 'susanoo'
+              ? a.until - a.at === 5000
+              : [1800, 4400].includes(a.until - a.at) ||
+                (kind === 'crystal_reflection' && a.until - a.at === reflectionLifetime))
         )
           throw Error('大廳攻擊資料格式不正確。');
         return {
@@ -513,6 +581,9 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                   throw Error('範圍攻擊資料格式不正確。');
                 const hits = a.hits.map((value) => {
                   const hit = record(value);
+                  const reflectedEffect = text(hit.reflectedEffect);
+                  const reflectedPhase = text(hit.reflectedPhase);
+                  const reflectedKind = attackArtworkKind(reflectedEffect);
                   if (
                     !text(hit.toId) ||
                     hit.toId === a.fromId ||
@@ -524,17 +595,45 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                       ![hit.aimX, hit.aimY].every(coordinate))
                   )
                     throw Error('範圍攻擊目標資料格式不正確。');
+                  if (
+                    (hit.reflectedEffect !== undefined || hit.reflectedPhase !== undefined) &&
+                    (kind !== 'crystal_reflection' ||
+                      hit.phase !== 'reflection' ||
+                      !attackEffects.some((effect) => effect.id === reflectedEffect) ||
+                      !combatRules.crystalReflection.projectiles.includes(reflectedKind) ||
+                      !attackTiming[reflectedKind as keyof typeof attackTiming]?.some(
+                        (stage) => stage[2] === reflectedPhase,
+                      ))
+                  )
+                    throw Error('反彈招式資料格式不正確。');
+                  const reflectionIndex = hit.reflectionIndex;
+                  if (
+                    reflectionIndex !== undefined &&
+                    (kind !== 'crystal_reflection' ||
+                      !reflectedEffect ||
+                      !Number.isSafeInteger(reflectionIndex) ||
+                      Number(reflectionIndex) < 0 ||
+                      Number(reflectionIndex) >= combatRules.crystalReflection.maximumReturns)
+                  )
+                    throw Error('反彈段次資料格式不正確。');
                   return {
+                    ...(reflectionIndex !== undefined
+                      ? { reflectionIndex: Number(reflectionIndex) }
+                      : {}),
+                    ...(reflectedEffect ? { reflectedEffect, reflectedPhase } : {}),
                     ...(hit.aimX !== undefined && coordinate(hit.aimX) && coordinate(hit.aimY)
                       ? { aimX: hit.aimX, aimY: hit.aimY }
                       : {}),
                     ...(hit.phase !== undefined
                       ? (() => {
+                          const stage = stages.find((stage) => stage[2] === hit.phase);
                           if (
-                            !stages.some((stage) => stage[2] === hit.phase) ||
+                            !stage ||
                             !finite(hit.delayMs) ||
                             hit.delayMs < 0 ||
-                            (a.head ? !Number.isSafeInteger(hit.delayMs) : hit.delayMs > 4100) ||
+                            (a.head
+                              ? !Number.isSafeInteger(hit.delayMs)
+                              : hit.delayMs > Math.max(4100, Number(stage[0]))) ||
                             typeof hit.pending !== 'boolean' ||
                             (hit.missed !== undefined && typeof hit.missed !== 'boolean')
                           )
@@ -565,9 +664,16 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                   };
                 });
                 if (
-                  new Set(hits.map((hit) => hit.toId + ':' + (hit.phase || 'legacy'))).size !==
-                    hits.length ||
-                  new Set(hits.map((hit) => hit.toId)).size > 32 ||
+                  new Set(
+                    hits.map(
+                      (hit) => hit.reflectionIndex ?? hit.toId + ':' + (hit.phase || 'legacy'),
+                    ),
+                  ).size !== hits.length ||
+                  new Set(hits.map((hit) => hit.toId)).size >
+                    (kind === 'crystal_reflection' ? 1 : 32) ||
+                  (kind === 'crystal_reflection' &&
+                    hits.length > 1 &&
+                    hits.some((hit) => hit.reflectionIndex === undefined)) ||
                   !finite(a.aspectRatio) ||
                   a.aspectRatio < 0.2 ||
                   a.aspectRatio > 5

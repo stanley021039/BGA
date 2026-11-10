@@ -176,6 +176,12 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       self = positions.get(playerId);
     if (!self) throw new HttpError(403, 'NOT_SEATED', '尚未加入此房間');
     combat.alive(self);
+    if (input.action === 'solve-equation') {
+      if (Object.keys(input).some((key) => !['code', 'action', 'id', 'answer'].includes(key)))
+        throw new HttpError(400, 'INVALID_EQUATION_ANSWER', '操作不正確');
+      combat.solveEquation(self, input.id, input.answer, time);
+      return;
+    }
     self.entrance = entrance || self.entrance || 'classic';
     if (
       !['step', 'teleport', 'attack'].includes(input.action) ||
@@ -257,9 +263,13 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     const target = targets[0];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '攻擊範圍內沒有其他玩家');
     const toId = target.id;
-    const defensive = target === self;
+    const defensive = target === self && attackKind(effect) !== 'susanoo';
     energy.spend(self, input.slot);
-    const hit = defensive ? combat.protect(self, time, effect) : { damage: 0, critical: false };
+    const reflection = attackKind(effect) === 'crystal_reflection';
+    const hit =
+      defensive && !reflection
+        ? combat.protect(self, time, effect)
+        : { damage: 0, critical: false };
     const events = (attacks.get(room) || []).filter(
       (e) =>
         e.until > time && !(e.head && e.fromId === playerId && effect.startsWith('shaohua_devour')),
@@ -282,7 +292,8 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       until: time + 1800,
     };
     combat.cast(self, effect, time);
-    if (!defensive)
+    if (reflection) timeline.armReflection(event, self);
+    else if (!defensive)
       timeline.prepare(
         event,
         self,

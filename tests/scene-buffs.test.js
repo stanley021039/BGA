@@ -100,9 +100,14 @@ test('Explosion recovery starts after VFX and never carries over to a respawned 
 });
 test('staged attacks divide a fixed total, with explicit Ea and phoenix extra phases and bounded payloads', () => {
   for (const [effect, phases] of Object.entries(timing)) {
-    assert.ok(phases.length <= 5);
+    if (effect === 'starburst_stream') assert.equal(phases.length, 16);
+    else assert.ok(phases.length <= 5);
     assert.equal(new Set(phases.map((p) => p[2])).size, phases.length);
-    assert.ok(phases.every(([at, w]) => at >= 0 && at <= 4100 && w > 0));
+    assert.ok(
+      phases.every(
+        ([at, w, phase]) => at >= 0 && at <= 4200 && (phase === 'stasis' ? w === 0 : w > 0),
+      ),
+    );
     const total = phases.reduce((sum, p) => sum + p[1], 0);
     assert.ok(
       Math.abs(total - (effect === 'gate_of_babylon' ? 3 : effect === 'solar_phoenix' ? 1.2 : 1)) <
@@ -123,6 +128,10 @@ test('staged attacks divide a fixed total, with explicit Ea and phoenix extra ph
   timeline.prepare(event, a, victims);
   assert.equal(event.hits.length, 160);
   assert.equal(new Set(event.hits.map((h) => h.toId)).size, 32);
+  const starburst = { effect: 'starburst_stream', at: 0 };
+  timeline.prepare(starburst, a, victims);
+  assert.equal(starburst.hits.length, 16);
+  assert.equal(new Set(starburst.hits.map((hit) => hit.toId)).size, 1);
 });
 test('self-only status reports real shield phases, temporary buffs and the two-second regeneration boundary', () => {
   const { combat, a, b } = setup(true);

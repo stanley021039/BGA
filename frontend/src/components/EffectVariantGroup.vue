@@ -22,6 +22,7 @@ const selected = computed(() => {
   );
 });
 function label(effect: T) {
+  if (effect.styleLabel) return effect.styleLabel;
   if (effect.id === props.original.id) return '原版';
   const suffix = effect.label.startsWith(props.original.label)
     ? effect.label.slice(props.original.label.length).match(/^（(.+)）$/)?.[1]

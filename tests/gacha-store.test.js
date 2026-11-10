@@ -67,36 +67,78 @@ test('previous devour Q/E selections migrate to R and cannot bypass its energy c
     code: 'INVALID_ATTACK_LOADOUT',
   });
 });
-test('daily credit uses Taipei midnight, survives store recreation, and cannot double grant', (t) => {
+test('daily visit and manual claim use Taipei midnight and survive store recreation', (t) => {
   let time = Date.parse('2026-10-29T15:59:59.999Z');
   const { db, user, store } = fixture(t, { clock: () => time });
   assert.equal(taipeiDay(time), '2026-10-29');
   store.daily(user);
   store.daily(user);
+  assert.equal(store.wallet(user).coins, 0);
+  assert.equal(store.checkin(user).visits, 1);
+  assert.equal(store.claimCheckin(user, 'daily').claimed, true);
   assert.equal(store.wallet(user).coins, 1000);
-  new GachaStore(db, { clock: () => time }).daily(user);
+  new GachaStore(db, { clock: () => time }).claimCheckin(user, 'daily');
   assert.equal(store.wallet(user).coins, 1000);
   time++;
   assert.equal(taipeiDay(time), '2026-10-30');
   store.daily(user);
+  assert.equal(store.checkin(user).visits, 2);
+  assert.equal(store.checkin(user).claimed, false);
+  store.claimCheckin(user, 'daily');
   assert.equal(store.wallet(user).coins, 2000);
-  assert.equal(db.prepare("SELECT COUNT(*) n FROM gacha_ledger WHERE reason='login'").get().n, 2);
+  assert.equal(
+    db.prepare("SELECT COUNT(*) n FROM gacha_ledger WHERE event_id GLOB 'login:*'").get().n,
+    2,
+  );
 });
 test('daily bonuses count old credits without paying them again and repeat after the fifth claim', (t) => {
   let time = Date.parse('2026-10-29T15:59:59.999Z');
   const { db, user, store } = fixture(t, { clock: () => time });
   store.ledger('login:2026-10-29:' + user, user, 'login', 100, 0, 'a'.repeat(64), store.at());
-  store.daily(user);
+  assert.equal(store.claimCheckin(user, 'daily').visits, 1);
   assert.equal(store.wallet(user).coins, 100);
   time++;
   const expected = [1000, 1500, 1000, 2000, 1000, 1000, 1500];
   for (const coins of expected) {
     const before = store.wallet(user).coins;
-    new GachaStore(db, { clock: () => time }).daily(user);
-    store.daily(user);
+    new GachaStore(db, { clock: () => time }).claimCheckin(user, 'daily');
+    store.claimCheckin(user, 'daily');
     assert.equal(store.wallet(user).coins - before, coins);
     time += 2 * 86400000;
   }
+});
+test('seven distinct visits unlock one manually claimed and atomic legendary draw', (t) => {
+  let time = Date.parse('2026-10-29T09:00:00Z');
+  const { db, user, other, store } = fixture(t, { clock: () => time, choose: () => 0 });
+  for (let n = 0; n < 6; n++) {
+    store.daily(user);
+    store.daily(user);
+    time += 2 * 86400000;
+  }
+  assert.equal(store.checkin(user).visits, 6);
+  assert.equal(store.checkin(user).milestone.status, 'locked');
+  const input = { requestId: randomUUID(), pool: 'combat', count: 1, voucher: true };
+  assert.throws(() => store.draw(user, input), { code: 'GACHA_VOUCHER_REQUIRED' });
+  assert.equal(store.claimCheckin(user, 'legendary').milestone.status, 'available');
+  assert.equal(store.claimCheckin(user, 'legendary').visits, 7);
+  assert.throws(() => store.claimCheckin(other, 'legendary'), { code: 'GACHA_CHECKIN_NOT_READY' });
+  const before = store.wallet(user).coins;
+  const restarted = new GachaStore(db, { clock: () => time, choose: () => 0 });
+  assert.throws(() => restarted.draw(user, { ...input, count: 10 }), {
+    code: 'INVALID_GACHA_DRAW',
+  });
+  const receipt = restarted.draw(user, input);
+  assert.equal(receipt.results[0].rarity, 'legendary');
+  assert.equal(receipt.cost, 0);
+  assert.equal(receipt.wallet.coins, before);
+  assert.equal(receipt.drawCount, 0);
+  assert.equal(restarted.drawCounts(user).get('combat'), undefined);
+  assert.deepEqual(restarted.draw(user, input), receipt);
+  assert.throws(() => restarted.draw(user, { ...input, requestId: randomUUID() }), {
+    code: 'GACHA_VOUCHER_REQUIRED',
+  });
+  assert.equal(restarted.claimCheckin(user, 'legendary').milestone.status, 'used');
+  require('../src/gacha/validation').validateGachaDatabase(db);
 });
 test('each pool counts historical draws separately and boosts only milestone cards in ten pulls', (t) => {
   let bonusRoll;
@@ -291,6 +333,9 @@ test('normal completed matches reward active humans once, preserve winners and e
   assert.equal(store.wallet(user).coins, 500);
   assert.equal(store.wallet(other).coins, 300);
   assert.equal(store.wallet(afk).coins, 0);
+  assert.deepEqual(store.matchReward(facts, user), { id: facts.id, coins: 500, winner: true });
+  assert.deepEqual(store.matchReward(facts, other), { id: facts.id, coins: 300, winner: false });
+  assert.deepEqual(store.matchReward(facts, afk), { id: facts.id, coins: 0, winner: false });
   assert.deepEqual(store.awardMatch({ ...facts, id: randomUUID(), purpose: 'test' }), []);
   assert.deepEqual(store.awardMatch({ ...facts, id: randomUUID(), normalEnd: false }), []);
   assert.deepEqual(
@@ -363,12 +408,43 @@ test('schema21 migration snapshots legacy ownership exactly once; later achievem
   assert.equal(db.prepare('PRAGMA foreign_key_check').all().length, 0);
 });
 
+test('former starter entrances are obtainable from the arrival pool or by fragment exchange', (t) => {
+  const locked = ['smoke', 'sparks', 'ink', 'rift', 'particles'];
+  const entries = poolItems('arrival').filter((item) => item.rarity === 'common');
+  const smoke = entries.findIndex((item) => item.key === 'entrances:smoke');
+  const rolls = [0, smoke];
+  const { db, store, user, other } = fixture(t, { choose: () => rolls.shift() });
+  fund(store, db, user);
+  assert.ok(locked.every((id) => !store.owned(user).entrances.has(id)));
+  assert.ok(locked.every((id) => entries.some((item) => item.key === 'entrances:' + id)));
+  assert.ok(
+    ['classic', 'runes'].every((id) => !entries.some((item) => item.key === 'entrances:' + id)),
+  );
+  assert.equal(
+    store.draw(user, { pool: 'arrival', count: 1, requestId: randomUUID() }).results[0].id,
+    'smoke',
+  );
+  store.exchange(user, { key: 'entrances:ink', requestId: randomUUID() });
+  assert.deepEqual([...store.owned(user).entrances].sort(), ['ink', 'smoke']);
+  assert.equal(store.owned(other).entrances.size, 0);
+});
+
 test('every new palette is an independent draw and exchange reward with the original rarity', (t) => {
   const { starters, variants } = require('../public/shared/entrance-palette.json');
   const entrances = require('../public/shared/entrance-requirements.json');
   const attacks = require('../public/shared/attack-effects.json');
   const palettes = attacks.filter((e) => 'paletteHue' in e);
-  assert.equal(palettes.length, 21);
+  assert.equal(palettes.length, 39);
+  for (const id of [
+    'crystal_reflection',
+    'crystal_reflection_alt',
+    'sakura_swarm',
+    'sakura_swarm_alt',
+    'venom_thorn',
+    'venom_thorn_alt',
+  ]) {
+    assert.equal(poolItems('attacks').find((item) => item.id === id)?.rarity, 'epic', id);
+  }
   assert.equal(variants.length, 31);
   assert.deepEqual(
     new Set(variants.map((e) => e.variantOf)),
@@ -437,4 +513,48 @@ test('retired achievement ownership can be reacquired through the prize machine'
   );
   assert.equal(source.get(user, item.kind, item.id).source, 'draw');
   assert.equal(source.get(other, item.kind, item.id).source, 'exchange');
+});
+
+test('Susanoo has two reward records and their separate style sets share the correct ownership', (t) => {
+  const { db, store, user, other } = fixture(t);
+  fund(store, db, user, 2000, 2000);
+  fund(store, db, other, 2000, 2000);
+  const settings = require('../src/profiles/settings');
+  const susanoo = poolItems('attacks').filter((item) => item.id.startsWith('susanoo'));
+  assert.deepEqual(
+    susanoo.map((item) => item.id),
+    ['susanoo', 'susanoo_alt'],
+  );
+  store.exchange(user, { key: 'attacks:susanoo', requestId: randomUUID() });
+  store.exchange(other, { key: 'attacks:susanoo_alt', requestId: randomUUID() });
+  const loadout = { q: 'barrage', e: 'beam' };
+  for (const [owner, allowed, locked] of [
+    [user, ['susanoo', 'susanoo_orange'], 'susanoo_blue'],
+    [other, ['susanoo_alt', 'susanoo_blue', 'susanoo_cyan'], 'susanoo_orange'],
+  ]) {
+    for (const r of allowed) {
+      settings.setAttackSettings(db, owner, { ...loadout, r });
+      assert.equal(settings.getAttackSettings(db, owner).r, r);
+    }
+    assert.throws(() => settings.setAttackSettings(db, owner, { ...loadout, r: locked }), {
+      code: 'ATTACK_REWARD_LOCKED',
+    });
+  }
+});
+
+test('legendary frames and player styles require independent ownership', (t) => {
+  const { AchievementStore } = require('../src/achievements/store');
+  const { db, store, user, other } = fixture(t);
+  const achievements = new AchievementStore(db);
+  for (const member of [user, other]) fund(store, db, member, 2000, 2000);
+  for (const id of ['observatory', 'abyssal-glass', 'eclipse-theatre']) {
+    assert.throws(() => achievements.assertFrame(user, id), { code: 'FRAME_LOCKED' });
+    store.exchange(user, { key: 'media:' + id, requestId: randomUUID() });
+    assert.throws(() => achievements.assertFrame(user, id), { code: 'FRAME_LOCKED' });
+    assert.ok(achievements.list(user).bonusRewards.media.includes(id));
+    assert.ok(!achievements.list(user).bonusRewards.frames.includes(id));
+    store.exchange(other, { key: 'frames:' + id, requestId: randomUUID() });
+    achievements.assertFrame(other, id);
+    assert.ok(!achievements.list(other).bonusRewards.media.includes(id));
+  }
 });

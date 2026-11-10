@@ -124,6 +124,11 @@ test('new cosmetics are enforced by the server and website opening stays separat
   assert.equal((await f.post('/api/lobby/background', { id: 'default' })).status, 429);
   const locked = await f.get('/api/lobby?entrance=stitch-senbonzakura');
   assert.ok(locked.body.visitors.every((visitor) => visitor.entrance === 'classic'));
+  for (const id of ['smoke', 'sparks', 'ink', 'rift', 'particles']) {
+    const view = await f.get('/api/lobby?entrance=' + id);
+    assert.equal(view.body.visitors[0].entrance, 'classic');
+  }
+  assert.equal((await f.get('/api/lobby?entrance=runes')).body.visitors[0].entrance, 'runes');
   assert.equal((await f.get('/api/profile/opening')).body.theme, 'default');
   assert.equal((await f.post('/api/profile/opening', { theme: 'soul-world' })).status, 403);
   assert.equal((await f.post('/api/profile/opening', { theme: 'unknown' })).status, 400);

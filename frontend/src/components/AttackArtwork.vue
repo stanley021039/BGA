@@ -4,6 +4,9 @@ import { usePreferencesStore } from '../stores/preferences';
 import { playAttackArtwork } from '../services/attack-artwork';
 import { warmNewSkillAssets } from '../services/game-assets';
 import { attackColor, previewAttackOptions } from '../services/attack-placement';
+import { summonAssets } from '../services/summon-assets';
+import SummonArtwork from './SummonArtwork.vue';
+import rules from '../../../public/shared/scene-rules.json';
 const props = defineProps<{
   effect: string;
   playKey: string | number;
@@ -13,10 +16,12 @@ const prefs = usePreferencesStore(),
   stage = ref<HTMLElement | null>(null);
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 const color = computed(() => attackColor(props.effect));
+const previewSummon = ref(0);
 let cleanup: (() => void) | null = null,
   revision = 0,
   mounted = false;
 async function play() {
+  previewSummon.value = 0;
   cleanup?.();
   cleanup = null;
   const epoch = ++revision;
@@ -34,6 +39,7 @@ async function play() {
   if (!width || !height) return;
   const options = previewAttackOptions(props.effect, width, height);
   warmNewSkillAssets(props.effect, options.width, options.height);
+  if (summonAssets(props.effect)) previewSummon.value = epoch;
   cleanup = playAttackArtwork(surface.value, options);
 }
 onMounted(() => {
@@ -61,7 +67,12 @@ onBeforeUnmount(() => {
     :class="{ 'is-still': still }"
     :data-effect="effect"
     aria-hidden="true"
-    ><canvas ref="surface"></canvas
+    ><SummonArtwork
+      v-if="previewSummon && !still"
+      :key="previewSummon"
+      :effect="effect"
+      :remaining-ms="rules.susanoo.durationMs"
+      preview /><canvas ref="surface"></canvas
     ><span v-if="still" class="attack-static-hit" :style="{ borderColor: color }"></span
   ></div>
 </template>
@@ -73,6 +84,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 .attack-artwork canvas {
+  position: relative;
   width: 100%;
   height: 100%;
   display: block;
