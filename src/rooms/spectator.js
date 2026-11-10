@@ -334,19 +334,36 @@ function spectatorView(room, gameAudio) {
       const revealed =
         ['reveal', 'finished'].includes(room.phase) &&
         room.result?.canvasEpoch === room.canvas.epoch;
-      out.drawScene = publicGame({
-        ...fields(room, ['round', 'roundLimit', 'presenterId', 'options', 'deadline',
-          'participantIds', 'guessedIds', 'winner', 'matchSummary']),
-        canvasEpoch: room.canvas.epoch,
-        strokeVersion: room.canvas.version,
-        question: revealed && room.question ? fields(room.question, ['title', 'category', 'topicLabel']) : null,
-        result: revealed && room.result?.resultId ? room.result : null,
-        guesses: rows(room.guesses).filter((guess) => guess.id && Number.isFinite(guess.at)).map((guess) => ({
-          ...fields(guess, ['id', 'name', 'correct', 'points', 'at']),
-          ...(!guess.correct ? { answer: guess.answer } : {}),
-        })),
-        ...(room.options.playMode === 'oracle' ? { oracle: room.oracle.view(room, null) } : {}),
-      }, ids);
+      out.drawScene = publicGame(
+        {
+          ...fields(room, [
+            'round',
+            'roundLimit',
+            'presenterId',
+            'options',
+            'deadline',
+            'participantIds',
+            'guessedIds',
+            'winner',
+            'matchSummary',
+          ]),
+          canvasEpoch: room.canvas.epoch,
+          strokeVersion: room.canvas.version,
+          question:
+            revealed && room.question
+              ? fields(room.question, ['title', 'category', 'topicLabel'])
+              : null,
+          result: revealed && room.result?.resultId ? room.result : null,
+          guesses: rows(room.guesses)
+            .filter((guess) => guess.id && Number.isFinite(guess.at))
+            .map((guess) => ({
+              ...fields(guess, ['id', 'name', 'correct', 'points', 'at']),
+              ...(!guess.correct ? { answer: guess.answer } : {}),
+            })),
+          ...(room.options.playMode === 'oracle' ? { oracle: room.oracle.view(room, null) } : {}),
+        },
+        ids,
+      );
       section('本輪題目', [
         revealed ? room.question?.title : '答案尚未揭曉',
         !revealed && room.question
@@ -418,12 +435,28 @@ function spectatorView(room, gameAudio) {
             'participantIds',
             'winner',
           ]),
-          question: q ? {
-            ...fields(q, ['id', 'type', 'topic', 'prompt', 'options', 'images', 'pack', 'shared', 'reused']),
-            ...(q.entries ? { entries: q.entries.map((entry) =>
-              fields(entry, ['id', 'label', 'detail', 'bank', 'image']),
-            ) } : {}),
-          } : null,
+          question: q
+            ? {
+                ...fields(q, [
+                  'id',
+                  'type',
+                  'topic',
+                  'prompt',
+                  'options',
+                  'images',
+                  'pack',
+                  'shared',
+                  'reused',
+                ]),
+                ...(q.entries
+                  ? {
+                      entries: q.entries.map((entry) =>
+                        fields(entry, ['id', 'label', 'detail', 'bank', 'image']),
+                      ),
+                    }
+                  : {}),
+              }
+            : null,
           tournament: room.tournamentView(),
           cruel: room.cruelView(null),
           answeredIds: Object.keys(room.answers),

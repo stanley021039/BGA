@@ -13,7 +13,12 @@ import { readBluffSnapshot, type BluffSnapshot } from './bluff';
 import { readDrawSnapshot, type DrawSnapshot } from './drawing';
 import { readTelephoneSnapshot, type TelephoneSnapshot, type TelephoneStroke } from './telephone';
 import { readMusicQuizSnapshot, type MusicQuizSnapshot } from './musicquiz';
-import { ingredientNames, readQuacksSnapshot, type IngredientColor, type QuacksSnapshot } from './quacks';
+import {
+  ingredientNames,
+  readQuacksSnapshot,
+  type IngredientColor,
+  type QuacksSnapshot,
+} from './quacks';
 import { record, text } from '../services/validation';
 
 export interface SpectatorShape {
@@ -631,20 +636,23 @@ export function readSpectatorSnapshot(value: unknown): SpectatorSnapshot {
     });
   }
   if (result.type === 'quacks' && s.quacksScene != null) {
-    result.quacksScene = readQuacksSnapshot({
-      ...record(s.quacksScene),
-      code: result.code,
-      type: result.type,
-      phase: result.phase,
-      serverNow: result.serverNow,
-      host: false,
-      me: 'observer',
-      mine: null,
-      patients: [],
-      rollEvents: [],
-      events: [],
-      players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
-    }, true);
+    result.quacksScene = readQuacksSnapshot(
+      {
+        ...record(s.quacksScene),
+        code: result.code,
+        type: result.type,
+        phase: result.phase,
+        serverNow: result.serverNow,
+        host: false,
+        me: 'observer',
+        mine: null,
+        patients: [],
+        rollEvents: [],
+        events: [],
+        players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+      },
+      true,
+    );
   }
   return result;
 }

@@ -22,7 +22,14 @@ const props = defineProps<{
 }>();
 const room = useRoomStore(),
   bluff = props.observer
-    ? { state: null, secretVisible: false, now: Date.now(), offset: 0, seconds: 0, liveReactions: [] }
+    ? {
+        state: null,
+        secretVisible: false,
+        now: Date.now(),
+        offset: 0,
+        seconds: 0,
+        liveReactions: [],
+      }
     : useBluffStore(),
   actions = props.observer
     ? {

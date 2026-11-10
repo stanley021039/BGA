@@ -16,7 +16,10 @@ const name = (id: string) => s.value?.players.find((p) => p.id === id)?.name || 
         >{{ team.name }} <span>{{ team.score }} 分</span></h3
       ><p>{{ team.members.map(name).join(' ＋ ') }}</p
       ><label v-if="game?.editable && team.members.length === 2"
-        >{{ name(team.members[0]) }} 的搭檔<!-- ui-check-allow raw-control: 保留隊伍欄內的既有搭檔選單。 --><select
+        >{{
+          name(team.members[0])
+        }}
+        的搭檔<!-- ui-check-allow raw-control: 保留隊伍欄內的既有搭檔選單。 --><select
           :value="team.members[1]"
           :disabled="room.busy || game.settingsPending || game.uncertain"
           @change="

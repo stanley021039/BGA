@@ -169,7 +169,10 @@ test('actual spectator component has one read, ignores aborted responses, follow
     first.serverNow = 100000;
     f.calls[0].resolve(first);
     await flush();
-    assert.equal(f.root.querySelector('[data-component="RoomHeader"]').getAttribute('title'), '你畫我猜');
+    assert.equal(
+      f.root.querySelector('[data-component="RoomHeader"]').getAttribute('title'),
+      '你畫我猜',
+    );
     assert.equal(f.connections[0].url, '/api/watch/events?code=ABCDEF');
     await f.advance(1000);
     assert.equal(f.calls.length, 2);
@@ -191,7 +194,10 @@ test('actual spectator component has one read, ignores aborted responses, follow
     next.serverNow = 108000;
     f.calls[2].resolve(next);
     await flush();
-    assert.equal(f.root.querySelector('[data-component="RoomHeader"]').getAttribute('title'), '德州撲克');
+    assert.equal(
+      f.root.querySelector('[data-component="RoomHeader"]').getAttribute('title'),
+      '德州撲克',
+    );
     assert.equal(f.connections.length, 1);
     assert.equal(f.urls.at(-1), '/poker/ABCDEF?watch=1');
     assert.equal(f.root.querySelector('[data-component="SpectatorCanvas"]'), null);
@@ -199,7 +205,10 @@ test('actual spectator component has one read, ignores aborted responses, follow
     assert.equal(f.calls.length, 4);
     f.calls[3].reject(new f.ApiError('已被踢出', 403));
     await flush();
-    assert.equal(f.root.querySelector('[data-room-kind]')?.getAttribute('data-room-kind'), undefined);
+    assert.equal(
+      f.root.querySelector('[data-room-kind]')?.getAttribute('data-room-kind'),
+      undefined,
+    );
     assert.equal(f.connections[0].closed, true);
     assert.equal(f.timers.size, 0);
     await f.advance(20000);
