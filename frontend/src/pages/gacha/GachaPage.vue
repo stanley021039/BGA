@@ -822,7 +822,7 @@ const newCount = computed(() =>
                         :caption="item.label"
                         variant="ghost"
                         aria-haspopup="dialog"
-                        @click="previewExchange(item, $event)"
+                        @click="previewReward(item, $event)"
                       />
                       <div class="gacha-item-meta">
                         <UiBadge :tone="rarityTone[item.rarity]">{{ item.rarityLabel }}</UiBadge>
