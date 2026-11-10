@@ -8,13 +8,14 @@ import UiButton from './UiButton.vue';
 import UiPopover from './UiPopover.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/room-header.scss';
-const props = defineProps<{ title: string; focused: boolean }>();
+const props = defineProps<{ title: string; focused: boolean; observerCode?: string }>();
 const emit = defineEmits<{ integrated: [value: boolean] }>();
 const room = useRoomStore(),
   ready = ref(false),
   navigation = ref<InstanceType<typeof UiPopover> | null>(null),
   notice = ref('');
 const integrated = computed(() => ready.value && !props.focused);
+const code = computed(() => props.observerCode ?? room.code);
 let timer: ReturnType<typeof setTimeout> | null = null,
   disposed = false;
 watch(integrated, (value) => emit('integrated', value), { immediate: true });
@@ -36,14 +37,14 @@ onBeforeUnmount(() => {
 });
 async function copyCode() {
   const scope = room.scope,
-    code = room.code;
+    value = code.value;
   try {
     if (!navigator.clipboard) throw Error();
-    await navigator.clipboard.writeText(code);
+    await navigator.clipboard.writeText(value);
     if (!disposed && scope === room.scope) notice.value = '房間代碼已複製。';
   } catch {
     if (!disposed && scope === room.scope)
-      notice.value = '無法自動複製，請選取房間代碼 ' + code + '。';
+      notice.value = '無法自動複製，請選取房間代碼 ' + value + '。';
   }
   if (disposed || scope !== room.scope) return;
   if (timer) clearTimeout(timer);
@@ -62,9 +63,9 @@ async function copyCode() {
       <div class="vue-room-topbar-context"
         ><UiButton
           class="vue-room-code-button"
-          :label="'複製房間代碼 ' + room.code"
-          :caption="'房間 ' + room.code"
-          @click="copyCode" /><RoomInvite /><SpectatorRoster
+          :label="'複製房間代碼 ' + code"
+          :caption="'房間 ' + code"
+          @click="copyCode" /><RoomInvite v-if="!observerCode" /><SpectatorRoster
           v-if="room.snapshot?.viewerNames"
           :key="room.code"
           :names="room.snapshot.viewerNames"
@@ -83,7 +84,9 @@ async function copyCode() {
           @click="navigation?.open($event.currentTarget as HTMLElement)" /><slot name="navigation"
       /></div>
       <div class="vue-room-topbar-actions"
-        ><RoomGameSwitcher /><div v-if="$slots['game-actions']" class="vue-room-game-actions"
+        ><RoomGameSwitcher v-if="!observerCode" /><div
+          v-if="$slots['game-actions']"
+          class="vue-room-game-actions"
           ><slot name="game-actions" /></div
         ><slot
       /></div>

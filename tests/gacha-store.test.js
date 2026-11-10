@@ -99,9 +99,13 @@ test('daily bonuses count old credits without paying them again and repeat after
   }
 });
 test('each pool counts historical draws separately and boosts only milestone cards in ten pulls', (t) => {
-  const bonusRolls = [6044, 6045];
+  let bonusRoll;
   const { db, user, other, store } = fixture(t, {
-    choose: (limit) => (limit === 9300 ? bonusRolls.shift() : 0),
+    choose: () => {
+      const roll = bonusRoll ?? 0;
+      bonusRoll = undefined;
+      return roll;
+    },
   });
   fund(store, db, user, 20_000, 0);
   const draw = (pool, count) => store.draw(user, { pool, count, requestId: randomUUID() });
@@ -117,6 +121,7 @@ test('each pool counts historical draws separately and boosts only milestone car
   assert.equal(draw('all', 1).results[0].rarity, 'common');
   assert.equal(draw('arrival', 1).results[0].rarity, 'common');
   const request = { pool: 'combat', count: 10, requestId: randomUUID() };
+  bonusRoll = 59;
   const receipt = store.draw(user, request);
   assert.equal(receipt.drawCount, 59);
   assert.equal(receipt.results[0].rarity, 'epic');
@@ -126,9 +131,10 @@ test('each pool counts historical draws separately and boosts only milestone car
   assert.equal(poolCount('all'), 1);
   assert.equal(poolCount('arrival'), 1);
   for (let n = 0; n < 4; n++) draw('combat', 10);
+  bonusRoll = 60;
   assert.equal(draw('combat', 1).results[0].rarity, 'legendary');
   assert.equal(poolCount('combat'), 100);
-  assert.deepEqual(bonusRolls, []);
+  assert.equal(bonusRoll, undefined);
 });
 test('ten pulls charge once, deduplicate rewards within the same batch, and replay exactly', (t) => {
   const { db, user, store } = fixture(t, { choose: () => 0 });
@@ -162,10 +168,10 @@ test('weighted draw respects rarity and uniform item boundaries', (t) => {
   const entries = poolItems('all');
   for (const [sample, rarity, itemIndex] of [
     [0, 'common', 0],
-    [74, 'common', 1],
-    [75, 'rare', 0],
-    [93, 'epic', 0],
-    [98, 'legendary', 0],
+    [69, 'common', 1],
+    [70, 'rare', 0],
+    [90, 'epic', 0],
+    [97, 'legendary', 0],
     [99, 'legendary', 1],
   ]) {
     rolls.push(sample, itemIndex);

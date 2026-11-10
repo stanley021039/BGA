@@ -2446,6 +2446,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/telephone/watch',
             '/api/watch',
             '/api/watch/events',
+            '/api/watch/chat',
             '/api/watch-audio',
             '/api/telephone/draft',
             '/api/bluff/caption',
@@ -2485,7 +2486,11 @@ function initializeApp(config, dataLock, acquired) {
         if (!room) throw new HttpError(404, 'ROOM_NOT_FOUND', '找不到房間，請確認房間代碼');
         if (kickedUsers.get(room.code)?.has(user.id))
           throw new HttpError(403, 'KICKED', '你已被房主踢出房間');
-        if (['/api/watch', '/api/watch-audio', '/api/watch/events'].includes(url.pathname)) {
+        if (
+          ['/api/watch', '/api/watch-audio', '/api/watch/events', '/api/watch/chat'].includes(
+            url.pathname,
+          )
+        ) {
           if (room.type === 'coc')
             throw new HttpError(
               403,
@@ -2493,13 +2498,36 @@ function initializeApp(config, dataLock, acquired) {
               '這份冒險只提供給在席參與者，不開放觀戰',
             );
           const audio = url.pathname === '/api/watch-audio';
-          if (req.method !== 'GET' && !(audio && req.method === 'HEAD'))
+          const postingChat = url.pathname === '/api/watch/chat';
+          if (
+            postingChat
+              ? req.method !== 'POST'
+              : req.method !== 'GET' && !(audio && req.method === 'HEAD')
+          )
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '觀戰只支援讀取');
           const events = url.pathname === '/api/watch/events';
-          const rateKey = audio ? 'watch-audio:' : events ? 'watch-events:' : 'watch:';
+          const rateKey = audio
+            ? 'watch-audio:'
+            : events
+              ? 'watch-events:'
+              : postingChat
+                ? 'watch-chat:'
+                : 'watch:';
           limitRate(roomRate, rateKey + user.id, audio ? 120 : events ? 30 : 90);
           if (seats.get(room.code)?.has(user.id))
             throw new HttpError(409, 'ALREADY_SEATED', '已入座玩家請使用玩家畫面');
+          if (postingChat) {
+            if (!Object.hasOwn(spectatorGames, room.type || 'poker'))
+              throw new HttpError(404, 'WATCH_UNAVAILABLE', '這款遊戲尚未開放觀戰');
+            chat.send(
+              room.code,
+              { ...user, display_name: user.display_name + '（觀戰）' },
+              data.message,
+              data.requestId,
+            );
+            stateStream.hint(room.code, 'chat');
+            return send({ messages: chat.read(room.code) });
+          }
           if (audio)
             return gameAudio.serve(req, res, room, observerAudioContext(room), url.searchParams);
           if (events) {
@@ -2509,7 +2537,14 @@ function initializeApp(config, dataLock, acquired) {
               throw new HttpError(429, 'STREAM_LIMIT', '觀戰連線已達上限');
             return;
           }
-          return send(spectatorView(room, gameAudio));
+          return send({
+            ...spectatorView(room, gameAudio),
+            messages: chat.read(room.code),
+            roomMusic:
+              musicRooms.has(room.code) || mediaRooms.get(room)?.managed
+                ? musicProjection(room)
+                : null,
+          });
         }
         if (url.pathname === '/api/telephone/watch') {
           if (req.method !== 'GET')

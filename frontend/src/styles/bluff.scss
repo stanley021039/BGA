@@ -154,7 +154,7 @@
       background: var(--stitch-surface);
       font: inherit;
     }
-    input[type='checkbox'] {
+    input[type='checkbox']:not(.ui-checkbox-input) {
       inline-size: 20px;
       block-size: 20px;
     }

@@ -126,7 +126,7 @@ export function readMajorityQuestion(value: unknown): MajorityQuestion {
     options.length !== (type === 'blank' ? 0 : type === 'two' ? 2 : 3) ||
     images.some(
       (url) =>
-        !/^\/assets\/(?:majority-cruel\/cruel-two-\d{3}-[ab]\.svg|majority-tournament\/(?:[a-zA-Z0-9_-]+\.png|20261018\/[a-zA-Z0-9_-]+\.svg)|playful\/game-musicquiz\.svg)$/.test(
+        !/^\/assets\/(?:majority-cruel\/cruel-two-\d{3}-[ab]\.svg|majority-tournament\/(?:[a-zA-Z0-9_-]+\.png|20261018\/[a-zA-Z0-9_-]+\.svg)|playful\/game-musicquiz\.svg)(?:\?v=[A-Za-z0-9_-]{1,32})?$/.test(
           url,
         ),
     ) ||

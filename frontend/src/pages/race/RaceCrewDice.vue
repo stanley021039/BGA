@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { RacePlayer } from '../../contracts/race';
 import RaceDie from './RaceDie.vue';
-withDefaults(defineProps<{ player: RacePlayer; variant?: number }>(), { variant: 0 });
+withDefaults(
+  defineProps<{ player: Pick<RacePlayer, 'name' | 'dice' | 'color'>; variant?: number }>(),
+  { variant: 0 },
+);
 </script>
 <template>
   <div class="vue-race-roster-details">

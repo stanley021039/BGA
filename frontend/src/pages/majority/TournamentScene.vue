@@ -7,14 +7,44 @@ import StatusSlot from '../../components/StatusSlot.vue';
 import GameSongClip from '../../components/GameSongClip.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
-const game = useMajorityStore(),
+import type { MajoritySnapshot } from '../../contracts/majority';
+import type { SpectatorSnapshot } from '../../contracts/spectator';
+const props = defineProps<{
+  observer?: MajoritySnapshot;
+  observerNow?: number;
+  observerClockOffset?: number;
+  clips?: SpectatorSnapshot['clips'];
+}>();
+const game = props.observer
+    ? {
+        pending: false,
+        uncertain: false,
+        expired: false,
+        participant: false,
+        failed: false,
+        context: '',
+        offset: 0,
+        clock: Date.now(),
+        choice: null as number | null,
+        message: '',
+        act(_action: string, _data?: Record<string, unknown>, _context?: string) {},
+        answer() {},
+        refresh() {},
+      }
+    : useMajorityStore(),
   room = useRoomStore(),
-  s = computed(() => game.state!),
+  s = computed(() => props.observer ?? ('state' in game ? game.state! : props.observer!)),
   t = computed(() => s.value.tournament!),
   live = ref<HTMLElement | null>(null),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
   blocked = computed(
-    () => !room.connected || room.busy || game.pending || game.uncertain || !!room.terminal,
+    () =>
+      !!props.observer ||
+      !room.connected ||
+      room.busy ||
+      game.pending ||
+      game.uncertain ||
+      !!room.terminal,
   ),
   name = (id: string) =>
     s.value.players.find((p) => p.id === id)?.name ||
@@ -77,9 +107,9 @@ onBeforeUnmount(() => {
       ><RoomCountdown
         :deadline="s.phase === 'answering' ? s.deadline : null"
         :duration="120000"
-        :offset="game.offset"
-        :now="game.clock"
-        :epoch="game.context"
+        :offset="observerClockOffset ?? game.offset"
+        :now="observerNow ?? game.clock"
+        :epoch="observer ? String(s.round) : game.context"
         caption="本場作答時間"
         :empty-value="s.phase === 'finished' ? '本局結束' : '本場揭曉'"
         urgent
@@ -90,7 +120,9 @@ onBeforeUnmount(() => {
         ><p class="vue-majority-banner">{{
           revealed ? '選擇、票數與得分一起公開。' : '猜大家會選哪一項；揭曉前不公開其他人的選擇。'
         }}</p
-        ><p v-if="s.phase === 'answering' && !game.participant" class="vue-majority-banner"
+        ><p
+          v-if="!observer && s.phase === 'answering' && !game.participant"
+          class="vue-majority-banner"
           >本場已開始，請等待下一場或下一局參與。</p
         >
         <div class="vue-tournament-pair"
@@ -108,7 +140,12 @@ onBeforeUnmount(() => {
             }}</h2
             ><p v-if="entry.detail">{{ entry.detail }}</p
             ><GameSongClip
-              v-if="entry.audioUrl"
+              v-if="observer && clips?.find((clip) => clip.key === s.question?.id + ':' + i)"
+              :key="s.question?.id + ':' + i"
+              :active="true"
+              :playback="clips.find((clip) => clip.key === s.question?.id + ':' + i)!.playback"
+            /><GameSongClip
+              v-else-if="entry.audioUrl"
               :key="s.question?.id + ':' + i"
               :active="room.connected"
               :playback="{
@@ -119,7 +156,7 @@ onBeforeUnmount(() => {
                 stage: 'highlight',
               }"
             /><UiButton
-              v-if="s.phase === 'answering'"
+              v-if="!observer && s.phase === 'answering'"
               :variant="game.choice === i || s.ownAnswer === i ? 'primary' : 'secondary'"
               :label="
                 s.ownAnswer === i ? '已選擇此項' : game.choice === i ? '已挑選，請鎖定' : '選這一項'
@@ -189,7 +226,7 @@ onBeforeUnmount(() => {
         :disabled="room.busy || !room.connected"
         @click="game.refresh()"
     /></div>
-    <footer class="vue-majority-footer"
+    <footer v-if="!observer" class="vue-majority-footer"
       ><div class="vue-majority-primary-actions"
         ><div v-if="s.phase === 'finished'" id="majority-next-settings"></div
         ><div v-if="s.phase === 'finished'" id="majority-replay-slot"></div

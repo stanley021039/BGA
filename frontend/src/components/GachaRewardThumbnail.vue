@@ -487,7 +487,12 @@ const fallback = {
 </script>
 
 <template>
-  <div class="gacha-reward-thumbnail" :class="{ 'is-compact': compact }" aria-hidden="true">
+  <div
+    class="gacha-reward-thumbnail"
+    :data-kind="kind"
+    :class="{ 'is-compact': compact }"
+    aria-hidden="true"
+  >
     <picture v-if="source && failedSource !== source" :key="source">
       <source
         v-if="compact && kind === 'backgrounds' && effect === 'castle'"
@@ -518,6 +523,10 @@ const fallback = {
   border-radius: var(--stitch-radius-panel);
   overflow: hidden;
   background: var(--stitch-artwork-preview-bg);
+}
+.gacha-reward-thumbnail[data-kind='entrances'] {
+  border-radius: 0;
+  background: transparent;
 }
 .gacha-reward-thumbnail.is-compact {
   inline-size: min(100%, 160px);

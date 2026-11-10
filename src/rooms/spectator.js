@@ -1,6 +1,7 @@
 'use strict';
+const { createHash } = require('node:crypto');
 const { HttpError } = require('../http/errors');
-const { SCENES, ROLES } = require('../games/trpg');
+const { SCENES, ROLES, APPROACHES } = require('../games/trpg');
 const { allRacers, tracks } = require('../games/second-wind/catalog');
 const { NAMES } = require('../games/quacks-catalog');
 
@@ -128,6 +129,28 @@ function observerAudioContext(room) {
   return {};
 }
 
+function observerPlayerId(room, id) {
+  return (
+    'observer-' +
+    createHash('sha256')
+      .update(room.code + ':' + id)
+      .digest('hex')
+      .slice(0, 24)
+  );
+}
+
+function publicGame(game, ids) {
+  const alias = (value) => {
+    if (Array.isArray(value)) return value.map(alias);
+    if (value && typeof value === 'object')
+      return Object.fromEntries(
+        Object.entries(value).map(([key, item]) => [ids.get(key) ?? key, alias(item)]),
+      );
+    return typeof value === 'string' ? (ids.get(value) ?? value) : value;
+  };
+  return alias({ ...game, events: [] });
+}
+
 function spectatorView(room, gameAudio) {
   const type = room.type || 'poker';
   if (!Object.hasOwn(games, type))
@@ -136,7 +159,7 @@ function spectatorView(room, gameAudio) {
     active = rows(room.players).filter((p) => !p.kicked);
   const names = new Map(rows(room.players).map((p) => [p.id, p.name]));
   const name = (id) => names.get(id) || '離席玩家';
-  const ids = new Map(rows(room.players).map((p, i) => [p.id, `observer-${i + 1}`]));
+  const ids = new Map(rows(room.players).map((p) => [p.id, observerPlayerId(room, p.id)]));
   const done = ['finished', 'showdown'].includes(room.phase);
   const out = {
     schema: 1,
@@ -166,8 +189,13 @@ function spectatorView(room, gameAudio) {
     clips: [],
     images: [],
   };
-  const section = (title, lines = [], items = []) =>
-    out.sections.push({ title, lines: lines.filter(Boolean), items });
+  const section = (title, lines = [], items = [], owner) =>
+    out.sections.push({
+      title,
+      lines: lines.filter(Boolean),
+      items,
+      ...(owner ? { playerId: ids.get(owner) } : {}),
+    });
   const item = (label, detail = '') => ({
     label: String(label ?? ''),
     detail: String(detail ?? ''),
@@ -178,6 +206,7 @@ function spectatorView(room, gameAudio) {
     id: ids.get(p.id),
     name: p.name,
     avatar: p.avatar || null,
+    host: p.id === room.host,
     bot: !!p.bot,
     online: !!p.bot || now - num(p.lastSeen) < 15000,
     score: Number.isFinite(p.score) ? p.score : null,
@@ -190,6 +219,45 @@ function spectatorView(room, gameAudio) {
 
   switch (type) {
     case 'decrypto': {
+      out.decryptoScene = publicGame(
+        {
+          ...fields(room, [
+            'round',
+            'roundId',
+            'roundLimit',
+            'encryptors',
+            'decoders',
+            'turn',
+            'results',
+            'interrupted',
+            'winner',
+          ]),
+          teams: room.teams.map((team, index) => ({
+            ...fields(team, ['members', 'interceptions', 'failures']),
+            name: index === 0 ? '白隊' : '黑隊',
+          })),
+          keywords: done && !room.interrupted ? room.keywords : [[], []],
+          clues: room.clues.map((clues, team) =>
+            room.phase !== 'clues' && (team <= room.turn || done) ? clues : null,
+          ),
+          clueReady: room.clues.map(Boolean),
+          history: [0, 1].map((team) =>
+            [1, 2, 3, 4].map((digit) =>
+              room.results
+                .filter((result) => result.team === team)
+                .flatMap((result) =>
+                  result.code.flatMap((value, index) =>
+                    value === digit ? [result.clues[index]] : [],
+                  ),
+                ),
+            ),
+          ),
+          guessReady: { decode: !!room.guesses.decode, intercept: !!room.guesses.intercept },
+          tieReady: [!!room.tieGuesses[0], !!room.tieGuesses[1]],
+          tieGuesses: done && !room.interrupted ? room.tieGuesses : {},
+        },
+        ids,
+      );
       for (const [t, team] of room.teams.entries()) {
         section(team.name || (t === 0 ? '白隊' : '黑隊'), [
           `截碼成功 ${team.interceptions}／2 · 溝通失誤 ${team.failures}／2`,
@@ -221,9 +289,7 @@ function spectatorView(room, gameAudio) {
       for (const p of active) {
         const row = player(p.id),
           revealed =
-            room.phase === 'showdown' &&
-            !p.folded &&
-            room.players.filter((q) => !q.folded).length > 1;
+            room.phase === 'showdown' && !p.folded && active.filter((q) => !q.folded).length > 1;
         row.lines = [
           `籌碼 ${p.stack}`,
           `下注 ${p.bet}`,
@@ -237,6 +303,23 @@ function spectatorView(room, gameAudio) {
           [],
           rows(room.results).map((r) => item(r.name, `${r.amount} · ${r.hand}`)),
         );
+      out.pokerTable = {
+        hand: num(room.hand),
+        button: active.indexOf(room.players[room.button]),
+        turn: active.indexOf(room.players[room.turn]),
+        currentBet: num(room.currentBet),
+        minRaise: num(room.minRaise, 20),
+        pot: room.players.reduce((sum, p) => sum + num(p.total), 0),
+        players: active.map((p) => ({
+          id: ids.get(p.id),
+          stack: p.stack,
+          bet: p.bet,
+          total: p.total,
+          folded: !!p.folded,
+          action: str(p.action),
+        })),
+        results: done ? rows(room.results).map((r) => fields(r, ['name', 'amount', 'hand'])) : [],
+      };
       break;
     }
     case 'draw': {
@@ -251,6 +334,19 @@ function spectatorView(room, gameAudio) {
       const revealed =
         ['reveal', 'finished'].includes(room.phase) &&
         room.result?.canvasEpoch === room.canvas.epoch;
+      out.drawScene = publicGame({
+        ...fields(room, ['round', 'roundLimit', 'presenterId', 'options', 'deadline',
+          'participantIds', 'guessedIds', 'winner', 'matchSummary']),
+        canvasEpoch: room.canvas.epoch,
+        strokeVersion: room.canvas.version,
+        question: revealed && room.question ? fields(room.question, ['title', 'category', 'topicLabel']) : null,
+        result: revealed && room.result?.resultId ? room.result : null,
+        guesses: rows(room.guesses).filter((guess) => guess.id && Number.isFinite(guess.at)).map((guess) => ({
+          ...fields(guess, ['id', 'name', 'correct', 'points', 'at']),
+          ...(!guess.correct ? { answer: guess.answer } : {}),
+        })),
+        ...(room.options.playMode === 'oracle' ? { oracle: room.oracle.view(room, null) } : {}),
+      }, ids);
       section('本輪題目', [
         revealed ? room.question?.title : '答案尚未揭曉',
         !revealed && room.question
@@ -270,6 +366,17 @@ function spectatorView(room, gameAudio) {
     }
     case 'telephone': {
       const v = room.observerView();
+      out.telephoneScene = fields(v, [
+        'round',
+        'roundLimit',
+        'stepId',
+        'deadline',
+        'interrupted',
+        'options',
+        'sources',
+        'books',
+        'review',
+      ]);
       out.duration =
         (room.phase === 'passing' && room.round % 2
           ? v.options.drawingSeconds
@@ -300,6 +407,36 @@ function spectatorView(room, gameAudio) {
       mark(Object.keys(room.answers || {}));
       const visible = ['review', 'reveal', 'finished'].includes(room.phase),
         q = room.question;
+      out.majorityScene = publicGame(
+        {
+          ...fields(room, [
+            'presenterId',
+            'round',
+            'roundLimit',
+            'options',
+            'deadline',
+            'participantIds',
+            'winner',
+          ]),
+          question: q ? {
+            ...fields(q, ['id', 'type', 'topic', 'prompt', 'options', 'images', 'pack', 'shared', 'reused']),
+            ...(q.entries ? { entries: q.entries.map((entry) =>
+              fields(entry, ['id', 'label', 'detail', 'bank', 'image']),
+            ) } : {}),
+          } : null,
+          tournament: room.tournamentView(),
+          cruel: room.cruelView(null),
+          answeredIds: Object.keys(room.answers),
+          groups: visible ? room.groups : [],
+          answers: visible ? room.answers : {},
+          result: ['reveal', 'finished'].includes(room.phase) ? room.result : null,
+          departed: rows(room.players)
+            .filter((p) => p.kicked)
+            .map((p) => fields(p, ['id', 'name'])),
+          reactions: rows(room.reactions).filter((r) => now - r.at < 8000),
+        },
+        ids,
+      );
       section(
         '本輪問題',
         [
@@ -342,6 +479,39 @@ function spectatorView(room, gameAudio) {
     }
     case 'gift': {
       actor = room.dealerId;
+      const choosing = room.phase === 'choosing';
+      const delivery = room.phase === 'delivering' ? room.delivery : null;
+      const recipient = delivery?.order[delivery.index];
+      out.giftScene = publicGame(
+        {
+          ...fields(room, ['round', 'target', 'customPercent', 'dealerId', 'winner']),
+          includeAdult: !!room.includeAdult,
+          gifts: rows(room.gifts).map((gift) => fields(gift, ['id', 'title', 'category', 'image'])),
+          players: active.map((p) => fields(p, ['id', 'giveScore', 'getScore'])),
+          gaveIds: choosing ? Object.keys(room.assignments) : [],
+          wishedIds: choosing ? Object.keys(room.rankings) : [],
+          submittedIds: choosing
+            ? active.filter((p) => room.assignments[p.id] && room.rankings[p.id]).map((p) => p.id)
+            : [],
+          delivery: delivery
+            ? {
+                recipientId: recipient,
+                index: delivery.index,
+                total: delivery.order.length,
+                entries: rows(room.pendingResult?.entries)
+                  .filter(
+                    (entry) =>
+                      entry.recipientId === recipient && active.some((p) => p.id === entry.giverId),
+                  )
+                  .map((entry) =>
+                    fields(entry, ['giverId', 'recipientId', 'giftId', 'rank', 'points']),
+                  ),
+              }
+            : null,
+          result: ['reveal', 'finished'].includes(room.phase) ? room.result : null,
+        },
+        ids,
+      );
       mark(
         active.filter((p) => room.assignments?.[p.id] && room.rankings?.[p.id]).map((p) => p.id),
       );
@@ -353,7 +523,6 @@ function spectatorView(room, gameAudio) {
       for (const p of active)
         player(p.id).lines = [`送禮 ${num(p.giveScore)} 分`, `收禮 ${num(p.getScore)} 分`];
       if (room.phase === 'delivering' && room.delivery) {
-        const recipient = room.delivery.order[room.delivery.index];
         section(
           `正在送給 ${name(recipient)}`,
           [],
@@ -390,6 +559,35 @@ function spectatorView(room, gameAudio) {
       const revealed = ['reveal', 'finished'].includes(room.phase);
       section('題目', [revealed ? room.question?.title : '答案尚未揭曉；只顯示目前展示的畫作。']);
       const artist = room.phase === 'guessing' ? room.order[room.shown] : null;
+      out.minimalScene = publicGame(
+        {
+          round: room.round,
+          roundLimit: room.roundLimit,
+          roundId: room.roundId,
+          guesserId: room.guesserId,
+          deadline: room.deadline,
+          readyIds: Object.keys(room.ready),
+          currentDrawing: artist
+            ? {
+                name: name(artist),
+                count: room.drafts[artist].length,
+                shapes: room.drafts[artist],
+              }
+            : null,
+          order:
+            room.phase === 'guessing'
+              ? room.order.map((id) => ({
+                  name: name(id),
+                  count: room.drafts[id].length,
+                }))
+              : [],
+          attempts: room.phase === 'drawing' ? [] : room.attempts,
+          results: room.results,
+          interrupted: room.interrupted,
+          winner: room.winner,
+        },
+        ids,
+      );
       if (artist) out.drawings.push({ title: name(artist), shapes: shapes(room.drafts[artist]) });
       if (revealed)
         out.drawings = rows(room.results.at(-1)?.drawings).map((d) => ({
@@ -407,6 +605,7 @@ function spectatorView(room, gameAudio) {
       break;
     }
     case 'bluff': {
+      out.bluffScene = publicGame(room.observerView(), ids);
       out.duration = num(room.options.roleSeconds, 10) * 1000;
       actor = room.thinkerId;
       mark(room.readyIds);
@@ -445,7 +644,14 @@ function spectatorView(room, gameAudio) {
       break;
     }
     case 'musicquiz': {
+      out.musicScene = publicGame(room.observerView(), ids);
       actor = room.players.length ? room.dj().id : null;
+      out.musicTimelines = active.map((p) => ({
+        playerId: ids.get(p.id),
+        cards: rows(p.timeline).map((entry) =>
+          fields(entry, ['title', 'year', 'artist', 'language']),
+        ),
+      }));
       mark(Object.keys(room.answers || {}));
       out.duration = room.phase === 'intro' ? 30000 : room.phase === 'timeline' ? 60000 : 15000;
       const visible = ['reveal', 'finished'].includes(room.phase);
@@ -460,6 +666,7 @@ function spectatorView(room, gameAudio) {
           `${p.name} 的年代軸`,
           [],
           rows(p.timeline).map((card) => item(song(card))),
+          p.id,
         );
       }
       if (['challenge', 'reveal', 'finished'].includes(room.phase))
@@ -476,6 +683,42 @@ function spectatorView(room, gameAudio) {
       actor = room.leaderId;
       mark(Object.keys(room.plans || {}));
       const scene = SCENES[room.round - 1];
+      out.trpgScene = publicGame(
+        {
+          round: room.round,
+          roundLimit: 6,
+          sceneId: room.sceneId,
+          leaderId: room.leaderId,
+          narratorMode: 'rules',
+          adventure: '霧港鐘聲',
+          supplies: room.supplies,
+          clues: room.clues,
+          danger: room.danger,
+          roles: ROLES,
+          scene: scene ? fields(scene, ['title', 'text', 'zone']) : null,
+          approaches: scene
+            ? Object.entries(APPROACHES).map(([id, approach], index) => ({
+                id,
+                ...approach,
+                description: scene.choices[index],
+              }))
+            : [],
+          players: active.map((p) => ({
+            id: p.id,
+            role: p.role,
+            roleName: ROLES[p.role].name,
+            focus: p.focus,
+            ready: !!room.plans[p.id],
+            offline: !p.bot && now - num(p.lastSeen) >= 15000,
+          })),
+          readyCount: active.filter((p) => room.plans[p.id]).length,
+          myPlan: null,
+          canResolve: false,
+          results: room.results,
+          winner: room.winner,
+        },
+        ids,
+      );
       section(scene?.title || '霧港鐘聲', [
         scene?.text,
         `補給 ${num(room.supplies)} · 線索 ${num(room.clues)} · 危險 ${num(room.danger)}`,
@@ -491,6 +734,7 @@ function spectatorView(room, gameAudio) {
       break;
     }
     case 'quacks': {
+      out.quacksScene = publicGame(room.observerView(), ids);
       if (room.phase === 'round-intro' && Number.isFinite(room.nextRoundAt)) {
         out.deadline = room.nextRoundAt;
         out.duration = Math.max(1000, room.nextRoundAt - num(room.fortuneDrawnAt, now));
@@ -525,6 +769,7 @@ function spectatorView(room, gameAudio) {
         ];
         return {
           name: p.potName || `${p.name}的鍋`,
+          playerId: ids.get(p.id),
           hidden: !visible,
           position: visible ? num(p.position) : null,
           chips: visible
@@ -565,6 +810,7 @@ function spectatorView(room, gameAudio) {
       break;
     }
     case 'thunder': {
+      out.raceDevilsRun = room.options?.devilsRun === true;
       const masked = room.diceCheck?.kind === 'round';
       actor = room.actor();
       if (masked) actor = null;
@@ -585,20 +831,78 @@ function spectatorView(room, gameAudio) {
         ),
       );
       out.track = { title: '雷霆之路', cells };
+      if (cells.length) {
+        out.raceBoard = {
+          finishAt: room.finishAt ?? null,
+          activeCar: masked ? null : (room.active?.car ?? null),
+          actorId: ids.get(actor) ?? null,
+          roadDie: masked ? null : (room.roadDie ?? null),
+          activeRemaining: masked ? 0 : num(room.active?.remaining),
+          diceTitle: room.diceCheck?.title || '',
+          tiles: rows(room.tiles).map(({ start, name, map, side, cells }) => ({
+            start,
+            name,
+            map,
+            side,
+            cells: cells.map((row) =>
+              row.map(({ kind, hazard }) => ({
+                kind,
+                ...(hazard
+                  ? { hazard: { face: !!hazard.face, kind: hazard.face ? hazard.kind : 'unknown' } }
+                  : {}),
+              })),
+            ),
+          })),
+          cars: rows(room.cars).map(
+            ({ id, owner, size, x, y, damage, dead, wreck, burning, moved }) => ({
+              id,
+              owner: ids.get(owner) ?? null,
+              size,
+              x,
+              y,
+              damage: rows(damage).map(() => true),
+              dead,
+              wreck,
+              burning,
+              moved,
+            }),
+          ),
+          players: active.map(({ id, name, color, chopper, dice, commandUsed }) => ({
+            id: ids.get(id),
+            name,
+            color,
+            chopper: chopper ? { x: chopper.x, y: chopper.y } : null,
+            dice: masked ? [] : rows(dice).map(({ value, used }) => ({ value, used: !!used })),
+            commandUsed: !!commandUsed,
+          })),
+          winner:
+            room.winner && typeof room.winner === 'object'
+              ? {
+                  id: ids.get(room.winner.id) ?? null,
+                  name: room.winner.name,
+                  reason: room.winner.reason,
+                }
+              : null,
+        };
+      }
       for (const p of active)
-        player(p.id).lines = masked
-          ? ['骰子尚未公開']
-          : [
-              `骰子：${rows(p.dice)
-                .map((d) => d.value ?? d.n ?? '?')
-                .join('、')}`,
-            ];
+        player(p.id).lines =
+          room.phase === 'waiting'
+            ? []
+            : masked
+              ? ['骰子尚未公開']
+              : [
+                  `骰子：${rows(p.dice)
+                    .map((d) => d.value ?? d.n ?? '?')
+                    .join('、')}`,
+                ];
       if (room.winner)
         section('終點', [typeof room.winner === 'string' ? name(room.winner) : room.winner.name]);
       break;
     }
     case 'ceo': {
       const g = room.observerGame();
+      out.nativeGame = g ? publicGame(g, ids) : null;
       section('牌庫', ['本站暫用替代牌庫；公司內容與原版不同。']);
       if (g) {
         actor = g.turnId;
@@ -648,6 +952,8 @@ function spectatorView(room, gameAudio) {
     }
     case 'second-wind': {
       const g = room.observerGame();
+      out.nativeGame = g ? publicGame(g, ids) : null;
+      out.nativeGameOptions = fields(room.options, ['racerSet']);
       const racer = (id) => allRacers.find((r) => r.id === id)?.name || str(id);
       if (g) {
         actor = g.turnId;

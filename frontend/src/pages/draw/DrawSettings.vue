@@ -10,6 +10,7 @@ import {
 import type { DrawSettingsDraft } from '../../contracts/draw-settings';
 import { useRoomStore } from '../../stores/room';
 import { useQueuedSave } from '../../composables/queued-save';
+import UiCheckbox from '../../components/UiCheckbox.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
@@ -129,12 +130,14 @@ defineExpose({
             @click="draft.topics = []"
         /></div>
         <div class="vue-draw-options"
-          ><label v-for="[id, label] in drawingTopics" :key="id"
-            ><input v-model="draft.topics" type="checkbox" :value="id" /><span>{{
-              label
-            }}</span></label
-          ></div
-        >
+          ><UiCheckbox
+            v-for="[id, label] in drawingTopics"
+            :key="id"
+            v-model="draft.topics"
+            variant="prominent"
+            :value="id"
+            :label="label"
+        /></div>
         <p>自定義只使用共編題庫的投稿題目；至少選擇一個類別。</p>
       </fieldset>
       <fieldset :disabled="!editable">

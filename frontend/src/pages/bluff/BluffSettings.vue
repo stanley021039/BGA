@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useBluffStore } from '../../stores/bluff';
+import UiCheckbox from '../../components/UiCheckbox.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 const room = useRoomStore(),
@@ -17,14 +18,14 @@ const room = useRoomStore(),
       ><p>設定供房主或管理者在開局前調整，修改後自動儲存。</p
       ><fieldset :disabled="!bluff.editable || room.busy"
         ><legend>題目難度（至少一種）</legend
-        ><label v-for="level in [1, 2, 3]" :key="level"
-          ><input
-            v-model="bluff.draft.levels"
-            type="checkbox"
-            :value="level"
-            @change="bluff.queue()"
-          />{{ level }} 級</label
-        ></fieldset
+        ><UiCheckbox
+          v-for="level in [1, 2, 3]"
+          :key="level"
+          v-model="bluff.draft.levels"
+          variant="prominent"
+          :value="level"
+          :label="level + ' 級'"
+          @change="bluff.queue()" /></fieldset
       ><label
         >看身分時間<select
           v-model.number="bluff.draft.roleSeconds"

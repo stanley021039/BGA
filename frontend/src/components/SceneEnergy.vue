@@ -9,7 +9,7 @@ const maximum = computed(() => props.visitor?.energyMaximum ?? sceneRules.energy
   <div
     class="scene-energy"
     role="progressbar"
-    aria-label="多人招式能量"
+    aria-label="大招能量"
     aria-valuemin="0"
     :aria-valuemax="maximum"
     :aria-valuenow="visitor?.energy || 0"

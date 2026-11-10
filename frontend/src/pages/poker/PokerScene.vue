@@ -11,26 +11,73 @@ import UiButton from '../../components/UiButton.vue';
 import UiHeading from '../../components/UiHeading.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import PlayerName from '../../components/PlayerName.vue';
-const poker = usePokerStore(),
-  room = useRoomStore(),
-  state = computed(() => poker.state!),
-  root = ref<HTMLElement | null>(null),
-  presentation = usePokerPresentation(root);
+import { pokerContributionTiers, type PokerSnapshot } from '../../contracts/poker';
+const props = defineProps<{ observer?: { state: PokerSnapshot; now: number; offset: number } }>();
+const livePoker = props.observer ? null : usePokerStore();
+const room = useRoomStore();
+const state = computed(() => props.observer?.state ?? livePoker!.state!);
+const root = ref<HTMLElement | null>(null);
+const presentation = props.observer
+  ? {
+      newCards: ref<number[]>([]),
+      canReplay: ref(false),
+      earned: ref<string[]>([]),
+      focus: ref(''),
+      chips: ref<never[]>([]),
+      replay() {},
+      stopFocus() {},
+    }
+  : usePokerPresentation(root);
+const poker = computed(() => {
+  if (livePoker) return livePoker;
+  const s = state.value;
+  const me = s.players.find((p) => p.id === s.me);
+  const due = Math.max(0, s.currentBet - (me?.bet || 0));
+  const setup = ['waiting', 'showdown'].includes(s.phase);
+  return {
+    me,
+    due,
+    setup,
+    active: !setup,
+    actor: s.players[s.turn],
+    callAmount: Math.min(due, me?.stack || 0),
+    tiers: pokerContributionTiers(s.players),
+    deadline: s.deadline,
+    offset: props.observer!.offset,
+    now: props.observer!.now,
+    expired: false,
+    myTurn: false,
+    canAct: false,
+    canAllIn: false,
+    canRaise: false,
+    raiseValid: false,
+    pending: false,
+    uncertain: false,
+    failed: false,
+    notice: '',
+    minimum: s.currentBet + s.minRaise,
+    maximum: (me?.stack || 0) + (me?.bet || 0),
+    amount: '',
+    act: (_action: string) => false,
+  };
+});
 const turnHint = computed(() =>
-    poker.setup
-      ? state.value.phase === 'showdown'
-        ? '本手已派彩，等待房主發下一手。'
-        : '邀請朋友，或加入腳本夥伴開始練習。'
-      : poker.expired
-        ? '行動時間已到，等待伺服器更新。'
-        : poker.myTurn
-          ? '輪到你，請在倒數結束前行動。'
-          : `${poker.actor?.name || '牌手'} 正在思考${poker.actor?.kicked ? '（離席席位，電腦接手）' : ''}。`,
+    props.observer
+      ? '觀戰中 · 遊戲操作停用'
+      : poker.value.setup
+        ? state.value.phase === 'showdown'
+          ? '本手已派彩，等待房主發下一手。'
+          : '邀請朋友，或加入腳本夥伴開始練習。'
+        : poker.value.expired
+          ? '行動時間已到，等待伺服器更新。'
+          : poker.value.myTurn
+            ? '輪到你，請在倒數結束前行動。'
+            : `${poker.value.actor?.name || '牌手'} 正在思考${poker.value.actor?.kicked ? '（離席席位，電腦接手）' : ''}。`,
   ),
   departed = computed(() => state.value.players.filter((p) => p.kicked)),
   callLabel = computed(() =>
-    poker.due
-      ? `跟注 ${poker.callAmount.toLocaleString()}${poker.callAmount === poker.me?.stack ? ' · ALL IN' : ''}`
+    poker.value.due
+      ? `跟注 ${poker.value.callAmount.toLocaleString()}${poker.value.callAmount === poker.value.me?.stack ? ' · ALL IN' : ''}`
       : '過牌',
   );
 </script>
@@ -44,7 +91,9 @@ const turnHint = computed(() =>
       v-if="state.phase === 'waiting'"
       type="poker"
       :quick-action="
-        room.gameManager ? { href: '#room-waiting-start-poker', label: '前往開局' } : undefined
+        !observer && room.gameManager
+          ? { href: '#room-waiting-start-poker', label: '前往開局' }
+          : undefined
       "
       title="德州撲克"
       hero-title="好牌已備，等你入座。"
@@ -77,7 +126,7 @@ const turnHint = computed(() =>
       />
       <div class="vue-poker-live"
         ><section class="vue-poker-table" aria-label="環桌座位與公共牌">
-          <PokerSeats :state="state">
+          <PokerSeats :state="state" :observer="!!observer">
             <div class="vue-poker-community"
               ><span class="vue-poker-felt-brand" aria-hidden="true">AFTERHOURS ♠</span
               ><h2>公共牌</h2
@@ -93,7 +142,8 @@ const turnHint = computed(() =>
         <section class="vue-poker-hero" data-private aria-label="你的籌碼與投入"
           ><dl
             ><div
-              ><dt>你的籌碼</dt><dd>{{ poker.me?.stack.toLocaleString() }}</dd></div
+              ><dt>{{ observer ? '所選玩家籌碼' : '你的籌碼' }}</dt
+              ><dd>{{ poker.me?.stack.toLocaleString() }}</dd></div
             ><div
               ><dt>本街已下注</dt><dd>{{ poker.me?.bet.toLocaleString() }}</dd></div
             ><div

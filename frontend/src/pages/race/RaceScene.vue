@@ -43,7 +43,9 @@ watch(
   },
 );
 const { car, die, command, commandDie, repairCar, player, cars, selected } = selection;
-const enabled = computed(() => model.canAct && !presentation.locked.value && presentation.ready),
+const enabled = computed(
+    () => !model.spectator && model.canAct && !presentation.locked.value && presentation.ready,
+  ),
   assign = computed(
     () => enabled.value && s.value.phase === 'assign' && !s.value.pending && !s.value.diceCheck,
   ),
@@ -65,41 +67,45 @@ const instruction = computed(() =>
       : '車輛移動中'
     : s.value.phase === 'finished'
       ? '比賽結束'
-      : s.value.diceCheck
-        ? s.value.diceCheck.title
-        : s.value.pending
-          ? '碰撞：保留或重擲'
-          : s.value.actor !== s.value.me
-            ? `${actor.value?.name || '其他車隊'} 正在行動`
-            : (
-                {
-                  assign: selected.value?.moved ? '選擇滑行骰 · 滑行 1 格' : '選擇車輛與移動骰',
-                  move: `移動中 · 剩餘 ${s.value.active?.remaining || 0} 點`,
-                  bonus: '公路加速機會',
-                  airplace: '部署直升機',
-                  airshoot: '直升機射擊',
-                  shoot: '選擇射擊目標',
-                  waiting: '等待房主或管理者開始',
-                  effects: '處理事件中',
-                } as Record<string, string>
-              )[s.value.phase] || '等待同步',
+      : model.spectatorDiceTitle
+        ? model.spectatorDiceTitle
+        : s.value.diceCheck
+          ? s.value.diceCheck.title
+          : s.value.pending
+            ? '碰撞：保留或重擲'
+            : s.value.actor !== s.value.me
+              ? `${actor.value?.name || '其他車隊'} 正在行動`
+              : (
+                  {
+                    assign: selected.value?.moved ? '選擇滑行骰 · 滑行 1 格' : '選擇車輛與移動骰',
+                    move: `移動中 · 剩餘 ${s.value.active?.remaining || 0} 點`,
+                    bonus: '公路加速機會',
+                    airplace: '部署直升機',
+                    airshoot: '直升機射擊',
+                    shoot: '選擇射擊目標',
+                    waiting: '等待房主或管理者開始',
+                    effects: '處理事件中',
+                  } as Record<string, string>
+                )[s.value.phase] || '等待同步',
 );
 const tip = computed(() =>
-  s.value.pending
-    ? '較大車車主可保留碰撞結果，或將兩顆骰子一起重擲一次；重擲後必須接受。'
-    : s.value.actor !== s.value.me
-      ? '其他車隊正在操作；所有公開車輛、骰子與事件會同步。'
-      : (
-          {
-            assign: '先選可用車輛和移動骰；指令選用，必須消耗另一顆骰子。',
-            move: '亮框可多格移動；危險、檢定或道路更新會停下重新選路。',
-            bonus: '接受後必須走完加速點數，途中可以離開公路。',
-            airplace: '選亮框空格；回合結束時，同格所有車輛都淘汰，包含自己的車。',
-            shoot: '射擊前方三格；骰面符合車型才命中。第一輪禁止射擊。',
-            airshoot: '射擊後才輪到已選車輛移動。第一輪禁止射擊。',
-            finished: '完整結果保留於賽道與紀錄；房主可再比一場。',
-          } as Record<string, string>
-        )[s.value.phase] || '至少兩支車隊即可開始比賽。',
+  model.spectator
+    ? '觀戰模式 · 跟隨目前選定的車隊'
+    : s.value.pending
+      ? '較大車車主可保留碰撞結果，或將兩顆骰子一起重擲一次；重擲後必須接受。'
+      : s.value.actor !== s.value.me
+        ? '其他車隊正在操作；所有公開車輛、骰子與事件會同步。'
+        : (
+            {
+              assign: '先選可用車輛和移動骰；指令選用，必須消耗另一顆骰子。',
+              move: '亮框可多格移動；危險、檢定或道路更新會停下重新選路。',
+              bonus: '接受後必須走完加速點數，途中可以離開公路。',
+              airplace: '選亮框空格；回合結束時，同格所有車輛都淘汰，包含自己的車。',
+              shoot: '射擊前方三格；骰面符合車型才命中。第一輪禁止射擊。',
+              airshoot: '射擊後才輪到已選車輛移動。第一輪禁止射擊。',
+              finished: '完整結果保留於賽道與紀錄；房主可再比一場。',
+            } as Record<string, string>
+          )[s.value.phase] || '至少兩支車隊即可開始比賽。',
 );
 watch([() => s.value.version, () => s.value.phase], () => {
   previewPoint.value = null;
@@ -177,6 +183,8 @@ const usedCommand = computed(() => {
         :visual="presentation.visual.value"
         :routes="routes"
         :enabled="enabled && !s.pending && !s.diceCheck"
+        :read-only="model.spectator"
+        :focus-player="model.spectator ? s.me : undefined"
         :preview="preview"
         :goal="model.lessonGoal"
         :annotations="model.lessonAnnotations"

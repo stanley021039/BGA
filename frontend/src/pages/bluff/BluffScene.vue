@@ -4,7 +4,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useBluffStore } from '../../stores/bluff';
 import { usePartyActionsStore } from '../../stores/party-actions';
-import { bluffRoles } from '../../contracts/bluff';
+import { bluffRoles, type BluffSnapshot } from '../../contracts/bluff';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
@@ -15,10 +15,26 @@ import BluffReview from './BluffReview.vue';
 import PlayerAvatar from '../../components/PlayerAvatar.vue';
 import BluffSettings from './BluffSettings.vue';
 import { useBluffSpeech } from './bluff-speech';
+const props = defineProps<{
+  observer?: BluffSnapshot;
+  observerNow?: number;
+  observerClockOffset?: number;
+}>();
 const room = useRoomStore(),
-  bluff = useBluffStore(),
-  actions = usePartyActionsStore(),
-  state = computed(() => bluff.state!),
+  bluff = props.observer
+    ? { state: null, secretVisible: false, now: Date.now(), offset: 0, seconds: 0, liveReactions: [] }
+    : useBluffStore(),
+  actions = props.observer
+    ? {
+        pending: false,
+        notice: '',
+        canRetry: false,
+        setTarget(_value: string) {},
+        command(_action: string, _payload?: Record<string, unknown>) {},
+        retrySame() {},
+      }
+    : usePartyActionsStore(),
+  state = computed(() => props.observer ?? bluff.state!),
   secretOpen = ref(false),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
   reviewId = ref(''),
@@ -27,13 +43,26 @@ const room = useRoomStore(),
   hideButton = ref<InstanceType<typeof UiButton> | null>(null);
 let disposed = false,
   scrollRevision = 0;
-const blocked = computed(() => !room.connected || room.busy || actions.pending || !!room.terminal),
+const blocked = computed(
+    () => !!props.observer || !room.connected || room.busy || actions.pending || !!room.terminal,
+  ),
   thinker = computed(() => state.value.players.find((p) => p.id === state.value.thinkerId)),
   isThinker = computed(() => state.value.me === state.value.thinkerId),
-  talk = useBluffSpeech(
-    () => state.value,
-    (text) => answer(text),
-  ),
+  talk = props.observer
+    ? {
+        supported: false,
+        listening: ref(false),
+        waiting: ref(false),
+        preview: ref(''),
+        status: ref(''),
+        failed: ref(false),
+        start() {},
+        finish() {},
+      }
+    : useBluffSpeech(
+        () => state.value,
+        (text) => answer(text),
+      ),
   writing = ref(false),
   written = ref(''),
   shown = ref<string[]>([]);
@@ -198,7 +227,7 @@ function rank(index: number) {
       { label: '看身分時間', value: state.options.roleSeconds + ' 秒' },
       { label: '入座人數', value: state.players.length + '／9 人' },
     ]"
-    ><template #settings><BluffSettings /></template
+    ><template #settings><BluffSettings v-if="!observer" /></template
   ></RoomWaitingTemplate>
 
   <section v-else class="vue-bluff-screen" :data-phase="state.phase" aria-labelledby="bluffHeading">
@@ -254,8 +283,8 @@ function rank(index: number) {
             ></div
           >
           <div v-if="state.phase === 'preparing'" class="vue-bluff-role-grid"
-            ><div class="vue-bluff-private-slot" data-private
-              ><button
+            ><div v-if="!observer" class="vue-bluff-private-slot" data-private
+              ><!-- ui-check-allow raw-control: 保留既有翻牌按鈕與隱藏角色卡動畫。 --><button
                 v-if="!bluff.secretVisible || !secretOpen"
                 ref="revealCard"
                 type="button"
@@ -317,14 +346,15 @@ function rank(index: number) {
                 ><RoomCountdown
                   :deadline="state.deadline"
                   :duration="state.options.roleSeconds * 1000"
-                  :offset="bluff.offset"
+                  :offset="observerClockOffset ?? bluff.offset"
                   :epoch="state.roundId || ''"
-                  :now="bluff.now"
-                  :caption="bluff.seconds > 0 ? '看身分剩餘' : '看身分已結束'"
+                  :now="observerNow ?? bluff.now"
+                  :caption="observer || bluff.seconds > 0 ? '看身分剩餘' : '看身分已結束'"
                   empty-value="0 秒"
                   :urgent="bluff.seconds <= 5" /></div
               ><p>{{ state.readyIds.length }}／{{ state.players.length }} 位已準備</p
               ><UiButton
+                v-if="!observer"
                 variant="primary"
                 icon="check"
                 :label="
@@ -539,7 +569,7 @@ function rank(index: number) {
         /><span v-else-if="state.phase === 'discussion'">等待 {{ thinker?.name }} 確定</span
         ><div v-if="state.phase === 'finished'" id="bluff-start-slot"></div
         ><UiButton
-          v-else-if="state.phase === 'reveal' && room.host"
+          v-else-if="state.phase === 'reveal' && !observer && room.host"
           variant="primary"
           icon="next"
           label="下一輪"
@@ -565,13 +595,15 @@ function rank(index: number) {
   ></section>
   <Teleport to="body"
     ><div
-      v-if="bluff.liveReactions.length"
+      v-if="(observer?.reactions ?? bluff.liveReactions).length"
       class="vue-bluff-reactions"
       role="log"
       aria-live="polite"
       aria-relevant="additions"
       data-game-focus-overlay
-      ><div v-for="event in bluff.liveReactions" :key="event.id">{{ event.name }} 質疑你</div></div
+      ><div v-for="event in observer?.reactions ?? bluff.liveReactions" :key="event.id"
+        >{{ event.name }} 質疑你</div
+      ></div
     ></Teleport
   ><ConfirmDialog ref="confirm" />
 </template>

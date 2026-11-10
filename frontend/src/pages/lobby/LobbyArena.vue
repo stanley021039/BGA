@@ -483,12 +483,16 @@ function start(mode: string) {
         <div class="lobby-arena-actions">
           <UiButton
             label="加入綠隊"
+            :variant="ownTeam === 'red' ? 'primary' : 'secondary'"
+            :icon="ownTeam === 'red' ? 'check' : undefined"
             :aria-pressed="ownTeam === 'red'"
             :disabled="!lobby.connected || playing || lobby.arenaPending"
             @click="command('team', { team: 'red' })"
           />
           <UiButton
             label="加入藍隊"
+            :variant="ownTeam === 'blue' ? 'primary' : 'secondary'"
+            :icon="ownTeam === 'blue' ? 'check' : undefined"
             :aria-pressed="ownTeam === 'blue'"
             :disabled="!lobby.connected || playing || lobby.arenaPending"
             @click="command('team', { team: 'blue' })"
@@ -583,13 +587,18 @@ function start(mode: string) {
         <UiList aria-label="報名玩家">
           <UiListRow v-for="p in roster" :key="p.id"
             ><UiBadge :tone="p.team === 'red' ? 'success' : 'info'">{{ teamName(p.team) }}</UiBadge>
-            {{ p.name }} <UiBadge>{{ p.ready ? '已準備' : '未準備' }}</UiBadge></UiListRow
+            {{ p.name }}
+            <UiBadge :tone="p.ready ? 'success' : 'neutral'">{{
+              p.ready ? '已準備' : '未準備'
+            }}</UiBadge></UiListRow
           >
           <UiListRow v-if="!roster.length">選隊加入對戰。</UiListRow>
         </UiList>
         <div class="lobby-arena-actions">
           <UiButton
             :label="ownReady ? '取消準備' : '準備'"
+            :variant="ownReady ? 'secondary' : 'primary'"
+            :icon="ownReady ? 'undo' : 'check'"
             :disabled="!ownTeam || !lobby.connected || lobby.arenaPending"
             @click="command('ready', { ready: !ownReady })"
           />

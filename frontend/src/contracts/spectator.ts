@@ -1,7 +1,19 @@
 import { isGameType, type GameType } from './room';
-import type { TelephoneStroke } from './telephone';
-import type { MusicQuizSnapshot } from './musicquiz';
-import { ingredientNames, type IngredientColor } from './quacks';
+import { readPublicRaceBoard } from './race';
+import { readChatMessages, type ChatMessage } from './social';
+import { readPokerSnapshot, type PokerSnapshot } from './poker';
+import { readCeoSnapshot, type CeoSnapshot } from './ceo';
+import { readAthleteSnapshot, type AthleteSnapshot } from './second-wind';
+import { readTrpgSnapshot, type TrpgSnapshot } from './trpg';
+import { readMinimalSnapshot, type MinimalSnapshot } from './minimal';
+import { readDecryptoSnapshot, type DecryptoSnapshot } from './decrypto';
+import { readGiftSnapshot, type GiftSnapshot } from './gift';
+import { readMajoritySnapshot, type MajoritySnapshot } from './majority';
+import { readBluffSnapshot, type BluffSnapshot } from './bluff';
+import { readDrawSnapshot, type DrawSnapshot } from './drawing';
+import { readTelephoneSnapshot, type TelephoneSnapshot, type TelephoneStroke } from './telephone';
+import { readMusicQuizSnapshot, type MusicQuizSnapshot } from './musicquiz';
+import { ingredientNames, readQuacksSnapshot, type IngredientColor, type QuacksSnapshot } from './quacks';
 import { record, text } from '../services/validation';
 
 export interface SpectatorShape {
@@ -40,6 +52,7 @@ export interface SpectatorSnapshot {
     id: string;
     name: string;
     avatar: string | null;
+    host: boolean;
     bot: boolean;
     online: boolean;
     score: number | null;
@@ -47,7 +60,12 @@ export interface SpectatorSnapshot {
     lines: string[];
     cards: (number | null)[];
   }[];
-  sections: { title: string; lines: string[]; items: { label: string; detail: string }[] }[];
+  sections: {
+    title: string;
+    lines: string[];
+    items: { label: string; detail: string }[];
+    playerId?: string;
+  }[];
   cards: (number | null)[];
   drawing: { epoch: string; strokes: SpectatorStroke[] } | null;
   drawings: { title: string; shapes: SpectatorShape[] }[];
@@ -67,8 +85,35 @@ export interface SpectatorSnapshot {
     title: string;
     cells: { row: number; column: number; label: string; names: string[] }[];
   } | null;
+  raceBoard: ReturnType<typeof readPublicRaceBoard> | null;
+  raceDevilsRun: boolean;
+  pokerTable: PokerSnapshot | null;
+  nativeGame: CeoSnapshot | AthleteSnapshot | null;
+  trpgScene: TrpgSnapshot | null;
+  minimalScene: MinimalSnapshot | null;
+  telephoneScene: TelephoneSnapshot | null;
+  decryptoScene: DecryptoSnapshot | null;
+  giftScene: GiftSnapshot | null;
+  majorityScene: MajoritySnapshot | null;
+  bluffScene: BluffSnapshot | null;
+  musicScene: MusicQuizSnapshot | null;
+  drawScene: DrawSnapshot | null;
+  quacksScene: QuacksSnapshot | null;
+  musicTimelines: {
+    playerId: string;
+    cards: { title: string; year: number; artist: string; language?: string }[];
+  }[];
+  messages: ChatMessage[];
+  roomMusic: {
+    id: string;
+    title: string;
+    playing: boolean;
+    position: number;
+    serverNow: number;
+  } | null;
   pots: {
     name: string;
+    playerId?: string;
     hidden: boolean;
     position: number | null;
     chips: {
@@ -84,6 +129,25 @@ export interface SpectatorSnapshot {
 }
 function invalid(): never {
   throw Error('觀戰資料格式不正確。');
+}
+function readRoomMusic(value: unknown): SpectatorSnapshot['roomMusic'] {
+  if (value == null) return null;
+  const music = record(value);
+  if (music.track == null) return null;
+  const track = record(music.track);
+  if (
+    !/^[a-f0-9-]{36}$/i.test(text(track.id)) ||
+    !finite(music.position) ||
+    !finite(music.serverNow)
+  )
+    return null;
+  return {
+    id: text(track.id),
+    title: text(track.title),
+    playing: music.playing === true,
+    position: music.position,
+    serverNow: music.serverNow,
+  };
 }
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const list = (v: unknown, max = 256) => {
@@ -189,7 +253,7 @@ export function readSpectatorSnapshot(value: unknown): SpectatorSnapshot {
     players: list(s.players, 12).map((v) => {
       const p = record(v);
       if (
-        !/^observer-\d+$/.test(text(p.id)) ||
+        !/^observer-(?:\d+|[a-f0-9]{24})$/.test(text(p.id)) ||
         !text(p.name) ||
         (p.score !== null && !finite(p.score))
       )
@@ -198,6 +262,7 @@ export function readSpectatorSnapshot(value: unknown): SpectatorSnapshot {
         id: text(p.id),
         name: text(p.name),
         avatar: typeof p.avatar === 'string' ? p.avatar : null,
+        host: p.host === true,
         bot: p.bot === true,
         online: p.online === true,
         score: p.score as number | null,
@@ -210,6 +275,7 @@ export function readSpectatorSnapshot(value: unknown): SpectatorSnapshot {
       const r = record(v);
       return {
         title: text(r.title),
+        playerId: text(r.playerId) || undefined,
         lines: strings(r.lines, 60),
         items: list(r.items, 256).map((v) => {
           const i = record(v);
@@ -249,11 +315,50 @@ export function readSpectatorSnapshot(value: unknown): SpectatorSnapshot {
       };
     }),
     track: null,
+    raceDevilsRun: s.raceDevilsRun === true,
+    pokerTable: null,
+    nativeGame: null,
+    trpgScene: null,
+    minimalScene: null,
+    telephoneScene: null,
+    decryptoScene: null,
+    giftScene: null,
+    majorityScene: null,
+    bluffScene: null,
+    musicScene: null,
+    drawScene: null,
+    quacksScene: null,
+    musicTimelines:
+      s.musicTimelines === undefined
+        ? []
+        : list(s.musicTimelines, 12).map((value) => {
+            const timeline = record(value);
+            return {
+              playerId: text(timeline.playerId),
+              cards: list(timeline.cards, 100).map((value) => {
+                const card = record(value);
+                if (!text(card.title) || !finite(card.year)) return invalid();
+                return {
+                  title: text(card.title),
+                  year: card.year,
+                  artist: text(card.artist),
+                  language: text(card.language) || undefined,
+                };
+              }),
+            };
+          }),
+    messages: s.messages === undefined ? [] : readChatMessages(s.messages),
+    roomMusic: readRoomMusic(s.roomMusic),
+    raceBoard:
+      s.type === 'thunder' && s.raceBoard != null
+        ? readPublicRaceBoard(s.raceBoard, text(s.phase))
+        : null,
     pots: list(s.pots, 8).map((v) => {
       const p = record(v);
       return {
         name: text(p.name),
         hidden: p.hidden === true,
+        playerId: text(p.playerId) || undefined,
         position: p.position === null ? null : Number(p.position),
         chips: list(p.chips, 300).map((v) => {
           const c = record(v);
@@ -319,6 +424,227 @@ export function readSpectatorSnapshot(value: unknown): SpectatorSnapshot {
         };
       }),
     };
+  }
+  if (result.type === 'poker' && s.pokerTable != null) {
+    const table = record(s.pokerTable);
+    const seats = list(table.players, 8).map((seat) => record(seat));
+    result.pokerTable = readPokerSnapshot(
+      {
+        ...table,
+        code: result.code,
+        type: result.type,
+        phase: result.phase,
+        serverNow: result.serverNow,
+        deadline: result.deadline,
+        host: false,
+        me: 'observer',
+        board: result.cards,
+        canRaise: false,
+        log: [],
+        players: result.players.map((player) => ({
+          ...seats.find((seat) => seat.id === player.id),
+          ...player,
+          roomRole: null,
+          kicked: false,
+        })),
+      },
+      true,
+    );
+  }
+  if ((result.type === 'ceo' || result.type === 'second-wind') && s.nativeGame !== undefined) {
+    const snapshot = {
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      roundId: String(result.gameRevision),
+      host: false,
+      me: 'observer',
+      game: s.nativeGame,
+      options: s.nativeGameOptions,
+      players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+    };
+    result.nativeGame =
+      result.type === 'ceo' ? readCeoSnapshot(snapshot) : readAthleteSnapshot(snapshot);
+  }
+  if (result.type === 'trpg' && s.trpgScene != null) {
+    const scene = record(s.trpgScene);
+    const seats = list(scene.players, 8).map((seat) => record(seat));
+    result.trpgScene = readTrpgSnapshot({
+      ...scene,
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      host: false,
+      me: 'observer',
+      players: result.players.map((player) => ({
+        ...seats.find((seat) => seat.id === player.id),
+        ...player,
+        roomRole: null,
+        kicked: false,
+      })),
+    });
+  }
+  if (result.type === 'minimal' && s.minimalScene != null) {
+    result.minimalScene = readMinimalSnapshot(
+      {
+        ...record(s.minimalScene),
+        code: result.code,
+        type: result.type,
+        phase: result.phase,
+        serverNow: result.serverNow,
+        host: false,
+        me: 'observer',
+        prompt: null,
+        myShapes: [],
+        submitted: false,
+        players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+      },
+      true,
+    );
+  }
+  if (result.type === 'telephone' && s.telephoneScene != null) {
+    result.telephoneScene = readTelephoneSnapshot({
+      ...record(s.telephoneScene),
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      host: false,
+      me: 'observer',
+      spectator: true,
+      task: null,
+      players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+    });
+  }
+  if (result.type === 'decrypto' && s.decryptoScene != null) {
+    result.decryptoScene = readDecryptoSnapshot({
+      ...record(s.decryptoScene),
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      host: false,
+      me: 'observer',
+      myTeam: 0,
+      secretCode: null,
+      myGuess: null,
+      players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+    });
+  }
+  if (result.type === 'gift' && s.giftScene != null) {
+    const scene = record(s.giftScene);
+    const seats = list(scene.players, 8).map((seat) => record(seat));
+    result.giftScene = readGiftSnapshot({
+      ...scene,
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      host: false,
+      me: 'observer',
+      ownAssignments: null,
+      ownRanking: null,
+      players: result.players.map((player) => ({
+        ...seats.find((seat) => seat.id === player.id),
+        ...player,
+        roomRole: null,
+        kicked: false,
+      })),
+    });
+  }
+  if (result.type === 'majority' && s.majorityScene != null) {
+    result.majorityScene = readMajoritySnapshot({
+      ...record(s.majorityScene),
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      host: false,
+      me: 'observer',
+      ownQueue: [],
+      candidates: [],
+      topics: [],
+      queueCount: 0,
+      players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+    });
+  }
+  if (result.type === 'bluff' && s.bluffScene != null) {
+    result.bluffScene = readBluffSnapshot({
+      ...record(s.bluffScene),
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      host: false,
+      me: 'observer',
+      players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+    });
+  }
+  if (result.type === 'musicquiz' && s.musicScene != null) {
+    const scene = record(s.musicScene);
+    const seats = list(scene.players, 8).map((seat) => record(seat));
+    result.musicScene = readMusicQuizSnapshot(
+      {
+        ...scene,
+        code: result.code,
+        type: result.type,
+        phase: result.phase,
+        serverNow: result.serverNow,
+        host: false,
+        me: 'observer',
+        events: [],
+        myAnswer: null,
+        submitted: false,
+        passed: [],
+        banks: [],
+        genres: [],
+        customSongs: [],
+        mine: { tokens: 0, bonus: 0, timeline: [] },
+        playback: result.clips[0]?.playback ?? null,
+        players: result.players.map((player) => ({
+          ...seats.find((seat) => seat.id === player.id),
+          ...player,
+          roomRole: null,
+          kicked: false,
+        })),
+      },
+      true,
+    );
+  }
+  if (result.type === 'draw' && s.drawScene != null) {
+    result.drawScene = readDrawSnapshot({
+      ...record(s.drawScene),
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      version: result.gameRevision,
+      host: false,
+      me: 'observer',
+      candidates: [],
+      recentResults: [],
+      resultVotes: [],
+      savedResultIds: [],
+      players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+    });
+  }
+  if (result.type === 'quacks' && s.quacksScene != null) {
+    result.quacksScene = readQuacksSnapshot({
+      ...record(s.quacksScene),
+      code: result.code,
+      type: result.type,
+      phase: result.phase,
+      serverNow: result.serverNow,
+      host: false,
+      me: 'observer',
+      mine: null,
+      patients: [],
+      rollEvents: [],
+      events: [],
+      players: result.players.map((player) => ({ ...player, roomRole: null, kicked: false })),
+    }, true);
   }
   return result;
 }

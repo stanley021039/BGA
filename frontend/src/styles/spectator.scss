@@ -3,30 +3,17 @@
   min-block-size: 100dvh;
   overflow: auto;
 }
-.vue-room-spectator {
-  box-sizing: border-box;
-  display: grid;
-  gap: var(--stitch-gap-section);
-  width: min(100%, 88rem);
-  margin-inline: auto;
-  padding: var(--stitch-page-gutter);
-  overflow-wrap: anywhere;
-  .vue-stitch-panel {
+.vue-room-observer {
+  min-inline-size: 0;
+
+  .vue-player-card[role='button'] {
+    cursor: pointer;
+  }
+
+  .vue-chat-compose > .ui-field {
     min-inline-size: 0;
   }
 }
-.vue-spectator-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--stitch-gap-controls);
-  h1,
-  p {
-    margin: 0;
-  }
-}
-.vue-spectator-roster,
 .vue-spectator-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
@@ -101,17 +88,4 @@
   inline-size: 100%;
   block-size: auto;
   object-fit: contain;
-}
-.vue-spectator-actions {
-  display: flex;
-  gap: var(--stitch-gap-controls);
-  align-items: center;
-}
-:root body.vue-spectator-document.vue-spectator-focus[data-visual-theme] {
-  #site-header-app[data-site-header] {
-    display: none;
-  }
-  .vue-room-spectator {
-    padding-block-start: calc(44px + var(--stitch-space-16) * 2);
-  }
 }

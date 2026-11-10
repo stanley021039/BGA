@@ -13,6 +13,7 @@ const props = defineProps<{
   image: string;
   name: string;
   size?: 128 | 256;
+  frameless?: boolean;
 }>();
 const prefs = usePreferencesStore(),
   stage = ref<HTMLElement | null>(null);
@@ -37,7 +38,12 @@ onBeforeUnmount(() => stop?.());
 defineExpose({ play });
 </script>
 <template>
-  <button type="button" class="entrance-preview" aria-label="重播進場特效" @click="play"
+  <button
+    type="button"
+    class="entrance-preview"
+    :data-frameless="frameless || undefined"
+    aria-label="重播進場特效"
+    @click="play"
     ><span ref="stage" class="entrance-stage" aria-hidden="true"
       ><span class="entrance-preview-actor"
         ><img :src="sizedImage(image, size ?? 256)" alt="" draggable="false" /><span>{{
@@ -59,6 +65,10 @@ defineExpose({ play });
   background: transparent;
   color: inherit;
   cursor: pointer;
+}
+.entrance-preview[data-frameless] .entrance-stage {
+  border-radius: 0;
+  background: transparent;
 }
 .entrance-preview-hint {
   font-size: 12px;

@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue';
 import type {
-  RaceSnapshot,
-  RaceVisual,
   RaceRoute,
   RacePoint,
   RaceAnnotation,
+  RaceBoardState,
+  RaceBoardVisual,
 } from '../../contracts/race';
 import RaceVehicle from './RaceVehicle.vue';
 import { terrain, hazardSymbols, sizes } from './race-meta';
 const props = defineProps<{
-  state: RaceSnapshot;
-  visual: RaceVisual;
+  state: RaceBoardState;
+  visual: RaceBoardVisual;
   routes: Map<string, RaceRoute>;
   enabled: boolean;
+  readOnly?: boolean;
+  focusPlayer?: string;
   preview: RaceRoute | null;
   goal?: RacePoint | null;
   annotations?: RaceAnnotation[];
@@ -119,12 +121,12 @@ function boundary(start: number) {
       ref="svg"
       viewBox="0 0 1180 398"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="向右前進的六線賽道；亮框格子可移動"
+      :aria-label="readOnly ? '雷霆之路公開賽道' : '向右前進的六線賽道；亮框格子可移動'"
     >
       <defs>
         <pattern :id="grainId" width="11" height="13" patternUnits="userSpaceOnUse">
-          <circle cx="3" cy="4" r=".8" fill="#201b1240" />
-          <circle cx="9" cy="11" r=".6" fill="#e7ca8130" />
+          <circle cx="3" cy="4" r=".8" fill="var(--stitch-race-grain-dark)" />
+          <circle cx="9" cy="11" r=".6" fill="var(--stitch-race-grain-light)" />
         </pattern>
       </defs>
       <g class="race-world">
@@ -177,29 +179,33 @@ function boundary(start: number) {
             <path
               v-if="c.kind === 'R'"
               d="M-17,-18L-7,-22M8,22L17,18"
-              stroke="#e4d2a750"
+              stroke="var(--stitch-race-tile-outline)"
               stroke-width="1"
             />
             <template v-if="c.kind === 'X'">
               <path
                 d="M-16,11L-12,-10L2,-19L17,-6L12,15L-5,20Z"
-                fill="#493f35"
-                stroke="#c0a25d"
+                fill="var(--stitch-race-rock-fill)"
+                stroke="var(--stitch-race-rock-outline)"
                 stroke-width="2"
               />
-              <path d="M2,-19L0,5L12,15M0,5L-16,11" stroke="#88715a" fill="none" />
+              <path
+                d="M2,-19L0,5L12,15M0,5L-16,11"
+                stroke="var(--stitch-race-rock-crack)"
+                fill="none"
+              />
             </template>
             <path
               v-if="c.kind === 'M'"
               d="M-14,-7Q0,-16 12,-3M-12,6Q0,17 13,6"
-              stroke="#96704b70"
+              stroke="var(--stitch-race-rock-striation)"
               stroke-width="3"
               fill="none"
             />
             <text
               v-if="['G', 'V', 'J', 'F', 'S'].includes(c.kind)"
               class="cell-symbol terrain-symbol"
-              style="fill: #fff2ce"
+              style="fill: var(--stitch-race-terrain-symbol)"
               y="1"
             >
               {{ c.info.symbol }}
@@ -207,7 +213,11 @@ function boundary(start: number) {
             <text
               v-if="c.cell.hazard"
               class="cell-symbol"
-              :style="{ fill: c.cell.hazard.face ? '#edcb8b' : '#ffcf77' }"
+              :style="{
+                fill: c.cell.hazard.face
+                  ? 'var(--stitch-race-hazard-revealed)'
+                  : 'var(--stitch-race-hazard-hidden)',
+              }"
               y="1"
             >
               {{ c.cell.hazard.face ? hazardSymbols[c.cell.hazard.kind] || '!' : '⚠' }}
@@ -224,10 +234,10 @@ function boundary(start: number) {
           v-if="state.finishAt !== null"
           :transform="`translate(${48 + (state.finishAt - visual.min) * 44 + 16},0)`"
         >
-          <rect y="55" width="33" height="280" fill="#e8dfb5" />
+          <rect y="55" width="33" height="280" fill="var(--stitch-race-finish-light)" />
           <path
             d="M0,55h16v16h17v16H16v16H0v16h16v16h17v16H16v16H0v16h16v16h17v16H16v16H0v16h16v16h17v16H16v16H0v16h16v16h17v16H16v16H0Z"
-            fill="#263d30"
+            fill="var(--stitch-race-finish-dark)"
           />
           <text y="358" class="map-index">終點</text>
         </g>
@@ -250,11 +260,11 @@ function boundary(start: number) {
             width="40"
             height="40"
             rx="5"
-            fill="#776943"
-            stroke="#ffe68c"
+            fill="var(--stitch-race-offboard-marker)"
+            stroke="var(--stitch-race-annotation-outline)"
             stroke-width="3"
           />
-          <text y="5" text-anchor="middle" fill="#fff">→</text>
+          <text y="5" text-anchor="middle" fill="var(--stitch-artwork-preview-ink)">→</text>
         </g>
         <g v-if="pathPoints.length" pointer-events="none">
           <polyline
@@ -270,18 +280,19 @@ function boundary(start: number) {
           v-for="car in visibleCars"
           :key="car.id"
           :data-car="car.id"
+          :data-owner="readOnly ? car.owner : undefined"
           :transform="`translate(${pos(car.x!, car.y).x},${pos(car.x!, car.y).y})`"
           class="map-car"
           :class="{
             'disabled-car': car.damage.length >= 2,
-            'active-car': car.id === state.active?.car,
+            'active-car': car.id === state.active?.car || car.owner === focusPlayer,
             target: state.targets.includes(car.id),
           }"
-          tabindex="0"
-          role="button"
+          :tabindex="readOnly ? undefined : 0"
+          :role="readOnly ? undefined : 'button'"
           :aria-label="`${owner(car.owner)?.name || '殘骸'} ${sizes[car.size]} ${car.damage.length} 損傷`"
-          @click="emit('car', car.id)"
-          @keydown="activate($event, () => emit('car', car.id))"
+          @click="!readOnly && emit('car', car.id)"
+          @keydown="!readOnly && activate($event, () => emit('car', car.id))"
           @pointerenter="emit('preview', { x: car.x!, y: car.y })"
           @focus="emit('preview', { x: car.x!, y: car.y })"
         >
@@ -293,11 +304,15 @@ function boundary(start: number) {
             <g>
               <RaceVehicle
                 :size="car.size"
-                :color="owner(car.owner)?.color || '#605d52'"
+                :color="owner(car.owner)?.color || 'var(--stitch-race-wreck-fill)'"
                 :disabled="car.damage.length >= 2"
               />
             </g>
-            <circle v-if="car.id === state.active?.car" r="23" class="race-active-ring" />
+            <circle
+              v-if="car.id === state.active?.car || car.owner === focusPlayer"
+              r="23"
+              class="race-active-ring"
+            />
             <circle v-if="state.targets.includes(car.id)" r="23" class="race-target-ring" />
             <text y="25" class="car-label">
               {{ car.wreck ? '' : sizes[car.size] }}{{ car.burning ? ' ♨' : ''
@@ -313,8 +328,18 @@ function boundary(start: number) {
           :transform="`translate(${pos(player.chopper!.x, player.chopper!.y).x},${pos(player.chopper!.x, player.chopper!.y).y})`"
         >
           <g class="race-car-motion">
-            <ellipse rx="17" ry="10" :fill="player.color" stroke="#17251b" stroke-width="2" />
-            <path d="M-25,-16H25M0,-20V16M-25,0H-13" stroke="#f8edcf" stroke-width="3" />
+            <ellipse
+              rx="17"
+              ry="10"
+              :fill="player.color"
+              stroke="var(--stitch-race-annotation-bg)"
+              stroke-width="2"
+            />
+            <path
+              d="M-25,-16H25M0,-20V16M-25,0H-13"
+              stroke="var(--stitch-race-chopper-blade)"
+              stroke-width="3"
+            />
           </g>
         </g>
         <g
@@ -323,8 +348,20 @@ function boundary(start: number) {
           pointer-events="none"
           :transform="`translate(${pos(a.x, a.y).x},${pos(a.x, a.y).y})`"
         >
-          <circle r="27" fill="none" :stroke="a.color || '#ffe68c'" stroke-width="3" />
-          <rect x="-58" y="-51" width="116" height="22" rx="6" fill="#17251b" />
+          <circle
+            r="27"
+            fill="none"
+            :stroke="a.color || 'var(--stitch-race-annotation-outline)'"
+            stroke-width="3"
+          />
+          <rect
+            x="-58"
+            y="-51"
+            width="116"
+            height="22"
+            rx="6"
+            fill="var(--stitch-race-annotation-bg)"
+          />
           <text y="-36" class="race-annotation">{{ a.label }}</text>
         </g>
         <g
@@ -332,7 +369,12 @@ function boundary(start: number) {
           pointer-events="none"
           :transform="`translate(${pos(goal.x, goal.y).x},${pos(goal.x, goal.y).y})`"
         >
-          <circle r="27" fill="none" stroke="#ffe68c" stroke-width="3" />
+          <circle
+            r="27"
+            fill="none"
+            stroke="var(--stitch-race-annotation-outline)"
+            stroke-width="3"
+          />
           <text y="-32" class="race-annotation">⚑ 目標</text>
         </g>
       </g>

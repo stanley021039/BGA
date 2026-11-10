@@ -585,7 +585,7 @@ function mine(v: unknown): QuacksMine | null {
     waitingEffect: bool(r.waitingEffect),
   };
 }
-export function readQuacksSnapshot(value: unknown): QuacksSnapshot {
+export function readQuacksSnapshot(value: unknown, observer = false): QuacksSnapshot {
   const base = readRoomSnapshot(value),
     r = record(value),
     o = record(r.options);
@@ -612,7 +612,7 @@ export function readQuacksSnapshot(value: unknown): QuacksSnapshot {
   if (
     recipes.length > 8 ||
     new Set(recipes.map((p) => p.id)).size !== recipes.length ||
-    !recipes.some((p) => p.id === base.me)
+    (!observer && !recipes.some((p) => p.id === base.me))
   )
     return bad();
   const potColors = Object.fromEntries(

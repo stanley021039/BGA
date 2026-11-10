@@ -2,10 +2,11 @@
 import { computed, ref, watch } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useMajorityStore } from '../../stores/majority';
+import type { MajoritySnapshot } from '../../contracts/majority';
 import QuestionPreview from './QuestionPreview.vue';
-const props = defineProps<{ recap?: boolean; focusId?: string }>(),
-  game = useMajorityStore(),
-  s = computed(() => game.state),
+const props = defineProps<{ recap?: boolean; focusId?: string; observer?: MajoritySnapshot }>(),
+  game = props.observer ? null : useMajorityStore(),
+  s = computed(() => props.observer ?? game?.state),
   room = useRoomStore(),
   recapIndex = ref(0),
   recaps = computed(() => s.value?.cruel?.recap || []),

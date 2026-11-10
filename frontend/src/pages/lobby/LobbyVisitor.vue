@@ -324,7 +324,7 @@ window.addEventListener('resize', positionBubble);
     :data-ping-player="visitor.id"
     :data-arena-team="team"
     :data-arena-concealed="visitor.concealed || undefined"
-    :aria-label="self ? visitor.name + '（你），點一下發表情，C 鍵瞬移、R 鍵多人招式' : undefined"
+    :aria-label="self ? visitor.name + '（你），點一下發表情，C 鍵瞬移、R 鍵施放大招' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref } from 'vue';
 import { requestJson, ApiError } from '../services/http';
-import { gamePath } from '../contracts/room';
+import { gamePath, type RoomSnapshot } from '../contracts/room';
 import { readSpectatorSnapshot, type SpectatorSnapshot } from '../contracts/spectator';
+import { readChatMessages } from '../contracts/social';
+import { record } from '../services/validation';
 import UiButton from './UiButton.vue';
+import UiField from './UiField.vue';
 import UiLink from './UiLink.vue';
 import UiPanel from './UiPanel.vue';
 import UiList from './UiList.vue';
@@ -13,8 +16,43 @@ import RoomCountdown from './RoomCountdown.vue';
 import SpectatorCanvas from './SpectatorCanvas.vue';
 import GameSongClip from './GameSongClip.vue';
 import RoomFullscreenToggle from './RoomFullscreenToggle.vue';
+import SpectatorRoomMusic from './SpectatorRoomMusic.vue';
+import RoomHeader from './RoomHeader.vue';
+import RoomSceneLayout from './RoomSceneLayout.vue';
+import RoomRoster from './RoomRoster.vue';
+import UiPopover from './UiPopover.vue';
+import '../styles/game-room.scss';
+import '../styles/room-social.scss';
 import '../styles/spectator.scss';
+const QuacksSpectatorScene = defineAsyncComponent(
+  () => import('../pages/quacks/QuacksSpectatorScene.vue'),
+);
 const QuacksGlyph = defineAsyncComponent(() => import('../pages/quacks/QuacksGlyph.vue'));
+const PokerScene = defineAsyncComponent(() => import('../pages/poker/PokerScene.vue'));
+const MusicTimeline = defineAsyncComponent(() => import('../pages/musicquiz/MusicTimeline.vue'));
+const CeoScene = defineAsyncComponent(() => import('../pages/ceo/CeoScene.vue'));
+const CeoWaiting = defineAsyncComponent(() => import('../pages/ceo/CeoWaiting.vue'));
+const AthleteScene = defineAsyncComponent(() => import('../pages/second-wind/AthleteScene.vue'));
+const AthleteWaiting = defineAsyncComponent(
+  () => import('../pages/second-wind/AthleteWaiting.vue'),
+);
+const LoungeStage = defineAsyncComponent(() => import('../pages/lounge/LoungeStage.vue'));
+const MinimalScene = defineAsyncComponent(() => import('../pages/minimal/MinimalScene.vue'));
+const MusicQuizScene = defineAsyncComponent(() => import('../pages/musicquiz/MusicQuizScene.vue'));
+const BluffScene = defineAsyncComponent(() => import('../pages/bluff/BluffScene.vue'));
+const DrawSpectatorScene = defineAsyncComponent(
+  () => import('../pages/draw/DrawSpectatorScene.vue'),
+);
+const TournamentScene = defineAsyncComponent(() => import('../pages/majority/TournamentScene.vue'));
+const MajorityScene = defineAsyncComponent(() => import('../pages/majority/MajorityScene.vue'));
+const GiftScene = defineAsyncComponent(() => import('../pages/gift/GiftScene.vue'));
+const DecryptoScene = defineAsyncComponent(() => import('../pages/decrypto/DecryptoScene.vue'));
+const TelephoneScene = defineAsyncComponent(() => import('../pages/telephone/TelephoneScene.vue'));
+const TrpgScene = defineAsyncComponent(() => import('../pages/trpg/TrpgScene.vue'));
+const RaceCrewDice = defineAsyncComponent(() => import('../pages/race/RaceCrewDice.vue'));
+const RaceSpectatorScene = defineAsyncComponent(
+  () => import('../pages/race/RaceSpectatorScene.vue'),
+);
 const props = defineProps<{ code: string }>();
 const state = ref<SpectatorSnapshot | null>(null),
   error = ref('正在連接觀戰畫面…'),
@@ -22,9 +60,91 @@ const state = ref<SpectatorSnapshot | null>(null),
   offset = ref(0),
   foreground = ref(!document.hidden),
   terminal = ref(false);
-const back = computed(() =>
-  state.value ? '/' + gamePath(state.value.type) + '/' + props.code : location.pathname,
+const following = ref('');
+const focused = ref(false),
+  headerIntegrated = ref(false);
+const media = ref<InstanceType<typeof UiPopover> | null>(null);
+const emoji = ref<InstanceType<typeof UiPopover> | null>(null);
+const followed = computed(() => state.value?.players.find((p) => p.id === following.value));
+const timeline = computed(() =>
+  state.value?.musicTimelines.find((entry) => entry.playerId === following.value),
 );
+const roster = computed<RoomSnapshot | null>(() => {
+  const s = state.value;
+  if (!s) return null;
+  return {
+    code: s.code,
+    type: s.type,
+    phase: s.phase,
+    serverNow: s.serverNow,
+    me: following.value,
+    host: false,
+    hostId: s.players.find((p) => p.host)?.id,
+    players: s.players.map((p) => ({ ...p, roomRole: null, kicked: false })),
+  };
+});
+const raceTeams = computed(
+  () =>
+    new Map(
+      (state.value?.raceBoard?.players || []).map((player, index) => [
+        player.id,
+        { player, index },
+      ]),
+    ),
+);
+const sharedScene = computed(() => {
+  const s = state.value;
+  return !!(
+    s &&
+    (s.pokerTable ||
+      s.nativeGame ||
+      s.trpgScene ||
+      s.minimalScene ||
+      s.telephoneScene ||
+      s.decryptoScene ||
+      s.giftScene ||
+      s.majorityScene ||
+      s.bluffScene ||
+      s.musicScene ||
+      s.drawScene ||
+      s.type === 'lounge')
+  );
+});
+const visibleSections = computed(() =>
+  (sharedScene.value ? [] : state.value?.sections || []).filter(
+    (section) => !section.playerId || (section.playerId === following.value && !timeline.value),
+  ),
+);
+const visiblePots = computed(() =>
+  (state.value?.pots || []).filter((pot) => !pot.playerId || pot.playerId === following.value),
+);
+const draft = ref('');
+const sending = ref(false);
+const chatError = ref('');
+let chatRetry: { message: string; requestId: string } | null = null;
+async function sendChat() {
+  const message = draft.value.trim();
+  const current = state.value;
+  if (!current || !message || sending.value) return;
+  if (chatRetry?.message !== message) chatRetry = { message, requestId: crypto.randomUUID() };
+  sending.value = true;
+  chatError.value = '';
+  try {
+    const reply = record(
+      await requestJson('/api/watch/chat', {
+        method: 'POST',
+        body: { code: current.code, ...chatRetry },
+      }),
+    );
+    if (state.value?.code === current.code) state.value.messages = readChatMessages(reply.messages);
+    if (draft.value.trim() === message) draft.value = '';
+    chatRetry = null;
+  } catch (cause) {
+    chatError.value = cause instanceof Error ? cause.message : '訊息未送出。';
+  } finally {
+    sending.value = false;
+  }
+}
 const columns = computed(() => {
   const cells = state.value?.track?.cells || [];
   return {
@@ -71,6 +191,12 @@ async function refresh() {
     );
     if (disposed || token !== generation || controller.signal.aborted) return;
     if (next.code !== props.code.toUpperCase()) throw Error('收到其他房間的觀戰資料。');
+    if (
+      state.value?.gameRevision !== next.gameRevision ||
+      !next.players.some((p) => p.id === following.value)
+    )
+      following.value =
+        (next.players.find((p) => p.status === '目前操作中') || next.players[0])?.id || '';
     presence ??= new EventSource('/api/watch/events?code=' + encodeURIComponent(next.code));
     state.value = next;
     now.value = Date.now();
@@ -98,7 +224,7 @@ async function refresh() {
     if (job === controller) {
       job = null;
       if (!disposed && foreground.value && !terminal.value)
-        timer = setTimeout(refresh, state.value?.type === 'draw' ? 1000 : 2500);
+        timer = setTimeout(refresh, following.value || state.value?.type === 'draw' ? 1000 : 2500);
     }
   }
 }
@@ -135,30 +261,60 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <main class="vue-room-spectator" aria-labelledby="room-spectator-title">
-    <header class="vue-spectator-heading"
-      ><div
-        ><p>只讀模式 · 不占玩家席位</p
-        ><h1 id="room-spectator-title">{{ state?.title || '房間' }}觀戰</h1
-        ><p
-          >房間 {{ code }} · {{ state?.phaseLabel || '連接中'
-          }}<template v-if="state?.round">
-            · 第 {{ state.round
-            }}<template v-if="state.roundLimit">／{{ state.roundLimit }}</template
-            >輪</template
-          ></p
-        ></div
-      ><div class="vue-spectator-actions"
-        ><RoomFullscreenToggle focus-class="vue-spectator-focus" /><UiLink
-          :href="back"
-          icon="leave"
-          label="離開觀戰" /></div
-    ></header>
-    <StatusSlot :message="error" persistent :error="!!error && error !== '正在連接觀戰畫面…'" />
-    <UiButton v-if="terminal" icon="refresh" label="重新連接觀戰" @click="retry" />
-    <template v-if="state">
+  <div
+    class="vue-game-workspace vue-room-shell has-room-space vue-room-observer"
+    :class="{ 'is-header-integrated': headerIntegrated }"
+    :data-room-kind="state?.type"
+    :data-room-phase="state?.phase"
+  >
+    <RoomHeader
+      :title="state?.title || '房間觀戰'"
+      :focused="focused"
+      :observer-code="code"
+      @integrated="headerIntegrated = $event"
+    >
+      <UiLink
+        v-if="state"
+        :href="'/' + gamePath(state.type) + '?learn=1&amp;from=game&amp;room=' + code"
+        label="試玩教學"
+        icon="play"
+        variant="ghost"
+      />
+      <RoomFullscreenToggle @update:focused="focused = $event" />
+      <UiLink href="/" icon="leave" label="離開觀戰" caption="離開" variant="danger" />
+    </RoomHeader>
+    <div class="vue-game-room-feedback vue-room-status-row">
+      <div class="vue-room-phase-slot">
+        <span class="vue-game-phase">{{ state?.phaseLabel || '連接中' }}</span>
+        <span class="vue-game-round">{{
+          state?.round ? '第 ' + state.round + ' 輪' : '等待開桌'
+        }}</span>
+        <span v-if="followed" class="ui-sr-only" role="status">{{ followed.name }}的視角</span>
+      </div>
+      <StatusSlot :message="error" persistent :error="!!error && error !== '正在連接觀戰畫面…'" />
+      <UiButton v-if="terminal" icon="refresh" label="重新連接觀戰" @click="retry" />
+    </div>
+    <RoomSceneLayout v-if="state" :connected="!error" :focused="focused" observer>
+      <template #roster>
+        <RoomRoster
+          :snapshot="roster"
+          :followed-id="following"
+          :max-players="state.type === 'thunder' ? 4 : state.type === 'poker' ? 8 : undefined"
+          :actor-id="state.raceBoard?.actorId"
+          :status="(player) => (typeof player.status === 'string' ? player.status : '')"
+          @view="following = $event"
+        >
+          <template v-if="raceTeams.size" #metric="{ player }">
+            <RaceCrewDice
+              v-if="raceTeams.has(player.id)"
+              :player="raceTeams.get(player.id)!.player"
+              :variant="raceTeams.get(player.id)!.index"
+            />
+          </template>
+        </RoomRoster>
+      </template>
       <RoomCountdown
-        v-if="state.deadline"
+        v-if="state.deadline && state.type !== 'thunder' && !sharedScene"
         :deadline="state.deadline"
         :duration="state.duration"
         :offset="offset"
@@ -166,28 +322,126 @@ onBeforeUnmount(() => {
         :epoch="state.type + ':' + state.gameRevision + ':' + state.deadline"
         caption="本階段剩餘"
       />
-      <section class="vue-spectator-roster" aria-label="本桌玩家"
-        ><UiPanel
-          v-for="p in state.players"
-          :key="p.id"
-          :title="p.name + (p.bot ? '（AI）' : '')"
-          density="compact"
-          ><p
-            >{{ p.status }} · {{ p.online ? '在線' : '暫時離線'
-            }}<template v-if="p.score !== null"> · {{ p.score }} 分</template></p
-          ><p v-for="(line, i) in p.lines" :key="i">{{ line }}</p
-          ><div v-if="p.cards.length" class="vue-spectator-cards" :aria-label="p.name + ' 的底牌'"
-            ><span v-for="(value, i) in p.cards" :key="i">{{ card(value) }}</span></div
-          ></UiPanel
-        ></section
+      <RaceSpectatorScene
+        v-if="state.type === 'thunder'"
+        :snapshot="state"
+        :followed="following"
+        :now="now"
+        :offset="offset"
+      />
+      <PokerScene
+        v-if="state.pokerTable"
+        :observer="{ state: { ...state.pokerTable, me: following }, now, offset }"
+      />
+      <LoungeStage v-if="state.type === 'lounge'" :title="state.roomMusic?.title" />
+      <MinimalScene
+        v-if="state.minimalScene"
+        :observer="state.minimalScene"
+        :observer-clock-offset="offset"
+        :observer-now="now"
+      />
+      <TelephoneScene
+        v-if="state.telephoneScene"
+        :observer="state.telephoneScene"
+        :observer-clock-offset="offset"
+        :observer-now="now"
+      />
+      <DecryptoScene
+        v-if="state.decryptoScene"
+        :observer="state.decryptoScene"
+        :focus="following"
+      />
+      <GiftScene v-if="state.giftScene" :observer="state.giftScene" :following="following" />
+      <TournamentScene
+        v-if="state.majorityScene?.tournament && state.phase !== 'waiting'"
+        :observer="state.majorityScene"
+        :clips="state.clips"
+        :observer-clock-offset="offset"
+        :observer-now="now"
+      />
+      <MajorityScene
+        v-else-if="state.majorityScene"
+        :observer="state.majorityScene"
+        :observer-clock-offset="offset"
+        :observer-now="now"
+      />
+      <BluffScene
+        v-if="state.bluffScene"
+        :observer="state.bluffScene"
+        :observer-clock-offset="offset"
+        :observer-now="now"
+      />
+      <MusicQuizScene
+        v-if="state.musicScene"
+        :observer="state.musicScene"
+        :following="following"
+        :observer-clock-offset="offset"
+      />
+      <DrawSpectatorScene
+        v-if="state.drawScene"
+        :snapshot="state.drawScene"
+        :drawing="state.drawing"
+        :duration="state.duration"
+        :offset="offset"
+        :now="now"
+        :following="following"
+        :hint="state.sections.find((section) => section.title === '本輪題目')?.lines[1]"
+      />
+      <QuacksSpectatorScene
+        v-if="state.quacksScene"
+        :state="state.quacksScene"
+        :following="following"
+      />
+      <TrpgScene v-if="state.trpgScene" :observer="{ ...state.trpgScene, me: following }" />
+      <template v-if="state.nativeGame?.type === 'ceo'">
+        <CeoWaiting v-if="state.nativeGame.phase === 'waiting'" />
+        <CeoScene v-else :observer="{ ...state.nativeGame, me: following }" />
+      </template>
+      <template v-if="state.nativeGame?.type === 'second-wind'">
+        <AthleteWaiting
+          v-if="state.nativeGame.phase === 'waiting'"
+          :roster="
+            {
+              base: '36 名初代角色',
+              mixed: '72 名混合角色',
+              'second-wind': '36 名 Second Wind 角色',
+            }[state.nativeGame.options?.racerSet || 'second-wind']
+          "
+        />
+        <AthleteScene
+          v-else-if="state.nativeGame.game"
+          :observer="{ ...state.nativeGame, me: following }"
+        />
+        <UiPanel v-else title="等待下一局"><p>等待房主開始下一局。</p></UiPanel>
+      </template>
+      <UiPanel
+        v-if="timeline && followed && !state.musicScene"
+        :title="followed.name + ' 的年代時間軸'"
       >
-      <UiPanel v-if="state.type === 'poker'" title="公共牌"
+        <MusicTimeline :cards="timeline.cards" />
+        <p v-if="!timeline.cards.length">還沒有公開的年代卡。</p>
+      </UiPanel>
+      <UiPanel
+        v-if="followed && state.type !== 'thunder' && !sharedScene && !state.quacksScene"
+        :title="followed.name + '的公開資訊'"
+        density="compact"
+      >
+        <p
+          >{{ followed.status }} · {{ followed.online ? '在線' : '暫時離線'
+          }}<template v-if="followed.score !== null"> · {{ followed.score }} 分</template></p
+        >
+        <p v-for="(line, i) in followed.lines" :key="i">{{ line }}</p>
+        <div v-if="followed.cards.length" class="vue-spectator-cards" aria-label="已公開的手牌">
+          <span v-for="(value, i) in followed.cards" :key="i">{{ card(value) }}</span>
+        </div>
+      </UiPanel>
+      <UiPanel v-if="state.type === 'poker' && !state.pokerTable" title="公共牌"
         ><div class="vue-spectator-cards"
           ><span v-for="(value, i) in state.cards" :key="i">{{ card(value) }}</span
           ><p v-if="!state.cards.length">尚未翻開公共牌</p></div
         ></UiPanel
       >
-      <UiPanel v-if="state.drawing" title="本輪公開畫布"
+      <UiPanel v-if="state.drawing && !state.drawScene" title="本輪公開畫布"
         ><SpectatorCanvas
           :key="state.drawing.epoch"
           :epoch="state.drawing.epoch"
@@ -195,7 +449,9 @@ onBeforeUnmount(() => {
           :live="state.phase === 'drawing'"
           label="目前公開畫布"
       /></UiPanel>
-      <UiPanel v-if="state.track" :title="state.track.title"
+      <UiPanel
+        v-if="state.track && state.type !== 'thunder' && !sharedScene"
+        :title="state.track.title"
         ><div
           class="vue-spectator-track"
           :style="{
@@ -213,8 +469,11 @@ onBeforeUnmount(() => {
           ></div
         ></UiPanel
       >
-      <section v-if="state.pots.length" class="vue-spectator-grid" aria-label="公開藥鍋"
-        ><UiPanel v-for="(pot, i) in state.pots" :key="i" :title="pot.name"
+      <section
+        v-if="visiblePots.length && !state.quacksScene"
+        class="vue-spectator-grid"
+        aria-label="公開藥鍋"
+        ><UiPanel v-for="(pot, i) in visiblePots" :key="i" :title="pot.name"
           ><p v-if="pot.hidden">本輪進度保密，結算後公開。</p
           ><template v-else
             ><p>位置 {{ pot.position }}</p
@@ -232,7 +491,10 @@ onBeforeUnmount(() => {
           ></UiPanel
         ></section
       >
-      <UiPanel v-for="(drawing, i) in state.drawings" :key="i" :title="drawing.title"
+      <UiPanel
+        v-for="(drawing, i) in state.minimalScene ? [] : state.drawings"
+        :key="i"
+        :title="drawing.title"
         ><svg
           viewBox="0 0 512 256"
           class="vue-spectator-shapes"
@@ -251,7 +513,7 @@ onBeforeUnmount(() => {
           </template></svg
       ></UiPanel>
       <UiPanel
-        v-for="(section, i) in state.sections"
+        v-for="(section, i) in visibleSections"
         :key="state.type + ':' + i"
         :title="section.title"
         ><p v-if="!section.lines.length && !section.items.length">尚無公開資料。</p
@@ -264,7 +526,10 @@ onBeforeUnmount(() => {
           ></dl
         ></UiPanel
       >
-      <section v-if="state.images.length" class="vue-spectator-grid" aria-label="公開題目圖片"
+      <section
+        v-if="state.images.length && !state.majorityScene"
+        class="vue-spectator-grid"
+        aria-label="公開題目圖片"
         ><UiPanel v-for="image in state.images" :key="image.src" :title="image.alt"
           ><img
             class="vue-spectator-question-image"
@@ -275,11 +540,10 @@ onBeforeUnmount(() => {
             loading="lazy"
             decoding="async" /></UiPanel
       ></section>
-      <template v-if="foreground"
-        ><UiPanel v-for="clip in state.clips" :key="clip.key" :title="clip.label"
-          ><GameSongClip :playback="clip.playback" :active="foreground && !error" /></UiPanel
-      ></template>
-      <UiPanel v-for="book in state.books" :key="book.ownerId" :title="book.ownerName + ' 的傳遞簿'"
+      <UiPanel
+        v-for="book in state.telephoneScene ? [] : state.books"
+        :key="book.ownerId"
+        :title="book.ownerName + ' 的傳遞簿'"
         ><ol class="vue-spectator-pages"
           ><li v-for="(page, i) in book.pages" :key="i"
             ><strong>{{ page.authorName }} · {{ page.kind === 'drawing' ? '畫圖' : '文字' }}</strong
@@ -293,6 +557,99 @@ onBeforeUnmount(() => {
           ></ol
         ></UiPanel
       >
-    </template>
-  </main>
+      <template #side="{ chatVisible }">
+        <section
+          class="vue-room-chat vue-chat-c01"
+          data-ping-anchor="chat"
+          aria-label="房間彈幕與閒聊"
+        >
+          <header class="vue-chat-header">
+            <div class="vue-chat-heading">
+              <h2>房間彈幕與閒聊</h2>
+              <span
+                class="vue-chat-connection"
+                role="img"
+                :data-connected="!error"
+                :aria-label="error ? '聊天室連線中斷' : '聊天室已連線'"
+              />
+            </div>
+          </header>
+          <div v-show="chatVisible" class="vue-room-chat-content vue-chat-c01-content">
+            <ol class="vue-chat-messages" aria-label="聊天訊息" tabindex="0">
+              <li v-for="message in state.messages" :key="message.id" class="vue-chat-message">
+                <div class="vue-chat-message-copy">
+                  <div class="vue-chat-message-meta"
+                    ><strong>{{ message.name }}</strong></div
+                  >
+                  <p>{{ message.message }}</p>
+                </div>
+              </li>
+            </ol>
+            <div class="vue-chat-feedback"
+              ><StatusSlot :message="chatError" :error="!!chatError"
+            /></div>
+            <form autocomplete="off" :aria-busy="sending" @submit.prevent="sendChat">
+              <div class="vue-chat-tools" aria-label="房間社交工具">
+                <UiButton
+                  icon="video"
+                  label="媒體"
+                  aria-haspopup="dialog"
+                  @click="media?.open($event.currentTarget as HTMLElement)"
+                />
+                <UiButton
+                  icon="emoji"
+                  label="表情"
+                  aria-haspopup="dialog"
+                  @click="emoji?.open($event.currentTarget as HTMLElement)"
+                />
+              </div>
+              <div class="vue-chat-compose">
+                <UiField
+                  v-model="draft"
+                  label="房間彈幕"
+                  label-hidden
+                  placeholder="輸入彈幕或閒聊…"
+                  maxlength="160"
+                  @keydown.enter="$event.isComposing && $event.preventDefault()"
+                />
+                <UiButton
+                  variant="contrast"
+                  type="submit"
+                  class="vue-chat-send"
+                  icon="send"
+                  icon-only
+                  label="發送房間彈幕"
+                  :pending="sending"
+                  :disabled="!draft.trim() || !!error"
+                />
+              </div>
+            </form>
+          </div>
+        </section>
+        <UiPopover id="observer-room-media" ref="media" title="房間媒體" keep-mounted>
+          <SpectatorRoomMusic
+            :music="state.roomMusic"
+            :active="foreground && !error"
+            :offset="offset"
+          />
+          <UiPanel v-for="clip in state.clips" :key="clip.key" :title="clip.label">
+            <GameSongClip :playback="clip.playback" :active="foreground && !error" />
+          </UiPanel>
+          <p v-if="!state.roomMusic && !state.clips.length">目前沒有播放中的媒體。</p>
+        </UiPopover>
+        <UiPopover id="observer-room-emoji" ref="emoji" title="表情">
+          <UiButton
+            v-for="icon in ['👏', '😂', '🔥', '👍']"
+            :key="icon"
+            :label="'填入 ' + icon"
+            :caption="icon"
+            @click="
+              draft += icon;
+              emoji?.close();
+            "
+          />
+        </UiPopover>
+      </template>
+    </RoomSceneLayout>
+  </div>
 </template>

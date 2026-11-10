@@ -452,7 +452,7 @@
     gap: t.space(2);
     margin-block: t.space(3);
   }
-  input[type='checkbox'] {
+  input[type='checkbox']:not(.ui-checkbox-input) {
     width: 20px;
     height: 20px;
     flex: none;

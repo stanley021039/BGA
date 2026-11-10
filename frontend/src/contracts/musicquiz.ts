@@ -89,7 +89,7 @@ function card(v: unknown): MusicCard {
     year: number(s.year),
   };
 }
-export function readMusicQuizSnapshot(value: unknown): MusicQuizSnapshot {
+export function readMusicQuizSnapshot(value: unknown, observer = false): MusicQuizSnapshot {
   const room = readRoomSnapshot(value),
     r = record(value),
     settings = record(r.settings),
@@ -111,9 +111,10 @@ export function readMusicQuizSnapshot(value: unknown): MusicQuizSnapshot {
       throw Error('歌曲播放格式不正確');
     if (media.provider === 'audio') {
       const u = new URL(text(media.url), 'http://afterhours.invalid');
+      const path = observer ? '/api/watch-audio' : '/api/game-song-audio';
       if (
-        !text(media.url).startsWith('/api/game-song-audio?') ||
-        u.pathname !== '/api/game-song-audio' ||
+        !text(media.url).startsWith(path + '?') ||
+        u.pathname !== path ||
         u.searchParams.get('code')?.toUpperCase() !== room.code ||
         u.searchParams.get('roundId') !== r.roundId
       )

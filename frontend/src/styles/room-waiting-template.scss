@@ -491,6 +491,29 @@
   }
 }
 
+:root body[data-visual-theme] .vue-room-waiting-template[data-waiting-game='draw'].is-flow {
+  .vue-waiting-lower {
+    align-items: start;
+  }
+
+  .vue-waiting-summary {
+    min-block-size: 0;
+
+    > dl {
+      display: flex;
+      flex-wrap: wrap;
+      margin-block: 0;
+      padding-block-start: 0;
+
+      > div {
+        box-sizing: border-box;
+        flex: 1 1 7rem;
+        min-block-size: 0;
+      }
+    }
+  }
+}
+
 // The common waiting panel already supplies the Draw settings heading.
 :root
   body[data-game-kind='draw'][data-visual-theme]
@@ -646,7 +669,7 @@
     }
   }
   :root body[data-game-kind='draw'][data-visual-theme]:not(.ui-large-text) .vue-draw-approved {
-    .vue-draw-main:has(.vue-room-waiting-template),
+    .vue-draw-main:has(.vue-room-waiting-template:not(.is-flow)),
     :is(
       .vue-draw-board-panel,
       .vue-drawing-surface,
@@ -655,7 +678,7 @@
       .vue-drawing-console-stage,
       .vue-drawing-frame,
       .vue-drawing-scene
-    ):has(.vue-room-waiting-template) {
+    ):has(.vue-room-waiting-template:not(.is-flow)) {
       display: flex;
       flex-direction: column;
       flex: 1 1 0;

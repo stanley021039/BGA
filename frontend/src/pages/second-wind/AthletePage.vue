@@ -3,11 +3,10 @@ import { computed } from 'vue';
 import { useAthleteStore } from '../../stores/second-wind';
 import { readAthleteSnapshot } from '../../contracts/second-wind';
 import GameRoomPage from '../../components/GameRoomPage.vue';
-import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
+import AthleteWaiting from './AthleteWaiting.vue';
 import AthleteScene from './AthleteScene.vue';
 import UiPanel from '../../components/UiPanel.vue';
-import athleteHero from '../../assets/second-wind/hero-384.webp?url&no-inline';
-import AthleteArt from './AthleteArt.vue';
+
 import AthleteSettings from './AthleteSettings.vue';
 const athlete = useAthleteStore();
 const roster = computed(
@@ -55,27 +54,7 @@ const phase = computed(() =>
     setup-target="#athlete-restart-settings"
     @start="athlete.start()"
   >
-    <RoomWaitingTemplate
-      v-if="athlete.state?.phase === 'waiting'"
-      flow
-      type="second-wind"
-      title="運動員 Second Wind"
-      description="招募四名選手，秘密安排出賽順序，利用能力搶下四場比賽的積分。"
-      :facts="[
-        { label: '人數', value: '3–6 人' },
-        { label: '角色', value: roster },
-        { label: '賽程', value: 'Twisty／Whirly 各兩場' },
-        { label: '獎分', value: '3／1、4／2、5／3、7／4' },
-      ]"
-      notice="四場能力競速，可加入測試 AI。"
-      ><template #art
-        ><AthleteArt
-          :src="athleteHero"
-          alt="Second Wind 原版選手衝線慶祝插畫"
-          :width="560"
-          :height="394"
-          eager /></template
-    ></RoomWaitingTemplate>
+    <AthleteWaiting v-if="athlete.state?.phase === 'waiting'" :roster="roster" />
     <AthleteScene v-else-if="athlete.game" />
     <UiPanel
       v-else-if="athlete.state"

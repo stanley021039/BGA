@@ -4,15 +4,18 @@ import QuacksFx from '../../engines/quacks-fx.js';
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
 import { useRoomStore } from '../../stores/room';
-const game = useQuacksStore(),
+import type { QuacksSnapshot } from '../../contracts/quacks';
+const props = defineProps<{ observer?: QuacksSnapshot }>();
+const game = props.observer ? null : useQuacksStore(),
   room = useRoomStore(),
   host = ref<HTMLElement | null>(null),
   legend = ref<HTMLElement | null>(null);
 let owner: ReturnType<NonNullable<Window['QuacksFx']>['createScoreboard']> | undefined,
   initialized = false;
 function update() {
-  if (game.state) {
-    owner?.update(game.state, initialized && room.connected && !document.hidden);
+  const state = props.observer ?? game?.state;
+  if (state) {
+    owner?.update(state, initialized && (!!props.observer || room.connected) && !document.hidden);
     initialized = true;
   }
 }
@@ -20,7 +23,7 @@ onMounted(() => {
   if (host.value && legend.value) owner = QuacksFx?.createScoreboard(host.value, legend.value);
   update();
 });
-watch(() => game.state, update);
+watch(() => props.observer ?? game?.state, update);
 onBeforeUnmount(() => {
   host.value?.querySelectorAll('*').forEach((n) => n.getAnimations?.().forEach((a) => a.cancel()));
   owner = undefined;

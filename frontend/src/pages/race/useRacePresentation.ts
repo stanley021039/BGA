@@ -66,7 +66,7 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
     focusTimer = setTimeout(stopFocus, 2200);
   }
   async function checkAchievements(initial = false) {
-    if (model.lesson) return;
+    if (model.lesson || model.spectator) return;
     await achievements.load();
     if (disposed || !achievements.loaded || achievements.error) return;
     const items = achievements.items.filter((i) => i.unlockedAt);
@@ -74,15 +74,16 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
       earned.value = items.filter((i) => !known!.has(i.id)).map((i) => i.title);
     known = new Set([...(known || []), ...items.map((i) => i.id)]);
   }
-  const dice = model.lessonInlineDice
-    ? undefined
-    : RaceDiceDialog?.mount({
-        onRolling: (cycle) => sounds?.rolling(cycle),
-        onAction: async (action, data) => {
-          if (!(await run(action, data)))
-            throw Error(model.notice || '目前無法操作，請依最新狀態再選擇。');
-        },
-      });
+  const dice =
+    model.lessonInlineDice || model.spectator
+      ? undefined
+      : RaceDiceDialog?.mount({
+          onRolling: (cycle) => sounds?.rolling(cycle),
+          onAction: async (action, data) => {
+            if (!(await run(action, data)))
+              throw Error(model.notice || '目前無法操作，請依最新狀態再選擇。');
+          },
+        });
   const movement = RaceMovement?.mount({
     onCue: ({ events, duration }) => {
       if (!latest || document.hidden) return;
@@ -343,6 +344,9 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
     stopFocus,
     run,
     skipCue: () => movement?.skipCue(),
-    ready: !!movement && (!!dice || model.lessonInlineDice === true) && !!RacePaths,
+    ready:
+      !!movement &&
+      (!!dice || model.lessonInlineDice === true || model.spectator === true) &&
+      !!RacePaths,
   };
 }

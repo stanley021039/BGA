@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import UiDialog from '../../components/UiDialog.vue';
 import UiHoverInfo from '../../components/UiHoverInfo.vue';
 import { useAthleteStore } from '../../stores/second-wind';
+import type { AthleteSnapshot } from '../../contracts/second-wind';
 import { usePartyActionsStore } from '../../stores/party-actions';
 import { useRoomStore } from '../../stores/room';
 import UiPanel from '../../components/UiPanel.vue';
@@ -17,13 +18,26 @@ import UiListRow from '../../components/UiListRow.vue';
 import AthleteArt from './AthleteArt.vue';
 import AthleteTurnOrder from './AthleteTurnOrder.vue';
 import { athleteArt, trackArt, trackPoint } from './art';
-const athlete = useAthleteStore(),
-  actions = usePartyActionsStore(),
-  room = useRoomStore();
-const game = computed(() => athlete.game!);
-const me = computed(() => athlete.state?.me || '');
+const props = defineProps<{ observer?: AthleteSnapshot }>();
+const live = props.observer ? null : useAthleteStore();
+const actions = props.observer
+  ? { notice: '', pending: false, canRetry: false, retrySame() {} }
+  : usePartyActionsStore();
+const room = useRoomStore();
+const athlete = computed(
+  () =>
+    live ?? {
+      state: props.observer!,
+      game: props.observer!.game,
+      ready: false,
+      act: (_action: string, _data?: Record<string, unknown>): boolean => false,
+      start: (): boolean => false,
+    },
+);
+const game = computed(() => athlete.value.game!);
+const me = computed(() => athlete.value.state?.me || '');
 const cards = computed(() => Object.fromEntries(game.value.catalog.map((c) => [c.id, c])));
-const name = (id: string) => athlete.state?.players.find((p) => p.id === id)?.name || id;
+const name = (id: string) => athlete.value.state?.players.find((p) => p.id === id)?.name || id;
 const cardName = (id: string) => cards.value[id]?.name || id;
 const racersOpen = ref(false);
 const raceVisible = computed(() =>
@@ -55,7 +69,7 @@ const twistCount = computed(() =>
     : 0,
 );
 const twistScope = computed(
-  () => `${athlete.state?.code}:${athlete.state?.roundId}:${game.value.race}`,
+  () => `${athlete.value.state?.code}:${athlete.value.state?.roundId}:${game.value.race}`,
 );
 let twistAutoShown = twistCount.value > 0;
 watch(
@@ -87,7 +101,7 @@ const turnPlayers = computed(() => {
 });
 const teamsOpen = ref(true);
 watch(
-  () => athlete.state?.code,
+  () => athlete.value.state?.code,
   () => {
     teamsOpen.value = true;
     racersOpen.value = false;
@@ -98,7 +112,7 @@ const picking = computed(() => game.value.phase === 'drafting');
 const choosing = computed(() => game.value.phase === 'choosing');
 const canPick = computed(
   () =>
-    athlete.ready &&
+    athlete.value.ready &&
     (picking.value
       ? game.value.turnId === me.value
       : choosing.value && !game.value.selectedIds.includes(me.value)),
@@ -125,7 +139,7 @@ function portal(position: number) {
   return pairs.find((p) => p.includes(position))?.find((n) => n !== position);
 }
 function pick(racerId: string) {
-  athlete.act(picking.value ? 'draft' : 'select', { racerId });
+  athlete.value.act(picking.value ? 'draft' : 'select', { racerId });
 }
 const eventBody = (e: (typeof game.value.events)[number]) =>
   e.text ||
@@ -579,7 +593,7 @@ const eventText = eventBody;
           @click="athlete.act('next-race')"
       /></template>
       <div v-else id="athlete-restart-settings"
-        ><UiButton v-if="room.host" label="再玩一局" @click="athlete.start()"
+        ><UiButton v-if="!observer && room.host" label="再玩一局" @click="athlete.start()"
       /></div>
     </UiPanel>
     <!-- Whirly World never triggers a Twist, so its dialog only explains the vortexes. -->

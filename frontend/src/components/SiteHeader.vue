@@ -13,6 +13,7 @@ import HeaderProfile from './HeaderProfile.vue';
 import InvitationInbox from './InvitationInbox.vue';
 import '../styles/site-header.scss';
 import { useFloatingPanel } from '../composables/floating-panel';
+defineProps<{ roomObserver?: boolean }>();
 // Rooms place the background toggle beside fullscreen in RoomFullscreenToggle.
 const sceneAvailable = computed(() => location.pathname === '/');
 const session = useSessionStore(),
@@ -240,7 +241,11 @@ onBeforeUnmount(() => {
         </div>
       </template>
     </nav>
-    <div id="vue-room-header-portal" class="vue-room-header-portal" :hidden="!room.seat" />
+    <div
+      id="vue-room-header-portal"
+      class="vue-room-header-portal"
+      :hidden="!room.seat && !roomObserver"
+    />
     <div class="vue-site-controls">
       <SceneViewToggle v-if="session.user && sceneAvailable" />
       <UiButton

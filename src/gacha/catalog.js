@@ -6,12 +6,12 @@ const definitions = new Map(require('../achievements/catalog').definitions.map((
 const { BUILTIN_FRAME_OPTIONS } = require('../barrage/builtins');
 const { variants: entranceVariants } = require('../../public/shared/entrance-palette.json');
 const tiers = Object.freeze({
-  common: { label: '普通', weight: 75, duplicateFragments: 1, exchangeCost: exchangeCosts.common },
-  rare: { label: '稀有', weight: 18, duplicateFragments: 5, exchangeCost: exchangeCosts.rare },
-  epic: { label: '史詩', weight: 5, duplicateFragments: 10, exchangeCost: exchangeCosts.epic },
+  common: { label: '普通', weight: 70, duplicateFragments: 1, exchangeCost: exchangeCosts.common },
+  rare: { label: '稀有', weight: 20, duplicateFragments: 5, exchangeCost: exchangeCosts.rare },
+  epic: { label: '史詩', weight: 7, duplicateFragments: 10, exchangeCost: exchangeCosts.epic },
   legendary: {
     label: '傳說',
-    weight: 2,
+    weight: 3,
     duplicateFragments: 20,
     exchangeCost: exchangeCosts.legendary,
   },

@@ -56,13 +56,13 @@ test('both gacha pools use the configured voice tiers and current display names'
   assert.ok(rewardLabels('poker-first-hand').includes('音效：他很壞嘟嘟嘟'));
   assert.ok(rewardLabels('bluff-convincing').includes('音效：不要瞎掰好嗎'));
 });
-test('bonus sets epic and legendary to 65% and 35% in every current pool', () => {
+test('bonus distributes all four exact percentages in every current pool', () => {
   for (const pool of Object.keys(poolLabels)) {
     const { tiers, totalWeight } = Odds.distribution(poolItems(pool), Odds.defaults, true);
     const chances = Object.fromEntries(
       tiers.map(({ items, weight }) => [items[0].rarity, weight / totalWeight]),
     );
-    assert.deepEqual(chances, { common: 0, rare: 0, epic: 0.65, legendary: 0.35 });
+    assert.deepEqual(chances, { common: 0.01, rare: 0.04, epic: 0.55, legendary: 0.4 });
   }
 });
 test('bonus percentages stay fixed with customized normal odds', () => {
@@ -71,14 +71,14 @@ test('bonus percentages stay fixed with customized normal odds', () => {
     { common: 15, rare: 10, epic: 50, legendary: 25 },
     true,
   );
-  assert.equal(totalWeight, 2500);
+  assert.equal(totalWeight, 100);
   assert.deepEqual(
     tiers.map(({ items, weight }) => [items[0].rarity, weight]),
     [
-      ['common', 0],
-      ['rare', 0],
-      ['epic', 1625],
-      ['legendary', 875],
+      ['common', 1],
+      ['rare', 4],
+      ['epic', 55],
+      ['legendary', 40],
     ],
   );
 });
@@ -107,7 +107,7 @@ function fixture(t, choose = () => 0) {
 test('odds preserve defaults, require admin, reject invalid weights and stale admin saves', (t) => {
   const { db, store } = fixture(t);
   const original = store.odds();
-  assert.deepEqual(original.weights, { common: 75, rare: 18, epic: 5, legendary: 2 });
+  assert.deepEqual(original.weights, { common: 70, rare: 20, epic: 7, legendary: 3 });
   const change = {
     revision: original.revision,
     weights: { common: 50, rare: 30, epic: 10, legendary: 10 },

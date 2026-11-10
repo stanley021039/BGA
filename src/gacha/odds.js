@@ -5,7 +5,7 @@ const { catalog, poolGroups, tiers } = require('./catalog');
 const { HttpError } = require('../http/errors');
 const names = Object.keys(tiers);
 const defaults = Object.freeze(Object.fromEntries(names.map((name) => [name, tiers[name].weight])));
-const settingName = 'draw_odds_v2';
+const settingName = 'draw_odds_v3';
 const legacySettingName = 'draw_odds_v1';
 const legacyNames = names.filter((name) => name !== 'epic');
 const catalogRevision = createHash('sha256')
@@ -54,6 +54,7 @@ function readSaved(db, name, tiers) {
 function read(db) {
   // Keep the old setting for restore validation, but the four-tier model has its own defaults.
   readSaved(db, legacySettingName, legacyNames);
+  readSaved(db, 'draw_odds_v2', names);
   const current = readSaved(db, settingName, names) || {
     weights: defaults,
     updatedAt: null,
@@ -64,26 +65,12 @@ function read(db) {
 function distribution(items, weights, boost = false) {
   const entriesByRarity = Object.fromEntries(names.map((name) => [name, []]));
   for (const item of items) entriesByRarity[item.rarity].push(item);
-  let tiers = names
+  const tiers = names
     .filter((name) => entriesByRarity[name].length)
     .map((name) => ({
-      weight: weights[name],
+      weight: boost ? bonusPercent[name] : weights[name],
       items: entriesByRarity[name],
     }));
-  if (boost) {
-    const percent = (tier) => bonusPercent[tier.items[0].rarity] ?? 0;
-    const reserved = tiers.reduce((sum, tier) => sum + percent(tier), 0);
-    const regularWeight = tiers.reduce((sum, tier) => sum + (percent(tier) ? 0 : tier.weight), 0);
-    if (reserved) {
-      // Set the bonus tiers to exact percentages and share the rest at the regular tier ratio.
-      tiers = tiers.map((tier) => ({
-        ...tier,
-        weight: percent(tier)
-          ? percent(tier) * (regularWeight || 1)
-          : tier.weight * (100 - reserved),
-      }));
-    }
-  }
   return { tiers, totalWeight: tiers.reduce((total, tier) => total + tier.weight, 0) };
 }
 function select({ tiers, totalWeight }, choose) {

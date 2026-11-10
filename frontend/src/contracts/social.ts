@@ -57,7 +57,17 @@ export function readChatReceipt(value: unknown): ChatReceipt {
   const row = record(value);
   if (row.channel !== 'table' || !/^[a-f0-9]{6}$/i.test(text(row.code)) || !text(row.viewerId))
     throw Error('聊天室資料格式不正確');
-  const messages = array(row.messages)
+  const messages = readChatMessages(row.messages);
+  return {
+    channel: 'table',
+    code: text(row.code).toUpperCase(),
+    viewerId: text(row.viewerId),
+    messages,
+    ...(row.roomState ? { roomState: row.roomState } : {}),
+  };
+}
+export function readChatMessages(value: unknown): ChatMessage[] {
+  return array(value)
     .slice(-50)
     .map((value) => {
       const item = record(value);
@@ -71,13 +81,6 @@ export function readChatReceipt(value: unknown): ChatReceipt {
         throw Error('聊天訊息資料格式不正確');
       return { id: text(item.id), name: item.name, message: item.message, at: item.at };
     });
-  return {
-    channel: 'table',
-    code: text(row.code).toUpperCase(),
-    viewerId: text(row.viewerId),
-    messages,
-    ...(row.roomState ? { roomState: row.roomState } : {}),
-  };
 }
 export function readEmojis(value: unknown): string[] {
   const emojis = array(record(value).emojis);

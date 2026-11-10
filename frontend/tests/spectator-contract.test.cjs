@@ -46,6 +46,21 @@ function load(file) {
 }
 const { readSpectatorSnapshot } = load(path.resolve(__dirname, '../src/contracts/spectator.ts'));
 test('spectator reader accepts real waiting and started projections for every room type', () => {
+  const sharedScenes = {
+    ceo: 'nativeGame',
+    'second-wind': 'nativeGame',
+    poker: 'pokerTable',
+    trpg: 'trpgScene',
+    minimal: 'minimalScene',
+    telephone: 'telephoneScene',
+    decrypto: 'decryptoScene',
+    gift: 'giftScene',
+    majority: 'majorityScene',
+    bluff: 'bluffScene',
+    musicquiz: 'musicScene',
+    draw: 'drawScene',
+    quacks: 'quacksScene',
+  };
   assert.equal(Object.keys(types).length, Object.keys(games).length);
   for (const [type, [file, key]] of Object.entries(types)) {
     const Type = require('../../src/games/' + file)[key],
@@ -58,6 +73,18 @@ test('spectator reader accepts real waiting and started projections for every ro
       assert.equal(v.type, type);
       assert.equal(v.players.length, type === 'decrypto' ? 4 : 3);
       assert.equal(v.spectator, true);
+      if (sharedScenes[type]) assert.ok(v[sharedScenes[type]], type + ' has a shared scene');
+      if (type === 'poker') {
+        assert.equal(v.pokerTable.canRaise, false);
+        assert.ok(
+          v.pokerTable.players.every((player) => player.cards.every((card) => card === null)),
+        );
+        assert.equal(v.pokerTable.players.length, v.players.length);
+      }
+      if (type === 'musicquiz' && started) {
+        assert.equal(v.musicTimelines.length, v.players.length);
+        assert.ok(v.musicTimelines.every((timeline) => timeline.cards.length === 1));
+      }
     }
   }
 });

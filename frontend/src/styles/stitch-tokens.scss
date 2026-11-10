@@ -45,6 +45,24 @@ $typography: (
     drop-shadow(0 1px 0 #000000) drop-shadow(0 -1px 0 #000000);
   --stitch-scene-dark-focus-shadow: 0 0 0 3px #000000;
   --stitch-scene-light-focus-shadow: 0 0 0 3px #ffffff;
+  // The shared race board uses the same palette in play and spectator modes.
+  --stitch-race-grain-dark: #201b1240;
+  --stitch-race-grain-light: #e7ca8130;
+  --stitch-race-tile-outline: #e4d2a750;
+  --stitch-race-rock-fill: #493f35;
+  --stitch-race-rock-outline: #c0a25d;
+  --stitch-race-rock-crack: #88715a;
+  --stitch-race-rock-striation: #96704b70;
+  --stitch-race-terrain-symbol: #fff2ce;
+  --stitch-race-hazard-revealed: #edcb8b;
+  --stitch-race-hazard-hidden: #ffcf77;
+  --stitch-race-finish-light: #e8dfb5;
+  --stitch-race-finish-dark: #263d30;
+  --stitch-race-offboard-marker: #776943;
+  --stitch-race-annotation-outline: #ffe68c;
+  --stitch-race-wreck-fill: #605d52;
+  --stitch-race-annotation-bg: #17251b;
+  --stitch-race-chopper-blade: #f8edcf;
   // Fixed artwork stage colours preserve attack previews across light/dark themes.
   --stitch-artwork-preview-bg: #10182b;
   --stitch-artwork-preview-ink: #fff;

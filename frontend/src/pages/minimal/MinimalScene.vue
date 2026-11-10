@@ -12,11 +12,41 @@ import UiHeading from '../../components/UiHeading.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import MinimalWaiting from './MinimalWaiting.vue';
-const editor = useMinimalStore(),
+const props = defineProps<{
+  observer?: MinimalSnapshot;
+  observerClockOffset?: number;
+  observerNow?: number;
+}>();
+const editor = props.observer
+    ? {
+        editable: false,
+        activeStroke: false,
+        drawingAllowed: false,
+        expired: false,
+        saving: false,
+        finishing: false,
+        dirty: false,
+        guess: '',
+        notice: '',
+        storageNotice: '',
+        shapes: [] as MinimalSnapshot['myShapes'],
+        now: undefined,
+        append() {},
+        undo() {},
+        clear() {},
+        sync() {},
+        submit() {},
+        answer() {},
+        saveGuess(_value: string) {},
+      }
+    : useMinimalStore(),
   room = useRoomStore(),
   actions = usePartyActionsStore(),
-  state = computed(() => editor.state as MinimalSnapshot),
-  guesser = computed(() => state.value.me === state.value.guesserId);
+  state = computed(
+    () =>
+      props.observer ?? ('state' in editor ? (editor.state as MinimalSnapshot) : props.observer!),
+  ),
+  guesser = computed(() => !props.observer && state.value.me === state.value.guesserId);
 const tool = ref<'line' | 'circle'>('line'),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
   input = ref<HTMLInputElement | null>(null),
@@ -97,7 +127,7 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <MinimalWaiting v-if="state.phase === 'waiting'" />
+  <MinimalWaiting v-if="state.phase === 'waiting'" :observer="!!observer" />
   <section
     v-else
     class="vue-minimal-stage"
@@ -106,10 +136,10 @@ onBeforeUnmount(() => {
   >
     <header
       class="vue-minimal-task-header"
-      :data-private="state.phase === 'drawing' && !guesser ? '' : undefined"
+      :data-private="state.phase === 'drawing' && !guesser && !observer ? '' : undefined"
       ><div>
         <UiHeading
-          v-if="state.phase === 'drawing' && !guesser"
+          v-if="state.phase === 'drawing' && !guesser && !observer"
           id="minimalHeading"
           :level="1"
           kind="prompt"
@@ -129,7 +159,7 @@ onBeforeUnmount(() => {
         }}</h1>
         <p>{{
           state.phase === 'drawing'
-            ? guesser
+            ? guesser || observer
               ? '等待畫家完成，題目與私人草稿不會公開。'
               : '僅畫家看見'
             : state.phase === 'guessing'
@@ -139,21 +169,21 @@ onBeforeUnmount(() => {
                 : '已完成回合的分數與畫作'
         }}</p> </div
       ><div class="vue-minimal-task-meta"
-        ><span v-if="state.phase === 'drawing' && !guesser" class="vue-minimal-badge"
+        ><span v-if="state.phase === 'drawing' && !guesser && !observer" class="vue-minimal-badge"
           >{{ editor.shapes.length }}／40 筆</span
         ><div class="vue-minimal-countdown-slot"
           ><RoomCountdown
             v-if="state.deadline"
             :deadline="state.deadline"
             :duration="10000"
-            :offset="room.clockOffset"
+            :offset="observerClockOffset ?? room.clockOffset"
             :epoch="state.roundId || ''"
             caption="最後畫家剩餘"
-            :now="editor.now"
+            :now="observerNow ?? editor.now ?? Date.now()"
             urgent /></div></div
     ></header>
     <section
-      v-if="state.phase === 'drawing' && !guesser"
+      v-if="state.phase === 'drawing' && !guesser && !observer"
       class="vue-minimal-task-panel vue-minimal-private"
       data-private
     >
@@ -324,7 +354,7 @@ onBeforeUnmount(() => {
       ><footer class="vue-minimal-footer"
         ><span>{{ state.phase === 'reveal' ? '本輪揭曉' : '本場結束' }}</span
         ><UiButton
-          v-if="state.phase === 'reveal' && room.host"
+          v-if="state.phase === 'reveal' && !observer && room.host"
           variant="primary"
           icon="next"
           label="下一輪"
@@ -343,13 +373,13 @@ onBeforeUnmount(() => {
           editor.finishing ||
           editor.dirty ||
           !!editor.storageNotice ||
-          (!actions.notice && !editor.notice && state.phase === 'drawing' && !guesser)
+          (!actions.notice && !editor.notice && state.phase === 'drawing' && !guesser && !observer)
         "
         :message="
           actions.notice ||
           editor.notice ||
           editor.storageNotice ||
-          (state.phase === 'drawing' && !guesser ? syncMessage : '')
+          (state.phase === 'drawing' && !guesser && !observer ? syncMessage : '')
         "
         :error="(!actions.pending && !!actions.notice) || !!editor.storageNotice" /><UiButton
         v-if="actions.canRetry"

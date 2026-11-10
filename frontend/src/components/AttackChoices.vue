@@ -18,9 +18,12 @@ import UiChoiceCard from './UiChoiceCard.vue';
 import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
 import UiTabs from './UiTabs.vue';
-withDefaults(defineProps<{ showCurrent?: boolean; disableTeleport?: boolean }>(), {
-  showCurrent: false,
-});
+withDefaults(
+  defineProps<{ showCurrent?: boolean; disableTeleport?: boolean; expandedList?: boolean }>(),
+  {
+    showCurrent: false,
+  },
+);
 const currentRevision = ref({ q: 0, e: 0, r: 0 });
 const previewTabs: { id: 'normal' | 'ultimate'; label: string }[] = [
   { id: 'normal', label: '一般招式' },
@@ -106,7 +109,7 @@ function play(id: string) {
 }
 </script>
 <template>
-  <div class="attack-choices"
+  <div class="attack-choices" :class="{ 'attack-choices-expanded': expandedList }"
     ><div
       v-if="showCurrent"
       class="attack-current-previews"
@@ -338,6 +341,12 @@ function play(id: string) {
   display: flex;
   align-items: center;
   gap: var(--stitch-gap-label);
+}
+@media (min-width: 601px) {
+  .attack-choices-expanded .attack-effect-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    max-block-size: min(62dvh, 680px);
+  }
 }
 .attack-effect-detail {
   font-size: var(--stitch-text-hint);

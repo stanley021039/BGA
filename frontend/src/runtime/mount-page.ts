@@ -70,7 +70,7 @@ export function mountPage(
     const app = createApp({
       render: () =>
         h(Fragment, [
-          header ? h(Teleport, { to: header }, h(SiteHeader)) : null,
+          header ? h(Teleport, { to: header }, h(SiteHeader, { roomObserver: watching })) : null,
           h(page, watching ? { code: route![2].toUpperCase() } : undefined),
           h(GachaLegendaryBarrage),
         ]),

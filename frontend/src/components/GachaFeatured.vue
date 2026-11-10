@@ -113,11 +113,6 @@ onBeforeUnmount(() => {
         <UiBadge v-if="item.owned" tone="success">已擁有</UiBadge>
       </div>
       <UiHeading :level="2">{{ item.label }}</UiHeading>
-      <GachaRewardThumbnail
-        v-if="['attacks', 'entrances', 'backgrounds'].includes(item.kind)"
-        :kind="item.kind"
-        :effect="item.id"
-      />
       <div class="gacha-feature-controls" v-if="items.length > 1">
         <UiButton label="上一個展示" icon="previous" icon-only @click="step(-1)" />
         <span>{{ index + 1 }} / {{ items.length }}</span>
@@ -147,6 +142,7 @@ onBeforeUnmount(() => {
         v-else-if="playable && entrance && image"
         :key="item.key + ':' + replay"
         :effect="entrance"
+        frameless
         :image="image"
         :name="name"
         :size="128"
@@ -161,6 +157,7 @@ onBeforeUnmount(() => {
       <UiHeading v-else-if="item.kind === 'sounds'" :level="3" kind="card" card-size="page">
         {{ item.label }}
       </UiHeading>
+      <GachaRewardThumbnail v-else :kind="item.kind" :effect="item.id" />
     </div>
   </div>
 </template>
@@ -190,7 +187,7 @@ onBeforeUnmount(() => {
 .gacha-feature-art {
   position: relative;
   display: grid;
-  align-items: center;
+  place-items: center;
   block-size: 22rem;
   min-inline-size: 0;
   overflow: hidden;

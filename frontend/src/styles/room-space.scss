@@ -1,4 +1,21 @@
 // Opt-in room panels keep their grid tracks while the framed surfaces slide.
+.vue-room-viewer-list {
+  flex: none;
+  padding-block-start: var(--stitch-space-8);
+  border-block-start: var(--stitch-border);
+  h3 {
+    margin: 0 0 var(--stitch-space-4);
+    font-size: var(--stitch-text-label);
+  }
+  ul {
+    max-block-size: 7rem;
+    overflow: auto;
+    margin: 0;
+    padding-inline-start: var(--stitch-space-16);
+    overflow-wrap: anywhere;
+  }
+}
+
 :root body[data-visual-theme] .vue-game-workspace.vue-room-shell.has-room-space > .vue-game-grid {
   position: relative;
   isolation: isolate;
