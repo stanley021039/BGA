@@ -602,6 +602,15 @@ function createLobby(
     );
   }
   function move(user, input) {
+    if (input?.action === 'solve-equation') {
+      if (Object.keys(input).some((key) => !['action', 'id', 'answer'].includes(key)))
+        throw new HttpError(400, 'INVALID_EQUATION_ANSWER', '操作不正確');
+      const visitor = enter(user);
+      const time = now();
+      advance(visitor, time);
+      combat.solveEquation(visitor, input.id, input.answer, time);
+      return view(user);
+    }
     const step = input && (Object.hasOwn(input, 'dx') || Object.hasOwn(input, 'dy'));
     if (step) {
       if (
@@ -715,9 +724,13 @@ function createLobby(
     combat.alive(self);
     combat.canCast(self, time);
     energy.spend(self, slot);
-    const defensive = target === self;
+    const defensive = target === self && attackKind(effect) !== 'susanoo';
+    const reflection = attackKind(effect) === 'crystal_reflection';
     if (!defensive && arena.active(self.id)) self.bushRevealUntil = time + 2000;
-    const hit = defensive ? combat.protect(self, time, effect) : { damage: 0, critical: false };
+    const hit =
+      defensive && !reflection
+        ? combat.protect(self, time, effect)
+        : { damage: 0, critical: false };
     self.lastAttacks ||= {};
     self.lastAttacks[slot] = time;
     const event = {
@@ -738,7 +751,8 @@ function createLobby(
       until: time + 1800,
     };
     combat.cast(self, effect, time);
-    if (!defensive)
+    if (reflection) timeline.armReflection(event, self);
+    else if (!defensive)
       timeline.prepare(
         event,
         self,

@@ -29,6 +29,9 @@ let BarrageFrames;
       { id: 'steam', label: '蒸汽郵件', group: '古典戲劇' },
       { id: 'burst', label: '漫畫爆擊', group: '古典戲劇' },
       { id: 'royal', label: '皇家劇院', group: '古典戲劇' },
+      { id: 'observatory', label: '星儀觀測台', group: '傳說收藏', gachaOnly: true },
+      { id: 'abyssal-glass', label: '深海琉璃', group: '傳說收藏', gachaOnly: true },
+      { id: 'eclipse-theatre', label: '日蝕劇院', group: '傳說收藏', gachaOnly: true },
       {
         id: 'palette',
         label: '彩筆調色盤',
@@ -201,7 +204,25 @@ let BarrageFrames;
   );
   // Original CSS/SVG artwork adapted from Stitch project 10999676405834166796.
   // Additional challenge rewards use local original SVG artwork.
+  function legendaryFrame(id, glyph, trim) {
+    return `<div class="barrage-art-root legendary-frame legendary-frame--${id}"><div class="legendary-frame-shell"></div><svg class="legendary-frame-trim" viewBox="0 0 320 70" preserveAspectRatio="none" fill="none" stroke="currentColor">${trim}</svg><svg class="legendary-frame-glyph" viewBox="0 0 56 56" fill="none" stroke="currentColor">${glyph}</svg></div>`;
+  }
   const artwork = Object.freeze({
+    observatory: legendaryFrame(
+      'observatory',
+      '<circle cx="28" cy="28" r="17"/><ellipse cx="28" cy="28" rx="25" ry="9" transform="rotate(-28 28 28)"/><ellipse cx="28" cy="28" rx="23" ry="11" transform="rotate(43 28 28)"/><path d="M6 28h44M28 6v44"/><circle cx="28" cy="28" r="3" fill="currentColor"/><circle cx="46" cy="16" r="2" fill="currentColor"/>',
+      '<path d="M17 11h280l12 12v24l-12 12H17L8 48V22Z"/><path d="M207 11q40-17 85 18m-77-18q35-10 69 14M76 53h145M76 17h140" opacity=".52"/><path d="M228 17v5m9-5v3m9-3v5m9-5v3m9-3v5m17 22v8m-4-4h8M295 17v6m-3-3h6"/>',
+    ),
+    'abyssal-glass': legendaryFrame(
+      'abyssal-glass',
+      '<path d="M28 50C9 38 12 14 28 7c16 7 19 31 0 43Zm0-9c-10-8-10-17 0-23 10 6 10 15 0 23ZM8 35C3 22 6 14 13 11m35 24c5-13 2-21-5-24"/><circle cx="28" cy="30" r="3" fill="currentColor"/><circle cx="8" cy="8" r="2"/><circle cx="46" cy="10" r="2"/>',
+      '<path d="M30 13q115 7 260 0 21 0 21 22t-21 22q-145-7-260 0Q9 57 9 35t21-22Z"/><path d="M13 23q22-11 65 2m-65 20q27 12 66-1m205 9q10-12 3-21m1 11q11-3 14-13m-22 21q-4-9-12-11" opacity=".64"/><circle cx="278" cy="22" r="2"/><circle cx="297" cy="22" r="2.8"/><circle cx="305" cy="32" r="1.5"/>',
+    ),
+    'eclipse-theatre': legendaryFrame(
+      'eclipse-theatre',
+      '<circle cx="28" cy="28" r="17"/><path d="M32 12a17 17 0 1 0 9 25c-13 3-22-12-9-25Z" fill="currentColor"/><path d="M28 3v4m0 42v4M3 28h4m42 0h4M10 10l4 4m28 28 4 4m0-36-4 4M14 42l-4 4"/>',
+      '<path d="M19 15h96l18-7h55l18 7h95l11 10v20l-11 10h-95l-18 7h-55l-18-7H19L8 45V25Z"/><path d="M11 22q19 6 36 28M14 18q28 6 42 29m253-25q-19 6-36 28m33-32q-28 6-42 29M131 13h55m-55 44h55" opacity=".64"/><path d="M160 7l4 4-4 4-4-4Zm0 48 4 4-4 4-4-4Z" fill="currentColor"/>',
+    ),
     ...{
       easel:
         '<div class="barrage-art-root reward-art"><div class="reward-object pointer-events-none"><svg width="76" height="64" viewBox="0 0 76 64" fill="#242338" stroke="#d7b3ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 58 20-50 21 50M19 46h31"/><rect x="14" y="12" width="45" height="32" rx="3"/><path d="m21 35 10-12 8 9 10-16"/></svg></div><div class="reward-glint pointer-events-none">✧</div><div class="reward-surface" style="background:linear-gradient(135deg,#242338,#171b2c);border:2px solid #d7b3ff;border-radius:14px;position:absolute;inset:0;box-shadow:inset 0 0 18px #d7b3ff22"></div></div>',
@@ -306,8 +327,9 @@ let BarrageFrames;
     mediaEntitlements = new Set(),
     entitlementsLoaded = false;
   function canUse(id, kind = 'barrage') {
+    const option = options.find((entry) => entry.id === id);
     return (
-      !options.find((o) => o.id === id)?.achievementId ||
+      (!option?.achievementId && !option?.gachaOnly) ||
       (kind === 'media' ? mediaEntitlements : entitlements).has(id)
     );
   }
@@ -323,12 +345,16 @@ let BarrageFrames;
     }
   }
   function acceptRewards(data) {
-    entitlements = new Set((data?.rewards || []).filter((r) => r.claimedAt).map((r) => r.frameId));
-    mediaEntitlements = new Set(
-      (data?.rewards || [])
+    entitlements = new Set([
+      ...(data?.rewards || []).filter((r) => r.claimedAt).map((r) => r.frameId),
+      ...(data?.bonusRewards?.frames || []),
+    ]);
+    mediaEntitlements = new Set([
+      ...(data?.rewards || [])
         .filter((r) => ('mediaClaimedAt' in r ? r.mediaClaimedAt : r.claimedAt))
         .map((r) => r.frameId),
-    );
+      ...(data?.bonusRewards?.media || []),
+    ]);
     entitlementsLoaded = true;
     notify();
   }

@@ -98,6 +98,9 @@ test('catalog callers cannot modify the allowlist or published labels and descri
       'steam',
       'burst',
       'royal',
+      'observatory',
+      'abyssal-glass',
+      'eclipse-theatre',
     ],
   );
   assert.ok(Object.isFrozen(BUILTIN_FRAME_OPTIONS));

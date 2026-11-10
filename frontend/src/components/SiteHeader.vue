@@ -11,6 +11,7 @@ import StatusSlot from './StatusSlot.vue';
 import GamePreferences from './GamePreferences.vue';
 import HeaderProfile from './HeaderProfile.vue';
 import InvitationInbox from './InvitationInbox.vue';
+import LoginRewards from './LoginRewards.vue';
 import '../styles/site-header.scss';
 import { useFloatingPanel } from '../composables/floating-panel';
 defineProps<{ roomObserver?: boolean }>();
@@ -239,6 +240,7 @@ onBeforeUnmount(() => {
             ><a href="/draw-words">你畫我猜</a><a href="/credits">素材來源與授權</a>
           </div>
         </div>
+        <LoginRewards v-if="sceneAvailable" :user-id="session.user.id" />
       </template>
     </nav>
     <div

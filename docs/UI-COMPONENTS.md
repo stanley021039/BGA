@@ -135,7 +135,7 @@ SiteHeader C03 在大廳、設定、收藏庫、成就收藏冊及遊戲房間�
 ```
 
 - `title` 自動成為 `aria-labelledby`；`description` 在標題下、`note` 在標題右側；`#actions` 放標題列右側的按鈕或連結。
-- `tone`：`surface`（預設白底）、`subtle`（次要底色）、`selected`（選取）、`raised`（Stitch 立體卡：2px 深色邊、圓角 16px、硬陰影）。
+- `tone`：`surface`（預設底色）、`subtle`（次要底色）、`selected`（選取）、`raised`（Stitch 立體卡：2px 深色邊、圓角 16px、硬陰影）、`translucent`（浮在遊戲場景上的半透明面板，文字和操作維持實色）。
 - `density`：`regular`（預設，內距 24px、內部間距 20px）用於頁面主要內容；`compact`（內距 16px、間距 12px）只用於側欄、遊戲中資訊欄等密集區。面板之間 `--stitch-gap-section`（24px）。
 - 頁面只給 class 排版（grid 區域、最小高度）；框線、底色、圓角、內距不要再寫。
 

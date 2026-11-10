@@ -17,8 +17,10 @@ import { requestJson } from '../../services/http';
 import { sizedImage } from '../../services/image-size';
 import { warm } from '../../services/preload';
 import { gachaEnding, type GachaSound } from '../../services/gacha-cinematic';
+import { groupGachaEffects } from '../../services/effect-variants';
 import { warmGachaAudio } from '../../services/game-assets';
 import economy from '../../../../public/shared/gacha-economy.json';
+import RewardCurrencyIcon from '../../components/RewardCurrencyIcon.vue';
 import GachaCinematic from '../../components/GachaCinematic.vue';
 import GachaRewardCard from '../../components/GachaRewardCard.vue';
 import GachaSpectator from '../../components/GachaSpectator.vue';
@@ -70,9 +72,9 @@ const kindNames: Record<string, string> = {
   sounds: '標記語音',
 };
 const number = (n: number) => n.toLocaleString('zh-TW');
-const loginBonusDescription = economy.dailyLoginBonuses
-  .flatMap((coins, index) => (coins ? [`第 ${index + 1} 次額外 +${number(coins)}`] : []))
-  .join('、');
+const loginBonuses = economy.dailyLoginBonuses.flatMap((coins, index) =>
+  coins ? [`第 ${index + 1} 次額外 +${number(coins)}`] : [],
+);
 function formatOdds(weight: number, total: number) {
   const percent = (weight / total) * 100;
   if (percent > 0 && percent < 0.001) return '<0.001%';
@@ -94,6 +96,8 @@ const filtered = computed(() =>
     (i) => (!unowned.value || !i.owned) && (!search.value || i.label.includes(search.value)),
   ),
 );
+const exchangeGroups = computed(() => groupGachaEffects(filtered.value));
+const oddsGroups = computed(() => groupGachaEffects(poolItems.value));
 const highlights = computed(() => gachaShowcaseItems(poolItems.value));
 const openSpectate = ref(false);
 const spectateStarting = ref(false);
@@ -439,11 +443,11 @@ async function resumeUnrevealedDraw() {
   );
   if (receipt) await show(receipt, { announce: true });
 }
-async function draw(count: 1 | 10, selectedPool = pool.value) {
+async function draw(count: 1 | 10, selectedPool = pool.value, voucher = false) {
   const userId = session.user?.id;
   const share = openSpectate.value;
   captureTrader();
-  const receipt = await store.draw(selectedPool, count);
+  const receipt = await store.draw(selectedPool, count, voucher);
   if (receipt && userId && session.user?.id === userId) {
     rememberUnrevealedDraw(userId, receipt.requestId);
     publishSpectate('close');
@@ -626,8 +630,14 @@ const newCount = computed(() =>
     <div class="gacha-heading">
       <UiHeading :level="1" kind="page">獎勵召喚</UiHeading>
       <div class="gacha-wallet" aria-label="抽卡餘額">
-        <UiBadge tone="primary">聖潔石 {{ number(store.state?.wallet.coins || 0) }}</UiBadge>
-        <UiBadge>共用碎片 {{ number(store.state?.wallet.fragments || 0) }}</UiBadge>
+        <UiBadge tone="primary"
+          ><RewardCurrencyIcon kind="stone" :size="20" /> 聖潔石
+          {{ number(store.state?.wallet.coins || 0) }}</UiBadge
+        >
+        <UiBadge
+          ><RewardCurrencyIcon kind="fragment" :size="20" /> 共用碎片
+          {{ number(store.state?.wallet.fragments || 0) }}</UiBadge
+        >
         <UiLink href="/" label="返回大廳" icon="previous" />
       </div>
     </div>
@@ -689,21 +699,32 @@ const newCount = computed(() =>
           </div>
         </UiPanel>
         <UiPanel title="聖潔石來源" density="compact">
-          <UiList
-            ><UiListRow>
-              <span class="gacha-income"
-                >每日登入 <strong>{{ number(economy.dailyCoins) }} 聖潔石</strong></span
-              > </UiListRow
-            ><UiListRow
-              >有效對局 <strong>{{ economy.matchCoins }} 聖潔石</strong></UiListRow
-            ><UiListRow
-              >勝者額外 <strong>{{ economy.winnerCoins }} 聖潔石</strong></UiListRow
-            ></UiList
-          >
-          <p class="gacha-note"
-            >登入每 {{ economy.dailyLoginBonuses.length }} 次循環，{{ loginBonusDescription }}。</p
-          >
-          <p class="gacha-note">有效對局須至少兩位真人完賽，且有實際操作。</p>
+          <UiList>
+            <UiListRow
+              ><span class="gacha-income"
+                ><span>每日登入</span><strong>{{ number(economy.dailyCoins) }} 聖潔石</strong></span
+              ></UiListRow
+            >
+            <UiListRow
+              ><span class="gacha-income"
+                ><span>有效對局</span><strong>{{ economy.matchCoins }} 聖潔石</strong></span
+              ></UiListRow
+            >
+            <UiListRow
+              ><span class="gacha-income"
+                ><span>勝者額外</span><strong>{{ economy.winnerCoins }} 聖潔石</strong></span
+              ></UiListRow
+            >
+          </UiList>
+          <div class="gacha-income-notes gacha-note">
+            <div>
+              <p>每 {{ economy.dailyLoginBonuses.length }} 次登入一輪</p>
+              <ul>
+                <li v-for="bonus in loginBonuses" :key="bonus">{{ bonus }} 石</li>
+              </ul>
+            </div>
+            <p>有效對局須至少兩位真人完賽，並有實際操作。</p>
+          </div>
         </UiPanel>
       </aside>
       <section
@@ -729,14 +750,20 @@ const newCount = computed(() =>
             <div class="gacha-draw-controls">
               <UiCheckbox v-model="skip" variant="prominent" label="略過抽卡演出" />
               <UiCheckbox v-model="openSpectate" variant="prominent" label="開放觀看" />
-              <p class="gacha-mobile-rules"
-                >聖潔石：每日登入 +{{ number(economy.dailyCoins) }}，登入每
-                {{ economy.dailyLoginBonuses.length }} 次循環（{{
-                  loginBonusDescription
-                }}）。有效對局 +{{ economy.matchCoins }}，勝者再 +{{
-                  economy.winnerCoins
-                }}。對局須至少兩位真人完賽並操作。</p
-              >
+              <div class="gacha-mobile-rules gacha-income-notes gacha-note">
+                <p
+                  >每日登入 +{{ number(economy.dailyCoins) }} 聖潔石。每
+                  {{ economy.dailyLoginBonuses.length }} 次登入一輪，{{
+                    loginBonuses.join('、')
+                  }}。</p
+                >
+                <p
+                  >有效對局 +{{ economy.matchCoins }} 石，勝者再 +{{
+                    economy.winnerCoins
+                  }}
+                  石。須至少兩位真人完賽，並有實際操作。</p
+                >
+              </div>
               <p>距下次加成 {{ untilBonus }} 抽</p>
               <div class="gacha-buttons">
                 <UiButton
@@ -751,6 +778,14 @@ const newCount = computed(() =>
                   :disabled="locked || store.state.wallet.coins < 1000"
                   :pending="store.pending"
                   @click="draw(10)"
+                />
+                <UiButton
+                  v-if="store.state.voucherAvailable"
+                  label="使用傳說單抽券"
+                  icon="gift"
+                  :disabled="locked"
+                  :pending="store.pending"
+                  @click="draw(1, pool, true)"
                 />
               </div>
               <div class="gacha-buttons"
@@ -776,31 +811,37 @@ const newCount = computed(() =>
                 label="只看未擁有"
             /></div>
             <p aria-live="polite">共 {{ filtered.length }} 項</p>
-            <UiList
-              ><UiListRow v-for="item in filtered" :key="item.key">
-                <div class="gacha-item-copy"
-                  ><UiButton
-                    class="gacha-exchange-name"
-                    :label="'預覽 ' + item.label"
-                    :caption="item.label"
-                    variant="ghost"
-                    aria-haspopup="dialog"
-                    @click="previewReward(item, $event)"
-                  />
-                  <div class="gacha-item-meta">
-                    <UiBadge :tone="rarityTone[item.rarity]">{{ item.rarityLabel }}</UiBadge>
-                    <span>{{ kindNames[item.kind] }}</span>
-                  </div></div
-                >
-                <template #actions
-                  ><UiBadge v-if="item.owned" tone="success">已擁有</UiBadge
-                  ><UiButton
-                    v-else
-                    :label="number(item.exchangeCost) + ' 碎片兌換'"
-                    :disabled="locked || store.state.wallet.fragments < item.exchangeCost"
-                    @click="chooseExchange(item)"
-                /></template> </UiListRow
-            ></UiList>
+            <UiList>
+              <UiListRow v-for="group in exchangeGroups" :key="group.key">
+                <div class="gacha-item-versions">
+                  <div v-for="item in group.versions" :key="item.key" class="gacha-item-version">
+                    <div class="gacha-item-copy"
+                      ><UiButton
+                        class="gacha-exchange-name"
+                        :label="'預覽 ' + item.label"
+                        :caption="item.label"
+                        variant="ghost"
+                        aria-haspopup="dialog"
+                        @click="previewReward(item, $event)"
+                      />
+                      <div class="gacha-item-meta">
+                        <UiBadge :tone="rarityTone[item.rarity]">{{ item.rarityLabel }}</UiBadge>
+                        <span>{{ kindNames[item.kind] }}</span>
+                      </div></div
+                    >
+                    <div class="gacha-item-actions">
+                      <UiBadge v-if="item.owned" tone="success">已擁有</UiBadge
+                      ><UiButton
+                        v-else
+                        :label="number(item.exchangeCost) + ' 碎片兌換'"
+                        :disabled="locked || store.state.wallet.fragments < item.exchangeCost"
+                        @click="chooseExchange(item)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </UiListRow>
+            </UiList>
             <p v-if="!filtered.length">目前沒有符合條件的外觀。</p>
           </UiPanel>
         </template>
@@ -867,33 +908,42 @@ const newCount = computed(() =>
               @click="store.loadOdds"
             />
           </UiPanel>
-          <UiList
-            ><UiListRow v-for="item in poolItems" :key="item.key">
-              <div class="gacha-item-copy"
-                ><UiButton
-                  class="gacha-exchange-name"
-                  :label="'預覽 ' + item.label"
-                  :caption="item.label"
-                  variant="ghost"
-                  @click="previewReward(item, $event)"
-                /><div class="gacha-item-meta">
-                  <UiBadge :tone="rarityTone[item.rarity]">{{ item.rarityLabel }}</UiBadge>
-                  <span>{{ kindNames[item.kind] }}・重複 +{{ item.duplicateFragments }} 片</span>
-                </div></div
-              >
-              <template #actions
-                ><UiButton
-                  v-if="item.kind === 'sounds' && item.owned"
-                  :label="'播放語音 ' + item.label"
-                  icon="sound"
-                  icon-only
-                  @click="playRewardVoice(item)"
-                /><span>{{
-                  formatOdds(item.weight, (poolInfo?.totalWeight || 1) * rarityCounts[item.rarity])
-                }}</span></template
-              >
-            </UiListRow></UiList
-          >
+          <UiList>
+            <UiListRow v-for="group in oddsGroups" :key="group.key">
+              <div class="gacha-item-versions">
+                <div v-for="item in group.versions" :key="item.key" class="gacha-item-version">
+                  <div class="gacha-item-copy"
+                    ><UiButton
+                      class="gacha-exchange-name"
+                      :label="'預覽 ' + item.label"
+                      :caption="item.label"
+                      variant="ghost"
+                      @click="previewReward(item, $event)"
+                    /><div class="gacha-item-meta">
+                      <UiBadge :tone="rarityTone[item.rarity]">{{ item.rarityLabel }}</UiBadge>
+                      <span
+                        >{{ kindNames[item.kind] }}・重複 +{{ item.duplicateFragments }} 片</span
+                      >
+                    </div></div
+                  >
+                  <div class="gacha-item-actions">
+                    <UiButton
+                      v-if="item.kind === 'sounds' && item.owned"
+                      :label="'播放語音 ' + item.label"
+                      icon="sound"
+                      icon-only
+                      @click="playRewardVoice(item)"
+                    /><span>{{
+                      formatOdds(
+                        item.weight,
+                        (poolInfo?.totalWeight || 1) * rarityCounts[item.rarity],
+                      )
+                    }}</span>
+                  </div>
+                </div>
+              </div>
+            </UiListRow>
+          </UiList>
         </UiPanel>
         <UiPanel v-else title="最近操作紀錄" description="最近 20 次抽取與兌換">
           <template #actions
@@ -1204,7 +1254,26 @@ const newCount = computed(() =>
   gap: var(--stitch-space-4);
 }
 .gacha-income {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: var(--stitch-space-8);
+  inline-size: 100%;
+}
+.gacha-income > * {
   white-space: nowrap;
+}
+.gacha-income-notes {
+  display: grid;
+  gap: var(--stitch-space-8);
+}
+.gacha-income-notes p,
+.gacha-income-notes ul {
+  margin: 0;
+}
+.gacha-income-notes ul {
+  padding-inline-start: var(--stitch-space-16);
 }
 .gacha-pool-name {
   display: grid;
@@ -1234,6 +1303,22 @@ const newCount = computed(() =>
 }
 .gacha-filters {
   margin-block-end: var(--stitch-space-20);
+}
+.gacha-item-versions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: var(--stitch-gap-controls);
+  inline-size: 100%;
+}
+.gacha-item-version,
+.gacha-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stitch-space-8);
+}
+.gacha-item-actions {
+  margin-inline-start: auto;
 }
 .gacha-item-copy {
   display: grid;
@@ -1396,8 +1481,7 @@ const newCount = computed(() =>
 }
 @media (max-width: 800px) {
   .gacha-mobile-rules {
-    display: block;
-    font-size: var(--stitch-text-hint);
+    display: grid;
   }
 }
 </style>

@@ -128,6 +128,25 @@ test('gacha receipts reject inconsistent pool, costs, duplicates and unsafe wall
   ten.fragmentsGained = 45;
   assert.equal(contract.readGachaReceipt(ten, 'draw').fragmentsGained, 45);
 });
+test('login rewards require a consistent cycle and accept only legendary single-draw voucher receipts', () => {
+  const checkin = {
+    day: '2026-11-09',
+    visits: 7,
+    cycle: [1000, 1000, 1500, 1000, 2000],
+    step: 1,
+    claimed: false,
+    milestone: { days: 7, status: 'claimable' },
+  };
+  assert.equal(contract.readGachaCheckin(checkin).milestone.status, 'claimable');
+  assert.throws(() => contract.readGachaCheckin({ ...checkin, visits: 6 }));
+  assert.throws(() => contract.readGachaCheckin({ ...checkin, step: 5 }));
+  const voucher = receipt();
+  voucher.voucher = true;
+  voucher.cost = 0;
+  assert.throws(() => contract.readGachaReceipt(voucher, 'draw'));
+  voucher.results[0].rarity = 'legendary';
+  assert.equal(contract.readGachaReceipt(voucher, 'draw').voucher, true);
+});
 test('uncertain draw keeps one request across retry and blocks a second purchase; identity changes discard stale responses', async () => {
   const vue = require('vue'),
     pinia = require('pinia');

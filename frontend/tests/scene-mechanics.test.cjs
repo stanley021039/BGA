@@ -3,6 +3,117 @@ const { test } = require('node:test'),
   fs = require('node:fs'),
   vm = require('node:vm'),
   path = require('node:path');
+const { window } = require('linkedom').parseHTML('<html><body></body></html>');
+for (const key of ['window', 'document', 'Element', 'HTMLElement', 'SVGElement', 'Event'])
+  global[key] = key === 'window' ? window : window[key];
+
+function loadAttackLayer(vue, runtime = {}) {
+  const ts = require('typescript');
+  const { parse, compileScript } = require('vue/compiler-sfc');
+  const file = path.join(__dirname, '../src/pages/lobby/LobbyAttackLayer.vue');
+  const code = compileScript(parse(fs.readFileSync(file, 'utf8'), { filename: file }).descriptor, {
+    id: 'lobby-equation',
+    inlineTemplate: true,
+  }).content;
+  const module = { exports: {} };
+  vm.runInNewContext(
+    ts.transpileModule(code, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText,
+    {
+      module,
+      exports: module.exports,
+      document,
+      ...runtime,
+      require(id) {
+        if (id === 'vue') return vue;
+        if (id.endsWith('/preferences')) return { usePreferencesStore: () => ({}) };
+        if (id.endsWith('/SceneEquation.vue'))
+          return {
+            default: {
+              props: ['puzzle'],
+              setup: (props) => () => vue.h('aside', props.puzzle.prompt),
+            },
+          };
+        return {};
+      },
+    },
+  );
+  return module.exports.default;
+}
+
+test('the lobby shows the local equation by default and rooms can explicitly suppress it', async () => {
+  const vue = require('vue');
+  const { renderToString } = require('vue/server-renderer');
+  const AttackLayer = loadAttackLayer(vue);
+  const snapshot = {
+    selfId: 'self',
+    serverNow: 1000,
+    attacks: [],
+    visitors: [
+      { id: 'self', equation: { id: 'mine', prompt: 'my question' } },
+      { id: 'peer', equation: { id: 'theirs', prompt: 'their question' } },
+    ],
+  };
+  const render = (options) =>
+    renderToString(
+      vue.createSSRApp({
+        render: () => vue.h(AttackLayer, { snapshot, connected: true, ...options }),
+      }),
+    );
+  assert.match(await render({}), /my question/);
+  assert.doesNotMatch(await render({}), /their question/);
+  assert.doesNotMatch(await render({ puzzleEnabled: false }), /my question/);
+  assert.doesNotMatch(await render({ connected: false }), /my question/);
+});
+
+test('black coffin counts down on the hit player only and clears the overlay and timer', async () => {
+  const vue = require('vue');
+  let now = 0;
+  const timers = new Set();
+  const AttackLayer = loadAttackLayer(vue, {
+    performance: { now: () => now },
+    setTimeout: (callback) => (timers.add(callback), callback),
+    clearTimeout: (callback) => timers.delete(callback),
+  });
+  const snapshot = vue.reactive({
+    selfId: 'self',
+    serverNow: 1000,
+    attacks: [],
+    visitors: [{ id: 'self' }, { id: 'peer', blackoutUntil: 3000 }],
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = vue.createApp({ render: () => vue.h(AttackLayer, { snapshot, connected: true }) });
+  const overlay = () => document.querySelector('.coffin-blackout');
+  const advance = async (ms) => {
+    now += ms;
+    const callback = [...timers][0];
+    timers.delete(callback);
+    callback();
+    await vue.nextTick();
+  };
+  app.mount(host);
+  try {
+    assert.equal(overlay(), null);
+    snapshot.visitors[0].blackoutUntil = 3000;
+    await vue.nextTick();
+    assert.match(overlay().textContent, /墮入無盡的黑暗深淵吧.*2 秒/);
+    await advance(1000);
+    assert.match(overlay().textContent, /1 秒/);
+    await advance(1000);
+    assert.equal(overlay(), null);
+    assert.equal(timers.size, 0);
+    snapshot.visitors[0].blackoutUntil = 5000;
+    await vue.nextTick();
+    assert.equal(timers.size, 1);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+  assert.equal(timers.size, 0);
+});
+
 test('knockback moves the real actor from its hit point to the server destination, with bounded concurrent jobs and immediate policy cleanup', () => {
   const source = fs
     .readFileSync(path.join(__dirname, '../src/services/scene-knockback.js'), 'utf8')
@@ -52,9 +163,6 @@ test('knockback moves the real actor from its hit point to the server destinatio
 });
 
 test('a dropped lower body renders only the owner image bottom half and its independent health; collection removes the entity', async () => {
-  const { window } = require('linkedom').parseHTML('<html><body></body></html>');
-  for (const k of ['window', 'document', 'Element', 'HTMLElement', 'SVGElement', 'Event'])
-    global[k] = k === 'window' ? window : window[k];
   const vue = require('vue'),
     ts = require('typescript'),
     { parse, compileScript } = require('vue/compiler-sfc');

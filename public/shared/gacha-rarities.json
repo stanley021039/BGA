@@ -1,4 +1,13 @@
 {
+  "attacks:crystal_reflection": "epic",
+  "attacks:sakura_swarm": "epic",
+  "attacks:venom_thorn": "epic",
+  "frames:observatory": "legendary",
+  "media:observatory": "legendary",
+  "frames:abyssal-glass": "legendary",
+  "media:abyssal-glass": "legendary",
+  "frames:eclipse-theatre": "legendary",
+  "media:eclipse-theatre": "legendary",
   "attacks:shield": "common",
   "attacks:chains": "common",
   "attacks:sphere": "common",

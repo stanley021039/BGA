@@ -15,6 +15,11 @@ const dayFormat = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
 });
 const taipeiDay = (ms) => dayFormat.format(new Date(ms));
+const legendaryLoginDays = 7;
+const checkinEvent = (day, userId) => 'checkin:' + day + ':' + userId;
+const dailyClaimEvent = (day, userId) => 'login:' + day + ':' + userId;
+const voucherEvent = (action, userId) => 'checkin-legendary-' + action + ':' + userId;
+const matchEvent = (facts, userId) => 'match:' + facts.game + ':' + facts.id + ':' + userId;
 class GachaStore {
   constructor(db, { clock = Date.now, choose = randomInt } = {}) {
     this.db = db;
@@ -72,31 +77,89 @@ class GachaStore {
       .run(eventId, userId, reason, coins, fragments, fingerprint, at);
     return true;
   }
-  daily(userId) {
-    const now = this.clock(),
-      day = taipeiDay(now);
+  daily(userId, now = this.clock()) {
+    const day = taipeiDay(now);
     if (this.dailyCache.get(userId) === day) return;
-    const at = new Date(now).toISOString(),
-      event = 'login:' + day + ':' + userId;
+    const at = new Date(now).toISOString();
     transaction(this.db, () => {
-      // A login already rewarded under the old rate stays settled for the same Taipei day.
-      if (this.db.prepare('SELECT 1 FROM gacha_ledger WHERE event_id=?').get(event)) return;
-      const { total } = this.db
-        .prepare("SELECT COUNT(*) AS total FROM gacha_ledger WHERE user_id=? AND reason='login'")
-        .get(userId);
-      const bonuses = economy.dailyLoginBonuses;
-      const coins = economy.dailyCoins + bonuses[total % bonuses.length];
-      this.ledger(event, userId, 'login', coins, 0, hash({ userId, day, coins }), at);
+      this.ledger(checkinEvent(day, userId), userId, 'login', 0, 0, hash({ userId, day }), at);
     });
     this.dailyCache.set(userId, day);
     if (this.dailyCache.size > 2048) this.dailyCache.delete(this.dailyCache.keys().next().value);
+  }
+  hasEvent(eventId) {
+    return !!this.db.prepare('SELECT 1 FROM gacha_ledger WHERE event_id=?').get(eventId);
+  }
+  checkin(userId, day = taipeiDay(this.clock())) {
+    this.user(userId);
+    const claim = dailyClaimEvent(day, userId);
+    const { visits, claims, claimed } = this.db
+      .prepare(
+        `SELECT COUNT(DISTINCT CASE WHEN event_id GLOB 'login:*' THEN substr(event_id,7,10)
+                 WHEN event_id GLOB 'checkin:*' THEN substr(event_id,9,10) END) AS visits,
+                COUNT(CASE WHEN event_id GLOB 'login:*' THEN 1 END) AS claims,
+                COALESCE(MAX(event_id=?),0) AS claimed
+         FROM gacha_ledger WHERE user_id=? AND reason='login'`,
+      )
+      .get(claim, userId);
+    const cycle = economy.dailyLoginBonuses.map((bonus) => economy.dailyCoins + bonus);
+    const step = (claims - claimed) % cycle.length;
+    const claimedVoucher = this.hasEvent(voucherEvent('claim', userId));
+    const usedVoucher = claimedVoucher && this.hasEvent(voucherEvent('use', userId));
+    return {
+      day,
+      visits,
+      cycle,
+      step,
+      claimed: !!claimed,
+      milestone: {
+        days: legendaryLoginDays,
+        status: usedVoucher
+          ? 'used'
+          : claimedVoucher
+            ? 'available'
+            : visits >= legendaryLoginDays
+              ? 'claimable'
+              : 'locked',
+      },
+    };
+  }
+  claimCheckin(userId, kind) {
+    const now = this.clock();
+    this.daily(userId, now);
+    return transaction(this.db, () => {
+      const at = new Date(now).toISOString();
+      const day = taipeiDay(now);
+      const state = this.checkin(userId, day);
+      if (kind === 'daily') {
+        if (!state.claimed) {
+          const coins = state.cycle[state.step];
+          this.ledger(
+            dailyClaimEvent(day, userId),
+            userId,
+            'login',
+            coins,
+            0,
+            hash({ userId, day, coins }),
+            at,
+          );
+        }
+      } else if (state.milestone.status === 'locked') {
+        throw new HttpError(409, 'GACHA_CHECKIN_NOT_READY', '首次累積登入七天後才可領取');
+      } else if (state.milestone.status === 'claimable') {
+        const event = voucherEvent('claim', userId);
+        this.ledger(event, userId, 'login', 0, 0, hash({ event }), at);
+      }
+      return { ...this.checkin(userId, day), wallet: this.wallet(userId) };
+    });
   }
   drawCounts(userId) {
     const rows = this.db
       .prepare(
         `SELECT json_extract(response_json, '$.pool') AS pool,
                 SUM(json_array_length(response_json, '$.results')) AS total
-         FROM gacha_requests WHERE user_id=? AND operation='draw' GROUP BY pool`,
+         FROM gacha_requests WHERE user_id=? AND operation='draw'
+           AND json_extract(response_json, '$.voucher') IS NOT 1 GROUP BY pool`,
       )
       .all(userId);
     return new Map(rows.map(({ pool, total }) => [pool, total]));
@@ -126,6 +189,8 @@ class GachaStore {
     });
     return {
       wallet: this.wallet(userId),
+      voucherAvailable:
+        this.hasEvent(voucherEvent('claim', userId)) && !this.hasEvent(voucherEvent('use', userId)),
       pools,
       items: catalog.map((i) => ({
         ...publicItem(i),
@@ -184,38 +249,52 @@ class GachaStore {
       !input ||
       typeof input !== 'object' ||
       Array.isArray(input) ||
-      Object.keys(input).some((k) => !['requestId', 'pool', 'count', 'oddsRevision'].includes(k))
+      Object.keys(input).some(
+        (k) => !['requestId', 'pool', 'count', 'oddsRevision', 'voucher'].includes(k),
+      )
     )
       throw new HttpError(400, 'INVALID_GACHA_DRAW', '抽卡操作內容不正確');
-    const { requestId, pool, count, oddsRevision } = input;
+    const { requestId, pool, count, oddsRevision, voucher } = input;
     if (
       oddsRevision !== undefined &&
       (typeof oddsRevision !== 'string' || !/^[a-f0-9]{64}$/.test(oddsRevision))
     )
       throw new HttpError(400, 'INVALID_GACHA_DRAW', '抽卡機率版本格式不正確');
     const entries = poolItems(pool);
-    if (!entries?.length || ![1, 10].includes(count))
+    if (
+      !entries?.length ||
+      ![1, 10].includes(count) ||
+      (voucher !== undefined && (voucher !== true || count !== 1))
+    )
       throw new HttpError(400, 'INVALID_GACHA_DRAW', '請選擇有效卡池及單抽或十連');
+    const eligible = voucher ? entries.filter((item) => item.rarity === 'legendary') : entries;
+    if (!eligible.length) throw new HttpError(400, 'INVALID_GACHA_DRAW', '這個卡池沒有傳說獎品');
     return this.request(
       userId,
       requestId,
       'draw',
-      { pool, count },
+      { pool, count, ...(voucher ? { voucher: true } : {}) },
       (at, fingerprint) => {
         // A receipt replay precedes this check: a changed configuration must never reroll an old purchase.
         const odds = Odds.read(this.db);
         if (oddsRevision !== undefined && oddsRevision !== odds.revision)
           throw new HttpError(409, 'GACHA_ODDS_CHANGED', '卡池機率已更新，請重新載入確認後再抽取');
-        const distribution = Odds.distribution(entries, odds.weights);
+        if (voucher) {
+          const event = voucherEvent('use', userId);
+          if (!this.hasEvent(voucherEvent('claim', userId)) || this.hasEvent(event))
+            throw new HttpError(409, 'GACHA_VOUCHER_REQUIRED', '沒有可用的傳說單抽券');
+          this.ledger(event, userId, 'login', 0, 0, hash({ requestId }), at);
+        }
+        const distribution = Odds.distribution(eligible, odds.weights);
         const wallet = this.wallet(userId),
-          cost = count * 100;
+          cost = voucher ? 0 : count * 100;
         if (wallet.coins < cost) throw new HttpError(409, 'GACHA_COINS_REQUIRED', '聖潔石不足');
         const previousDraws = this.drawCounts(userId).get(pool) ?? 0;
         const owned = this.owned(userId),
           results = [];
         let fragments = 0;
         for (let n = 0; n < count; n++) {
-          const boosted = (previousDraws + n + 1) % economy.bonusInterval === 0;
+          const boosted = !voucher && (previousDraws + n + 1) % economy.bonusInterval === 0;
           const item = Odds.select(
             boosted ? Odds.distribution(entries, odds.weights, true) : distribution,
             this.choose,
@@ -252,7 +331,8 @@ class GachaStore {
           pool,
           cost,
           results,
-          drawCount: previousDraws + count,
+          drawCount: previousDraws + (voucher ? 0 : count),
+          ...(voucher ? { voucher: true } : {}),
           oddsRevision: odds.revision,
           fragmentsGained: fragments,
           wallet: this.wallet(userId),
@@ -345,21 +425,22 @@ class GachaStore {
         )
           continue;
         const coins = economy.matchCoins + (p.winner ? economy.winnerCoins : 0);
-        if (
-          this.ledger(
-            'match:' + facts.game + ':' + facts.id + ':' + p.userId,
-            p.userId,
-            'match',
-            coins,
-            0,
-            fingerprint,
-            at,
-          )
-        )
+        if (this.ledger(matchEvent(facts, p.userId), p.userId, 'match', coins, 0, fingerprint, at))
           awards.push({ userId: p.userId, coins });
       }
       return awards;
     });
+  }
+  matchReward(facts, userId) {
+    const participant = facts.participants.find((entry) => entry.userId === userId);
+    if (!participant) return null;
+    const row = this.db
+      .prepare(
+        "SELECT coins_delta AS coins FROM gacha_ledger WHERE event_id=? AND user_id=? AND reason='match'",
+      )
+      .get(matchEvent(facts, userId), userId);
+    const coins = row?.coins ?? 0;
+    return { id: facts.id, coins, winner: participant.winner === true };
   }
 }
 module.exports = { GachaStore, taipeiDay };

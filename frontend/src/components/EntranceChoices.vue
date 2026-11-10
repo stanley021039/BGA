@@ -10,8 +10,8 @@ import { sizedImage } from '../services/image-size';
 import { apparate } from '../pages/lobby/apparition';
 import {
   entranceEffect,
-  entranceVariant,
   isFreeEntrance,
+  isGachaOnlyEntrance,
   setEntranceEffect,
   type EntranceEffectId,
 } from '../services/entrance-effects';
@@ -22,7 +22,7 @@ const prefs = usePreferencesStore();
 const unlocked = ref<string[]>([]);
 const allowed = (id: string) => isFreeEntrance(id) || unlocked.value.includes(id);
 const condition = (id: string) =>
-  entranceVariant(id) ? '抽卡或碎片兌換解鎖' : '抽卡、碎片兌換或兌換碼解鎖';
+  isGachaOnlyEntrance(id) ? '抽卡或碎片兌換解鎖' : '抽卡、碎片兌換或兌換碼解鎖';
 onMounted(async () => {
   try {
     const data = (await requestJson('/api/achievements')) as {

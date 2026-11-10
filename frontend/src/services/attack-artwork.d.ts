@@ -4,6 +4,7 @@ export type AttackArtworkOptions = {
   coverClips?: readonly Path2D[];
   readCaster?: () => { x: number; y: number } | null;
   readAnchor?: () => { x: number; y: number } | null;
+  readTarget?: () => { x: number; y: number } | undefined;
   rays?: { x: number; y: number }[];
   readHits?: () => {
     toId: string;
@@ -12,9 +13,14 @@ export type AttackArtworkOptions = {
     damage: number;
     critical: boolean;
     phase?: string;
+    reflectionIndex?: number;
+    reflectedEffect?: string;
+    reflectedPhase?: string;
     delayMs?: number;
     pending?: boolean;
     missed?: boolean;
+    pathX?: number;
+    pathY?: number;
   }[];
   preview?: boolean;
   previewUnit?: number;

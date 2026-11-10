@@ -23,6 +23,7 @@ import MotionPolicy from '../../engines/motion-policy.js';
 import { sizedImage } from '../../services/image-size';
 import { focusFromPointer } from '../../services/pointer-focus';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { visibleSummons } from '../../services/attack-placement';
 import { useLobbyStore } from '../../stores/lobby';
 import { useLobbyBackgroundStore } from '../../stores/lobby-background';
 import UiDialog from '../../components/UiDialog.vue';
@@ -112,6 +113,7 @@ const controls = useSceneControls({
   },
 });
 const background = useLobbyBackgroundStore();
+const summons = computed(() => visibleSummons(lobby.snapshot));
 const sounds = ExpressionSounds?.create();
 let disposed = false,
   controller: BarrageController | null = null,
@@ -428,6 +430,7 @@ defineExpose({ openChat });
       ><div ref="world" class="arena-camera-world" :class="{ 'is-expanded': expanded }">
         <LobbyAttackLayer
           :snapshot="sceneSnapshot"
+          :arena="props.arenaPage"
           :read-camera="expanded ? readCamera : undefined"
           :connected="lobby.connected" /><LobbyBackgroundArt
           v-if="background.visible"
@@ -495,6 +498,7 @@ defineExpose({ openChat });
             v-for="visitor in sceneSnapshot?.visitors || []"
             :key="visitor.id"
             :visitor="visitor"
+            :show-summon="summons.has(visitor.id)"
             :team="
               battlePlaying
                 ? lobby.snapshot?.arena?.teams.find((p) => p.id === visitor.id)?.team

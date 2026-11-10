@@ -20,6 +20,7 @@ function inAttackArea(self, aim, actor, effect, aspect, override) {
   const x = ((actor.x - self.x) * aspect) / divisor,
     y = (actor.y - self.y) / divisor;
   if (area?.shape === 'screenBeam') return Math.abs(y) <= area.width / 2;
+  if (area?.shape === 'selfBurst') return Math.hypot(x, y) <= area.radius + 1e-8;
   if (Math.hypot(x, y) > range + 1e-8) return false;
   if (!area) return true;
   const ax = ((aim.x - self.x) * aspect) / divisor,
@@ -91,15 +92,23 @@ function selectBijuuDirections(self, actors, aspect) {
 }
 function selectAttackTargets(self, actors, effect, aspect) {
   effect = attackKind(effect);
-  if (['shield', 'sphere'].includes(effect)) return [self];
+  if (['shield', 'sphere', 'crystal_reflection', 'susanoo'].includes(effect)) return [self];
   const range = isAreaAttack(effect) ? rules.areaAttackRange : rules.attackRange;
+  const lockedTarget = [
+    'gate_of_heroes',
+    'shaohua_devour',
+    'starburst_stream',
+    'rainbow_bear',
+    'zero_equation',
+  ].includes(effect);
   const nearby = [...actors]
     .filter(
       (actor) =>
         actor.id !== self.id &&
         actor.ownerId !== self.id &&
         actor.health > 0 &&
-        (!['gate_of_heroes', 'shaohua_devour'].includes(effect) || actor.kind !== 'fragment') &&
+        (!lockedTarget || actor.kind !== 'fragment') &&
+        (effect !== 'zero_equation' || !actor.equation) &&
         (areas.get(effect)?.shape === 'screenBeam' || sceneDistance(self, actor, aspect) <= range),
     )
     .sort(

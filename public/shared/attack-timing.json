@@ -109,5 +109,85 @@
   "photon_sniper": [[1250, 1, "impact"]],
   "photon_sniper_alt": [[1250, 1, "impact"]],
   "gate_of_heroes": [[2100, 1, "landing"]],
-  "gate_of_heroes_alt": [[2100, 1, "landing"]]
+  "gate_of_heroes_alt": [[2100, 1, "landing"]],
+  "returning_moon": [[650, 1, "impact"]],
+  "tidal_blades": [
+    [430, 0.5, "hit1"],
+    [790, 0.5, "hit2"]
+  ],
+  "magnetic_disc": [
+    [540, 0.5, "hit1"],
+    [925, 0.5, "hit2"]
+  ],
+  "venom_thorn": [
+    [650, 0.5, "hit1"],
+    [930, 0.5, "hit2"]
+  ],
+  "quicksand_trap": [
+    [570, 0.5, "hit1"],
+    [1080, 0.5, "hit2"]
+  ],
+  "refracting_prism": [
+    [420, 0.3, "hit1"],
+    [690, 0.35, "hit2"],
+    [960, 0.35, "hit3"]
+  ],
+  "bell_shockwave": [
+    [500, 0.5, "hit1"],
+    [885, 0.5, "hit2"]
+  ],
+  "shadow_lunge": [[530, 1, "impact"]],
+  "seeking_talismans": [
+    [470, 0.3, "hit1"],
+    [740, 0.35, "hit2"],
+    [1010, 0.35, "hit3"]
+  ],
+  "sakura_swarm": [
+    [540, 0.28, "hit1"],
+    [760, 0.32, "hit2"],
+    [1030, 0.4, "hit3"]
+  ],
+  "crystal_reflection": [[0, 1, "reflection"]],
+  "black_coffin": [
+    [1660, 0.35, "pierce"],
+    [2790, 0.65, "collapse"]
+  ],
+  "world_stasis": [
+    [850, 0, "stasis"],
+    [2250, 1, "release"]
+  ],
+  "human_malice": [
+    [1570, 0.55, "salvo"],
+    [3310, 0.45, "detonation"]
+  ],
+  "susanoo": [
+    [1000, 0.34, "sweep1"],
+    [2450, 0.33, "sweep2"],
+    [3900, 0.33, "sweep3"]
+  ],
+  "starburst_stream": [
+    [760, 0.0625, "slash1"],
+    [864, 0.0625, "slash2"],
+    [968, 0.0625, "slash3"],
+    [1072, 0.0625, "slash4"],
+    [1176, 0.0625, "slash5"],
+    [1280, 0.0625, "slash6"],
+    [1384, 0.0625, "slash7"],
+    [1488, 0.0625, "slash8"],
+    [1592, 0.0625, "slash9"],
+    [1696, 0.0625, "slash10"],
+    [1800, 0.0625, "slash11"],
+    [1904, 0.0625, "slash12"],
+    [2008, 0.0625, "slash13"],
+    [2112, 0.0625, "slash14"],
+    [2216, 0.0625, "slash15"],
+    [2320, 0.0625, "slash16"]
+  ],
+  "rainbow_bear": [
+    [1180, 0.28, "hug"],
+    [2180, 0.24, "kiss1"],
+    [3180, 0.24, "kiss2"],
+    [4180, 0.24, "kiss3"]
+  ],
+  "zero_equation": [[1960, 1, "equation"]]
 }

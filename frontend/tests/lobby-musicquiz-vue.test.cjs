@@ -720,3 +720,96 @@ test('three-ray geometry and the owning combat status survive the contract, whil
     assert.throws(() => read({ ...broken, serverNow: now }));
   }
 });
+test('Rainbow Bear cast snapshots accept all four phases for the caster and target', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  const { rainbow_bear: timing } = require('../../public/shared/attack-timing.json');
+  let now = 1000;
+  const lobby = createLobby(
+    () => now,
+    undefined,
+    () => 0.5,
+  );
+  const users = ['a', 'b'].map((id) => ({ id, display_name: id }));
+  const [caster, target] = users;
+  lobby.move(caster, { x: 40, y: 50 });
+  lobby.move(target, { x: 60, y: 50 });
+  now += 10000;
+  chargeScene(lobby, null, users, caster.id, (ms) => (now += ms));
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  for (const effect of ['rainbow_bear', 'rainbow_bear_alt']) {
+    if (effect.endsWith('_alt')) chargeScene(lobby, null, users, caster.id, (ms) => (now += ms));
+    const raw = lobby.attack(caster, {
+      slot: 'r',
+      effect,
+      aspectRatio: 1,
+      requestId: 'bear-cast-' + effect.replaceAll('_', '-'),
+    });
+    const findAttack = (snapshot) =>
+      read(snapshot).attacks.find((attack) => attack.effect === effect);
+    const attack = findAttack({ ...raw, serverNow: now });
+    assert.equal(attack.toId, target.id);
+    assert.equal(attack.hits.length, 4);
+    attack.hits.forEach((hit, index) => {
+      assert.equal(hit.phase, timing[index][2]);
+      assert.equal(hit.delayMs, timing[index][0]);
+      assert.equal(hit.pending, true);
+    });
+
+    const corrupt = structuredClone({ ...raw, serverNow: now });
+    corrupt.attacks.find((attack) => attack.effect === effect).hits.at(-1).delayMs += 1;
+    assert.throws(() => read(corrupt), /攻擊階段資料格式不正確/);
+
+    now += timing.at(-1)[0];
+    const settled = findAttack({ ...lobby.view(target), serverNow: now });
+    assert.ok(settled.hits.every((hit) => !hit.pending && hit.damage > 0));
+  }
+});
+
+test('lobby snapshot retains the reflected projectile variant and rejects non-projectile returns', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  let now = 1000;
+  const lobby = createLobby(() => now);
+  const attacker = { id: 'a', display_name: 'A' };
+  const defender = { id: 'b', display_name: 'B' };
+  lobby.move(attacker, { x: 40, y: 50 });
+  lobby.move(defender, { x: 60, y: 50 });
+  now += 10000;
+  lobby.attack(defender, {
+    effect: 'crystal_reflection_alt',
+    slot: 'q',
+    aspectRatio: 1,
+    requestId: 'reflected-guard',
+  });
+  lobby.attack(attacker, {
+    effect: 'tidal_blades_alt',
+    slot: 'q',
+    aspectRatio: 1,
+    requestId: 'reflected-tide',
+  });
+  now += 450;
+  const raw = { ...lobby.view(attacker), serverNow: now };
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  const hit = (snapshot) =>
+    snapshot.attacks.find((event) => event.effect === 'crystal_reflection_alt').hits[0];
+  assert.equal(hit(read(raw)).reflectedEffect, 'tidal_blades_alt');
+  assert.equal(hit(read(raw)).reflectedPhase, 'hit1');
+  const corrupted = structuredClone(raw);
+  hit(corrupted).reflectedEffect = 'starburst_stream';
+  assert.throws(() => read(corrupted), /反彈招式資料格式不正確/);
+  const legacy = structuredClone(raw);
+  delete hit(legacy).reflectedEffect;
+  delete hit(legacy).reflectedPhase;
+  delete hit(legacy).reflectionIndex;
+  assert.equal(hit(read(legacy)).reflectedEffect, undefined);
+  now += 350;
+  const both = { ...lobby.view(attacker), serverNow: now };
+  const returns = (snapshot) =>
+    snapshot.attacks.find((event) => event.effect === 'crystal_reflection_alt').hits;
+  assert.equal(returns(read(both)).length, 2);
+  assert.equal(returns(read(both))[1].reflectionIndex, 1);
+  for (const invalid of [{ reflectionIndex: 0 }, { toId: 'c' }]) {
+    const broken = structuredClone(both);
+    Object.assign(returns(broken)[1], invalid);
+    assert.throws(() => read(broken));
+  }
+});

@@ -7,16 +7,19 @@
     },
     {
       "id": "smoke",
+      "gachaOnly": true,
       "label": "黑煙漩渦",
       "description": "紫黑色漩渦捲緊、啪一聲現身。"
     },
     {
       "id": "sparks",
+      "gachaOnly": true,
       "label": "金色魔杖火花",
       "description": "金色火花聚成光球，從光裡浮現。"
     },
     {
       "id": "ink",
+      "gachaOnly": true,
       "label": "墨水潑濺",
       "description": "墨水潑地長成剪影，再染回原色。"
     },
@@ -27,11 +30,13 @@
     },
     {
       "id": "rift",
+      "gachaOnly": true,
       "label": "時空裂縫",
       "description": "空中撕開發光裂縫，角色走出來。"
     },
     {
       "id": "particles",
+      "gachaOnly": true,
       "label": "粒子組合",
       "description": "粒子飛來由腳到頭拼出角色。"
     }

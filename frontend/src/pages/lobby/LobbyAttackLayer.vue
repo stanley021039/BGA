@@ -7,12 +7,19 @@ import { createAttackStage } from '../../services/attack-artwork';
 import { attackColor, attackOptions } from '../../services/attack-placement';
 import { sizedImage } from '../../services/image-size';
 import { playHeroFlight } from '../../services/scene-hero-flight.js';
+import SceneEquation from '../../components/SceneEquation.vue';
 import { homingScale } from '../../services/attack-homing.js';
-const props = defineProps<{
-  snapshot: LobbySnapshot | null;
-  connected: boolean;
-  readCamera?: () => { x: number; y: number };
-}>();
+const props = withDefaults(
+  defineProps<{
+    snapshot: LobbySnapshot | null;
+    connected: boolean;
+    roomCode?: string;
+    puzzleEnabled?: boolean;
+    arena?: boolean;
+    readCamera?: () => { x: number; y: number };
+  }>(),
+  { puzzleEnabled: true },
+);
 // Every live attack draws on this one canvas (#322); up to three play at once.
 const layer = ref<HTMLElement | null>(null),
   surface = ref<HTMLCanvasElement | null>(null),
@@ -32,6 +39,36 @@ const coverImpacts = computed(() => {
     )
     .slice(-12);
 });
+const equation = computed(() => {
+  if (!props.connected || !props.puzzleEnabled) return;
+  const scene = props.snapshot;
+  return scene?.visitors.find((actor) => actor.id === scene.selfId)?.equation;
+});
+const blackoutSeconds = ref(0);
+watch(
+  () => {
+    const scene = props.snapshot;
+    return props.connected
+      ? scene?.visitors.find((actor) => actor.id === scene.selfId)?.blackoutUntil
+      : undefined;
+  },
+  (until, _, onCleanup) => {
+    const ms = until === undefined ? 0 : until - (props.snapshot?.serverNow ?? until);
+    blackoutSeconds.value = 0;
+    if (ms <= 0) return;
+    const deadline = performance.now() + ms;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const remaining = deadline - performance.now();
+      blackoutSeconds.value = Math.max(0, Math.ceil(remaining / 1000));
+      if (blackoutSeconds.value)
+        timer = setTimeout(tick, Math.ceil(remaining - (blackoutSeconds.value - 1) * 1000));
+    };
+    onCleanup(() => clearTimeout(timer));
+    tick();
+  },
+  { immediate: true },
+);
 const heads = computed(() =>
   (props.snapshot?.attacks || []).filter(
     (e) =>
@@ -114,6 +151,9 @@ function play(event: LobbyAttack) {
     height,
     () => active.value.find((item) => item.id === event.id)?.hits,
     () => active.value.find((item) => item.id === event.id) || {},
+    undefined,
+    () =>
+      props.snapshot?.visitors.find((visitor) => visitor.id === event.toId && visitor.health !== 0),
   );
   const avatar = [
     ...(layer.value
@@ -131,7 +171,8 @@ function play(event: LobbyAttack) {
     ...options,
     coverClips: wallClips(event, width, height),
     readCaster,
-    ...(isDefensiveAttack(event.effect) && { readAnchor: readCaster }),
+    ...(isDefensiveAttack(event.effect) &&
+      attackArtworkKind(event.effect) !== 'crystal_reflection' && { readAnchor: readCaster }),
   });
   if (added && event.effect.replace(/_alt$/, '') === 'gate_of_heroes') {
     const node = [
@@ -227,6 +268,19 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
+  <SceneEquation
+    v-if="equation"
+    :key="equation.id"
+    :puzzle="equation"
+    :room-code="roomCode"
+    :arena="arena"
+  />
+  <Teleport to="body">
+    <div v-if="blackoutSeconds" class="coffin-blackout">
+      <p class="coffin-blackout-message" role="status">墮入無盡的黑暗深淵吧</p>
+      <p class="coffin-blackout-countdown">{{ blackoutSeconds }} 秒</p>
+    </div>
+  </Teleport>
   <div ref="layer" class="lobby-attack-layer" aria-hidden="true">
     <canvas ref="surface" :class="{ 'is-camera-canvas': readCamera }"></canvas>
     <span
@@ -290,6 +344,32 @@ onBeforeUnmount(() => {
   </div>
 </template>
 <style scoped>
+.coffin-blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stitch-gap-controls);
+  padding: var(--stitch-space-24);
+  pointer-events: none;
+  background: var(--stitch-artwork-preview-bg);
+  color: var(--stitch-scene-dark-ink);
+  text-align: center;
+}
+.coffin-blackout p {
+  margin: 0;
+}
+.coffin-blackout-message {
+  font-size: var(--stitch-text-data);
+  font-weight: 900;
+}
+.coffin-blackout-countdown {
+  font-size: var(--stitch-text-section);
+  font-variant-numeric: tabular-nums;
+}
 .lobby-attack-layer {
   position: absolute;
   inset: 0;

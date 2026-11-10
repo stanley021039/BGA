@@ -53,6 +53,10 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     actor.immobileUntil = 0;
     actor.heroFlightUntil = 0;
     actor.sealedUntil = 0;
+    actor.summon = null;
+    actor.blackoutUntil = 0;
+    actor.kissedUntil = 0;
+    actor.equation = null;
     actor.regenBlockedUntil = 0;
     actor.fragment = null;
     actor.hazardId = actor.hazardKind = null;
@@ -190,8 +194,66 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     actor.targetX = actor.x;
     actor.targetY = actor.y;
   }
+  function trapEquation(actor, id) {
+    const digit = () => 2 + Math.floor(random() * 7);
+    const a = digit(),
+      b = digit(),
+      c = digit(),
+      d = digit(),
+      e = digit();
+    const flat = random() < 0.5;
+    const prompt = flat
+      ? `${a} + ${b} × ${c} − ${d * e} ÷ ${e}`
+      : `${a} × (${b + c} − ${c}) + ${d * e} ÷ ${e}`;
+    const answer = flat ? a + b * c - d : a * b + d;
+    const offsets = [-9, -6, -3, -1, 1, 4, 7, 10];
+    const options = [answer];
+    while (options.length < 5) {
+      const [offset] = offsets.splice(Math.floor(random() * offsets.length), 1);
+      options.push(answer + offset);
+    }
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    actor.equation = { id, prompt, answer, options, rejectedOptions: [] };
+    actor.targetX = actor.x;
+    actor.targetY = actor.y;
+    actor.knockback = null;
+  }
+  function solveEquation(actor, id, answer, time) {
+    alive(actor);
+    if (typeof id !== 'string' || !id || id.length > 80 || !Number.isSafeInteger(answer))
+      throw new HttpError(400, 'INVALID_EQUATION_ANSWER', '請輸入整數答案');
+    if (!actor.equation || actor.equation.id !== id)
+      throw new HttpError(409, 'SCENE_EQUATION_EXPIRED', '這道題已經解除');
+    if (!actor.equation.options.includes(answer))
+      throw new HttpError(400, 'INVALID_EQUATION_ANSWER', '請選擇題目提供的答案');
+    if (actor.equation.answer !== answer) {
+      if (!actor.equation.rejectedOptions.includes(answer)) {
+        actor.equation.rejectedOptions.push(answer);
+        const damage = Math.min(
+          actor.health - 1,
+          Math.ceil(actor.maxHealth * rules.zeroEquation.wrongAnswerHpFraction),
+        );
+        if (damage > 0) {
+          actor.health -= damage;
+          actor.lastHitAt = actor.regenAt = time;
+          actor.dotPulse = {
+            id: 'equation:' + id + ':' + answer,
+            at: time,
+            damage,
+            critical: false,
+          };
+        }
+      }
+      throw new HttpError(409, 'SCENE_EQUATION_WRONG', '答錯會扣 5% 最大 HP，請再試一次');
+    }
+    actor.equation = null;
+  }
   function canMove(actor, time) {
     alive(actor);
+    if (actor.equation) throw new HttpError(409, 'SCENE_EQUATION_LOCKED', '答對方程式後才能移動');
     if (time < (actor.immobileUntil || 0))
       throw new HttpError(409, 'SCENE_IMMOBILIZED', '暫時無法移動');
   }
@@ -459,7 +521,12 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       if (time >= to.shieldUntil) blockedPercent *= rules.shield.residualMultiplier;
     }
     const cover = policy.damageThroughCover?.(from, to, effect) ?? 1;
-    const damage =
+    const owner = from.energyActor;
+    const outgoing =
+      (!owner || owner.lifeId === from.energyLifeId) && time < ((owner ?? from).kissedUntil || 0)
+        ? rules.rainbowBear.outgoingMultiplier
+        : 1;
+    const rawDamage =
       effect === 'shaohua_devour'
         ? Math.round(Math.max(0, to.health - 1) * cover)
         : Math.round(
@@ -469,12 +536,19 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
                 (from.pickupAttackBonus ??
                   (time < (from.pickupAttackUntil || 0) ? pickupRules.attackBonus : 0))) *
               profile(to).defense *
+              outgoing *
               (1 - blockedPercent / 100) *
               (time < (to.pickupShieldUntil || 0) ? 0.7 : 1) *
               (time < (to.excaliburUntil || 0)
                 ? 1 - rules.excaliburGuard.reductionPercent / 100
                 : 1),
           );
+    const damage =
+      effect === 'zero_equation'
+        ? Math.min(rawDamage, Math.max(0, to.health - 1))
+        : effect === 'shaohua_devour'
+          ? Math.round(rawDamage * outgoing)
+          : rawDamage;
     const weakened =
       damage > 0 &&
       (cover < 1 ||
@@ -498,7 +572,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     if (damage > 0 && from.id && from.id !== to.id) {
       helpers.set(from.id, { actor: from, at: time });
     }
-    if (phase !== 'ordinary-dot') energy.hit(from, to, effect, damage);
+    if (phase !== 'ordinary-dot' && !(effect === 'starburst_stream' && phase !== 'slash1'))
+      energy.hit(from, to, effect, damage);
     if (
       to.guardEnergyReady &&
       time < to.shieldUntil &&
@@ -527,6 +602,10 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     return { damage, critical, ...(weakened && { weakened }) };
   }
   function clearDeath(actor, time) {
+    actor.summon = null;
+    actor.kissedUntil = 0;
+    actor.equation = null;
+    actor.blackoutUntil = 0;
     actor.shieldUntil = 0;
     actor.shieldResidualUntil = 0;
     actor.guardEnergyReady = false;
@@ -645,6 +724,24 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       hasteMs: living ? Math.max(0, (actor.hasteUntil || 0) - time) : 0,
       heroFlightUntil: actor.heroFlightUntil || 0,
       sealedUntil: actor.sealedUntil || 0,
+      ...(living && actor.kissedUntil > time ? { kissedUntil: actor.kissedUntil } : {}),
+      ...(living && actor.equation ? { equationLocked: true } : {}),
+      ...(living && includeStatus && actor.equation
+        ? {
+            equation: {
+              id: actor.equation.id,
+              prompt: actor.equation.prompt,
+              options: [...actor.equation.options],
+              rejectedOptions: [...actor.equation.rejectedOptions],
+            },
+          }
+        : {}),
+      ...(includeStatus && actor.blackoutUntil > time
+        ? { blackoutUntil: actor.blackoutUntil }
+        : {}),
+      ...(living && actor.summon?.until > time
+        ? { summon: { ...actor.summon, remainingMs: actor.summon.until - time } }
+        : {}),
       knockback:
         actor.knockback && actor.combatAt - actor.knockback.at < 1200
           ? { ...actor.knockback }
@@ -676,6 +773,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     view,
     freeze,
     canMove,
+    trapEquation,
+    solveEquation,
     canCast,
     canTeleport,
     applyEffect,

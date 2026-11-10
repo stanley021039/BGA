@@ -4,7 +4,10 @@ const poolGroups = require('../../public/shared/gacha-pools.json');
 const { exchangeCosts } = require('../../public/shared/gacha-economy.json');
 const definitions = new Map(require('../achievements/catalog').definitions.map((d) => [d.id, d]));
 const { BUILTIN_FRAME_OPTIONS } = require('../barrage/builtins');
-const { variants: entranceVariants } = require('../../public/shared/entrance-palette.json');
+const {
+  starters: baseEntrances,
+  variants: entranceVariants,
+} = require('../../public/shared/entrance-palette.json');
 const tiers = Object.freeze({
   common: { label: '普通', weight: 70, duplicateFragments: 1, exchangeCost: exchangeCosts.common },
   rare: { label: '稀有', weight: 20, duplicateFragments: 5, exchangeCost: exchangeCosts.rare },
@@ -51,12 +54,14 @@ function add(kind, id, label, rarity, achievementIds = [], legacy = true, gachaE
   );
 }
 const attacks = require('../../public/shared/attack-effects.json');
-for (const e of attacks.filter((e) => !('paletteHue' in e) && (e.achievementId || e.gachaOnly)))
+for (const e of attacks.filter(
+  (e) => !e.rewardOf && !('paletteHue' in e) && (e.achievementId || e.gachaOnly),
+))
   add(
     'attacks',
     e.id,
     e.label,
-    e.area || ['shaohua_devour'].includes(e.variantOf || e.id)
+    e.area || e.ultimate || ['shaohua_devour'].includes(e.variantOf || e.id)
       ? 'legendary'
       : ['shield', 'chains', 'sphere'].includes(e.id)
         ? 'common'
@@ -66,6 +71,8 @@ for (const e of attacks.filter((e) => !('paletteHue' in e) && (e.achievementId |
   );
 for (const e of require('../../public/shared/entrance-requirements.json'))
   add('entrances', e.id, e.label, intro(e.achievementId), [e.achievementId]);
+for (const e of baseEntrances.filter((effect) => effect.gachaOnly))
+  add('entrances', e.id, e.label, 'common', [], false, true);
 for (const [kind, variants] of [
   ['attacks', attacks.filter((e) => 'paletteHue' in e)],
   ['entrances', entranceVariants],

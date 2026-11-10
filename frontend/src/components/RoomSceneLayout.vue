@@ -5,6 +5,7 @@ import { useChatStore } from '../stores/chat';
 import RoomBackground from './RoomBackground.vue';
 import RoomSidePanel from './RoomSidePanel.vue';
 import SpectatorRoster from './SpectatorRoster.vue';
+import MatchStoneReward from './MatchStoneReward.vue';
 import '../styles/room-space.scss';
 
 const props = withDefaults(
@@ -96,7 +97,10 @@ watch(
         inline
       />
     </RoomSidePanel>
-    <main class="vue-game-main" :class="mainClass" :inert="drawerOpen"><slot /></main>
+    <main class="vue-game-main" :class="mainClass" :inert="drawerOpen">
+      <MatchStoneReward v-if="room.snapshot?.matchReward" :reward="room.snapshot.matchReward" />
+      <slot />
+    </main>
     <RoomSidePanel
       :class="sideClass"
       enabled

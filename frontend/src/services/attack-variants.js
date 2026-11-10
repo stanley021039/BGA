@@ -5,8 +5,9 @@ export const attackVariant = (id) => {
   const effect = byId.get(id);
   return effect?.paletteHue === undefined ? undefined : effect;
 };
-export const attackArtworkKind = (id) => attackVariant(id)?.variantOf ?? id;
-export const isDefensiveAttack = (id) => ['shield', 'sphere'].includes(attackArtworkKind(id));
+export const attackArtworkKind = (id) => byId.get(id)?.variantOf ?? id;
+export const isDefensiveAttack = (id) =>
+  ['shield', 'sphere', 'crystal_reflection'].includes(attackArtworkKind(id));
 
 const gradientMethods = new Set([
   'createLinearGradient',

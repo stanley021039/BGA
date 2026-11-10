@@ -8,8 +8,7 @@ const { attackKind } = require('../src/rooms/attack-kind');
 const timing = require('../public/shared/attack-timing.json');
 const schedule = (id) => timing[attackKind(id)];
 const ordinary = effects.filter(
-  (effect) =>
-    !effect.area && !effect.ultimate && !['shield', 'sphere'].includes(attackKind(effect.id)),
+  (effect) => !effect.area && !effect.ultimate && effect.damageMultiplier !== 0,
 );
 // Movement utility trades some direct damage for positioning.
 const tunedMultiplier = {

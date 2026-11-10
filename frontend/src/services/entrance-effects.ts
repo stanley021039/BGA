@@ -4,9 +4,15 @@ import stitchEffects from '../../../public/shared/entrance-requirements.json';
 import palettes from '../../../public/shared/entrance-palette.json';
 
 export const entranceEffects = [...palettes.starters, ...stitchEffects, ...palettes.variants];
-const starterIds = new Set(palettes.starters.map((effect) => effect.id));
+const starterIds = new Set(
+  palettes.starters.filter((effect) => !effect.gachaOnly).map((effect) => effect.id),
+);
+const gachaOnlyIds = new Set(
+  palettes.starters.filter((effect) => effect.gachaOnly).map((effect) => effect.id),
+);
 const variants = new Map(palettes.variants.map((effect) => [effect.id, effect]));
 export const isFreeEntrance = (id: string) => starterIds.has(id);
+export const isGachaOnlyEntrance = (id: string) => gachaOnlyIds.has(id) || variants.has(id);
 export const entranceVariant = (id: string) => variants.get(id);
 export type EntranceEffectId = string;
 

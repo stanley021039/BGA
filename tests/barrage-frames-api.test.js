@@ -117,6 +117,9 @@ for (const type of ['poker', 'thunder', 'majority', 'gift', 'draw'])
         { id: 'steam', label: '蒸汽郵件' },
         { id: 'burst', label: '漫畫爆擊' },
         { id: 'royal', label: '皇家劇院' },
+        { id: 'observatory', label: '星儀觀測台' },
+        { id: 'abyssal-glass', label: '深海琉璃' },
+        { id: 'eclipse-theatre', label: '日蝕劇院' },
       ],
     );
     assert.ok(options.body.emojis.includes('🎉'));

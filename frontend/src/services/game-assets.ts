@@ -5,6 +5,9 @@ import { record, strings } from './validation';
 import { preloadAllowed, warm, whenIdle } from './preload';
 import AudioSettings from '../engines/audio-settings.js';
 import athleteTrackPreview from '../assets/second-wind/twisty-twirl-1600.webp';
+import { summonAssets } from './summon-assets';
+import { bearPortrait, bearSquad } from './attack-single-ultimates.js';
+import { malicePortrait } from './attack-ultimate-extra.js';
 
 // Art and sounds a game uses only once play starts, warmed while seats fill up.
 // Sound files follow the registry in public/shared/audio-settings.js.
@@ -18,6 +21,11 @@ export function warmGachaAudio(): void {
   });
 }
 export function warmNewSkillAssets(effect: string, width = 0, height = 0) {
+  const summon = summonAssets(effect);
+  if (summon) warm([summon[1]]);
+  if (effect.replace(/_alt$/, '') === 'rainbow_bear')
+    warm([bearPortrait(width, height), bearSquad(width, height)]);
+  if (effect.replace(/_alt$/, '') === 'human_malice') warm([malicePortrait(width, height)]);
   if (effect.replace(/_alt$/, '') === 'shaohua_devour')
     warm(['/assets/attacks/shaohua-closed.webp', '/assets/attacks/shaohua-open.webp']);
   if (effect.replace(/_alt$/, '') === 'reaper_seal') {

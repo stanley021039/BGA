@@ -394,7 +394,11 @@ test('new reward descriptors and client art preserve every old ID while enforcin
   const options = vm.runInNewContext('(' + optionsMatch[1] + ')');
   const artworkMatch = source.match(/const\s+artwork\s*=\s*(Object\.freeze\(\{[\s\S]*?\n\s*\}\));/);
   assert.ok(artworkMatch, 'client artwork remains an immutable declared dictionary');
-  const artwork = vm.runInNewContext('(' + artworkMatch[1] + ')');
+  const legendaryFrame = source.slice(
+    source.indexOf('  function legendaryFrame('),
+    source.indexOf('  const artwork ='),
+  );
+  const artwork = vm.runInNewContext(legendaryFrame + '\n(' + artworkMatch[1] + ')');
   for (const r of rewards) {
     const option = options.find((o) => o.id === r.frameId);
     assert.equal(option.achievementId, r.achievementId);
@@ -403,7 +407,9 @@ test('new reward descriptors and client art preserve every old ID while enforcin
     assert.ok(r.frameId.length <= 7);
     assert.ok(artwork[r.frameId].startsWith('<div'), r.frameId + ' has real client artwork');
   }
-  assert.equal(options.length, 48);
+  assert.equal(options.length, 51);
+  for (const option of options.filter((entry) => entry.gachaOnly))
+    assert.ok(artwork[option.id].includes('legendary-frame--' + option.id));
   assert.equal(rewards.find((r) => r.frameId === 'vinyl').achievementId, 'musicquiz-first-match');
   assert.equal(rewards.find((r) => r.frameId === 'encore').achievementId, 'musicquiz-intro-streak');
   new vm.Script(source);

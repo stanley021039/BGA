@@ -5,7 +5,7 @@ function ownedAttacks(db, userId) {
   if (gacha.enabled(db)) {
     const owned = new Set(gacha.ownedIds(db, userId, 'attacks'));
     return effects
-      .filter((e) => (!e.achievementId && !e.gachaOnly) || owned.has(e.id))
+      .filter((e) => (!e.achievementId && !e.gachaOnly) || owned.has(e.rewardOf ?? e.id))
       .map((e) => e.id);
   }
   const ids = new Set(
@@ -16,9 +16,10 @@ function ownedAttacks(db, userId) {
   );
   const all = !!require('./redemption').redeemedAt(db, userId, 'other');
   const starter = new Set(require('./starter-rewards').owned(db, userId, 'attacks'));
-  return effects
+  const earned = effects
     .filter(
       (e) =>
+        !e.rewardOf &&
         !('paletteHue' in e) &&
         ((!e.achievementId && !e.gachaOnly) ||
           all ||
@@ -26,5 +27,7 @@ function ownedAttacks(db, userId) {
           starter.has(e.id)),
     )
     .map((e) => e.id);
+  const earnedIds = new Set(earned);
+  return effects.filter((e) => earnedIds.has(e.rewardOf ?? e.id)).map((e) => e.id);
 }
 module.exports = { ownedAttacks };
