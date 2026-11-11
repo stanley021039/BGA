@@ -39,6 +39,7 @@ function validateGachaDatabase(db) {
             pool: response.pool,
             count: response.results?.length,
             ...(response.voucher === true ? { voucher: true } : {}),
+            ...(response.thirdLogin === true ? { thirdLogin: true } : {}),
           }
         : { operation: 'exchange', key: response.item?.key };
     if (digest(payload) !== row.fingerprint) throw Error('Invalid gacha receipt fingerprint');
@@ -54,6 +55,33 @@ function validateGachaDatabase(db) {
         (row.operation === 'draw' ? response.fragmentsGained : -response.cost)
     )
       throw Error('Gacha receipt disagrees with ledger');
+    if (response.thirdLogin !== undefined) {
+      const claim = 'third-login-epic-ten-claim:' + row.user_id;
+      const use = 'third-login-epic-ten:' + row.user_id;
+      const events = db
+        .prepare(
+          "SELECT event_id,fingerprint FROM gacha_ledger WHERE user_id=? AND reason='login' AND event_id IN (?,?)",
+        )
+        .all(row.user_id, claim, use);
+      if (
+        response.thirdLogin !== true ||
+        response.voucher !== undefined ||
+        row.operation !== 'draw' ||
+        response.pool !== 'all' ||
+        response.cost !== 0 ||
+        response.results?.length !== 10 ||
+        response.results[9]?.rarity !== 'epic' ||
+        events.length !== 2 ||
+        !events.some(
+          (event) => event.event_id === claim && event.fingerprint === digest({ event: claim }),
+        ) ||
+        !events.some(
+          (event) =>
+            event.event_id === use && event.fingerprint === digest({ requestId: row.request_id }),
+        )
+      )
+        throw Error('Invalid epic ten-draw voucher receipt');
+    }
     if (response.voucher !== undefined) {
       const events = db
         .prepare(

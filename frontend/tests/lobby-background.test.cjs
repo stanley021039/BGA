@@ -172,3 +172,28 @@ test('server cooldown failure preserves current background and displays the reas
     f.close();
   }
 });
+
+test('background motion persists independently of visibility and synchronizes storage changes', () => {
+  const saved = new Map(),
+    f = fixture(
+      () => {
+        throw Error('must not request');
+      },
+      { saved },
+    );
+  f.store.setAnimated(false);
+  f.store.setVisible(false);
+  f.store.setVisible(true);
+  assert.equal(f.store.animated, false);
+  const next = fixture(() => {}, { saved });
+  assert.equal(next.store.animated, false);
+  saved.set('bga-lobby-background-animation-v1', 'on');
+  next.storage('bga-lobby-background-animation-v1');
+  assert.equal(next.store.animated, true);
+  saved.clear();
+  f.storage(null);
+  assert.equal(f.store.animated, true);
+  next.close();
+  f.close();
+  assert.equal(f.listeners.size, 0);
+});

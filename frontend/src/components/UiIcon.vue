@@ -67,6 +67,7 @@ const allowed = new Set([
   'healing',
   'shield',
   'frost',
+  'paralysis',
   'scene-damage',
   'haste',
   'timer',

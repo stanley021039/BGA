@@ -47,10 +47,18 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     actor.shieldResidualUntil = 0;
     actor.guardEnergyReady = false;
     actor.guardEnergy = null;
+    actor.bijuuSlowUntil =
+      actor.strongSlowUntil =
+      actor.orangeSlowUntil =
+      actor.critBuffUntil =
+      actor.energyDebuffUntil =
+      actor.regenBuffUntil =
+      actor.regenDebuffUntil =
+        0;
     actor.slowUntil = 0;
     actor.teleportBlockedUntil = 0;
     actor.hasteUntil = 0;
-    actor.immobileUntil = 0;
+    actor.immobileUntil = actor.stasisUntil = 0;
     actor.heroFlightUntil = 0;
     actor.sealedUntil = 0;
     actor.summon = null;
@@ -118,15 +126,34 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       );
       const ticks = time < blockedUntil ? 0 : Math.max(0, Math.floor((time - start) / 1000));
       if (ticks) {
-        const boostedTicks = Math.max(
-          0,
-          Math.min(ticks, Math.ceil(((actor.guanyinUntil || 0) - start) / 1000) - 1),
-        );
+        const modifiers = [
+          [actor.guanyinUntil || 0, rules.guanyinBonus.multiplier],
+          [actor.regenBuffUntil || 0, 1.1],
+          [actor.regenDebuffUntil || 0, 0.9],
+        ];
+        const boundaries = [
+          ...new Set([
+            1,
+            ticks + 1,
+            ...modifiers.map(([until]) =>
+              Math.max(1, Math.min(ticks + 1, Math.ceil((until - start) / 1000))),
+            ),
+          ]),
+        ].sort((a, b) => a - b);
+        let healing = 0;
+        for (let i = 1; i < boundaries.length; i++) {
+          const tickAt = start + boundaries[i - 1] * 1000;
+          const multiplier = modifiers.reduce(
+            (m, [until, factor]) => m * (tickAt < until ? factor : 1),
+            1,
+          );
+          healing += (boundaries[i] - boundaries[i - 1]) * multiplier;
+        }
         actor.health = Math.min(
           actor.maxHealth,
           actor.health +
             Math.round(
-              (ticks + boostedTicks * (rules.guanyinBonus.multiplier - 1)) *
+              healing *
                 rules.regeneration.perSecond *
                 rules.unitScale *
                 (actor.authorBonus ? rules.authorBonus.regenerationMultiplier : 1),
@@ -183,10 +210,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       );
       actor.lastHitAt = actor.regenAt = time;
     }
-    if (effect === 'guanyin_barrage') {
-      actor.guanyinUntil = time + rules.guanyinBonus.durationMs;
-      syncScale(actor, time);
-    }
+
     if (effect === 'excalibur') actor.excaliburUntil = time + rules.excaliburGuard.durationMs;
   }
   function freeze(actor, time, duration = 1000) {
@@ -259,6 +283,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
   }
   function canCast(actor, time) {
     alive(actor);
+    if (time < (actor.stasisUntil || 0))
+      throw new HttpError(409, 'SCENE_TIME_STOPPED', '時間暫停中');
     if (time < (actor.heroFlightUntil || 0))
       throw new HttpError(409, 'SCENE_FLYING', '降臨途中暫時無法施法');
     if (time < (actor.sealedUntil || 0))
@@ -312,7 +338,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       }
       if (!touchesFragment(actor, eligibleFrom, part)) continue;
       owner.fragment = null;
-      energy.gain(actor, rules.fragment.stealEnergy);
+      energy.gain(actor, rules.fragment.stealEnergy, undefined, false);
     }
   }
   function applyEffect(
@@ -327,6 +353,28 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
   ) {
     effect = attackKind(effect);
     if (!actor.health || actor.kind === 'fragment') return;
+    const owner = from.energyActor || from;
+    const valid = owner.health > 0 && (!from.energyActor || owner.lifeId === from.energyLifeId);
+    if (effect === 'chain_lightning' && random() < 0.1) freeze(actor, time, 1000);
+    if (
+      ['tidal_blades', 'magnetic_disc'].includes(effect) &&
+      random() < (effect === 'tidal_blades' ? 0.15 : 0.1)
+    )
+      actor.slowUntil = Math.max(actor.slowUntil || 0, time + 1500);
+    if (firstContact) {
+      if (effect === 'chains') {
+        if (random() < 0.2)
+          actor.strongSlowUntil = Math.max(actor.strongSlowUntil || 0, time + 1500);
+        if (random() < 0.3) actor.slowUntil = Math.max(actor.slowUntil || 0, time + 1500);
+      }
+      if (effect === 'arrow_volley' && valid) owner.critBuffUntil = time + 2000;
+      if (effect === 'bell_shockwave' && valid) {
+        owner.hasteUntil = time + 800;
+        owner.regenBuffUntil = time + 2000;
+      }
+      if (effect === 'seeking_talismans') actor.energyDebuffUntil = time + 2000;
+      if (effect === 'sakura_swarm') actor.regenDebuffUntil = time + 2000;
+    }
     if (effect === 'reaper_seal')
       actor.sealedUntil = Math.max(actor.sealedUntil || 0, time + rules.reaperSeal.durationMs);
     if (effect === 'gate_of_heroes') {
@@ -340,13 +388,13 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         vertical: true,
       };
     }
-    if (effect === 'bijuu_beam' || (firstContact && effect === 'chains')) {
+    if (effect === 'bijuu_beam') {
       const config = effect === 'chains' ? rules.chains : rules.bijuuImmobilize;
       if (random() < (config.immobilizeChance ?? config.chance))
         freeze(actor, time, config.immobilizeMs ?? config.durationMs);
       if (random() < config.slowChance)
-        actor.slowUntil = Math.max(
-          actor.slowUntil || 0,
+        actor.bijuuSlowUntil = Math.max(
+          actor.bijuuSlowUntil || 0,
           Math.max(time, actor.immobileUntil || 0) + rules.frost.durationMs,
         );
     }
@@ -355,11 +403,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         actor.teleportBlockedUntil || 0,
         time + rules.orbitalTeleportBlock.durationMs,
       );
-    if (
-      firstContact &&
-      (effect === 'arrow_volley' || effect === 'flame_vortex') &&
-      random() < rules.ordinaryDot.chance
-    )
+    if (firstContact && effect === 'flame_vortex' && random() < rules.ordinaryDot.chance)
       actor.ordinaryDot = {
         from,
         effect,
@@ -378,6 +422,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         actor.immobileUntil + rules.orangeCat.slowMs,
       );
     }
+    if (effect === 'giant_orange_cat')
+      actor.orangeSlowUntil = actor.immobileUntil + rules.orangeCat.slowMs;
     if (effect === 'dimension_cleave' && !actor.severed) {
       const angle = random() * Math.PI * 2;
       let point = {
@@ -451,6 +497,9 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       actor.drillDot = { from, nextAt: time + 1000, remaining: 3 };
     }
   }
+  function rollChance(chance) {
+    return random() < chance;
+  }
   function targets(actors) {
     return [...actors].flatMap((actor) =>
       actor.fragment && actor.health > 0 ? [actor, actor.fragment] : [actor],
@@ -485,10 +534,26 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       ? (from.comboDamage ?? rollBabylonDamage(from))
       : minimum +
         Math.floor(random() * ((rules.damage.max - rules.damage.min) * rules.unitScale + 1));
+    const caster = from.energyActor || from;
+    const validCaster =
+      caster.health > 0 && (!from.energyActor || caster.lifeId === from.energyLifeId);
+    if (effect === 'guanyin_barrage' && validCaster && !from.guanyinTriggered) {
+      from.guanyinTriggered = true;
+      caster.guanyinUntil = from.guanyinUntil = time + rules.guanyinBonus.durationMs;
+      syncScale(caster, time);
+    }
     const critical =
       effect !== 'shaohua_devour' &&
       phase !== 'ordinary-dot' &&
-      random() < rules.damage.criticalChance;
+      random() <
+        (effect === 'barrage'
+          ? 0.3
+          : effect === 'photon_sniper'
+            ? 0.4
+            : rules.damage.criticalChance) +
+          (validCaster && !energy.fitsSlot('r', effect) && time < (caster.critBuffUntil || 0)
+            ? 0.05
+            : 0);
     // A whole-cast budget preserves the requested author range. Integer partitions
     // sum exactly; Ea takes two thirds, the four weapon salvos share one third.
     const weapons = Math.round(base / 3);
@@ -528,7 +593,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         : 1;
     const rawDamage =
       effect === 'shaohua_devour'
-        ? Math.round(Math.max(0, to.health - 1) * cover)
+        ? Math.min(to.health - 1, Math.round(Math.max(0, to.health * 0.9) * cover))
         : Math.round(
             incoming *
               cover *
@@ -573,7 +638,28 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       helpers.set(from.id, { actor: from, at: time });
     }
     if (phase !== 'ordinary-dot' && !(effect === 'starburst_stream' && phase !== 'slash1'))
-      energy.hit(from, to, effect, damage);
+      energy.hit(from, to, effect, damage, phase);
+    if (damage > 0 && phase !== 'ordinary-dot' && validCaster) {
+      if (['funnel', 'plasma_pulse', 'railgun'].includes(effect))
+        to.energy = Math.max(0, (to.energy || 0) - (effect === 'railgun' ? 10 : 5));
+      if (effect === 'refracting_prism') {
+        const count = from.healCount || 0;
+        if (count < 3) {
+          caster.health = Math.min(
+            caster.maxHealth,
+            caster.health + Math.round(caster.maxHealth * 0.01),
+          );
+          from.healCount = count + 1;
+        }
+      }
+      if (effect === 'shadow_lunge' && !from.directHealed) {
+        from.directHealed = true;
+        caster.health = Math.min(
+          caster.maxHealth,
+          caster.health + Math.round(caster.maxHealth * 0.02),
+        );
+      }
+    }
     if (
       to.guardEnergyReady &&
       time < to.shieldUntil &&
@@ -602,6 +688,16 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     return { damage, critical, ...(weakened && { weakened }) };
   }
   function clearDeath(actor, time) {
+    actor.bijuuSlowUntil =
+      actor.strongSlowUntil =
+      actor.orangeSlowUntil =
+      actor.critBuffUntil =
+      actor.energyDebuffUntil =
+      actor.regenBuffUntil =
+      actor.regenDebuffUntil =
+      actor.stasisUntil =
+      actor.immobileUntil =
+        0;
     actor.summon = null;
     actor.kissedUntil = 0;
     actor.equation = null;
@@ -667,6 +763,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
                   ? actor.guardEnergy.amount
                   : 0,
               guanyin,
+              paralysisMs: living ? Math.max(0, (actor.immobileUntil || 0) - time) : 0,
               excalibur: living && time < (actor.excaliburUntil || 0),
               shield:
                 !living || time >= (actor.shieldResidualUntil || 0)
@@ -702,7 +799,9 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
                 rules.regeneration.perSecond *
                   rules.unitScale *
                   (actor.authorBonus ? rules.authorBonus.regenerationMultiplier : 1) *
-                  (guanyin ? rules.guanyinBonus.multiplier : 1),
+                  (guanyin ? rules.guanyinBonus.multiplier : 1) *
+                  (time < (actor.regenBuffUntil || 0) ? 1.1 : 1) *
+                  (time < (actor.regenDebuffUntil || 0) ? 0.9 : 1),
               ),
             },
           }
@@ -716,9 +815,25 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       immobileUntil: actor.immobileUntil || 0,
       guardFullMs: living ? Math.max(0, guardFullUntil - time) : 0,
       guardMs: living ? Math.max(0, guardUntil - time) : 0,
+      slowMultiplier:
+        time < (actor.strongSlowUntil || 0)
+          ? 0.5
+          : time < (actor.orangeSlowUntil || 0)
+            ? 0.6
+            : time < (actor.bijuuSlowUntil || 0)
+              ? 0.7
+              : rules.frost.speedMultiplier,
       slowMs:
         living && time >= (actor.immobileUntil || 0)
-          ? Math.max(0, (actor.slowUntil || 0) - time)
+          ? Math.max(
+              0,
+              Math.max(
+                actor.slowUntil || 0,
+                actor.strongSlowUntil || 0,
+                actor.orangeSlowUntil || 0,
+                actor.bijuuSlowUntil || 0,
+              ) - time,
+            )
           : 0,
       teleportBlockedUntil: actor.teleportBlockedUntil || 0,
       hasteMs: living ? Math.max(0, (actor.hasteUntil || 0) - time) : 0,
@@ -762,6 +877,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     };
   }
   return {
+    rollChance,
     reset,
     environmentDamage,
     advance,

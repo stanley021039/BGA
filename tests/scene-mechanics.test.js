@@ -16,11 +16,11 @@ function actors() {
 }
 test('explosion multiplies standard area damage by 1.5 and Ea stage weighs twice the weapon volley', () => {
   const { combat, a, b } = actors();
-  assert.equal(combat.hit(a, b, 0, 'guanyin_barrage').damage, 400000);
+  assert.equal(combat.hit(a, b, 0, 'guanyin_barrage').damage, 440000);
   b.health = b.maxHealth;
-  assert.equal(combat.hit(a, b, 0, 'explosion').damage, 600000);
+  assert.equal(combat.hit(a, b, 3000, 'explosion').damage, 600000);
   b.health = 5000000;
-  assert.equal(combat.hit(a, b, 0, 'gate_of_babylon', 2).damage, 562319);
+  assert.equal(combat.hit(a, b, 3000, 'gate_of_babylon', 2).damage, 507493);
 });
 test('bijuu freezes three distinct narrow target paths, excludes a fourth and misses someone who dodges', () => {
   const { combat, a, b } = actors();
@@ -71,7 +71,7 @@ test('detached lower body has half max health, can be picked up without healing,
   const fragment = b.fragment;
   assert.equal(fragment.health, 600000);
   assert.equal(fragment.maxHealth, 600000);
-  assert.equal(b.health, 800000);
+  assert.equal(b.health, 840000);
   assert.equal(b.severed, true);
   assert.equal(selectAttackTargets(b, combat.targets([b]), 'beam', 1).length, 0);
   assert.equal(combat.hit(b, fragment, 1, 'beam').damage, 0);
@@ -82,7 +82,7 @@ test('detached lower body has half max health, can be picked up without healing,
   combat.collect(b);
   assert.equal(b.fragment, null);
   assert.equal(b.severed, false);
-  assert.equal(b.health, 800000);
+  assert.equal(b.health, 840000);
   assert.equal(combat.hit(a, fragment, 2, 'beam').damage, 0);
 });
 test('destroying the lower body halves current health once, preserves max health and does not award a kill', () => {
@@ -92,10 +92,10 @@ test('destroying the lower body halves current health once, preserves max health
   const fragment = b.fragment;
   for (let i = 0; i < 3; i++) combat.hit(a, fragment, 100 + i, 'beam');
   assert.equal(b.fragment, null);
-  assert.equal(b.health, 400000);
+  assert.equal(b.health, 420000);
   assert.equal(b.maxHealth, 1200000);
   combat.hit(a, fragment, 105, 'beam');
-  assert.equal(b.health, 400000);
+  assert.equal(b.health, 420000);
   assert.equal(a.kda.kills, 0);
   assert.equal(b.kda.deaths, 0);
   combat.applyEffect(a, b, 106, 'dimension_cleave', a);
@@ -137,7 +137,7 @@ test('drill knocks a survivor away, then applies three bounded one-second ticks 
   assert.equal(b.health, reborn);
 });
 for (const kind of ['lobby', 'room'])
-  test(`${kind}: explosion and giant cat immobilize exactly one second and block teleport too`, () => {
+  test(`${kind}: explosion recovery lasts 1.5 seconds and giant cat immobilizes one second and block teleport too`, () => {
     let time = 0;
     const users = ['a', 'b'].map((id) => ({ id, display_name: id, name: id }));
     const lobby = createLobby(
@@ -188,10 +188,10 @@ for (const kind of ['lobby', 'room'])
     cast('explosion', 'explosion-cast-001');
     time = castAt + 999;
     assert.doesNotThrow(() => move(0));
-    time = castAt + 5099;
+    time = castAt + 5599;
     assert.throws(() => move(0), { code: 'SCENE_IMMOBILIZED' });
     assert.throws(() => teleport(0), { code: 'SCENE_IMMOBILIZED' });
-    time = castAt + 5100;
+    time = castAt + 5600;
     assert.doesNotThrow(() => move(0));
     // Keep the caster still before the next, independently aimed cast.
     time = castAt + 8000;

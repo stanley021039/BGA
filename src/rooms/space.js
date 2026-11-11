@@ -35,6 +35,9 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       position.passage,
       {
         slowMs: Math.max(0, (position.slowUntil || 0) - walkFrom),
+        strongSlowMs: Math.max(0, (position.strongSlowUntil || 0) - walkFrom),
+        orangeSlowMs: Math.max(0, (position.orangeSlowUntil || 0) - walkFrom),
+        bijuuSlowMs: Math.max(0, (position.bijuuSlowUntil || 0) - walkFrom),
         hasteMs: Math.max(0, (position.hasteUntil || 0) - walkFrom),
         speed: authorSpeed(position),
       },

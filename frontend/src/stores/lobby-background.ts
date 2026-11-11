@@ -9,12 +9,33 @@ export const lobbyBackgrounds = backgrounds;
 export const useLobbyBackgroundStore = defineStore('lobby-background', () => {
   const selected = ref('default'),
     visible = ref(true),
+    animated = ref(true),
+    animationPersisted = ref(true),
     visibilityPersisted = ref(true),
     pending = ref(false),
     message = ref(''),
     nextChangeAt = ref(0);
   // Local display is independent of the authoritative shared background.
   const visibilityKey = 'bga-lobby-background-display-v1';
+  const animationKey = 'bga-lobby-background-animation-v1';
+  function readAnimation() {
+    try {
+      animated.value = localStorage.getItem(animationKey) !== 'off';
+      animationPersisted.value = true;
+    } catch {
+      animationPersisted.value = false;
+    }
+  }
+  readAnimation();
+  function setAnimated(value: boolean) {
+    animated.value = value;
+    try {
+      localStorage.setItem(animationKey, value ? 'on' : 'off');
+      animationPersisted.value = true;
+    } catch {
+      animationPersisted.value = false;
+    }
+  }
   function readVisibility() {
     try {
       visible.value = localStorage.getItem(visibilityKey) !== 'off';
@@ -35,6 +56,7 @@ export const useLobbyBackgroundStore = defineStore('lobby-background', () => {
   }
   function storage(event: StorageEvent) {
     if (event.key === visibilityKey || event.key === null) readVisibility();
+    if (event.key === animationKey || event.key === null) readAnimation();
   }
   if (typeof window !== 'undefined') {
     window.addEventListener('storage', storage);
@@ -74,6 +96,9 @@ export const useLobbyBackgroundStore = defineStore('lobby-background', () => {
   return {
     selected,
     visible,
+    animated,
+    animationPersisted,
+    setAnimated,
     visibilityPersisted,
     setVisible,
     pending,

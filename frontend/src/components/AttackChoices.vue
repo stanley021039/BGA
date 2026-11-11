@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SkillGuide from './SkillGuide.vue';
 import sceneRules from '../../../public/shared/scene-rules.json';
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { attackEffectGroups } from '../services/effect-variants';
@@ -109,6 +110,7 @@ function play(id: string) {
 }
 </script>
 <template>
+  <SkillGuide />
   <div class="attack-choices" :class="{ 'attack-choices-expanded': expandedList }"
     ><div
       v-if="showCurrent"
@@ -147,12 +149,12 @@ function play(id: string) {
         >。</p
       >
       <p
-        ><strong>回能</strong>　普通招式每段命中 +{{ sceneRules.energy.lobbyOrdinaryHit }}（能量型
-        +{{ sceneRules.energy.energyArchetypeHit }}），受傷 +{{
+        ><strong>回能</strong>　普通招式首段命中 +{{ sceneRules.energy.lobbyOrdinaryHit }}，受傷 +{{
           sceneRules.energy.receivedHit
-        }}，移動每秒 +{{ sceneRules.energy.movementPerSecond }}。大招命中不回能給施放者。</p
-      >
-      <p><strong>普通招式總傷害</strong>　1 段 100% · 2 段 90% · 3 段 80% · 4 段 70%。</p> </div
+        }}，移動每秒 +{{
+          sceneRules.energy.movementPerSecond
+        }}。第二、三段回能減半，第四段起不回能。大招命中不回能。</p
+      > </div
     ><div class="attack-loadout" :class="{ 'has-confirm': $slots.confirm }"
       ><UiField
         v-for="slot in ['q', 'e', 'r'] as const"

@@ -128,7 +128,7 @@ function createLobbyPickups(now, random, arena, coverGeometry = covers, expanded
         );
       } else if (item.kind === 'energy') {
         if ((actor.energy || 0) >= energy.maximum(actor)) continue;
-        energy.gain(actor, rules.energy);
+        energy.gain(actor, rules.energy, undefined, false);
       } else if (item.kind === 'speed') {
         actor.pickupSpeedAt = time;
         actor.pickupSpeedUntil = time + rules.effectMs;

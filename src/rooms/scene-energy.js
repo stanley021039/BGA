@@ -1,4 +1,5 @@
 const { HttpError } = require('../http/errors');
+const { attackKind } = require('./attack-kind');
 const { profile } = require('./archetypes');
 const { energy: rules, authorBonus } = require('../../public/shared/scene-rules.json');
 const effects = require('../../public/shared/attack-effects.json');
@@ -15,9 +16,12 @@ function fitsSlot(slot, effect) {
 function maximum(actor) {
   return actor.energyMaximum ?? rules.maximum;
 }
-function gain(actor, amount, multiplier = profile(actor).energyGain ?? 1) {
+function gain(actor, amount, multiplier = profile(actor).energyGain ?? 1, combatGain = true) {
   const author = actor.authorBonus ? authorBonus.energyMultiplier : 1;
-  const next = (actor.energy || 0) + amount * multiplier * author;
+  const time = actor.combatAt || 0;
+  const bonus = time < (actor.guanyinUntil || 0) ? 1.1 : 1;
+  const debuff = combatGain && time < (actor.energyDebuffUntil || 0) ? 0.9 : 1;
+  const next = (actor.energy || 0) + amount * multiplier * author * bonus * debuff;
   actor.energy = Math.min(maximum(actor), Math.round(next * 10) / 10);
 }
 function walk(actor, durationMs) {
@@ -48,7 +52,7 @@ function spend(actor, slot) {
     actor.energyWalkMs = 0;
   }
 }
-function hit(from, to, effect, damage) {
+function hit(from, to, effect, damage, phase = '') {
   if (damage <= 0 || to.kind === 'fragment') return;
   gain(to, rules.receivedHit);
   const owner = from.energyActor || from;
@@ -57,10 +61,16 @@ function hit(from, to, effect, damage) {
     owner.health > 0 &&
     (!from.energyActor || owner.lifeId === from.energyLifeId)
   ) {
-    const remaining = from.ordinaryEnergyRemaining;
+    if (attackKind(effect) === 'returning_moon' && phase === 'return') return;
+    const index = from.energyActor ? from.ordinaryHitIndex || 0 : 0;
+    if (from.energyActor) from.ordinaryHitIndex = index + 1;
+    const budget = from.reflectionBudget || from;
+    const remaining = budget.ordinaryEnergyRemaining;
     const perHit = owner.ordinaryHitEnergy ?? rules.ordinaryHit;
-    const amount = Math.min(remaining ?? perHit, perHit);
-    if (remaining !== undefined) from.ordinaryEnergyRemaining -= amount;
+    const base = index === 0 ? perHit : index < 3 ? perHit / 2 : 0;
+    const desired = base * (attackKind(effect) === 'beam' ? 1.1 : 1);
+    const amount = Math.min(remaining ?? desired, desired);
+    if (remaining !== undefined) budget.ordinaryEnergyRemaining -= amount;
     const multiplier = owner.archetype === 'energy' ? rules.energyArchetypeHit / perHit : 1;
     gain(owner, amount, multiplier);
   }

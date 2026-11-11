@@ -602,3 +602,41 @@ test('legendary frames and player styles require independent ownership', (t) => 
     assert.ok(!achievements.list(other).bonusRewards.media.includes(id));
   }
 });
+
+test('third-login claim grants only a voucher; redemption is a free idempotent epic-ending ten draw', (t) => {
+  let now = Date.parse('2026-11-01T12:00:00Z');
+  const { db, user, store } = fixture(t, { clock: () => now, choose: () => 0 });
+  store.daily(user);
+  assert.throws(() => store.claimCheckin(user, 'epic-ten'), { code: 'GACHA_CHECKIN_NOT_READY' });
+  const input = { requestId: randomUUID(), pool: 'all', count: 10, thirdLogin: true };
+  assert.throws(() => store.draw(user, input), { code: 'GACHA_EPIC_TEN_UNAVAILABLE' });
+  now += 86400000;
+  store.daily(user);
+  now += 86400000;
+  store.daily(user);
+  const before = store.wallet(user),
+    claimed = store.claimCheckin(user, 'epic-ten');
+  assert.equal(claimed.epicTen.status, 'available');
+  assert.equal(claimed.epicResults, undefined);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM gacha_requests WHERE user_id=?').get(user).n, 0);
+  assert.equal(store.wallet(user).coins, before.coins);
+  assert.equal(store.state(user).epicTenAvailable, true);
+  assert.equal(store.claimCheckin(user, 'epic-ten').epicTen.status, 'available');
+  const result = store.draw(user, input);
+  assert.equal(result.results.length, 10);
+  assert.equal(result.results[9].rarity, 'epic');
+  assert.equal(result.cost, 0);
+  assert.equal(result.wallet.coins, before.coins);
+  assert.equal(store.checkin(user).epicTen.status, 'used');
+  assert.equal(store.state(user).epicTenAvailable, false);
+  assert.deepEqual(store.draw(user, input), result);
+  assert.throws(() => store.draw(user, { ...input, requestId: randomUUID() }), {
+    code: 'GACHA_EPIC_TEN_UNAVAILABLE',
+  });
+  assert.deepEqual(store.drawCounts(user), new Map());
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM gacha_requests WHERE user_id=?').get(user).n, 1);
+  const { validateGachaDatabase } = require('../src/gacha/validation');
+  assert.doesNotThrow(() => validateGachaDatabase(db));
+  db.prepare('DELETE FROM gacha_ledger WHERE event_id=?').run('third-login-epic-ten-claim:' + user);
+  assert.throws(() => validateGachaDatabase(db), /Invalid epic ten-draw voucher receipt/);
+});

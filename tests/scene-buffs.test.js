@@ -16,21 +16,22 @@ function setup(author = false) {
   combat.advance(b, 0);
   return { combat, a, b };
 }
-test('Guanyin health scales proportionally, refreshes without healing, and expires exactly at two seconds', () => {
+test('Guanyin health scales proportionally, refreshes without healing, and starts at first impact and expires three seconds later', () => {
   for (const author of [false, true]) {
     const { combat, a, b } = setup(author),
       max = a.maxHealth;
     a.health = max / 2;
     combat.cast(a, 'guanyin_barrage', 1000);
+    combat.hit({ ...a, energyActor: a, energyLifeId: a.lifeId }, b, 1000, 'guanyin_barrage', 0.2);
     assert.equal(a.maxHealth, Math.round(max * 1.1));
     assert.equal(a.health, a.maxHealth / 2);
-    combat.cast(a, 'guanyin_barrage', 1500);
+    combat.hit({ ...a, energyActor: a, energyLifeId: a.lifeId }, b, 1500, 'guanyin_barrage', 0.2);
     assert.equal(a.health, a.maxHealth / 2);
-    assert.equal(combat.hit(a, b, 3499, 'beam').damage, author ? 253000 : 220000);
-    assert.equal(combat.hit(a, b, 3500, 'beam').damage, author ? 230000 : 200000);
+    assert.equal(combat.hit(a, b, 4499, 'beam').damage, author ? 253000 : 220000);
+    assert.equal(combat.hit(a, b, 4500, 'beam').damage, author ? 230000 : 200000);
     // Keep wounded with no eligible regeneration ticks during the expiry check.
-    a.lastHitAt = a.regenAt = 2000;
-    combat.advance(a, 3500);
+    a.lastHitAt = a.regenAt = 4000;
+    combat.advance(a, 4500);
     assert.equal(a.maxHealth, max);
     assert.equal(a.health, max / 2);
   }
@@ -39,9 +40,9 @@ test('Guanyin regen bonus is ten percent, stacks with author proportionally, and
   for (const author of [false, true]) {
     const early = setup(author),
       late = setup(author);
-    for (const { combat, a } of [early, late]) {
+    for (const { combat, a, b } of [early, late]) {
       a.health = 400000;
-      combat.cast(a, 'guanyin_barrage', 2500);
+      combat.hit({ ...a, energyActor: a, energyLifeId: a.lifeId }, b, 2500, 'guanyin_barrage', 0.2);
     }
     for (const t of [3000, 4000, 4500, 5000, 6000]) early.combat.advance(early.a, t);
     late.combat.advance(late.a, 6000);
@@ -59,10 +60,10 @@ test('Excalibur has twenty percent guard only during its cast and composes with 
   combat.protect(b, 1100);
   assert.equal(combat.hit(a, b, 1200, 'beam').damage, 104000);
   assert.equal(combat.hit(a, b, 3100, 'beam').damage, 132000);
-  assert.equal(combat.hit(a, b, 5099, 'beam').damage, 132000);
-  assert.equal(combat.hit(a, b, 5100, 'beam').damage, 165000);
+  assert.equal(combat.hit(a, b, 4999, 'beam').damage, 132000);
+  assert.equal(combat.hit(a, b, 5000, 'beam').damage, 165000);
   b.health = 1;
-  combat.hit(a, b, 5101, 'beam');
+  combat.hit(a, b, 5001, 'beam');
   assert.equal(b.excaliburUntil, 0);
   assert.equal(b.shieldResidualUntil, 0);
 });
@@ -93,8 +94,8 @@ test('Explosion recovery starts after VFX and never carries over to a respawned 
     advance(4100);
     if (reborn) assert.doesNotThrow(() => combat.canMove(a, 4100));
     else {
-      assert.throws(() => combat.canMove(a, 5099), { code: 'SCENE_IMMOBILIZED' });
-      assert.doesNotThrow(() => combat.canMove(a, 5100));
+      assert.throws(() => combat.canMove(a, 5599), { code: 'SCENE_IMMOBILIZED' });
+      assert.doesNotThrow(() => combat.canMove(a, 5600));
     }
   }
 });
@@ -110,8 +111,16 @@ test('staged attacks divide a fixed total, with explicit Ea and phoenix extra ph
     );
     const total = phases.reduce((sum, p) => sum + p[1], 0);
     assert.ok(
-      Math.abs(total - (effect === 'gate_of_babylon' ? 3 : effect === 'solar_phoenix' ? 1.2 : 1)) <
-        1e-9,
+      Math.abs(
+        total -
+          (effect === 'gate_of_babylon'
+            ? 3
+            : effect === 'solar_phoenix'
+              ? 1.2
+              : effect === 'returning_moon'
+                ? 1.5
+                : 1),
+      ) < 1e-9,
       effect,
     );
   }
@@ -137,7 +146,7 @@ test('self-only status reports real shield phases, temporary buffs and the two-s
   const { combat, a, b } = setup(true);
   assert.equal(combat.view(a).combatStatus, undefined);
   combat.protect(a, 0);
-  combat.cast(a, 'guanyin_barrage', 0);
+  combat.hit({ ...a, energyActor: a, energyLifeId: a.lifeId }, b, 0, 'guanyin_barrage', 0.2);
   combat.cast(a, 'excalibur', 0);
   combat.advance(a, 1500);
   let status = combat.view(a, true).combatStatus;

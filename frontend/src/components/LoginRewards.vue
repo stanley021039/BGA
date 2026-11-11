@@ -18,7 +18,7 @@ const error = ref('');
 let controller: AbortController | undefined;
 let shownDay = '';
 
-async function refresh(kind?: 'daily' | 'legendary') {
+async function refresh(kind?: 'daily' | 'legendary' | 'epic-ten') {
   if (busy.value) return;
   const request = new AbortController();
   controller = request;
@@ -47,7 +47,11 @@ async function refresh(kind?: 'daily' | 'legendary') {
 
 async function showToday() {
   const next = await refresh();
-  if (!next || shownDay === next.day || (next.claimed && next.milestone.status !== 'claimable'))
+  if (
+    !next ||
+    shownDay === next.day ||
+    (next.claimed && next.milestone.status !== 'claimable' && next.epicTen?.status !== 'claimable')
+  )
     return;
   shownDay = next.day;
   const key = 'bga:login-rewards:shown:' + props.userId;
@@ -125,6 +129,29 @@ const number = new Intl.NumberFormat('zh-TW');
             />
           </div>
         </UiPanel>
+        <UiPanel
+          v-if="rewards.epicTen"
+          title="史詩十連抽券"
+          description="首次累積登入三天可領。到抽卡機使用，前九抽一般機率，第十抽固定史詩。"
+          density="compact"
+        >
+          <div class="login-reward-actions">
+            <span>累積登入 {{ Math.min(rewards.visits, 3) }}／3 天</span>
+            <UiButton
+              v-if="rewards.epicTen.status === 'claimable'"
+              label="領取史詩十連券"
+              variant="primary"
+              :disabled="busy"
+              @click="refresh('epic-ten')"
+            />
+            <UiLink
+              v-else-if="rewards.epicTen.status === 'available'"
+              href="/gacha"
+              label="前往抽卡機使用"
+            />
+            <UiBadge v-else-if="rewards.epicTen.status === 'used'" tone="success">已使用</UiBadge>
+          </div>
+        </UiPanel>
         <UiPanel title="傳說單抽券" description="首次累積登入七天，可領取一次。" density="compact">
           <div class="login-reward-actions">
             <div class="login-reward-progress">
@@ -187,6 +214,9 @@ const number = new Intl.NumberFormat('zh-TW');
 }
 .login-reward-day strong {
   font-size: var(--stitch-text-section);
+}
+.login-reward-day[data-tone='selected'] strong {
+  color: var(--stitch-selected-ink);
 }
 .login-reward-stamp {
   transform: rotate(-7deg);

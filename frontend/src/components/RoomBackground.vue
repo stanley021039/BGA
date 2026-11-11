@@ -354,7 +354,8 @@ onBeforeUnmount(() => {
       !focused &&
       !inert &&
       self?.health &&
-      (self.slowMs ||
+      (self.combatStatus?.paralysisMs ||
+        self.slowMs ||
         self.hasteMs ||
         self.combatStatus?.guardEnergy ||
         self.combatStatus?.teleportBlockedMs ||

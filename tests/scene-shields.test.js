@@ -169,7 +169,7 @@ test('both shields, hero landing and Excalibur publish their visual lifetime to 
     ['shield', 2000, 4000],
     ['sphere', 2000, 5000],
     ['gate_of_heroes', 2000, 5000],
-    ['excalibur', 4100, 4100],
+    ['excalibur', 4000, 4000],
   ]) {
     const actor = { health: undefined, x: 0, y: 0 };
     combat.advance(actor, 100);

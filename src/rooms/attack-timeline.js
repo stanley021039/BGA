@@ -30,7 +30,13 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
   function armReflection(event, actor) {
     event.hits = [];
     event.until = event.at + reflectionWindow + reflectionTravelMs + reflectionSettleMs;
-    const state = { jobs: [], lifeId: actor.lifeId };
+    const state = {
+      jobs: [],
+      lifeId: actor.lifeId,
+      energyBudget: {
+        ordinaryEnergyRemaining: actor.ordinaryHitEnergy ?? rules.energy.ordinaryHit,
+      },
+    };
     runtime.set(event, state);
     reflections.set(actor, { event, state });
   }
@@ -77,6 +83,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
         health: 1,
         energyActor: actor,
         energyLifeId: actor.lifeId,
+        reflectionBudget: guard.state.energyBudget,
         authorBonus: actor.authorBonus,
         guanyinUntil: actor.guanyinUntil,
         kda: actor.kda,
@@ -104,9 +111,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
     const source = {
       energyActor: self,
       energyLifeId: self.lifeId,
-      ...(effect === 'micro_missiles'
-        ? { ordinaryEnergyRemaining: rules.energy.missileCastCap }
-        : {}),
+      ordinaryHitIndex: 0,
       id: self.id,
       combatEpoch: self.combatEpoch || 0,
       matchId: self.matchId || null,
@@ -140,7 +145,10 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       ? 1
       : rules.maximumAreaTargets;
     event.hits = [];
-    for (const [delay, weight, phase] of timing[effect]) {
+    const phases = [...timing[effect]];
+    if (['quicksand_trap', 'venom_thorn'].includes(effect) && combat.rollChance(0.15))
+      phases.push([phases.at(-1)[0] + 300, 0.5, 'extra']);
+    for (const [delay, weight, phase] of phases) {
       const radius =
         effect === 'susanoo'
           ? rules.susanoo.radius
@@ -417,6 +425,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
           hit.toY = actor.y;
           if (actor.kind !== 'fragment') {
             combat.freeze(actor, job.at, duration);
+            actor.stasisUntil = job.at + duration;
             actor.sealedUntil = Math.max(actor.sealedUntil || 0, job.at + duration);
           }
           continue;

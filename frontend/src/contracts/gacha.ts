@@ -53,12 +53,14 @@ export interface GachaCheckin {
   cycle: number[];
   step: number;
   claimed: boolean;
+  epicTen?: { days: number; status: (typeof checkinMilestoneStatuses)[number] };
   milestone: { days: number; status: (typeof checkinMilestoneStatuses)[number] };
   wallet?: GachaWallet;
 }
 export interface GachaState {
   wallet: GachaWallet;
   voucherAvailable: boolean;
+  epicTenAvailable: boolean;
   pools: {
     id: string;
     label: string;
@@ -109,6 +111,7 @@ export type GachaReceipt =
       results: GachaResult[];
       drawCount?: number;
       voucher?: true;
+      thirdLogin?: true;
       fragmentsGained: number;
       wallet: GachaWallet;
       at: string;
@@ -154,6 +157,14 @@ export function readGachaCheckin(value: unknown): GachaCheckin {
     (status === 'locked') !== visits < days
   )
     throw Error('登入獎勵格式不正確');
+  const epicTen = r.epicTen === undefined ? undefined : record(r.epicTen);
+  if (
+    epicTen &&
+    (epicTen.days !== 3 ||
+      !['locked', 'claimable', 'available', 'used'].includes(String(epicTen.status)) ||
+      (epicTen.status === 'locked') !== visits < 3)
+  )
+    throw Error('登入十連狀態不正確');
   return {
     day,
     cycle,
@@ -161,6 +172,14 @@ export function readGachaCheckin(value: unknown): GachaCheckin {
     visits,
     claimed: r.claimed,
     milestone: { days, status },
+    ...(r.epicTen
+      ? {
+          epicTen: {
+            days: integer(record(r.epicTen).days),
+            status: required(record(r.epicTen).status) as GachaCheckin['milestone']['status'],
+          },
+        }
+      : {}),
     ...(r.wallet === undefined ? {} : { wallet: readWallet(r.wallet) }),
   };
 }
@@ -218,6 +237,7 @@ export function readGachaState(value: unknown): GachaState {
   return {
     wallet: readWallet(r.wallet),
     voucherAvailable: r.voucherAvailable === true,
+    epicTenAvailable: r.epicTenAvailable === true,
     items,
     pools,
     odds: readGachaOdds(r.odds),
@@ -252,10 +272,14 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
     return { ...readGachaItem(p), duplicate: p.duplicate, fragments: integer(p.fragments) };
   });
   const voucher = r.voucher === true;
+  const thirdLogin = r.thirdLogin === true;
   if (
     (r.voucher !== undefined && !voucher) ||
+    (r.thirdLogin !== undefined && !thirdLogin) ||
+    (voucher && thirdLogin) ||
+    (thirdLogin && (results.length !== 10 || results[9]?.rarity !== 'epic' || r.pool !== 'all')) ||
     ![1, 10].includes(results.length) ||
-    common.cost !== (voucher ? 0 : results.length * 100) ||
+    common.cost !== (voucher || thirdLogin ? 0 : results.length * 100) ||
     (voucher && (results.length !== 1 || results[0].rarity !== 'legendary'))
   )
     throw Error('抽卡結果數量不正確');
@@ -275,6 +299,7 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
     results,
     fragmentsGained,
     ...(voucher ? { voucher: true } : {}),
+    ...(thirdLogin ? { thirdLogin: true } : {}),
     ...(r.drawCount === undefined ? {} : { drawCount: integer(r.drawCount) }),
   };
 }

@@ -20,6 +20,7 @@ type Operation =
       count: 1 | 10;
       oddsRevision?: string;
       voucher?: true;
+      thirdLogin?: true;
     }
   | { operation: 'exchange'; requestId: string; key: string };
 export const useGachaStore = defineStore('gacha', () => {
@@ -59,6 +60,8 @@ export const useGachaStore = defineStore('gacha', () => {
         typeof p.pool === 'string' &&
         [1, 10].includes(p.count) &&
         (p.voucher === undefined || (p.voucher === true && p.count === 1)) &&
+        (p.thirdLogin === undefined ||
+          (p.thirdLogin === true && p.count === 10 && p.pool === 'all' && !p.voucher)) &&
         (p.oddsRevision === undefined ||
           (typeof p.oddsRevision === 'string' && /^[a-f0-9]{64}$/.test(p.oddsRevision)))
       )
@@ -69,6 +72,7 @@ export const useGachaStore = defineStore('gacha', () => {
           count: p.count,
           ...(p.oddsRevision ? { oddsRevision: p.oddsRevision } : {}),
           ...(p.voucher ? { voucher: true } : {}),
+          ...(p.thirdLogin ? { thirdLogin: true } : {}),
         };
       else if (p.operation === 'exchange' && typeof p.key === 'string')
         unsettled.value = { operation: 'exchange', requestId: p.requestId, key: p.key };
@@ -126,6 +130,8 @@ export const useGachaStore = defineStore('gacha', () => {
       last.value = receipt;
       if (state.value) {
         state.value.wallet = receipt.wallet;
+        if (receipt.operation === 'draw' && receipt.thirdLogin)
+          state.value.epicTenAvailable = false;
         if (receipt.operation === 'draw' && receipt.voucher) state.value.voucherAvailable = false;
         if (receipt.operation === 'draw' && receipt.drawCount !== undefined) {
           const pool = state.value.pools.find((pool) => pool.id === receipt.pool);
@@ -147,7 +153,9 @@ export const useGachaStore = defineStore('gacha', () => {
         if (definitive) retain(null);
         if (
           e instanceof ApiError &&
-          (e.code === 'GACHA_ODDS_CHANGED' || e.code === 'GACHA_VOUCHER_REQUIRED')
+          (e.code === 'GACHA_ODDS_CHANGED' ||
+            e.code === 'GACHA_VOUCHER_REQUIRED' ||
+            e.code === 'GACHA_EPIC_TEN_UNAVAILABLE')
         )
           await load();
         if (epoch !== generation) return null;
@@ -161,8 +169,13 @@ export const useGachaStore = defineStore('gacha', () => {
       if (epoch === generation) pending.value = false;
     }
   }
-  function draw(pool: string, count: 1 | 10, voucher = false) {
-    if (unsettled.value || !state.value || (voucher && !state.value.voucherAvailable))
+  function draw(pool: string, count: 1 | 10, voucher = false, thirdLogin = false) {
+    if (
+      unsettled.value ||
+      !state.value ||
+      (voucher && !state.value.voucherAvailable) ||
+      (thirdLogin && !state.value?.epicTenAvailable)
+    )
       return Promise.resolve(null);
     return execute({
       operation: 'draw',
@@ -171,6 +184,7 @@ export const useGachaStore = defineStore('gacha', () => {
       count,
       oddsRevision: state.value.odds.revision,
       ...(voucher ? { voucher: true } : {}),
+      ...(thirdLogin ? { thirdLogin: true } : {}),
     });
   }
   async function loadOdds() {

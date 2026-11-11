@@ -241,3 +241,36 @@ test('uncertain draw keeps one request across retry and blocks a second purchase
   assert.equal(store.state.items[0].owned, false);
   store.$dispose();
 });
+
+test('third-login receipts and milestone reject malformed rewards and remain readable in draw history', () => {
+  const ten = receipt();
+  ten.cost = 0;
+  ten.thirdLogin = true;
+  ten.results = Array.from({ length: 10 }, (_, i) => ({
+    ...ten.results[0],
+    ...(i === 9 ? { rarity: 'epic', rarityLabel: '史詩' } : {}),
+  }));
+  ten.fragmentsGained = ten.results.reduce((sum, i) => sum + i.fragments, 0);
+  ten.pool = 'all';
+  assert.equal(contract.readGachaReceipt(ten, 'draw').thirdLogin, true);
+  assert.throws(() =>
+    contract.readGachaReceipt({ ...ten, results: ten.results.slice(0, 9) }, 'draw'),
+  );
+  const wrong = structuredClone(ten);
+  wrong.results[9].rarity = 'legendary';
+  assert.throws(() => contract.readGachaReceipt(wrong, 'draw'));
+  const checkin = {
+    day: '2026-11-11',
+    cycle: [1000, 1000, 1500, 1000, 2000],
+    step: 0,
+    visits: 3,
+    claimed: false,
+    milestone: { days: 7, status: 'locked' },
+    epicTen: { days: 3, status: 'used' },
+    epicResults: ten.results,
+  };
+  assert.equal(contract.readGachaCheckin(checkin).epicTen.status, 'used');
+  assert.throws(() =>
+    contract.readGachaCheckin({ ...checkin, epicTen: { days: 3, status: 'unknown' } }),
+  );
+});

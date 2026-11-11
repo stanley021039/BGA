@@ -40,24 +40,24 @@ test('energy counts actual fractional walking time, caps at 100, and never banks
   assert.equal(actor.energy, 0);
 });
 
-test('ordinary hits give 10/5; multi hits only give the victim 5, and shields/invalid targets give none', () => {
+test('ordinary hits give 12/5; multi hits only give the victim 5, and shields/invalid targets give none', () => {
   const combat = createSceneCombat(() => 0.5);
   const a = { id: 'a' },
     b = { id: 'b' };
   combat.advance(a, 0);
   combat.advance(b, 0);
   combat.hit(a, b, 100, 'barrage');
-  assert.equal(a.energy, 10);
+  assert.equal(a.energy, 12);
   assert.equal(b.energy, 5);
   combat.hit(a, b, 200, 'guanyin_barrage');
-  assert.equal(a.energy, 10);
+  assert.equal(a.energy, 12);
   assert.equal(b.energy, 10);
   combat.protect(a, 200);
   combat.hit(a, a, 300, 'barrage');
-  assert.equal(a.energy, 10);
+  assert.equal(a.energy, 12);
   b.health = 0;
   combat.hit(a, b, 400, 'barrage');
-  assert.equal(a.energy, 10);
+  assert.equal(a.energy, 12);
   assert.equal(b.energy, 10);
 });
 
@@ -67,11 +67,11 @@ test('energy archetype boosts each gain, preserves tenths and respects the scene
   energy.walk(actor, 1000);
   assert.equal(actor.energy, 2.4);
   energy.hit(actor, target, 'beam', 1);
-  assert.equal(actor.energy, 16.4);
+  assert.equal(actor.energy, 17.8);
   energy.hit(target, actor, 'beam', 1);
-  assert.equal(actor.energy, 22.4);
+  assert.equal(actor.energy, 23.8);
   energy.gain(actor, 25);
-  assert.equal(actor.energy, 52.4);
+  assert.equal(actor.energy, 53.8);
   actor.energy = 149.8;
   assert.throws(() => energy.check(actor, 'r', 'explosion'), { code: 'INSUFFICIENT_SCENE_ENERGY' });
   energy.gain(actor, 2);
@@ -84,8 +84,8 @@ test('energy archetype boosts each gain, preserves tenths and respects the scene
 test('author energy stacks with the chosen archetype without raising the cap', () => {
   const target = { health: 1 };
   for (const [archetype, perHit] of [
-    [null, 13.2],
-    ['energy', 15.4],
+    [null, 14.5],
+    ['energy', 16.9],
   ]) {
     const actor = {
       archetype,
@@ -164,14 +164,14 @@ for (const kind of ['lobby', 'room']) {
       f.attack('q', 'barrage');
       f.tick(1200);
       const b = f.view('b').visitors.find((v) => v.id === 'b');
-      assert.equal(b.energy - baseline, 20);
-      assert.equal(b.combatStatus.guardEnergy, 5);
+      assert.equal(b.energy - baseline, 30);
+      assert.equal(b.combatStatus.guardEnergy, 15);
       assert.equal(f.actor('b').combatStatus, undefined);
       f.attack('q', shield, 'shield-request-001', 'b');
       f.tick(800);
       f.attack('q', 'barrage', 'barrage-request-002');
       f.tick(1200);
-      assert.equal(f.actor('b').energy - baseline, 35);
+      assert.equal(f.actor('b').energy - baseline, 45);
       assert.equal(f.view('b').visitors.find((v) => v.id === 'b').combatStatus.guardEnergy, 0);
     });
   test(kind + ': frost slows movement once and a blade hit speeds up the caster', () => {
@@ -231,7 +231,7 @@ for (const kind of ['lobby', 'room']) {
       f.attack('r', effect);
       assert.equal(f.actor().energy, 0);
       const after = f.actor().health;
-      if (effect.startsWith('reaper')) assert.equal(after, before - Math.ceil(before * 0.2));
+      if (effect.startsWith('reaper')) assert.equal(after, before - Math.ceil(before * 0.1));
       f.attack('r', effect);
       assert.equal(f.actor().energy, 0);
       assert.equal(f.actor().health, after, 'retry never repeats health cost');
@@ -328,11 +328,11 @@ for (const kind of ['lobby', 'room']) {
       received = f.actor('b').energy;
     f.attack('q', 'barrage');
     f.tick(1600);
-    assert.equal(f.actor().energy, before + (kind === 'lobby' ? 36 : 30));
+    assert.equal(f.actor().energy, before + 24);
     assert.equal(f.actor('b').energy, received + 15);
     f.view();
     f.attack('q', 'barrage');
-    assert.equal(f.actor().energy, before + (kind === 'lobby' ? 36 : 30));
+    assert.equal(f.actor().energy, before + 24);
   });
 }
 

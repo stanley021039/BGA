@@ -693,7 +693,6 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
           class="settings-attack-panel"
           title="攻擊特效"
           description="Q／E 普通招式，R 大招。"
-          note="立即套用"
           ><template #actions><a href="/collection?section=attack">前往收藏庫 ↗</a></template
           ><AttackChoices
             v-if="activePanel === 'attack'"
