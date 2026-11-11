@@ -8,19 +8,13 @@ function ownedAttacks(db, userId) {
       .filter((e) => (!e.achievementId && !e.gachaOnly) || owned.has(e.rewardOf ?? e.id))
       .map((e) => e.id);
   }
-  const ids = new Set(
-    db
-      .prepare('SELECT achievement_id FROM user_achievements WHERE user_id=?')
-      .all(userId)
-      .map((r) => r.achievement_id),
-  );
   const starter = new Set(require('./starter-rewards').owned(db, userId, 'attacks'));
   const earned = effects
     .filter(
       (e) =>
         !e.rewardOf &&
         !('paletteHue' in e) &&
-        ((!e.achievementId && !e.gachaOnly) || ids.has(e.achievementId) || starter.has(e.id)),
+        ((!e.achievementId && !e.gachaOnly) || starter.has(e.id)),
     )
     .map((e) => e.id);
   const earnedIds = new Set(earned);

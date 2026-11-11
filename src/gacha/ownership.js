@@ -1,5 +1,12 @@
 'use strict';
-const retiredAchievementKinds = new Set(['frames', 'media', 'entrances', 'openings', 'sounds']);
+const retiredAchievementKinds = new Set([
+  'attacks',
+  'frames',
+  'media',
+  'entrances',
+  'openings',
+  'sounds',
+]);
 const validAt = (at) =>
   typeof at === 'string' && Number.isFinite(Date.parse(at)) && new Date(at).toISOString() === at;
 function enabled(db) {

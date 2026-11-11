@@ -219,7 +219,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   );
 });
 
-test('persistent gacha ownership unlocks attacks, new achievements do not, and stale loadouts fall back', async (t) => {
+test('legacy attack rewards are locked and stale loadouts fall back to the two defaults', async (t) => {
   const { base } = await appFixture(t, {
     seed: async (db) => {
       await createAuth(db).bootstrap('attack_earned', 'test-password-123');
@@ -236,7 +236,7 @@ test('persistent gacha ownership unlocks attacks, new achievements do not, and s
           new Date().toISOString(),
         );
       db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
-        JSON.stringify({ attackLoadout: { q: 'gate_of_babylon', e: 'flame_vortex' } }),
+        JSON.stringify({ attackLoadout: { q: 'shield', e: 'flame_vortex', r: 'gate_of_babylon' } }),
         user.id,
       );
     },
@@ -250,13 +250,20 @@ test('persistent gacha ownership unlocks attacks, new achievements do not, and s
   const data = await fetch(base + '/api/achievements', { headers: { Cookie: cookie } }).then((r) =>
     r.json(),
   );
-  assert.deepEqual(data.bonusRewards.attacks, ['barrage', 'beam', 'shield', 'gate_of_babylon']);
+  assert.deepEqual(data.bonusRewards.attacks, ['barrage', 'beam']);
   assert.deepEqual(
     await fetch(base + '/api/profile/attacks', { headers: { Cookie: cookie } }).then((r) =>
       r.json(),
     ),
-    { q: 'barrage', e: 'beam', r: 'gate_of_babylon' },
+    { q: 'barrage', e: 'beam', r: '' },
   );
+  const equip = await fetch(base + '/api/profile/attacks', {
+    method: 'POST',
+    headers: { Cookie: cookie, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ q: 'shield', e: 'beam', r: 'gate_of_babylon' }),
+  });
+  assert.equal(equip.status, 403);
+  assert.equal((await equip.json()).code, 'ATTACK_REWARD_LOCKED');
   const effects = require('../public/shared/attack-effects.json'),
     { definitions } = require('../src/achievements/catalog');
   for (const e of effects.slice(2).filter((e) => !e.gachaOnly)) {

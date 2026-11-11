@@ -125,7 +125,7 @@ test('starter handles fewer than five remaining attacks and rejects unavailable 
       a,
       'attacks',
       item.id,
-      'legacy',
+      'draw',
       new Date().toISOString(),
     );
   const missing = effects.filter((r) => !store.list(a).bonusRewards.attacks.includes(r.id));
