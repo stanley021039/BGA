@@ -9,8 +9,8 @@ const { createRoomSpace } = require('../src/rooms/space');
 test('Babylon reference range already includes author damage, exact whole-cast integer partitions and independent critical/guard', () => {
   for (const author of [false, true])
     for (const [roll, reference] of [
-      [0, 828000],
-      [0.999999999, 1112000],
+      [0, 747270],
+      [0.999999999, 1003580],
     ]) {
       let values = [];
       const combat = createSceneCombat(
@@ -26,7 +26,7 @@ test('Babylon reference range already includes author damage, exact whole-cast i
       const max = a.maxHealth;
       combat.protect(a, 0);
       combat.cast(a, 'gate_of_babylon', 100);
-      assert.equal(a.health, 350000, 'cost is current HP, rounded, not reduced by shields');
+      assert.equal(a.health, 400000, 'cost is current HP, rounded, not reduced by shields');
       assert.equal(a.maxHealth, max);
       const timeline = createAttackTimeline(combat),
         event = {
@@ -128,7 +128,7 @@ test('accepted lobby and room casts pay once; retry, cooldown rejection and miss
     const before = getHP();
     cast(input);
     const after = getHP();
-    assert.equal(after, Math.floor(before * 0.7));
+    assert.equal(after, Math.floor(before * 0.8));
     cast(input);
     assert.equal(getHP(), after);
     assert.throws(() => cast({ ...input, requestId: 'babylon-cost-reject' }), {

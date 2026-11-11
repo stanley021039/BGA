@@ -138,10 +138,12 @@ for (const { id: effect } of effects)
           : effect === 'explosion'
             ? 600000
             : effect === 'gate_of_babylon'
-              ? 843478
+              ? 761239
               : effect === 'guanyin_barrage'
-                ? 408000
-                : 400000,
+                ? 440000
+                : effect === 'dimension_cleave'
+                  ? 360000
+                  : 400000,
       );
       const total = snapshot.attacks
         .flatMap((event) => event.hits || [])

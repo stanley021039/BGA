@@ -1,18 +1,24 @@
 {
-  "fragment": { "ownerOnlyMs": 3000, "stealEnergy": 30 },
+  "fragment": {
+    "ownerOnlyMs": 3000,
+    "stealEnergy": 30
+  },
   "energy": {
     "maximum": 100,
     "lobbyInitial": 20,
     "lobbyMaximum": 150,
     "lobbyTeleportCost": 20,
-    "ordinaryHit": 10,
+    "ordinaryHit": 12,
     "lobbyOrdinaryHit": 12,
     "energyArchetypeHit": 14,
-    "missileCastCap": 30,
+    "missileCastCap": 24,
     "receivedHit": 5,
     "movementPerSecond": 2
   },
-  "frost": { "durationMs": 1000, "speedMultiplier": 0.8 },
+  "frost": {
+    "durationMs": 1000,
+    "speedMultiplier": 0.8
+  },
   "singularityPull": 5,
   "crystalReflection": {
     "windowMs": 800,
@@ -33,12 +39,29 @@
       "seeking_talismans"
     ]
   },
-  "humanMalice": { "detonationRadius": 24 },
-  "susanoo": { "durationMs": 5000, "radius": 24 },
-  "rainbowBear": { "durationMs": 3000, "outgoingMultiplier": 0.7 },
-  "zeroEquation": { "wrongAnswerHpFraction": 0.05 },
-  "orangeCat": { "immobilizeMs": 1000, "slowMs": 1000 },
-  "bladeHaste": { "durationMs": 800, "speedMultiplier": 1.15 },
+  "humanMalice": {
+    "detonationRadius": 24
+  },
+  "susanoo": {
+    "durationMs": 5000,
+    "radius": 24
+  },
+  "rainbowBear": {
+    "durationMs": 3000,
+    "outgoingMultiplier": 0.7
+  },
+  "zeroEquation": {
+    "wrongAnswerHpFraction": 0.05
+  },
+  "orangeCat": {
+    "immobilizeMs": 1000,
+    "slowMs": 2000,
+    "speedMultiplier": 0.6
+  },
+  "bladeHaste": {
+    "durationMs": 800,
+    "speedMultiplier": 1.15
+  },
   "health": {
     "base": 120,
     "min": 110,
@@ -61,7 +84,7 @@
   "unitScale": 10000,
   "shield": {
     "durationMs": 2000,
-    "guardEnergy": 5,
+    "guardEnergy": 15,
     "guardResidualDurationMs": 2000,
     "guardNoticeMs": 1800,
     "minimumPercent": 30,
@@ -80,9 +103,21 @@
   },
   "attackCooldownMs": 1600,
   "maximumAreaTargets": 32,
-  "chains": { "immobilizeChance": 0.2, "immobilizeMs": 1000, "slowChance": 0.3 },
-  "ordinaryDot": { "chance": 0.3, "ticks": 2, "intervalMs": 1000, "damageWeight": 0.1 },
-  "orbitalTeleportBlock": { "chance": 0.3, "durationMs": 1000 },
+  "chains": {
+    "immobilizeChance": 0.2,
+    "immobilizeMs": 1000,
+    "slowChance": 0.3
+  },
+  "ordinaryDot": {
+    "chance": 0.3,
+    "ticks": 2,
+    "intervalMs": 1000,
+    "damageWeight": 0.1
+  },
+  "orbitalTeleportBlock": {
+    "chance": 0.3,
+    "durationMs": 1000
+  },
   "bijuuImmobilize": {
     "chance": 0.3,
     "durationMs": 1000,
@@ -90,21 +125,21 @@
   },
   "phoenixHealingBlockMs": 5000,
   "babylon": {
-    "authorComboMin": 828000,
-    "authorComboMax": 1112000,
-    "currentHealthCost": 0.3
+    "authorComboMin": 747270,
+    "authorComboMax": 1003580,
+    "currentHealthCost": 0.2
   },
   "guanyinBonus": {
-    "durationMs": 2000,
+    "durationMs": 3000,
     "multiplier": 1.1
   },
   "excaliburGuard": {
-    "durationMs": 4100,
+    "durationMs": 4000,
     "reductionPercent": 20
   },
   "explosionRecovery": {
     "delayMs": 4100,
-    "durationMs": 1000
+    "durationMs": 1500
   },
   "heroLanding": {
     "delayMs": 2100,
@@ -112,11 +147,11 @@
     "radius": 22.5
   },
   "reaperSeal": {
-    "currentHealthCost": 0.2,
+    "currentHealthCost": 0.1,
     "durationMs": 2000
   },
   "shaohua": {
-    "lifetimeMs": 3000,
+    "lifetimeMs": 2000,
     "burstMs": 850,
     "biteMs": 400,
     "speedMultiplier": 0.75,

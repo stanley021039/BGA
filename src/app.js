@@ -1492,7 +1492,7 @@ function initializeApp(config, dataLock, acquired) {
           limitRate(roomRate, 'gacha-checkin:' + user.id, 30);
           if (
             !data ||
-            !['daily', 'legendary'].includes(data.kind) ||
+            !['daily', 'legendary', 'epic-ten'].includes(data.kind) ||
             Object.keys(data).length !== 1
           )
             throw new HttpError(400, 'INVALID_GACHA_CHECKIN', '請選擇登入獎勵');

@@ -54,6 +54,7 @@ export interface SceneCombatStatus {
   guardEnergy?: number;
   regenerating: boolean;
   regenWaitMs: number;
+  paralysisMs?: number;
   regenBlockedMs?: number;
   sealedMs?: number;
   teleportBlockedMs?: number;
@@ -87,6 +88,7 @@ export interface LobbyVisitor {
   guardFullMs?: number;
   guardMs?: number;
   slowMs?: number;
+  slowMultiplier?: number;
   hasteMs?: number;
   knockback?: {
     id: string;
@@ -311,6 +313,9 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         deaths: counter(item.kda && record(item.kda).deaths),
         assists: counter(item.kda && record(item.kda).assists),
       },
+      slowMultiplier: [0.5, 0.6, 0.7, 0.8].includes(Number(item.slowMultiplier))
+        ? Number(item.slowMultiplier)
+        : 0.8,
       immobileUntil: finite(item.immobileUntil) ? item.immobileUntil : 0,
       guardFullMs: Math.min(5000, counter(item.guardFullMs)),
       guardMs: Math.min(5000, counter(item.guardMs)),
@@ -412,6 +417,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           guardEnergy: finite(status.guardEnergy) ? Math.max(0, status.guardEnergy) : 0,
           regenerating: status.regenerating === true,
           regenWaitMs: status.regenWaitMs,
+          paralysisMs: finite(status.paralysisMs) ? Math.max(0, status.paralysisMs) : 0,
           regenBlockedMs: Number(status.regenBlockedMs || 0),
           sealedMs: Number(status.sealedMs || 0),
           teleportBlockedMs: Math.min(1000, counter(status.teleportBlockedMs)),

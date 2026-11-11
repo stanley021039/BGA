@@ -312,11 +312,17 @@ function createLobby(
   }
   function arenaSpeed(visitor, time) {
     const status =
-      time < (visitor.slowUntil || 0)
-        ? combatRules.frost.speedMultiplier
-        : time < (visitor.hasteUntil || 0)
-          ? combatRules.bladeHaste.speedMultiplier
-          : 1;
+      time < (visitor.strongSlowUntil || 0)
+        ? 0.5
+        : time < (visitor.orangeSlowUntil || 0)
+          ? 0.6
+          : time < (visitor.bijuuSlowUntil || 0)
+            ? 0.7
+            : time < (visitor.slowUntil || 0)
+              ? combatRules.frost.speedMultiplier
+              : time < (visitor.hasteUntil || 0)
+                ? combatRules.bladeHaste.speedMultiplier
+                : 1;
     return (
       hazards.speed(visitor) *
       profile(visitor).speed *
@@ -336,7 +342,13 @@ function createLobby(
       const at = Math.min(
           end,
           visitor.updatedAt + 100,
-          ...[visitor.slowUntil, visitor.hasteUntil].filter((until) => until > visitor.updatedAt),
+          ...[
+            visitor.slowUntil,
+            visitor.strongSlowUntil,
+            visitor.orangeSlowUntil,
+            visitor.bijuuSlowUntil,
+            visitor.hasteUntil,
+          ].filter((until) => until > visitor.updatedAt),
         ),
         teleportId = visitor.teleportId;
       combat.advance(visitor, at);
@@ -445,6 +457,9 @@ function createLobby(
       null,
       {
         slowMs: Math.max(0, (visitor.slowUntil || 0) - walkFrom),
+        strongSlowMs: Math.max(0, (visitor.strongSlowUntil || 0) - walkFrom),
+        orangeSlowMs: Math.max(0, (visitor.orangeSlowUntil || 0) - walkFrom),
+        bijuuSlowMs: Math.max(0, (visitor.bijuuSlowUntil || 0) - walkFrom),
         hasteMs: Math.max(0, (visitor.hasteUntil || 0) - walkFrom),
         speed: authorSpeed(visitor),
       },

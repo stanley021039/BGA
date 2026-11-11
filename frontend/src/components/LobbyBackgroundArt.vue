@@ -3,9 +3,11 @@ import { computed, nextTick, onMounted, onBeforeUnmount, ref, useId, watch } fro
 import scenes from '../../../public/shared/lobby-background-live.json';
 import { useSteppedAnimations } from '../composables/stepped-animations';
 import { usePreferencesStore } from '../stores/preferences';
+import { useLobbyBackgroundStore } from '../stores/lobby-background';
 import '../assets/lobby-background-live.css';
 const props = defineProps<{ id: string }>(),
   prefs = usePreferencesStore(),
+  background = useLobbyBackgroundStore(),
   root = ref<HTMLElement | null>(null),
   hidden = ref(document.hidden),
   idle = ref(false),
@@ -23,7 +25,11 @@ const svg = computed(() => {
 });
 const paused = computed(
   () =>
-    hidden.value || idle.value || prefs.motion?.enabled === false || prefs.motion?.reduced === true,
+    !background.animated ||
+    hidden.value ||
+    idle.value ||
+    prefs.motion?.enabled === false ||
+    prefs.motion?.reduced === true,
 );
 const playing = computed(() => !paused.value),
   stepped = useSteppedAnimations(root, playing);

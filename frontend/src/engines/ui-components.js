@@ -30,6 +30,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       '<path d="M12 20 4.4 12.4a4.8 4.8 0 0 1 6.8-6.8l.8.8.8-.8a4.8 4.8 0 0 1 6.8 6.8L12 20ZM19 2v7m-3-4 3-3 3 3"/>',
     'scene-damage':
       '<path d="M12 3c2 5 7 7 7 12a7 7 0 0 1-14 0c0-3 1.5-5 3.5-7 0 3 1 4 2 4 2-3 2-6 1.5-9Z"/>',
+    paralysis: '<path d="m13 2-7 11h5l-1 9 8-12h-5l1-8ZM3 5l2 2m14 10 2 2M3 19l2-2m14-10 2-2"/>',
     frost: '<path d="M12 3v18M4.2 7.5l15.6 9m0-9-15.6 9M9 5l3 3 3-3m-6 14 3-3 3 3"/>',
     haste: '<path d="m4 5 7 7-7 7m9-14 7 7-7 7"/>',
     'attack-up': '<path d="m4 20 4-4m-3-3 6 6M8 16 18 6V3h-3L5 13m12 2h6m-3-3v6"/>',

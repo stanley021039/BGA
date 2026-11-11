@@ -110,7 +110,10 @@
   "photon_sniper_alt": [[1250, 1, "impact"]],
   "gate_of_heroes": [[2100, 1, "landing"]],
   "gate_of_heroes_alt": [[2100, 1, "landing"]],
-  "returning_moon": [[650, 1, "impact"]],
+  "returning_moon": [
+    [650, 1, "impact"],
+    [1300, 0.5, "return"]
+  ],
   "tidal_blades": [
     [430, 0.5, "hit1"],
     [790, 0.5, "hit2"]

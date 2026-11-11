@@ -239,7 +239,13 @@ const revealItem = computed(() =>
 );
 const drawBonus = computed(() => {
   const receipt = result.value;
-  if (receipt?.operation !== 'draw' || receipt.drawCount === undefined) return;
+  if (
+    receipt?.operation !== 'draw' ||
+    receipt.drawCount === undefined ||
+    receipt.voucher ||
+    receipt.thirdLogin
+  )
+    return;
   const number = receipt.drawCount - (receipt.drawCount % economy.bonusInterval);
   const position = receipt.results.length - (receipt.drawCount - number);
   if (number > 0 && position > 0) return { number, position };
@@ -440,11 +446,11 @@ async function resumeUnrevealedDraw() {
   );
   if (receipt) await show(receipt, { announce: true });
 }
-async function draw(count: 1 | 10, selectedPool = pool.value, voucher = false) {
+async function draw(count: 1 | 10, selectedPool = pool.value, voucher = false, thirdLogin = false) {
   const userId = session.user?.id;
   const share = openSpectate.value;
   captureTrader();
-  const receipt = await store.draw(selectedPool, count, voucher);
+  const receipt = await store.draw(selectedPool, count, voucher, thirdLogin);
   if (receipt && userId && session.user?.id === userId) {
     rememberUnrevealedDraw(userId, receipt.requestId);
     publishSpectate('close');
@@ -777,6 +783,14 @@ const newCount = computed(() =>
                   @click="draw(10)"
                 />
                 <UiButton
+                  v-if="store.state.epicTenAvailable"
+                  label="使用史詩十連券（綜合卡池）"
+                  icon="gift"
+                  :disabled="locked"
+                  :pending="store.pending"
+                  @click="draw(10, 'all', false, true)"
+                />
+                <UiButton
                   v-if="store.state.voucherAvailable"
                   label="使用傳說單抽券"
                   icon="gift"
@@ -1067,6 +1081,7 @@ const newCount = computed(() =>
           @silence="stopCinematicSound"
         />
         <div v-show="!spotlight" class="gacha-card-reveal">
+          <p v-if="result.thirdLogin" class="gacha-note">史詩十連券 · 第 10 張固定史詩</p>
           <p
             v-if="revealIndex !== null"
             ref="revealRegion"

@@ -75,27 +75,27 @@ for (const suffix of ['', '_alt']) {
       suffix +
       ' follows moving target and bites exactly 400ms after real contact, ignoring shields',
     () => {
-      const f = fixture('shaohua_devour' + suffix, { to: { x: 40, y: 50 } }),
+      const f = fixture('shaohua_devour' + suffix, { to: { x: 31, y: 50 } }),
         [a, b] = f.actors;
       f.combat.protect(b, 100);
       f.advance(300);
       assert.equal(b.health, 1200000);
       assert.ok(f.event.head.x > 20);
-      b.y = 54;
+      b.y = 51;
       f.advance(800);
       assert.ok(f.event.head.y > 50);
       let time = 800;
-      while (!f.event.head.contactAt && time < 3100) f.advance((time += 50));
+      while (!f.event.head.contactAt && time < 2100) f.advance((time += 50));
       const contact = f.event.head.contactAt,
         bite = f.event.head.biteAt;
       assert.equal(bite - contact, 400);
       f.advance(100 + bite - 1);
       assert.equal(b.health, 1200000);
       f.advance(100 + bite);
-      assert.equal(b.health, 1);
+      assert.equal(b.health, 120000);
       assert.equal(b.respawnAt, 0);
       assert.equal(a.kda.kills, 0);
-      assert.equal(f.event.hits[0].damage, 1199999);
+      assert.equal(f.event.hits[0].damage, 1080000);
       f.advance(100 + bite);
       assert.equal(a.kda.kills, 0);
       assert.equal(f.event.hits[0].delayMs, bite);
@@ -108,7 +108,7 @@ for (const suffix of ['', '_alt']) {
     () => {
       const f = fixture('reaper_seal' + suffix),
         [a, b] = f.actors;
-      assert.equal(a.health, 960000);
+      assert.equal(a.health, 1080000);
       f.advance(2699);
       assert.equal(b.health, 1200000);
       f.advance(2700);
@@ -145,7 +145,7 @@ test('hero cancels on death, new life or caster removal; homing retargets withou
   }
 });
 
-test('homing expires at three seconds, costs half current HP once, and never resumes', () => {
+test('homing expires at two seconds, costs half current HP once, and never resumes', () => {
   const f = fixture('shaohua_devour');
   const [caster, target, other] = f.actors;
   target.x = 99;
@@ -155,28 +155,28 @@ test('homing expires at three seconds, costs half current HP once, and never res
   f.actors.splice(1);
   caster.health = 800000;
   caster.lastHitAt = 1100;
-  f.advance(3099);
+  f.advance(2099);
   assert.equal(f.event.head.cancelled, false);
   assert.equal(caster.health, 800000);
-  f.advance(3100);
-  assert.equal(f.event.until, 3950);
+  f.advance(2100);
+  assert.equal(f.event.until, 2950);
   assert.equal(f.event.head.cancelled, true);
   assert.equal(f.event.head.exploded, true);
-  assert.equal(f.event.head.at, 3000);
+  assert.equal(f.event.head.at, 2000);
   assert.equal(caster.health, 400000);
-  f.advance(3200);
+  f.advance(2200);
   assert.equal(caster.health, 400000);
   assert.equal(f.event.hits.length, 0);
 });
 
-test('a bite finishing exactly at three seconds counts as success', () => {
-  const f = fixture('shaohua_devour', { to: { x: 46.25, y: 50 } });
+test('a bite finishing exactly at two seconds counts as success', () => {
+  const f = fixture('shaohua_devour', { to: { x: 37.25, y: 50 } });
   const [caster, target] = f.actors;
-  f.advance(3100);
+  f.advance(2100);
   assert.equal(f.event.head.finished, true);
   assert.equal(f.event.head.exploded, undefined);
-  assert.equal(f.event.hits[0].delayMs, 3000);
-  assert.equal(target.health, 1);
+  assert.equal(f.event.hits[0].delayMs, 2000);
+  assert.equal(target.health, 120000);
   assert.equal(caster.health, 1200000);
 });
 
@@ -217,7 +217,7 @@ test('normal walking outruns the head in every direction and aspect until it exp
       const f = fixture('shaohua_devour', { from, to, aspectRatio }),
         victim = f.actors[1];
       const initialGap = sceneDistance(from, to, aspectRatio);
-      for (let time = 150; time < 3100; time += 50) {
+      for (let time = 150; time < 2100; time += 50) {
         const step = sceneWalk(victim, goal, 50);
         victim.x = step.x;
         victim.y = step.y;
@@ -234,7 +234,7 @@ test('normal walking outruns the head in every direction and aspect until it exp
         Math.abs(headTravel / playerTravel - 0.75) < 0.001,
         'head walks at 75% of the same character path',
       );
-      f.advance(3100);
+      f.advance(2100);
       assert.equal(f.event.head.cancelled, true);
       assert.equal(victim.health, 1200000);
       assert.equal(victim.respawnAt, 0);
@@ -346,5 +346,7 @@ test('arena devour follows wall corners and bites only after a clear approach', 
     previous = { x: head.x, y: head.y };
   }
   assert.ok(roundedCorner);
-  assert.equal(f.event.hits[0]?.toId, 'b');
+  assert.equal(f.event.head.cancelled, true);
+  assert.equal(f.event.hits.length, 0);
+  assert.equal(f.actors[1].health, 1200000);
 });

@@ -22,7 +22,9 @@ const speed = computed<Indicator | null>(() => {
   const duration = slowMs || hasteMs;
   if (!props.connected || !props.self?.health || duration <= 0) return null;
   const slowed = slowMs > 0;
-  const factor = slowed ? rules.frost.speedMultiplier : rules.bladeHaste.speedMultiplier;
+  const factor = slowed
+    ? (props.self?.slowMultiplier ?? rules.frost.speedMultiplier)
+    : rules.bladeHaste.speedMultiplier;
   const percent = Math.round((factor - 1) * 100);
   return {
     icon: slowed ? 'frost' : 'haste',
@@ -70,6 +72,13 @@ const newAilments = computed<Indicator[]>(() => {
   const state = status.value;
   const items: Indicator[] = [];
   if (!props.connected || !props.self?.health) return items;
+  if (state?.paralysisMs)
+    items.push({
+      icon: 'paralysis',
+      label:
+        '麻痺：' + (Math.ceil(state.paralysisMs / 100) / 10).toFixed(1) + ' 秒內無法移動或瞬移',
+      tone: 'danger',
+    });
   if (state?.teleportBlockedMs && !state.sealedMs)
     items.push({
       icon: 'lock',

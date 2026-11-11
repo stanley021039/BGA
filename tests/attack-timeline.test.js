@@ -207,7 +207,7 @@ test('crystal blocks eligible stages and returns multiple stages only to the fir
   assert.equal(guardA.hits.length, 0);
   assert.equal(guardB.hits[0].toX, 90);
   assert.equal(a.health, 1110000);
-  assert.equal(b.health, 1200000);
+  assert.equal(b.health, 1100000);
   advance(2290);
   assert.equal(guardA.hits.length, 0);
   assert.equal(a.health, 1020000);
@@ -237,7 +237,7 @@ test('crystal blocks eligible stages and returns multiple stages only to the fir
 });
 test('Babylon/Ea has a double-strength second stage; the two dragoon salvos share the balanced combo total', () => {
   for (const [effect, first, last, total] of [
-    ['gate_of_babylon', 2400, 3880, 843478],
+    ['gate_of_babylon', 2400, 3880, 761239],
     ['funnel', 1320, 2120, 180000],
   ]) {
     const f = fixture(effect);
@@ -245,7 +245,7 @@ test('Babylon/Ea has a double-strength second stage; the two dragoon salvos shar
     const initial = f.points[1].health;
     assert.ok(initial < 1200000 && initial > 1200000 - total);
     f.advance(last - 1);
-    assert.equal(f.points[1].health, effect === 'gate_of_babylon' ? 918841 : initial);
+    assert.equal(f.points[1].health, effect === 'gate_of_babylon' ? 946254 : initial);
     f.advance(last);
     assert.equal(f.points[1].health, 1200000 - total);
     f.advance(last);
@@ -275,7 +275,7 @@ test('time stop locks nearby opponents until one shared release without damaging
   for (const target of [b, c]) {
     assert.equal(target.health, 1200000);
     assert.throws(() => combat.canMove(target, 849 + 1), { code: 'SCENE_IMMOBILIZED' });
-    assert.throws(() => combat.canCast(target, 2249), { code: 'SCENE_SEALED' });
+    assert.throws(() => combat.canCast(target, 2249), { code: 'SCENE_TIME_STOPPED' });
   }
   for (const target of [a, far]) combat.canMove(target, 850);
   advance(2250);
@@ -441,7 +441,7 @@ test('missile casts cap attacker energy after three real hits, including an earl
   for (const effect of ['micro_missiles', 'micro_missiles_alt']) {
     const full = fixture(effect);
     full.advance(1600);
-    assert.equal(full.points[0].energy, 30);
+    assert.equal(full.points[0].energy, 24);
     assert.equal(full.points[1].energy, 20);
 
     const partial = fixture(effect);
@@ -450,7 +450,7 @@ test('missile casts cap attacker energy after three real hits, including an earl
     partial.points[1].x = 40;
     partial.advance(1600);
     assert.equal(partial.event.hits[0].missed, true);
-    assert.equal(partial.points[0].energy, 30);
+    assert.equal(partial.points[0].energy, 24);
     assert.equal(partial.points[1].energy, 15);
   }
 });

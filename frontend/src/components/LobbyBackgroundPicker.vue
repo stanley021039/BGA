@@ -34,6 +34,17 @@ function open() {
         ? '只影響此瀏覽器；關閉後保留角色與操作，不更改其他玩家的背景。'
         : '瀏覽器無法保存此設定；本頁仍可切換，重新進入後可能恢復預設。'
     }}</p>
+    <UiCheckbox
+      label="背景動態"
+      variant="prominent"
+      :model-value="background.animated"
+      @update:model-value="background.setAnimated($event === true)"
+    />
+    <p role="status">{{
+      background.animationPersisted
+        ? '關閉後保留靜態背景；角色與招式效果照常。僅儲存在此瀏覽器。'
+        : '本頁可切換，但瀏覽器無法保存此設定。'
+    }}</p>
     <button
       type="button"
       class="vue-preference-frame background-picker-trigger"
