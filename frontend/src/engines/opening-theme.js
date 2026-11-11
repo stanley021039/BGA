@@ -13,7 +13,7 @@ let EntryOpening;
     },
     'home-family': {
       id: 'home-family',
-      image: '/assets/auth/home-family.jpg',
+      image: '/assets/auth/home-family.webp',
       sound: 'entry-home-family',
       duration: 8500,
       label: '我們這一家',

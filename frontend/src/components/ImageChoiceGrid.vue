@@ -30,7 +30,7 @@ defineEmits<{ 'update:modelValue': [id: string] }>();
       :selected="modelValue === item.id"
       :aria-label="item.ariaLabel || item.label"
       @click="$emit('update:modelValue', item.id)"
-      ><img :src="sizedImage(item.url, 256)" alt="" loading="lazy" /><small v-if="item.caption">{{
+      ><img :src="sizedImage(item.url, 128)" alt="" loading="lazy" /><small v-if="item.caption">{{
         item.caption
       }}</small></UiChoiceCard
     ><slot name="append"

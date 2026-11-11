@@ -57,6 +57,6 @@ test('the free family opening is restored with its own image and audio', async (
   );
   assert.equal(f.opening.get(), 'home-family');
   const result = await f.opening.resolve();
-  assert.equal(result.image, '/assets/auth/home-family.jpg');
+  assert.equal(result.image, '/assets/auth/home-family.webp');
   assert.equal(result.sound, 'entry-home-family');
 });

@@ -12,7 +12,7 @@ defineProps<{
   <article class="collection-card ui-interactive-card" :data-selected="!!selected"
     ><img
       v-if="image"
-      :src="sizedImage(image, 256)"
+      :src="sizedImage(image, 128)"
       :alt="title"
       loading="lazy"
       class="collection-image"

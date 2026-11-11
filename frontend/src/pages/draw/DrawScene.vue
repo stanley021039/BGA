@@ -87,7 +87,9 @@ const artistPoints = computed(
     props.snapshot.result?.scores.find((player) => player.id === props.snapshot.result?.artist.id)
       ?.roundPoints,
 );
-const waitingIllustration = '/assets/stitch/draw-waiting.jpg';
+const waitingIllustration = '/assets/stitch/draw-waiting.webp',
+  waitingIllustrationSet =
+    '/assets/stitch/draw-waiting-160.webp 160w, /assets/stitch/draw-waiting.webp 512w';
 function topicIcon(topic: unknown) {
   const icons: Record<string, string> = {
     food: 'gift',
@@ -162,6 +164,8 @@ function rank(index: number) {
     "
     :notice="oracleMode && !room.gameManager ? '等待房主或管理者開始' : undefined"
     :art="waitingIllustration"
+    :art-srcset="waitingIllustrationSet"
+    art-sizes="(max-width: 760px) 80px, 280px"
     art-alt="你畫我猜的畫室插畫"
     :facts="waitingFacts"
     :quick-action="

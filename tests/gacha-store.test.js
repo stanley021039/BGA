@@ -284,16 +284,13 @@ test('invalid, insufficient, cross-operation, and unknown requests have no parti
     (e) => e.code === 'GACHA_REQUEST_CONFLICT',
   );
 });
-test('existing reward codes and starter grants stay owned without granting achievements', (t) => {
+test('author codes do not unlock attacks while starter grants remain owned', (t) => {
   const { db, user, other, store } = fixture(t);
   db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
     JSON.stringify({ achievementRewardCodes: { other: '2026-10-29T00:00:00.000Z' } }),
     user,
   );
-  assert.equal(
-    store.owned(user).attacks.size,
-    poolItems('attacks').filter((item) => !item.gachaExclusive).length,
-  );
+  assert.equal(store.owned(user).attacks.size, 0);
   assert.equal(store.owned(user).frames.size, 0);
   const item = catalog.find((i) => i.kind === 'entrances');
   db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
@@ -308,6 +305,53 @@ test('existing reward codes and starter grants stay owned without granting achie
   );
   assert.ok(store.owned(other).entrances.has(item.id));
   assert.equal(db.prepare('SELECT COUNT(*) n FROM user_achievements').get().n, 0);
+});
+
+for (const saved of [
+  { achievementRewardCodes: { other: '2026-10-29T00:00:00.000Z' } },
+  { achievementRewardCodeAt: '2026-10-01T00:00:00.000Z' },
+]) {
+  const format = saved.achievementRewardCodes ? 'grouped' : 'legacy';
+  test(`${format} author code holders must acquire attacks before equipping them`, (t) => {
+    const { db, user, store } = fixture(t, { choose: () => 0 });
+    const { getAttackSettings, setAttackSettings } = require('../src/profiles/settings');
+    db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+      JSON.stringify({ ...saved, attackLoadout: { q: 'shield', e: 'beam', r: 'bijuu_beam' } }),
+      user,
+    );
+    assert.deepEqual(getAttackSettings(db, user), { q: 'barrage', e: 'beam', r: '' });
+    assert.throws(() => setAttackSettings(db, user, { q: 'shield', e: 'beam', r: 'bijuu_beam' }), {
+      code: 'ATTACK_REWARD_LOCKED',
+    });
+    const achievements = new (require('../src/achievements/store').AchievementStore)(db);
+    achievements.redeem(user, '我愛作者');
+    assert.deepEqual(achievements.list(user).bonusRewards.attacks, ['barrage', 'beam']);
+    fund(store, db, user);
+    const drawn = store.draw(user, { pool: 'attacks', count: 1, requestId: randomUUID() })
+      .results[0];
+    assert.equal(drawn.duplicate, false);
+    assert.ok(store.owned(user).attacks.has(drawn.id));
+    store.exchange(user, { key: 'attacks:bijuu_beam', requestId: randomUUID() });
+    const loadout = { q: drawn.id, e: 'beam', r: 'bijuu_beam' };
+    assert.deepEqual(setAttackSettings(db, user, loadout), loadout);
+    achievements.redeem(user, '我愛作者');
+    assert.deepEqual(getAttackSettings(db, user), loadout);
+    assert.equal(new GachaStore(db).owned(user).attacks.size, 2);
+    assert.ok(require('../src/achievements/redemption').redeemedAt(db, user, 'other'));
+  });
+}
+
+test('author codes cannot unlock attacks in the pre-gacha ownership path', (t) => {
+  const { db, user } = fixture(t);
+  for (const table of GACHA_TABLES) db.exec('DROP TABLE ' + table);
+  db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+    JSON.stringify({ achievementRewardCodeAt: '2026-10-01T00:00:00.000Z' }),
+    user,
+  );
+  assert.deepEqual(require('../src/achievements/attack-rewards').ownedAttacks(db, user), [
+    'barrage',
+    'beam',
+  ]);
 });
 test('normal completed matches reward active humans once, preserve winners and exclude tests, bots, and AFK', (t) => {
   const { db, user, other, store } = fixture(t),

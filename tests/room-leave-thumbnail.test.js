@@ -30,6 +30,9 @@ test('thumbnail static route serves exact JPEG bytes without authentication; unk
     assert.equal(response.status, 200);
     assert.match(response.headers.get('content-type'), /^image\/jpeg/);
     assert.deepEqual(Buffer.from(await response.arrayBuffer()), fs.readFileSync(asset));
+    const webp = await fetch(base + '/assets/room-leave-thumbnail.webp');
+    assert.equal(webp.status, 200);
+    assert.match(webp.headers.get('content-type'), /^image\/webp/);
     assert.equal((await fetch(base + '/assets/not-allowed.jpg')).status, 404);
   } finally {
     await app.close();

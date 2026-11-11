@@ -498,7 +498,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
                       v-if="selectedAvatar"
                       id="avatar-preview"
                       class="settings-avatar"
-                      :src="sizedImage(selectedAvatar.url, 256)"
+                      :src="sizedImage(selectedAvatar.url, 128)"
                       alt="目前選擇的帳號頭像"
                     /><span v-else>正在載入頭像…</span></div
                   ><div class="settings-avatar-options"
@@ -540,7 +540,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
                     :src="
                       sizedImage(
                         selected.expressions[selectedExpression] || selected.expressions.neutral,
-                        512,
+                        128,
                       )
                     "
                     :alt="
@@ -787,6 +787,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
             <EntrancePreview
               :effect="entranceEffect"
               :image="selected?.expressions.neutral || '/assets/characters/traveler-neutral.png'"
+              :size="128"
               :name="nickname || session.user?.displayName || '玩家'"
             />
           </div>
