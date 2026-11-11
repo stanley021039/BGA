@@ -24,7 +24,7 @@ function ownedIds(db, userId, kind, saved = appearance(db, userId)) {
       .all(userId, kind))
       if (row.source !== 'legacy' || !retiredAchievementKinds.has(kind)) result.add(row.reward_id);
   if (
-    (kind === 'attacks' || kind === 'backgrounds') &&
+    kind === 'backgrounds' &&
     (validAt(saved.achievementRewardCodes?.other) || validAt(saved.achievementRewardCodeAt))
   ) {
     for (const i of require('./catalog').catalog)

@@ -89,7 +89,7 @@ test('Q and E have independent cooldowns, stable event artwork and deduplicated 
 });
 
 test('account attack choices persist, preserve appearance changes, and determine HTTP event artwork', async (t) => {
-  const { base } = await appFixture(t, {
+  const { base, config } = await appFixture(t, {
     seed: (db) => createAuth(db).bootstrap('qe_owner', 'test-password-123'),
   });
   async function request(path, { method = 'GET', body, cookie } = {}) {
@@ -116,15 +116,25 @@ test('account attack choices persist, preserve appearance changes, and determine
     post = (path, body) => request(path, { method: 'POST', body, cookie: owner.cookie });
   assert.deepEqual((await get('/api/profile/attacks')).body, { q: 'barrage', e: 'beam', r: '' });
   assert.equal((await post('/api/profile/attacks', { q: 'shield', e: 'beam' })).status, 403);
-  assert.equal(
-    (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: 'bijuu_beam' })).status,
-    403,
-  );
   const initial = await get('/api/achievements');
   assert.deepEqual(initial.body.bonusRewards.attacks, ['barrage', 'beam']);
   const redeemed = await post('/api/achievements/redeem', { code: '我愛作者' });
   assert.equal(redeemed.status, 200);
-  assert.equal(redeemed.body.bonusRewards.attacks.length, 56);
+  assert.deepEqual(redeemed.body.bonusRewards.attacks, ['barrage', 'beam']);
+  assert.equal(
+    (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: 'bijuu_beam' })).status,
+    403,
+  );
+  const database = require('../src/db').openDatabase(config.dbFile);
+  try {
+    const userId = database.prepare("SELECT id FROM users WHERE username='qe_owner'").get().id;
+    for (const id of ['bijuu_beam', 'blade_aura_crimson', 'blade_aura', 'chain_lightning'])
+      database
+        .prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'draw',?)")
+        .run(userId, 'attacks', id, new Date().toISOString());
+  } finally {
+    database.close();
+  }
   assert.equal(
     (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: 'bijuu_beam' })).status,
     200,
