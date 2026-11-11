@@ -14,17 +14,13 @@ function ownedAttacks(db, userId) {
       .all(userId)
       .map((r) => r.achievement_id),
   );
-  const all = !!require('./redemption').redeemedAt(db, userId, 'other');
   const starter = new Set(require('./starter-rewards').owned(db, userId, 'attacks'));
   const earned = effects
     .filter(
       (e) =>
         !e.rewardOf &&
         !('paletteHue' in e) &&
-        ((!e.achievementId && !e.gachaOnly) ||
-          all ||
-          ids.has(e.achievementId) ||
-          starter.has(e.id)),
+        ((!e.achievementId && !e.gachaOnly) || ids.has(e.achievementId) || starter.has(e.id)),
     )
     .map((e) => e.id);
   const earnedIds = new Set(earned);

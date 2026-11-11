@@ -3,7 +3,7 @@ const { transaction } = require('../db');
 const { HttpError } = require('../http/errors');
 const { defaults } = require('../profiles/appearance');
 const codes = Object.freeze([
-  { code: '我愛作者', group: 'other', label: '其他獎勵（大廳背景、攻擊特效與戰鬥加成）' },
+  { code: '我愛作者', group: 'other', label: '其他獎勵（大廳背景與戰鬥加成）' },
 ]);
 const validAt = (at) =>
   typeof at === 'string' && Number.isFinite(Date.parse(at)) && new Date(at).toISOString() === at;
