@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { sizedImage } from '../services/image-size';
 const props = defineProps<{ name: string; avatar?: string | null; bot?: boolean }>();
 const failed = ref(false),
-  source = computed(
-    () =>
+  // Avatars render at 68 CSS px or less, so the smallest thumbnail suffices.
+  source = computed(() =>
+    sizedImage(
       props.avatar ||
-      (props.bot
-        ? '/assets/characters/sunny-neutral.png?size=256'
-        : '/assets/characters/traveler-neutral.png?size=256'),
+        (props.bot
+          ? '/assets/characters/sunny-neutral.png'
+          : '/assets/characters/traveler-neutral.png'),
+      128,
+    ),
   );
 watch(source, () => {
   failed.value = false;

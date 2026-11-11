@@ -91,7 +91,7 @@ onBeforeUnmount(() => controller?.abort());
   /><UiDialog ref="dialog" title="確定離開這個房間？" compact :dismissible="!pending"
     ><img
       class="vue-room-leave-image"
-      src="/assets/room-leave-thumbnail.jpg"
+      src="/assets/room-leave-thumbnail.webp"
       width="640"
       height="361"
       alt="離別場景，字幕：多麼虎頭蛇尾的結局" /><p>{{ effect }}</p

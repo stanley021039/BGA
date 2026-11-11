@@ -9,6 +9,9 @@ defineProps<{
   heroTitle?: string;
   heroDescription?: string;
   art?: string;
+  // Smaller copies for the narrow layout, where the art is at most 96px tall.
+  artSrcset?: string;
+  artSizes?: string;
   artAlt?: string;
   facts: readonly { label: string; value: string }[];
   notice?: string;
@@ -32,7 +35,13 @@ const heading = useId();
         class="vue-waiting-art"
         :role="!art ? 'img' : undefined"
         :aria-label="!art ? artAlt || title + '遊戲插畫' : undefined"
-        ><slot name="art"><img v-if="art" :src="art" :alt="artAlt || title + '遊戲插畫'" /></slot
+        ><slot name="art"
+          ><img
+            v-if="art"
+            :src="art"
+            :srcset="artSrcset"
+            :sizes="artSrcset ? artSizes : undefined"
+            :alt="artAlt || title + '遊戲插畫'" /></slot
       ></div>
       <div class="vue-waiting-hero-copy"
         ><h1 :id="heading">{{ heroTitle || title }}</h1

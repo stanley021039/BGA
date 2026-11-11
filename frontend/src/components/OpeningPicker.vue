@@ -11,7 +11,7 @@ const selected = ref('default'),
   pending = ref(false),
   message = ref('');
 const themes = [
-  { id: 'home-family', label: '我們這一家（直接獲得）', image: '/assets/auth/home-family.jpg' },
+  { id: 'home-family', label: '我們這一家（直接獲得）', image: '/assets/auth/home-family.webp' },
   { id: 'default', label: '歡迎來到 Ave Mujica 的世界', image: '/assets/auth/login-864.webp' },
   { id: 'soul-world', label: '歡迎來到我的屍魂界', image: '/assets/auth/soul-world.webp' },
 ];

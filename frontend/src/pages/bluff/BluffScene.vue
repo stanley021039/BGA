@@ -528,7 +528,7 @@ function rank(index: number) {
                 ><template #icon
                   ><img
                     class="vue-bluff-reaction-photo"
-                    src="/assets/bluff-reaction-photo-144.webp"
+                    src="/assets/bluff-reaction-photo-96.webp"
                     alt="" /></template></UiButton></div></div
         ></template>
         <template v-else-if="state.phase === 'finished'"

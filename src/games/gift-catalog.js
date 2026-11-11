@@ -177,7 +177,7 @@ const notoImage = (symbol) =>
         .filter((char) => !['\ufe0f', '\ufe0e'].includes(char))
         .map((char) => char.codePointAt(0).toString(16))
         .join('_') +
-      '.png',
+      '.webp',
   );
 const GIFTS = Object.entries(categories)
   .flatMap(([category, titles], group) => {
@@ -194,7 +194,7 @@ const GIFTS = Object.entries(categories)
         title,
         image: number
           ? versionedAsset(
-              `/assets/gifts/kenney/genericItem_color_${String(number).padStart(3, '0')}.png`,
+              `/assets/gifts/kenney/genericItem_color_${String(number).padStart(3, '0')}.webp`,
             )
           : notoImage(symbol),
       };
