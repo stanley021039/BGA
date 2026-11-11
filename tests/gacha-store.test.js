@@ -49,9 +49,9 @@ test('gacha schema enforces safe nonnegative balances and complete schema shape'
   assert.equal(db.prepare('PRAGMA foreign_key_check').all().length, 0);
 });
 
-test('previous devour Q/E selections migrate to R and cannot bypass its energy category', (t) => {
+test('owned devour Q/E selections migrate to R and cannot bypass its energy category', (t) => {
   const { db, user } = fixture(t);
-  db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'legacy',?)").run(
+  db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'draw',?)").run(
     user,
     'attacks',
     'shaohua_devour',
@@ -341,13 +341,16 @@ for (const saved of [
   });
 }
 
-test('author codes cannot unlock attacks in the pre-gacha ownership path', (t) => {
+test('author codes and achievements cannot unlock attacks in the pre-gacha ownership path', (t) => {
   const { db, user } = fixture(t);
   for (const table of GACHA_TABLES) db.exec('DROP TABLE ' + table);
   db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
     JSON.stringify({ achievementRewardCodeAt: '2026-10-01T00:00:00.000Z' }),
     user,
   );
+  db.prepare(
+    'INSERT INTO user_achievements(user_id,achievement_id,source_key,unlocked_at) VALUES(?,?,?,?)',
+  ).run(user, 'gift-first-gift', 'old', '2026-10-01T00:00:00.000Z');
   assert.deepEqual(require('../src/achievements/attack-rewards').ownedAttacks(db, user), [
     'barrage',
     'beam',
@@ -400,7 +403,7 @@ test('normal completed matches reward active humans once, preserve winners and e
   );
   assert.equal(store.wallet(user).coins, 500);
 });
-test('schema21 migration snapshots legacy ownership exactly once; later achievements do not grant rewards', (t) => {
+test('schema21 migration preserves achievements without importing attack rewards', (t) => {
   const dir = mkdtempSync(path.join(tmpdir(), 'bga-gacha-'));
   const file = path.join(dir, 'users.sqlite');
   let db = openDatabase(file);
@@ -439,7 +442,16 @@ test('schema21 migration snapshots legacy ownership exactly once; later achievem
   db = openDatabase(file);
   assert.deepEqual(db.prepare('SELECT * FROM coc_receipts').all(), priorCoc);
   assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
-  assert.ok(Ownership.ownedIds(db, user, 'attacks').includes(old.id));
+  assert.equal(
+    db.prepare('SELECT achievement_id FROM user_achievements WHERE user_id=?').get(user)
+      .achievement_id,
+    old.achievementIds[0],
+  );
+  assert.equal(
+    db.prepare("SELECT COUNT(*) AS count FROM gacha_ownership WHERE kind='attacks'").get().count,
+    0,
+  );
+  assert.deepEqual(Ownership.ownedIds(db, user, 'attacks'), []);
   db.prepare(
     'INSERT INTO user_achievements(user_id,achievement_id,source_key,unlocked_at) VALUES(?,?,?,?)',
   ).run(user, later.achievementIds[0], 'new', '2026-10-01T00:00:00.000Z');
@@ -541,23 +553,27 @@ test('every new palette is an independent draw and exchange reward with the orig
   assert.deepEqual(getAttackSettings(db, user), loadout);
 });
 
-test('retired achievement ownership can be reacquired through the prize machine', (t) => {
-  const { db, user, other, store } = fixture(t, { choose: () => 0 });
-  const item = poolItems('frames')[0];
-  const seed = db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'legacy',?)");
-  for (const id of [user, other]) {
-    seed.run(id, item.kind, item.id, store.at());
-    assert.ok(!Ownership.ownedIds(db, id, item.kind).includes(item.id));
-    fund(store, db, id);
-  }
-  store.draw(user, { pool: 'frames', count: 1, requestId: randomUUID() });
-  store.exchange(other, { key: item.key, requestId: randomUUID() });
-  const source = db.prepare(
-    'SELECT source FROM gacha_ownership WHERE user_id=? AND kind=? AND reward_id=?',
-  );
-  assert.equal(source.get(user, item.kind, item.id).source, 'draw');
-  assert.equal(source.get(other, item.kind, item.id).source, 'exchange');
-});
+for (const kind of ['frames', 'attacks'])
+  test(`retired rewards in the ${kind} pool can be reacquired through draws and exchanges`, (t) => {
+    const { db, user, other, store } = fixture(t, { choose: () => 0 });
+    const item = poolItems(kind).find((item) => item.rarity === 'common');
+    const seed = db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'legacy',?)");
+    for (const id of [user, other]) {
+      seed.run(id, kind, item.id, store.at());
+      assert.ok(!Ownership.ownedIds(db, id, kind).includes(item.id));
+      fund(store, db, id);
+    }
+    const draw = store.draw(user, { pool: kind, count: 1, requestId: randomUUID() });
+    assert.equal(draw.results[0].id, item.id);
+    assert.equal(draw.results[0].duplicate, false);
+    store.exchange(other, { key: item.key, requestId: randomUUID() });
+    const source = db.prepare(
+      'SELECT source FROM gacha_ownership WHERE user_id=? AND kind=? AND reward_id=?',
+    );
+    assert.equal(source.get(user, kind, item.id).source, 'draw');
+    assert.equal(source.get(other, kind, item.id).source, 'exchange');
+    for (const id of [user, other]) assert.ok(Ownership.ownedIds(db, id, kind).includes(item.id));
+  });
 
 test('Susanoo has two reward records and their separate style sets share the correct ownership', (t) => {
   const { db, store, user, other } = fixture(t);
