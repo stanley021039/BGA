@@ -3,7 +3,7 @@ const fs = require('node:fs'),
   path = require('node:path');
 const { catalog } = require('../src/gacha/catalog');
 const { openDatabase, transaction } = require('../src/db');
-const { AchievementStore, definitions } = require('../src/achievements/store');
+const { definitions } = require('../src/achievements/store');
 const { rewards } = require('../src/achievements/rewards');
 function unlockPlaytestRewards(dbFile) {
   const work = fs.realpathSync(path.resolve(__dirname, '../work'));
@@ -17,16 +17,15 @@ function unlockPlaytestRewards(dbFile) {
   if (marker.purpose !== 'isolated-playtest') throw Error('缺少獨立試玩資料標記');
   const db = openDatabase(file);
   try {
-    const store = new AchievementStore(db),
-      users = db.prepare('SELECT id FROM users WHERE disabled=0').all();
+    const users = db.prepare('SELECT id FROM users WHERE disabled=0').all();
     // Preview all rewards without inserting fabricated gameplay achievements.
     const grant = db.prepare(
       "INSERT INTO gacha_ownership(user_id,kind,reward_id,source,acquired_at) VALUES(?,?,?,'draw',?) ON CONFLICT(user_id,kind,reward_id) DO UPDATE SET source='draw' WHERE gacha_ownership.source='legacy'",
     );
-    const kinds = new Set(['frames', 'media', 'entrances', 'sounds']);
+    const kinds = new Set(['frames', 'media', 'entrances', 'sounds', 'backgrounds']);
     const rewardsToGrant = catalog.filter((item) => kinds.has(item.kind) && !item.gachaExclusive);
     const at = new Date().toISOString();
-    for (const user of users) store.redeem(user.id, '我愛作者');
+    // Preview achievement rewards without consuming either one-time code.
     transaction(db, () => {
       for (const user of users) {
         for (const item of rewardsToGrant) grant.run(user.id, item.kind, item.id, at);

@@ -8,13 +8,53 @@ const TAU = Math.PI * 2;
 const clamp = (n) => Math.max(0, Math.min(1, n));
 const mix = (a, b, p) => a + (b - a) * p;
 const palettes = {
-  shaohua: ['#ffb858', '#bb8dff'],
-  reaper: ['#65e8c2', '#c090ff'],
-  railgun: ['#55ddff', '#ff8055'],
-  plasma: ['#80edaf', '#b68bff'],
-  missiles: ['#ffad54', '#7ddcff'],
-  sniper: ['#ff779f', '#66e8d0'],
+  shaohua: ['#ffb858', '#a895ef'],
+  reaper: ['#65e8c2', '#f77597'],
+  railgun: ['#55ddff', '#ff915a'],
+  plasma: ['#80edaf', '#bc93ff'],
+  missiles: ['#ffad54', '#78dafa'],
+  sniper: ['#ff779f', '#65e5b8'],
 };
+// Material and accent colours are independent of the energy glow. No image tinting.
+const alternateMaterials = {
+  shaohua: { accent: '#ffda86', core: '#fff1c9', dark: '#181329' },
+  reaper: { accent: '#88dfcd', core: '#ffe5cb', dark: '#301826' },
+  railgun: {
+    accent: '#78d9ee',
+    core: '#fff3ce',
+    top: '#e6c4a2',
+    middle: '#855841',
+    dark: '#261f26',
+    edge: '#edbd89',
+  },
+  plasma: {
+    accent: '#70eadc',
+    core: '#fff1ff',
+    top: '#d9daf4',
+    middle: '#655879',
+    dark: '#24243e',
+    edge: '#b9bde4',
+  },
+  missiles: {
+    accent: '#a6a0ef',
+    core: '#dfe7ff',
+    top: '#77cbdc',
+    middle: '#28647b',
+    dark: '#182a3e',
+    edge: '#a2d3eb',
+  },
+  sniper: {
+    accent: '#efcd85',
+    core: '#effff5',
+    top: '#b9ddd0',
+    middle: '#375b59',
+    dark: '#132d30',
+    edge: '#b7cdac',
+  },
+};
+function material(o, k) {
+  return o.alternate ? alternateMaterials[k] : undefined;
+}
 function color(o, k) {
   return palettes[k][o.alternate ? 1 : 0];
 }
@@ -138,6 +178,7 @@ function drawShaohua(c, o, t) {
   const biting = h.contactAt > 0 && t >= h.contactAt;
   const img = o.images?.[biting ? 'open' : 'closed'];
   if (!img?.width) return;
+  const paint = material(o, 'shaohua');
   const col = color(o, 'shaohua'),
     S = (o.scale || 1) * homingScale(Math.max(t, h.at || 0)),
     sz = (biting ? 176 : 124) * S;
@@ -180,11 +221,42 @@ function drawShaohua(c, o, t) {
         }
       }
       glow(c, 0, 0, sz * (biting ? 1.05 : 0.85), col + '66');
+      const accent = paint?.accent || '#ffe0a1';
+      // Open arcs follow the authoritative head; the portrait keeps its original colours.
+      for (let k = 0; k < 2; k++) {
+        const radius = sz * (0.76 + k * 0.16) * (1 - p * 0.12);
+        const turn = t * (k ? -0.0025 : 0.003) + facing + k * Math.PI;
+        c.beginPath();
+        c.arc(0, 0, radius, turn, turn + Math.PI * (biting ? 1.3 : 0.95));
+        c.strokeStyle = (k ? col : accent) + 'cc';
+        c.lineWidth = (k ? 2 : 3) * S;
+        c.stroke();
+        const a = turn + Math.PI * 0.85;
+        line(
+          c,
+          Math.cos(a) * radius,
+          Math.sin(a) * radius,
+          Math.cos(a + 0.18) * radius * 0.88,
+          Math.sin(a + 0.18) * radius * 0.88,
+          accent,
+          2 * S,
+        );
+      }
       c.lineWidth = 4 * S;
-      circle(c, 0, 0, sz * 0.65, null, col);
+      circle(c, 0, 0, sz * 0.65, null, paint?.accent || col);
       for (let k = 0; k < 10; k++) {
         const a = t * 0.004 + (k * TAU) / 10;
-        circle(c, Math.cos(a) * sz * 0.69, Math.sin(a) * sz * 0.69, 3 * S, col);
+        const orbit = sz * (biting ? 0.88 - p * 0.22 : 0.72);
+        const inner = orbit - (biting ? 15 : 7) * S;
+        line(
+          c,
+          Math.cos(a) * orbit,
+          Math.sin(a) * orbit,
+          Math.cos(a + 0.08) * inner,
+          Math.sin(a + 0.08) * inner,
+          k % 2 ? accent : paint?.core || col,
+          2.5 * S,
+        );
       }
       c.scale(1 - closing * 0.65, 1 - closing * 0.65);
       if (!biting) {
@@ -197,7 +269,7 @@ function drawShaohua(c, o, t) {
           split = 0.58;
         const mouthY = -H / 2 + H * split;
         // A local vortex exaggerates the suction without moving or damaging players.
-        c.fillStyle = '#130d1b';
+        c.fillStyle = paint?.dark || '#130d1b';
         c.fillRect(-w / 2, mouthY, w, H * (1 - split) + gape);
         if (p < 1) {
           c.save();
@@ -206,7 +278,7 @@ function drawShaohua(c, o, t) {
           for (let k = 0; k < 3; k++) {
             c.save();
             c.rotate(-t * 0.008 + (k * TAU) / 3);
-            c.strokeStyle = col + 'bb';
+            c.strokeStyle = (k % 2 ? paint?.accent || col : col) + 'bb';
             c.lineWidth = 3 * S;
             c.beginPath();
             c.arc(0, 0, (24 + k * 18) * S, 0.15, Math.PI * 1.5);
@@ -273,7 +345,7 @@ function drawShaohua(c, o, t) {
       glow(c, 0, 0, (65 + q * 60) * S, col + '77');
       c.lineWidth = (7 - 4 * q) * S;
       circle(c, 0, 0, (20 + q * 145) * S, null, col);
-      circle(c, 0, 0, (12 + q * 105) * S, null, col + 'aa');
+      circle(c, 0, 0, (12 + q * 105) * S, null, (paint?.accent || col) + 'aa');
       for (let k = 0; k < 24; k++) {
         const a = (k * TAU) / 24,
           r = (30 + q * (95 + (k % 3) * 15)) * S;
@@ -295,6 +367,7 @@ function drawShaohua(c, o, t) {
 }
 function drawReaper(c, o, t) {
   if (!alive(t, 4050)) return;
+  const paint = material(o, 'reaper');
   const col = color(o, 'reaper'),
     f = o.readCaster?.() || o.from,
     scale = o.scale || 1;
@@ -312,11 +385,11 @@ function drawReaper(c, o, t) {
       c.rotate(rotation);
       c.lineWidth = 2 * scale;
       circle(c, 0, 0, r, null, col);
-      circle(c, 0, 0, r * 0.86, null, col + 'aa');
+      circle(c, 0, 0, r * 0.86, null, (paint?.accent || col) + 'aa');
       for (let k = 0; k < 24; k++) {
         c.save();
         c.rotate((k * TAU) / 24);
-        c.strokeStyle = col;
+        c.strokeStyle = paint?.core || col;
         c.lineWidth = 1.5 * scale;
         c.strokeRect(r * 0.91, -3 * scale, 7 * scale, 6 * scale);
         line(c, r * 0.91, -6 * scale, r * 0.96, -6 * scale, col, scale);
@@ -351,7 +424,7 @@ function drawReaper(c, o, t) {
       c.translate(cx, cy - 45 * scale);
       c.scale(scale, scale);
       c.globalAlpha = alpha * 0.7 * clamp(t / 900);
-      c.fillStyle = col + '22';
+      c.fillStyle = paint ? paint.dark + '99' : col + '22';
       c.strokeStyle = col + 'bb';
       c.lineWidth = 3;
       c.beginPath();
@@ -366,8 +439,8 @@ function drawReaper(c, o, t) {
       c.closePath();
       c.fill();
       c.stroke();
-      line(c, -27, -69, -10, -62, col, 4);
-      line(c, 10, -62, 27, -69, col, 4);
+      line(c, -27, -69, -10, -62, paint?.accent || col, 4);
+      line(c, 10, -62, 27, -69, paint?.accent || col, 4);
       c.beginPath();
       c.moveTo(-32, -35);
       c.quadraticCurveTo(-80, -13, -112, 35);
@@ -455,7 +528,7 @@ function drawReaper(c, o, t) {
         for (const [width, tint] of [
           [12, col + '33'],
           [4, col + 'bb'],
-          [1, col],
+          [1, paint?.core || col],
         ]) {
           c.strokeStyle = tint;
           c.lineWidth = width * scale;
@@ -471,7 +544,7 @@ function drawReaper(c, o, t) {
         }
         const v = soulPoint(p);
         c.translate(v.x, v.y);
-        c.fillStyle = col + 'dd';
+        c.fillStyle = (paint?.accent || col) + 'dd';
         c.strokeStyle = col;
         c.lineWidth = 2 * scale;
         c.beginPath();
@@ -484,7 +557,7 @@ function drawReaper(c, o, t) {
         c.closePath();
         c.fill();
         c.stroke();
-        circle(c, -3.5 * scale, -15 * scale, 1.8 * scale, '#16342f');
+        circle(c, -3.5 * scale, -15 * scale, 1.8 * scale, paint?.dark || '#16342f');
         circle(c, 3.5 * scale, -15 * scale, 1.8 * scale, '#16342f');
       } finally {
         c.restore();
@@ -519,16 +592,40 @@ function drawReaper(c, o, t) {
   }
   impact(c, o, t, col);
 }
-function gun(c, w, col, style = 0) {
+// A six-face crystal replaces the alternate's soft sphere without extra particles.
+function crystal(c, x, y, r, rotation, fill, edge, core) {
+  c.save();
+  c.translate(x, y);
+  c.rotate(rotation);
+  c.beginPath();
+  for (let k = 0; k < 6; k++) {
+    const a = (k * TAU) / 6;
+    if (k === 0) c.moveTo(Math.cos(a) * r * 1.25, Math.sin(a) * r);
+    else c.lineTo(Math.cos(a) * r * 1.25, Math.sin(a) * r);
+  }
+  c.closePath();
+  c.fillStyle = fill;
+  c.strokeStyle = edge;
+  c.lineWidth = 1.5;
+  c.fill();
+  c.stroke();
+  for (let k = 0; k < 3; k++) {
+    const a = (k * TAU) / 3;
+    line(c, 0, 0, Math.cos(a) * r * 1.25, Math.sin(a) * r, k ? edge : core, 1);
+  }
+  line(c, -r * 0.42, -r * 0.34, r * 0.5, -r * 0.34, core, 2);
+  c.restore();
+}
+function gun(c, w, col, style = 0, paint) {
   c.save();
   c.scale(0.7, 0.7);
   w /= 0.7;
   const g = c.createLinearGradient(0, -18, 0, 18);
-  g.addColorStop(0, '#d6e2e8');
-  g.addColorStop(0.35, '#526374');
-  g.addColorStop(1, '#152432');
+  g.addColorStop(0, paint?.top || '#d6e2e8');
+  g.addColorStop(0.35, paint?.middle || '#526374');
+  g.addColorStop(1, paint?.dark || '#152432');
   c.fillStyle = g;
-  c.strokeStyle = '#9ba9b3';
+  c.strokeStyle = paint?.edge || '#9ba9b3';
   c.lineWidth = 1.2;
   c.beginPath();
   c.moveTo(-28, -12);
@@ -542,11 +639,11 @@ function gun(c, w, col, style = 0) {
   c.closePath();
   c.fill();
   c.stroke();
-  c.fillStyle = '#222b3c';
+  c.fillStyle = paint?.dark || '#222b3c';
   c.fillRect(-15, -7, Math.max(9, w - 14), 13);
   for (let i = 0; i < 4; i++) {
     const x = -12 + i * Math.min(9, w / 7);
-    line(c, x, -4, x + 3, 2, '#aab9c9', 1.5);
+    line(c, x, -4, x + 3, 2, paint?.edge || '#aab9c9', 1.5);
   }
   for (const x of [-20, w - 28]) {
     circle(c, x, 10, 3.5, '#22303c', '#9ba9b3');
@@ -558,7 +655,7 @@ function gun(c, w, col, style = 0) {
   line(c, -26, 22, -8, 22, '#8a9aa9', 7);
   line(c, -12, -12, w - 25, -12, col, 2);
   if (style === 1) {
-    c.fillStyle = '#263d50';
+    c.fillStyle = paint?.dark || '#263d50';
     c.fillRect(15, -33, 40, 16);
     circle(c, 36, -26, 9, '#203240', col);
   }
@@ -566,27 +663,67 @@ function gun(c, w, col, style = 0) {
 }
 function drawRailgun(c, o, t) {
   if (!alive(t, 1450)) return;
-  const col = color(o, 'railgun');
+  const col = color(o, 'railgun'),
+    paint = material(o, 'railgun');
   c.save();
   try {
     frame(c, o, (L) => {
       const w = Math.min(80, L * 0.3);
       followCaster(c, o);
-      gun(c, w, col);
-      c.fillStyle = '#1a2d3b';
+      gun(c, w, col, 0, paint);
+      c.fillStyle = paint?.dark || '#1a2d3b';
       c.fillRect(2, -6, w, 12);
-      line(c, 0, -14, w, -14, '#dbe6f2', 4);
-      line(c, 0, 14, w, 14, '#849cae', 4);
+      line(c, 0, -14, w, -14, paint?.edge || '#dbe6f2', 4);
+      line(c, 0, 14, w, 14, paint?.middle || '#849cae', 4);
+      if (paint) {
+        // Copper cheek plates leave the dark acceleration channel visible.
+        for (const side of [-1, 1]) {
+          c.beginPath();
+          c.moveTo(-3, side * 17);
+          c.lineTo(12, side * 26);
+          c.lineTo(w - 9, side * 26);
+          c.lineTo(w + 4, side * 14);
+          c.lineTo(w - 6, side * 11);
+          c.lineTo(4, side * 12);
+          c.closePath();
+          c.fillStyle = paint.middle;
+          c.strokeStyle = paint.edge;
+          c.lineWidth = 1.5;
+          c.fill();
+          c.stroke();
+          line(c, 13, side * 21, w - 13, side * 21, paint.top, 2);
+        }
+      }
       for (let k = 0; k < 6; k++) {
         const active = clamp((t - k * 65) / 160);
         c.globalAlpha = 0.3 + 0.7 * active;
         c.lineWidth = 3;
         const x = (k * w) / 6;
-        circle(c, x, 0, 14, null, col);
+        if (paint) {
+          c.beginPath();
+          c.ellipse(x, 0, 4.5, 15, 0, 0, TAU);
+          c.strokeStyle = active > 0.6 ? paint.accent : paint.edge;
+          c.stroke();
+        } else circle(c, x, 0, 14, null, col);
         line(c, x - 3, -19, x + 3, -19, '#eaf6ff', 2);
         line(c, x - 3, 19, x + 3, 19, '#788d9f', 2);
       }
       c.globalAlpha = 1;
+      if (paint && t < 950) {
+        const charge = Math.min(1, t / 550),
+          front = w * charge;
+        for (const side of [-1, 1]) {
+          c.beginPath();
+          c.moveTo(0, side * 9);
+          for (let k = 1; k <= 6; k++) {
+            const x = (front * k) / 6;
+            c.lineTo(x, side * (8 + ((k + Math.floor(t / 55)) % 2) * 6));
+          }
+          c.strokeStyle = paint.accent;
+          c.lineWidth = 1.5;
+          c.stroke();
+        }
+      }
       glow(c, w, 0, 28 * clamp(t / 550), col + '99');
       c.restore();
       const p = (t - 550) / 400;
@@ -594,11 +731,11 @@ function drawRailgun(c, o, t) {
         const x = mix(w, L, p);
         line(c, Math.max(w, x - 125), 0, x, 0, col + '77', 14);
         line(c, Math.max(w, x - 95), 0, x, 0, col, 6);
-        line(c, Math.max(w, x - 75), 0, x, 0, '#ecfbff', 2);
+        line(c, Math.max(w, x - 75), 0, x, 0, paint?.core || '#ecfbff', 2);
         for (let i = 0; i < 8; i++) {
           const d = Math.max(w, x - i * 11);
           const y = (i % 2 ? -1 : 1) * (5 + i * 2);
-          line(c, d, y, d + 8, y * 0.65, col, 1.3);
+          line(c, d, y, d + 8, y * 0.65, paint?.accent || col, 1.3);
         }
         c.fillStyle = '#f6f8f4';
         c.fillRect(x - 13, -3, 17, 6);
@@ -612,19 +749,31 @@ function drawRailgun(c, o, t) {
 }
 function drawPlasma(c, o, t) {
   if (!alive(t, 1550)) return;
-  const col = color(o, 'plasma');
+  const col = color(o, 'plasma'),
+    paint = material(o, 'plasma');
   c.save();
   try {
     frame(c, o, (L) => {
       const w = Math.min(63, L * 0.25);
       followCaster(c, o);
-      gun(c, w, col);
+      gun(c, w, col, 0, paint);
       for (let k = 0; k < 3; k++) {
         c.save();
         c.translate(w - 21 + k * 10, 0);
         c.scale(0.45, 1);
         c.lineWidth = 4;
-        circle(c, 0, 0, 18 + Math.sin(t * 0.006 + k) * 2, null, col);
+        if (paint)
+          crystal(
+            c,
+            0,
+            0,
+            16 + Math.sin(t * 0.006 + k) * 2,
+            t * 0.002 + k * 0.4,
+            paint.dark + '99',
+            k % 2 ? paint.accent : col,
+            paint.core,
+          );
+        else circle(c, 0, 0, 18 + Math.sin(t * 0.006 + k) * 2, null, col);
         c.restore();
       }
       glow(c, w, 0, 25, col + '77');
@@ -636,20 +785,33 @@ function drawPlasma(c, o, t) {
         const x = mix(w, L, p),
           r = 12 + Math.sin(t * 0.015) * 2;
         glow(c, x, 0, 30, col + 'aa');
-        circle(c, x, 0, r, col + 'bb', '#f4fff9');
-        circle(c, x, 0, r * 0.5, '#f1fff6');
+        if (paint) {
+          const beat = 1 + 0.18 * Math.sin((t - at) * 0.028);
+          crystal(c, x, 0, r * beat, t * 0.008 + index, col + 'cc', paint.accent, paint.core);
+        } else {
+          circle(c, x, 0, r, col + 'bb', '#f4fff9');
+          circle(c, x, 0, r * 0.5, '#f1fff6');
+        }
         for (let i = 0; i < 7; i++) {
           const phase = t * 0.016 + (i * TAU) / 7;
           const offset = Math.cos(phase) * 15;
           const y = Math.sin(phase) * 14;
-          line(c, x - 24 + offset, y * 1.4, x - 14 + offset, y, i % 3 ? col : '#effff8', 2);
+          line(
+            c,
+            x - 24 + offset,
+            y * 1.4,
+            x - 14 + offset,
+            y,
+            i % 3 ? col : paint?.accent || '#effff8',
+            2,
+          );
         }
         c.save();
         c.translate(x, 0);
         c.scale(1.5, 0.6);
         c.rotate(t * 0.01);
         c.lineWidth = 1.5;
-        circle(c, 0, 0, r * 1.25, null, col);
+        circle(c, 0, 0, r * 1.25, null, paint?.accent || col);
         c.restore();
       }
     });
@@ -660,18 +822,19 @@ function drawPlasma(c, o, t) {
 }
 function drawMissiles(c, o, t) {
   if (!alive(t, 2100)) return;
-  const col = color(o, 'missiles');
+  const col = color(o, 'missiles'),
+    paint = material(o, 'missiles');
   c.save();
   try {
     frame(c, o, (L) => {
       const w = Math.min(46, L * 0.18);
       followCaster(c, o);
-      gun(c, w, col);
+      gun(c, w, col, 0, paint);
       c.restore();
       for (let k = 0; k < 4; k++) {
         const y = (k - 1.5) * 11;
         followCaster(c, o);
-        c.fillStyle = '#35475b';
+        c.fillStyle = paint?.middle || '#35475b';
         c.fillRect(-10, y - 4, w, 8);
         line(c, -10, y - 4, w, y - 4, '#8499ac', 1.3);
         line(c, -8, y + 4, w, y + 4, '#111c2a', 1.5);
@@ -687,37 +850,82 @@ function drawMissiles(c, o, t) {
         c.save();
         c.translate(x, Y);
         c.rotate(angle);
-        line(c, -62, 0, -10, 0, col + '66', 5);
+        line(c, -62, 0, -10, 0, (paint?.accent || col) + '66', 5);
         for (let i = 0; i < 5; i++) {
           const tail = -23 - i * 7;
-          circle(c, tail, Math.sin(t * 0.02 + i) * i * 0.8, 1.5 + i * 0.55, col + '66');
+          circle(
+            c,
+            tail,
+            Math.sin(t * 0.02 + i) * i * 0.8,
+            1.5 + i * 0.55,
+            (paint?.accent || col) + '66',
+          );
         }
-        line(c, -25, 0, -10, 0, '#fff2d0', 2.5);
-        c.fillStyle = col;
+        line(c, -25, 0, -10, 0, paint?.core || '#fff2d0', 2.5);
+        c.fillStyle = paint?.accent || col;
         c.beginPath();
         c.moveTo(-11, 0);
         c.lineTo(-28, -5);
         c.lineTo(-22, 0);
         c.lineTo(-28, 5);
         c.fill();
-        c.fillStyle = '#c3ccd6';
+        if (paint) {
+          // Cyan armour and violet exhaust distinguish the entire alternate projectile.
+          line(c, -46, -5, -15, -3, col + 'aa', 1.5);
+          line(c, -46, 5, -15, 3, col + 'aa', 1.5);
+        }
+        // Warm, broad segmented casing versus a longer dark shaft with split ice armour.
+        c.fillStyle = paint?.dark || '#d3ae78';
         c.beginPath();
-        c.moveTo(12, 0);
-        c.lineTo(2, -5);
-        c.lineTo(-12, -5);
-        c.lineTo(-12, 5);
-        c.lineTo(2, 5);
+        c.moveTo(paint ? 16 : 12, 0);
+        c.lineTo(paint ? 3 : 2, -5);
+        c.lineTo(paint ? -22 : -14, -5);
+        c.lineTo(paint ? -22 : -14, 5);
+        c.lineTo(paint ? 3 : 2, 5);
         c.closePath();
         c.fill();
-        c.fillStyle = '#526477';
+        if (paint) {
+          c.beginPath();
+          c.moveTo(16, 0);
+          c.lineTo(3, -5);
+          c.lineTo(-1, -5);
+          c.lineTo(4, 0);
+          c.lineTo(-1, 5);
+          c.lineTo(3, 5);
+          c.closePath();
+          c.fillStyle = paint.top;
+          c.fill();
+          for (const x of [-20, -12, -4]) {
+            for (const side of [-1, 1]) {
+              c.beginPath();
+              c.moveTo(x, side * 5);
+              c.lineTo(x + 5, side * 5);
+              c.lineTo(x + 7, side * 2);
+              c.lineTo(x + 1, side * 2);
+              c.closePath();
+              c.fillStyle = side < 0 ? paint.top : paint.middle;
+              c.fill();
+            }
+          }
+        } else {
+          line(c, -13, 3, 1, 3, '#674d35', 2);
+          line(c, -12, -3, 1, -3, '#fff0c6', 1);
+          for (const x of [-9, -2]) line(c, x, -5, x, 5, '#674d35', 2);
+        }
+        c.fillStyle = paint?.dark || '#674d35';
         c.beginPath();
         c.moveTo(-7, -4);
-        c.lineTo(-16, -10);
+        c.lineTo(paint ? -20 : -16, paint ? -15 : -10);
         c.lineTo(-13, 0);
-        c.lineTo(-16, 10);
+        c.lineTo(paint ? -20 : -16, paint ? 15 : 10);
         c.lineTo(-7, 4);
         c.fill();
-        line(c, -4, -3, 2, -3, col, 2);
+        if (paint) {
+          line(c, -18, -12, -9, -4, col, 1.5);
+          line(c, -18, 12, -9, 4, col, 1.5);
+        }
+        if (paint) line(c, -21, 0, 5, 0, col, 1.3);
+        else line(c, 3, -3, 7, -1, col, 2);
         c.restore();
       }
     });
@@ -728,14 +936,15 @@ function drawMissiles(c, o, t) {
 }
 function drawSniper(c, o, t) {
   if (!alive(t, 1800)) return;
-  const col = color(o, 'sniper');
+  const col = color(o, 'sniper'),
+    paint = material(o, 'sniper');
   c.save();
   try {
     frame(c, o, (L) => {
       const w = Math.min(95, L * 0.32);
       followCaster(c, o);
-      gun(c, w, col, 1);
-      c.fillStyle = '#9aadb9';
+      gun(c, w, col, 1, paint);
+      c.fillStyle = paint?.middle || '#9aadb9';
       c.fillRect(w - 15, -5, 45, 10);
       line(c, w + 10, -6, w + 30, -6, col, 2);
       c.restore();
@@ -743,7 +952,7 @@ function drawSniper(c, o, t) {
         r = 45 - 25 * p;
       c.lineWidth = 1.5;
       circle(c, L, 0, r, null, col);
-      circle(c, L, 0, r + 8, null, col + '66');
+      circle(c, L, 0, r + 8, null, (paint?.accent || col) + 'aa');
       for (let i = 0; i < 12; i++) {
         const a = (i * TAU) / 12;
         line(
@@ -764,7 +973,7 @@ function drawSniper(c, o, t) {
           Math.sin(a) * (r + 4),
           L + Math.cos(a) * (r + 13),
           Math.sin(a) * (r + 13),
-          col,
+          paint?.accent || col,
           2,
         );
       }
@@ -777,8 +986,8 @@ function drawSniper(c, o, t) {
         line(c, w + 20, 0, L, 0, col + '66', 17);
         line(c, w + 20, 0, L, 0, col, 7);
         circle(c, w + 25, 0, 9 + fire * 21, null, col);
-        circle(c, L, 0, 8 + fire * 38, null, '#fff2f9');
-        line(c, w + 20, 0, L, 0, '#ffffff', 2);
+        circle(c, L, 0, 8 + fire * 38, null, paint?.accent || '#fff2f9');
+        line(c, w + 20, 0, L, 0, paint?.core || '#ffffff', 2);
         glow(c, w + 30, 0, 27, col);
       }
     });

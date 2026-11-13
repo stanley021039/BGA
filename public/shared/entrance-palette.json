@@ -9,13 +9,15 @@
       "id": "smoke",
       "gachaOnly": true,
       "label": "黑煙漩渦",
-      "description": "紫黑色漩渦捲緊、啪一聲現身。"
+      "description": "紫黑色漩渦捲緊、啪一聲現身。",
+      "detailColors": ["#7e719b", "#b0a4c6", "#decba7"]
     },
     {
       "id": "sparks",
       "gachaOnly": true,
       "label": "金色魔杖火花",
-      "description": "金色火花聚成光球，從光裡浮現。"
+      "description": "金色火花聚成光球，從光裡浮現。",
+      "detailColors": ["#ffd579", "#e4ad68", "#fff2ce"]
     },
     {
       "id": "ink",
@@ -32,243 +34,513 @@
       "id": "rift",
       "gachaOnly": true,
       "label": "時空裂縫",
-      "description": "空中撕開發光裂縫，角色走出來。"
+      "description": "空中撕開發光裂縫，角色走出來。",
+      "detailColors": ["#bb94e8", "#76bbc8", "#f5ecff"]
     },
     {
       "id": "particles",
       "gachaOnly": true,
       "label": "粒子組合",
       "description": "粒子飛來由腳到頭拼出角色。"
+    },
+    {
+      "id": "arrival-gift-box",
+      "label": "驚喜禮物盒",
+      "description": "禮盒開啟，角色、彩帶與驚喜道具彈出。",
+      "gachaOnly": true,
+      "rarity": "rare",
+      "duration": 2200
+    },
+    {
+      "id": "arrival-hero-faceplant",
+      "label": "天降失誤",
+      "description": "帥氣俯衝卻臉著地，爬起來假裝沒事。",
+      "gachaOnly": true,
+      "rarity": "epic",
+      "duration": 2800
+    },
+    {
+      "id": "arrival-coffin-dance",
+      "label": "黑人抬棺舞",
+      "description": "六人舉棺滑步，角色掀蓋躍出。",
+      "gachaOnly": true,
+      "rarity": "legendary",
+      "duration": 3500
+    },
+    {
+      "id": "arrival-math-dimension",
+      "label": "萬象演算",
+      "description": "公式與幾何環繞，角色旋轉登場。",
+      "gachaOnly": true,
+      "rarity": "legendary",
+      "duration": 3200
+    },
+    {
+      "id": "arrival-heart-bubbles",
+      "label": "愛心泡泡降落",
+      "description": "粉色泡泡飄落，角色破泡而出。",
+      "gachaOnly": true,
+      "rarity": "common",
+      "duration": 1900
+    },
+    {
+      "id": "arrival-glass-break",
+      "label": "次元破屏",
+      "description": "六拳打裂玻璃，角色破屏登場。",
+      "gachaOnly": true,
+      "rarity": "rare",
+      "duration": 2400
+    },
+    {
+      "id": "arrival-star-courier",
+      "label": "星星快遞",
+      "description": "騎流星急煞，留下彩虹與星光。",
+      "gachaOnly": true,
+      "rarity": "common",
+      "duration": 2100
+    },
+    {
+      "id": "arrival-brush-creation",
+      "label": "畫筆創生",
+      "description": "畫筆在畫布描出角色，完成後躍出。",
+      "gachaOnly": true,
+      "rarity": "rare",
+      "duration": 2500
+    },
+    {
+      "id": "arrival-delivery-scooter",
+      "label": "外送抵達",
+      "description": "騎士高速送達，角色跳出外送袋。",
+      "gachaOnly": true,
+      "rarity": "legendary",
+      "duration": 3300
     }
   ],
   "variants": [
     {
       "id": "classic-alt",
-      "label": "經典現影（翡翠異色）",
-      "description": "以翡翠配色重現原版的進場動畫。",
+      "label": "經典現影（翠幕初現異色）",
+      "description": "翠色煙渦收束，光環隨角色散開。",
       "variantOf": "classic",
       "paletteHue": 154,
-      "sourceHue": 250
+      "sourceHue": 250,
+      "styleLabel": "翠幕初現異色"
     },
     {
       "id": "smoke-alt",
-      "label": "黑煙漩渦（赤銅異色）",
-      "description": "以赤銅配色重現原版的進場動畫。",
+      "label": "黑煙漩渦（燼海迴旋異色）",
+      "description": "銅色煙渦迴旋，刻紋與青光交錯。",
       "variantOf": "smoke",
       "paletteHue": 20,
-      "sourceHue": 255
+      "sourceHue": 255,
+      "detailColors": ["#b77c56", "#72bfc5", "#ead7b9"],
+      "styleLabel": "燼海迴旋異色"
     },
     {
       "id": "sparks-alt",
-      "label": "金色魔杖火花（銀藍異色）",
-      "description": "以銀藍配色重現原版的進場動畫。",
+      "label": "金色魔杖火花（星紋流光異色）",
+      "description": "星紋聚成光球，角色從光中浮現。",
       "variantOf": "sparks",
-      "paletteHue": 209
+      "paletteHue": 209,
+      "detailColors": ["#83c9e8", "#b8a7de", "#eef7ff"],
+      "styleLabel": "星紋流光異色"
     },
     {
       "id": "ink-alt",
-      "label": "墨水潑濺（深靛異色）",
-      "description": "以深靛配色重現原版的進場動畫。",
+      "label": "墨水潑濺（靛夜墨痕異色）",
+      "description": "靛藍墨跡潑落，剪影化為角色。",
       "variantOf": "ink",
-      "paletteHue": 238
+      "paletteHue": 238,
+      "styleLabel": "靛夜墨痕異色"
     },
     {
       "id": "runes-alt",
-      "label": "地面魔法陣（紫晶異色）",
-      "description": "以紫晶配色重現原版的進場動畫。",
+      "label": "地面魔法陣（紫曜星陣異色）",
+      "description": "紫色符文亮起，角色在光柱中浮現。",
       "variantOf": "runes",
-      "paletteHue": 275
+      "paletteHue": 275,
+      "styleLabel": "紫曜星陣異色"
     },
     {
       "id": "rift-alt",
-      "label": "時空裂縫（琥珀異色）",
-      "description": "以琥珀配色重現原版的進場動畫。",
+      "label": "時空裂縫（琥光裂境異色）",
+      "description": "琥光裂面張開，角色跨出裂隙。",
       "variantOf": "rift",
-      "paletteHue": 39
+      "paletteHue": 39,
+      "detailColors": ["#ecb66c", "#8998ca", "#fff0d5"],
+      "styleLabel": "琥光裂境異色"
     },
     {
       "id": "particles-alt",
-      "label": "粒子組合（翡翠異色）",
-      "description": "以翡翠配色重現原版的進場動畫。",
+      "label": "粒子組合（森光織影異色）",
+      "description": "森綠粒子聚攏，從腳到頭拼出角色。",
       "variantOf": "particles",
       "paletteHue": 153,
-      "sourceHue": 28
+      "sourceHue": 28,
+      "styleLabel": "森光織影異色"
     },
     {
       "id": "stitch-senbonzakura-alt",
-      "label": "千本櫻景嚴（金葉異色）",
-      "description": "以金葉配色重現原版的進場動畫。",
+      "label": "千本櫻景嚴（鎏葉花宴異色）",
+      "description": "金色刀花飛舞，巨刃隨角色升起。",
       "variantOf": "stitch-senbonzakura",
-      "paletteHue": 44
+      "paletteHue": 44,
+      "styleLabel": "鎏葉花宴異色"
     },
     {
       "id": "stitch-hyorinmaru-alt",
-      "label": "大紅蓮冰輪丸（緋霜異色）",
-      "description": "以緋霜配色重現原版的進場動畫。",
+      "label": "大紅蓮冰輪丸（緋霜羽冠異色）",
+      "description": "緋色冰翼展開，冰花與結晶環繞。",
       "variantOf": "stitch-hyorinmaru",
-      "paletteHue": 334
+      "paletteHue": 334,
+      "styleLabel": "緋霜羽冠異色",
+      "detailColors": ["#d18fb8", "#6f6aaf", "#fff0e4"]
     },
     {
       "id": "stitch-minazuki-alt",
-      "label": "皆盡（霧藍異色）",
-      "description": "以霧藍配色重現原版的進場動畫。",
+      "label": "皆盡（霧海幽潮異色）",
+      "description": "冷色血幕垂落，斬光交錯綻放。",
       "variantOf": "stitch-minazuki",
-      "paletteHue": 211
+      "paletteHue": 211,
+      "styleLabel": "霧海幽潮異色"
     },
     {
       "id": "stitch-zanka-alt",
-      "label": "殘火太刀（蒼焰異色）",
-      "description": "以蒼焰配色重現原版的進場動畫。",
+      "label": "殘火太刀（蒼燼殘陽異色）",
+      "description": "蒼色烈焰升騰，刀光劃開空間。",
       "variantOf": "stitch-zanka",
       "paletteHue": 201,
-      "sourceHue": 26
+      "sourceHue": 26,
+      "styleLabel": "蒼燼殘陽異色"
     },
     {
       "id": "stitch-gilgamesh-alt",
-      "label": "王之財寶（翠玉異色）",
-      "description": "以翠玉配色重現原版的進場動畫。",
+      "label": "王之財寶（翠庭王藏異色）",
+      "description": "翠色寶庫展開，寶具接連射出。",
       "variantOf": "stitch-gilgamesh",
-      "paletteHue": 152
+      "paletteHue": 152,
+      "styleLabel": "翠庭王藏異色",
+      "detailColors": ["#58c9a9", "#1f635f", "#e0ffe7"]
     },
     {
       "id": "stitch-purple-alt",
-      "label": "虛式「茈」（赤焰異色）",
-      "description": "深赤焰與亮赤焰交會，暗紅外圈收束成白熱焰芯。",
+      "label": "虛式「茈」（赤曜虛界異色）",
+      "description": "赤焰光球交會，白熱焰芯向外爆開。",
       "variantOf": "stitch-purple",
-      "paletteHue": 19
+      "paletteHue": 19,
+      "styleLabel": "赤曜虛界異色"
     },
     {
       "id": "stitch-blue-eyes-alt",
-      "label": "青眼白龍（琥珀異色）",
-      "description": "以琥珀配色重現原版的進場動畫。",
+      "label": "青眼白龍（琥光龍臨異色）",
+      "description": "琥光龍翼展開，冰青吐息迸出。",
       "variantOf": "stitch-blue-eyes",
-      "paletteHue": 37
+      "paletteHue": 37,
+      "styleLabel": "琥光龍臨異色",
+      "detailColors": ["#f5dbab", "#b38355", "#94c4ca"]
     },
     {
       "id": "stitch-black-coffin-alt",
-      "label": "破道之九十·黑棺（幽青異色）",
-      "description": "以幽青配色重現原版的進場動畫。",
+      "label": "破道之九十·黑棺（幽碧葬歌異色）",
+      "description": "幽青黑棺升起，長劍穿透四周。",
       "variantOf": "stitch-black-coffin",
-      "paletteHue": 174
+      "paletteHue": 174,
+      "styleLabel": "幽碧葬歌異色"
     },
     {
       "id": "stitch-grail-mud-alt",
-      "label": "聖杯之泥（紫泥異色）",
-      "description": "以紫泥配色重現原版的進場動畫。",
+      "label": "聖杯之泥（紫淵聖痕異色）",
+      "description": "紫色泥潮湧出，怨影向上伸展。",
       "variantOf": "stitch-grail-mud",
-      "paletteHue": 278
+      "paletteHue": 278,
+      "styleLabel": "紫淵聖痕異色"
     },
     {
       "id": "stitch-stand-fists-alt",
-      "label": "替身 · 近身狂拳（海藍異色）",
-      "description": "以海藍配色重現原版的進場動畫。",
+      "label": "替身 · 近身狂拳（深海連擊異色）",
+      "description": "深藍替身現身，連續拳影爆發。",
       "variantOf": "stitch-stand-fists",
       "paletteHue": 205,
-      "sourceHue": 276
+      "sourceHue": 276,
+      "styleLabel": "深海連擊異色"
     },
     {
       "id": "stitch-stand-time-alt",
-      "label": "替身 · 時之領域（赤銅異色）",
-      "description": "以赤銅配色重現原版的進場動畫。",
+      "label": "替身 · 時之領域（銅刻時停異色）",
+      "description": "銅色時鐘展開，波紋凝住時間。",
       "variantOf": "stitch-stand-time",
-      "paletteHue": 19
+      "paletteHue": 19,
+      "styleLabel": "銅刻時停異色"
     },
     {
       "id": "stitch-stand-emerald-alt",
-      "label": "替身 · 翠綠連彈（熔金異色）",
-      "description": "以熔金配色重現原版的進場動畫。",
+      "label": "替身 · 翠綠連彈（熔金星彈異色）",
+      "description": "金色光彈散射，替身隨角色浮現。",
       "variantOf": "stitch-stand-emerald",
       "paletteHue": 45,
-      "sourceHue": 157
+      "sourceHue": 157,
+      "styleLabel": "熔金星彈異色"
     },
     {
       "id": "stitch-ulquiorra-alt",
-      "label": "黑翼大魔 · 歸刃（緋紅異色）",
-      "description": "以緋紅配色重現原版的進場動畫。",
+      "label": "黑翼大魔 · 歸刃（緋翼夜臨異色）",
+      "description": "緋色雙翼展開，靈壓向外迸出。",
       "variantOf": "stitch-ulquiorra",
-      "paletteHue": 348
+      "paletteHue": 348,
+      "styleLabel": "緋翼夜臨異色"
     },
     {
       "id": "stitch-saiyan-alt",
-      "label": "超級賽亞人（紫電異色）",
-      "description": "以紫電配色重現原版的進場動畫。",
+      "label": "超級賽亞人（紫霆覺醒異色）",
+      "description": "紫色氣焰升起，角色在光中覺醒。",
       "variantOf": "stitch-saiyan",
-      "paletteHue": 272
+      "paletteHue": 272,
+      "styleLabel": "紫霆覺醒異色"
     },
     {
       "id": "stitch-lightning-alt",
-      "label": "天罰閃電（碧雷異色）",
-      "description": "以碧雷配色重現原版的進場動畫。",
+      "label": "天罰閃電（碧霄雷裁異色）",
+      "description": "碧色雷電劈落，分叉電光沿地炸開。",
       "variantOf": "stitch-lightning",
       "paletteHue": 162,
-      "sourceHue": 202
+      "sourceHue": 202,
+      "styleLabel": "碧霄雷裁異色",
+      "detailColors": ["#73e6b6", "#4e8798", "#f1ffe3"]
     },
     {
       "id": "stitch-exodia-alt",
-      "label": "黑暗大法師（冰藍異色）",
-      "description": "以冰藍配色重現原版的進場動畫。",
+      "label": "黑暗大法師（霜冕禁咒異色）",
+      "description": "霜色封印碎裂，魔神在光中現身。",
       "variantOf": "stitch-exodia",
       "paletteHue": 197,
-      "sourceHue": 41
+      "sourceHue": 41,
+      "styleLabel": "霜冕禁咒異色"
     },
     {
       "id": "stitch-water-breathing-alt",
-      "label": "水之呼吸（夕紅異色）",
-      "description": "以夕紅配色重現原版的進場動畫。",
+      "label": "水之呼吸（夕潮流舞異色）",
+      "description": "夕色水流繞身，浪花隨刀勢展開。",
       "variantOf": "stitch-water-breathing",
-      "paletteHue": 348
+      "paletteHue": 348,
+      "styleLabel": "夕潮流舞異色"
     },
     {
       "id": "stitch-explosion-alt",
-      "label": "爆裂魔法（蒼炎異色）",
-      "description": "以蒼炎配色重現原版的進場動畫。",
+      "label": "爆裂魔法（蒼炎終幕異色）",
+      "description": "蒼色法陣展開，爆裂光柱衝上天空。",
       "variantOf": "stitch-explosion",
       "paletteHue": 206,
-      "sourceHue": 24
+      "sourceHue": 24,
+      "styleLabel": "蒼炎終幕異色"
     },
     {
       "id": "stitch-starburst-alt",
-      "label": "星爆氣流斬（紫星異色）",
-      "description": "以紫星配色重現原版的進場動畫。",
+      "label": "星爆氣流斬（紫宙連星異色）",
+      "description": "紫色雙劍連斬，交叉光芒爆發。",
       "variantOf": "stitch-starburst",
       "paletteHue": 281,
-      "sourceHue": 171
+      "sourceHue": 171,
+      "styleLabel": "紫宙連星異色"
     },
     {
       "id": "stitch-black-moon-alt",
-      "label": "月牙天沖 · 黑月（銀青異色）",
-      "description": "以銀青配色重現原版的進場動畫。",
+      "label": "月牙天沖 · 黑月（銀月斷潮異色）",
+      "description": "銀色月牙斬出，雷光撕開夜幕。",
       "variantOf": "stitch-black-moon",
-      "paletteHue": 175
+      "paletteHue": 175,
+      "styleLabel": "銀月斷潮異色"
     },
     {
       "id": "stitch-pup-parade-alt",
-      "label": "萌犬相伴（藍紫異色）",
-      "description": "以藍紫配色重現原版的進場動畫。",
+      "label": "萌犬相伴（藍夢巡遊異色）",
+      "description": "萌犬蹦跳相伴，藍色愛心與腳印飛舞。",
       "variantOf": "stitch-pup-parade",
-      "paletteHue": 242
+      "paletteHue": 242,
+      "styleLabel": "藍夢巡遊異色"
     },
     {
       "id": "stitch-gentle-kitty-alt",
-      "label": "靈貓隨行（玫紅異色）",
-      "description": "以玫紅配色重現原版的進場動畫。",
+      "label": "靈貓隨行（玫夜靈步異色）",
+      "description": "靈貓輕步繞行，玫紅光點隨行。",
       "variantOf": "stitch-gentle-kitty",
       "paletteHue": 330,
-      "sourceHue": 22
+      "sourceHue": 22,
+      "styleLabel": "玫夜靈步異色"
     },
     {
       "id": "stitch-chibaku-tensei-alt",
-      "label": "地爆天星（碧光異色）",
-      "description": "以碧光配色重現原版的進場動畫。",
+      "label": "地爆天星（殷月星封異色）",
+      "description": "黑色岩層聚攏，紅色裂光與紫色引力紋交錯。",
       "variantOf": "stitch-chibaku-tensei",
-      "paletteHue": 164
+      "paletteHue": 275,
+      "styleLabel": "殷月星封異色"
     },
     {
       "id": "stitch-bungee-gum-alt",
-      "label": "伸縮自在的愛（薄荷異色）",
-      "description": "以薄荷配色重現原版的進場動畫。",
+      "label": "伸縮自在的愛（琥光繫心異色）",
+      "description": "琥珀撲克牌翻飛，古銅與冰青念氣延展。",
       "variantOf": "stitch-bungee-gum",
-      "paletteHue": 151
+      "paletteHue": 37,
+      "styleLabel": "琥光繫心異色"
+    },
+    {
+      "id": "arrival-gift-box-alt",
+      "label": "驚喜禮物盒（薄荷禮盒異色）",
+      "description": "薄荷禮盒打開，角色與彩帶彈出。",
+      "variantOf": "arrival-gift-box",
+      "styleLabel": "薄荷禮盒異色",
+      "paletteHue": 165,
+      "colors": {
+        "#fde047": "#9fe4cb",
+        "#fef08a": "#d8ffee",
+        "#facc15": "#73c9b6",
+        "#ca8a04": "#368a85",
+        "#dc2626": "#9b78bf",
+        "#ef4444": "#c69ad9",
+        "#991b1b": "#78528e"
+      }
+    },
+    {
+      "id": "arrival-hero-faceplant-alt",
+      "label": "天降失誤（緋星墜落異色）",
+      "description": "緋色流光俯衝，角色臉著地後爬起。",
+      "variantOf": "arrival-hero-faceplant",
+      "styleLabel": "緋星墜落異色",
+      "paletteHue": 325,
+      "colors": {
+        "#9edfff": "#f2b5e6",
+        "#89d9ff": "#dd88d4",
+        "#b3e9ff": "#f1bfe5",
+        "#fff0bc": "#ddd4ff",
+        "#ffe5a0": "#e1b6ef"
+      }
+    },
+    {
+      "id": "arrival-coffin-dance-alt",
+      "label": "黑人抬棺舞（銀棺夜宴異色）",
+      "description": "六人抬起銀棺，角色掀蓋躍出。",
+      "variantOf": "arrival-coffin-dance",
+      "styleLabel": "銀棺夜宴異色",
+      "paletteHue": 215,
+      "colors": {
+        "#381504": "#24364a",
+        "#78350f": "#5c7690",
+        "#260e02": "#142333",
+        "#451a03": "#451a03",
+        "#fbbf24": "#c7e3ee",
+        "#d97706": "#7ca4b7",
+        "#fde047": "#e4f8ff",
+        "#b45309": "#59859b",
+        "#582106": "#35526b",
+        "#f59e0b": "#a8c8df"
+      }
+    },
+    {
+      "id": "arrival-math-dimension-alt",
+      "label": "萬象演算（玫瑰演算異色）",
+      "description": "玫色公式環繞，角色旋轉登場。",
+      "variantOf": "arrival-math-dimension",
+      "styleLabel": "玫瑰演算異色",
+      "paletteHue": 330,
+      "colors": {
+        "#79dfff": "#f7b5d3",
+        "#fff2c8": "#d4fff0",
+        "#b5a2ff": "#f5d7bd",
+        "#b9f3ff": "#ffe1ef"
+      }
+    },
+    {
+      "id": "arrival-heart-bubbles-alt",
+      "label": "愛心泡泡降落（海鹽泡泡異色）",
+      "description": "海鹽色泡泡飄落，角色破泡而出。",
+      "variantOf": "arrival-heart-bubbles",
+      "styleLabel": "海鹽泡泡異色",
+      "paletteHue": 180,
+      "colors": {
+        "#ffe9f4": "#e1fff9",
+        "#ff9ed1": "#8ce3d9",
+        "#ffe2f2": "#c6fff2",
+        "#ffafd5": "#82d3d1",
+        "#ffb8dd": "#9be3ed",
+        "#fff6fc": "#f3ffff",
+        "#ffc4e4": "#c5f5ed",
+        "#ffd3ea": "#b0efe4",
+        "#f4b8ee": "#b4c5f3",
+        "#ffb7d9": "#91d8da",
+        "#ffd3e9": "#d1fff2"
+      }
+    },
+    {
+      "id": "arrival-glass-break-alt",
+      "label": "次元破屏（琥珀裂界異色）",
+      "description": "六拳打裂琥光玻璃，角色破屏登場。",
+      "variantOf": "arrival-glass-break",
+      "styleLabel": "琥珀裂界異色",
+      "paletteHue": 35,
+      "colors": {
+        "#bfdff5": "#eed9b0",
+        "#99c6de": "#d8b98e",
+        "#c6edff": "#f8e4bd",
+        "#d7f4ff": "#ffedce",
+        "#bfecff": "#ffe3b4",
+        "#c8eaff": "#efd2ad",
+        "#effbff": "#fff5d9",
+        "#d4f6ff": "#ffdda4",
+        "#678da7": "#9f7853"
+      }
+    },
+    {
+      "id": "arrival-star-courier-alt",
+      "label": "星星快遞（銀河快遞異色）",
+      "description": "騎流星急煞，留下銀河星光。",
+      "variantOf": "arrival-star-courier",
+      "styleLabel": "銀河快遞異色",
+      "paletteHue": 220,
+      "colors": {
+        "#a86e23": "#4f689a",
+        "#ffcf55": "#b1d6ff",
+        "#f6e5a0": "#e0edff",
+        "#fff3b5": "#f7fbff"
+      }
+    },
+    {
+      "id": "arrival-brush-creation-alt",
+      "label": "畫筆創生（紫墨畫境異色）",
+      "description": "紫墨描出角色，角色從畫布躍出。",
+      "variantOf": "arrival-brush-creation",
+      "styleLabel": "紫墨畫境異色",
+      "paletteHue": 275,
+      "colors": {
+        "#674730": "#344a5e",
+        "#ad7c4c": "#7a9ca9",
+        "#93623c": "#3a6271",
+        "#cf9a5f": "#86b5bb",
+        "#bc8d57": "#6c98a4",
+        "#735137": "#304956",
+        "#75d5e7": "#b2a0e9",
+        "#82d4df": "#b39fdd",
+        "#9d673f": "#76527d",
+        "#d3a070": "#c195c4"
+      }
+    },
+    {
+      "id": "arrival-delivery-scooter-alt",
+      "label": "外送抵達（極光外送異色）",
+      "description": "騎士高速送達，角色跳出極光色外送袋。",
+      "variantOf": "arrival-delivery-scooter",
+      "styleLabel": "極光外送異色",
+      "paletteHue": 195,
+      "colors": {
+        "#c77b53": "#527eab",
+        "#e7ac7c": "#a1c8df",
+        "#357a72": "#79699e",
+        "#245c59": "#534f78",
+        "#73a395": "#a294c0",
+        "#1d514d": "#4d4167",
+        "#b6cbb8": "#d6cbe5",
+        "#c64f4f": "#de934a",
+        "#f29d85": "#ffd39b"
+      }
     }
   ]
 }

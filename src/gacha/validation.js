@@ -40,6 +40,7 @@ function validateGachaDatabase(db) {
             count: response.results?.length,
             ...(response.voucher === true ? { voucher: true } : {}),
             ...(response.thirdLogin === true ? { thirdLogin: true } : {}),
+            ...(response.useTickets === true ? { useTickets: true } : {}),
           }
         : { operation: 'exchange', key: response.item?.key };
     if (digest(payload) !== row.fingerprint) throw Error('Invalid gacha receipt fingerprint');
@@ -82,6 +83,24 @@ function validateGachaDatabase(db) {
       )
         throw Error('Invalid epic ten-draw voucher receipt');
     }
+    if (
+      response.useTickets !== undefined &&
+      (response.useTickets !== true ||
+        row.operation !== 'draw' ||
+        response.voucher ||
+        response.thirdLogin ||
+        response.cost !== 0 ||
+        ![1, 10].includes(response.results?.length) ||
+        response.ticketCost !== response.results.length ||
+        !Number.isSafeInteger(response.rewardTickets) ||
+        response.rewardTickets < 0)
+    )
+      throw Error('Invalid reward ticket draw receipt');
+    if (
+      response.useTickets === undefined &&
+      (response.ticketCost !== undefined || response.rewardTickets !== undefined)
+    )
+      throw Error('Invalid reward ticket draw receipt');
     if (response.voucher !== undefined) {
       const events = db
         .prepare(
@@ -108,5 +127,6 @@ function validateGachaDatabase(db) {
         throw Error('Invalid gacha check-in voucher receipt');
     }
   }
+  require('../achievements/code-packs').validate(db);
 }
 module.exports = { validateGachaDatabase };

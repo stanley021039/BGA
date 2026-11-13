@@ -208,6 +208,7 @@ class GachaStore {
     });
     return {
       wallet: this.wallet(userId),
+      rewardTickets: require('../achievements/code-packs').availableTickets(this.db, userId),
       epicTenAvailable: this.hasEvent(epicClaimEvent(userId)) && !this.hasEvent(epicEvent(userId)),
       voucherAvailable:
         this.hasEvent(voucherEvent('claim', userId)) && !this.hasEvent(voucherEvent('use', userId)),
@@ -270,11 +271,20 @@ class GachaStore {
       typeof input !== 'object' ||
       Array.isArray(input) ||
       Object.keys(input).some(
-        (k) => !['requestId', 'pool', 'count', 'oddsRevision', 'voucher', 'thirdLogin'].includes(k),
+        (k) =>
+          ![
+            'requestId',
+            'pool',
+            'count',
+            'oddsRevision',
+            'voucher',
+            'thirdLogin',
+            'useTickets',
+          ].includes(k),
       )
     )
       throw new HttpError(400, 'INVALID_GACHA_DRAW', '抽卡操作內容不正確');
-    const { requestId, pool, count, oddsRevision, voucher, thirdLogin } = input;
+    const { requestId, pool, count, oddsRevision, voucher, thirdLogin, useTickets } = input;
     if (
       oddsRevision !== undefined &&
       (typeof oddsRevision !== 'string' || !/^[a-f0-9]{64}$/.test(oddsRevision))
@@ -284,6 +294,7 @@ class GachaStore {
     if (
       !entries?.length ||
       ![1, 10].includes(count) ||
+      (useTickets !== undefined && (useTickets !== true || voucher || thirdLogin)) ||
       (voucher !== undefined && (voucher !== true || count !== 1)) ||
       (thirdLogin !== undefined &&
         (thirdLogin !== true || count !== 10 || voucher || pool !== 'all'))
@@ -300,6 +311,7 @@ class GachaStore {
         count,
         ...(voucher ? { voucher: true } : {}),
         ...(thirdLogin ? { thirdLogin: true } : {}),
+        ...(useTickets ? { useTickets: true } : {}),
       },
       (at, fingerprint) => {
         // A receipt replay precedes this check: a changed configuration must never reroll an old purchase.
@@ -319,7 +331,13 @@ class GachaStore {
         }
         const distribution = Odds.distribution(eligible, odds.weights);
         const wallet = this.wallet(userId),
-          cost = voucher || thirdLogin ? 0 : count * 100;
+          cost = voucher || thirdLogin || useTickets ? 0 : count * 100;
+        const rewardTickets = require('../achievements/code-packs').availableTickets(
+          this.db,
+          userId,
+        );
+        if (useTickets && rewardTickets < count)
+          throw new HttpError(409, 'GACHA_TICKETS_REQUIRED', '抽卡券不足');
         if (wallet.coins < cost) throw new HttpError(409, 'GACHA_COINS_REQUIRED', '聖潔石不足');
         const previousDraws = this.drawCounts(userId).get(pool) ?? 0;
         const owned = this.owned(userId),
@@ -374,6 +392,9 @@ class GachaStore {
           drawCount: previousDraws + (voucher || thirdLogin ? 0 : count),
           ...(voucher ? { voucher: true } : {}),
           ...(thirdLogin ? { thirdLogin: true } : {}),
+          ...(useTickets
+            ? { useTickets: true, ticketCost: count, rewardTickets: rewardTickets - count }
+            : {}),
           oddsRevision: odds.revision,
           fragmentsGained: fragments,
           wallet: this.wallet(userId),

@@ -9,7 +9,8 @@
     "id": "stitch-hyorinmaru",
     "label": "大紅蓮冰輪丸",
     "achievementId": "quacks-double-explosion",
-    "description": "冰翼張開，冰晶與白霧繞身浮現。"
+    "description": "冰翼張開，冰晶與白霧繞身浮現。",
+    "detailColors": ["#bde8f5", "#4384af", "#f4fdff"]
   },
   {
     "id": "stitch-minazuki",
@@ -27,7 +28,8 @@
     "id": "stitch-gilgamesh",
     "label": "王之財寶",
     "achievementId": "poker-first-hand",
-    "description": "金色門扉展開，寶具接連射出。"
+    "description": "金色門扉展開，寶具接連射出。",
+    "detailColors": ["#e6b859", "#7b4a23", "#fff1c8"]
   },
   {
     "id": "stitch-purple",
@@ -39,7 +41,8 @@
     "id": "stitch-blue-eyes",
     "label": "青眼白龍",
     "achievementId": "gift-first-gift",
-    "description": "白龍環繞，冰藍吐息照亮登場。"
+    "description": "白龍環繞，冰藍吐息照亮登場。",
+    "detailColors": ["#e5f0f5", "#6c9fb8", "#56c8ef"]
   },
   {
     "id": "stitch-black-coffin",
@@ -87,7 +90,8 @@
     "id": "stitch-lightning",
     "label": "天罰閃電",
     "achievementId": "thunder-regular",
-    "description": "紫白雷電劈落，電光沿地面炸開。"
+    "description": "紫白雷電劈落，電光沿地面炸開。",
+    "detailColors": ["#a496f1", "#535292", "#edf3ff"]
   },
   {
     "id": "stitch-exodia",

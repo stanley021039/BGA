@@ -25,7 +25,7 @@ test('all effect versions appear once beside their original, including the older
   });
   const { attackEffectGroups: attackGroups, entranceEffectGroups: entranceGroups } = helpers;
   assert.equal(attackGroups.length, 47);
-  assert.equal(entranceGroups.length, 31);
+  assert.equal(entranceGroups.length, 40);
   for (const [groups, effects] of [
     [attackGroups, attacks],
     [entranceGroups, entrances],

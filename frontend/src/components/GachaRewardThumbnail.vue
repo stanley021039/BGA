@@ -497,6 +497,15 @@ const posters: Readonly<Record<string, readonly [string, string]>> = {
     '/assets/entrances/gacha/classic-alt.webp',
     '/assets/entrances/gacha/classic-alt-256.webp',
   ],
+  'entrances:smoke': [
+    '/assets/entrances/gacha/smoke.webp',
+    '/assets/entrances/gacha/smoke-256.webp',
+  ],
+  'entrances:sparks': [
+    '/assets/entrances/gacha/sparks.webp',
+    '/assets/entrances/gacha/sparks-256.webp',
+  ],
+  'entrances:rift': ['/assets/entrances/gacha/rift.webp', '/assets/entrances/gacha/rift-256.webp'],
   'entrances:smoke-alt': [
     '/assets/entrances/gacha/smoke-alt.webp',
     '/assets/entrances/gacha/smoke-alt-256.webp',

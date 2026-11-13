@@ -136,7 +136,14 @@ const number = new Intl.NumberFormat('zh-TW');
           density="compact"
         >
           <div class="login-reward-actions">
-            <span>累積登入 {{ Math.min(rewards.visits, 3) }}／3 天</span>
+            <div class="login-reward-progress">
+              <span>累積登入 {{ Math.min(rewards.visits, 3) }}／3 天</span>
+              <progress
+                :value="Math.min(rewards.visits, 3)"
+                :max="3"
+                aria-label="史詩十連抽券登入進度"
+              />
+            </div>
             <UiButton
               v-if="rewards.epicTen.status === 'claimable'"
               label="領取史詩十連券"

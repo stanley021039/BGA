@@ -381,11 +381,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
 </script>
 <template>
   <header class="settings-page-heading"
-    ><div
-      ><UiHeading :level="1" kind="page">個人化設定</UiHeading
-      ><p class="settings-intro"
-        >依分類切換設定；頭像顯示在帳號選單，角色用於大廳與遊戲座位。</p
-      ></div
+    ><div><UiHeading :level="1" kind="page">個人化設定</UiHeading></div
     ><UiLink
       class="settings-return"
       href="/"
@@ -682,7 +678,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         id="settings-panel-lobby"
         class="settings-panel settings-panel-lobby"
         aria-labelledby="settings-tab-lobby"
-        ><UiPanel class="settings-background-panel" title="大廳與開場" note="立即套用"
+        ><UiPanel class="settings-background-panel" title="大廳與開場"
           ><LobbyBackgroundPicker /><OpeningPicker /></UiPanel></section
       ><section
         v-show="activePanel === 'attack'"
@@ -703,7 +699,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         id="settings-panel-barrage"
         class="settings-panel settings-panel-barrage"
         aria-labelledby="settings-tab-barrage"
-        ><UiPanel class="settings-barrage-panel" title="彈幕外觀" note="立即套用，僅儲存於此瀏覽器">
+        ><UiPanel class="settings-barrage-panel" title="彈幕外觀">
           <p
             id="settings-barrage-frame-status"
             class="settings-frame-status"
@@ -734,11 +730,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         id="settings-panel-media"
         class="settings-panel settings-panel-media"
         aria-labelledby="settings-tab-media"
-        ><UiPanel
-          class="settings-barrage-panel settings-media-panel"
-          title="播放器外觀"
-          note="立即套用，僅儲存於此瀏覽器"
-        >
+        ><UiPanel class="settings-barrage-panel settings-media-panel" title="播放器外觀">
           <p
             id="settings-media-frame-status"
             class="settings-frame-status"
@@ -765,11 +757,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         id="settings-panel-entrance"
         class="settings-panel settings-panel-entrance"
         aria-labelledby="settings-tab-entrance"
-        ><UiPanel
-          class="settings-barrage-panel settings-entrance-panel"
-          title="進場特效"
-          note="立即套用，僅儲存於此瀏覽器"
-        >
+        ><UiPanel class="settings-barrage-panel settings-entrance-panel" title="進場特效">
           <template #actions><a href="/collection?section=entrance">前往收藏庫 ↗</a></template>
           <p
             id="settings-entrance-status"
@@ -793,6 +781,8 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
           </div>
           <EntranceChoices
             v-if="activePanel === 'entrance'"
+            :image="selected?.expressions.neutral"
+            :name="nickname || session.user?.displayName || '玩家'"
             class="settings-entrance-choices"
             tabindex="0"
           /> </UiPanel></section></div></div

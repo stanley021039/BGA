@@ -39,7 +39,10 @@ test('both crescent variants are separate selectable persistent artwork IDs', ()
   const original = effects.find((e) => e.id === 'blade_aura');
   assert.equal(original.label, '半月劍氣');
   assert.equal(original.color, '#00d0ff');
-  assert.equal(effects.find((e) => e.id === 'blade_aura_crimson').label, '半月劍氣（紅黑異色）');
+  assert.equal(
+    effects.find((e) => e.id === 'blade_aura_crimson').label,
+    '半月劍氣（緋夜月痕異色）',
+  );
 });
 
 test('Q and E have independent cooldowns, stable event artwork and deduplicated retries', () => {
@@ -120,9 +123,14 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.deepEqual(initial.body.bonusRewards.attacks, ['barrage', 'beam']);
   const redeemed = await post('/api/achievements/redeem', { code: '我愛作者' });
   assert.equal(redeemed.status, 200);
-  assert.deepEqual(redeemed.body.bonusRewards.attacks, ['barrage', 'beam']);
+  const gifted = redeemed.body.redemption.rewards.find((row) => row.key === 'attacks').items[0].id;
+  assert.ok(redeemed.body.bonusRewards.attacks.includes(gifted));
+  const locked = require('../public/shared/attack-effects.json').find(
+    (effect) =>
+      (effect.area || effect.ultimate) && !redeemed.body.bonusRewards.attacks.includes(effect.id),
+  ).id;
   assert.equal(
-    (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: 'bijuu_beam' })).status,
+    (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: locked })).status,
     403,
   );
   const database = require('../src/db').openDatabase(config.dbFile);
@@ -130,7 +138,7 @@ test('account attack choices persist, preserve appearance changes, and determine
     const userId = database.prepare("SELECT id FROM users WHERE username='qe_owner'").get().id;
     for (const id of ['bijuu_beam', 'blade_aura_crimson', 'blade_aura', 'chain_lightning'])
       database
-        .prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'draw',?)")
+        .prepare("INSERT OR IGNORE INTO gacha_ownership VALUES(?,?,?,'draw',?)")
         .run(userId, 'attacks', id, new Date().toISOString());
   } finally {
     database.close();

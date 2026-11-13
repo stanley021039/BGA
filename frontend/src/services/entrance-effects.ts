@@ -4,6 +4,9 @@ import stitchEffects from '../../../public/shared/entrance-requirements.json';
 import palettes from '../../../public/shared/entrance-palette.json';
 
 export const entranceEffects = [...palettes.starters, ...stitchEffects, ...palettes.variants];
+export const arrivalEffects = palettes.starters.filter((effect) =>
+  effect.id.startsWith('arrival-'),
+);
 const starterIds = new Set(
   palettes.starters.filter((effect) => !effect.gachaOnly).map((effect) => effect.id),
 );
