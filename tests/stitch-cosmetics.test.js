@@ -107,7 +107,7 @@ test('nine Stitch backgrounds include eight personal achievement unlocks and exc
   }
 });
 
-test('the exact nine selected dynamic card artworks are local and have animation definitions', () => {
+test('the nine existing stage artworks stay local and static without animation schedulers', () => {
   const scenes = require('../public/shared/lobby-background-live.json');
   assert.equal(scenes.length, 9);
   assert.deepEqual(
@@ -117,14 +117,23 @@ test('the exact nine selected dynamic card artworks are local and have animation
   for (const scene of scenes) {
     assert.match(scene.svg, /viewBox="0 0 300 160"/);
     assert.match(scene.svg, /class="anim-/);
-    assert.doesNotMatch(scene.svg, /<script|<image|<foreignObject|\son\w+=/i);
+    assert.doesNotMatch(scene.svg, /<script|<image|<foreignObject|<animate|<set\b|\son\w+=/i);
   }
   const css = fs.readFileSync(
     path.join(root, 'frontend/src/assets/lobby-background-live.css'),
     'utf8',
   );
-  assert.match(css, /@keyframes lobby-live-/);
+  assert.match(css, /animation:\s*none\s*;/);
+  assert.doesNotMatch(css, /@keyframes/);
   assert.doesNotMatch(css, /@import|url\(https?:/i);
+  const component = fs.readFileSync(
+    path.join(root, 'frontend/src/components/LobbyBackgroundArt.vue'),
+    'utf8',
+  );
+  assert.doesNotMatch(
+    component,
+    /useSteppedAnimations|setTimeout|requestAnimationFrame|addEventListener/,
+  );
 });
 
 test('Bungee Gum keeps card ranks and suits but no decorative English labels', () => {

@@ -1,3 +1,5 @@
+2026-11-13 #407：使用者確認主大廳與所有遊戲房間全部固定靜態；移除背景動畫排程／閒置監聽／動態開關及舊偏好API，保留角色招式與顯示選項。Stitch八景SVG候選已保存，火星R2改宇宙天空與立體撞擊坑，其他七景保留R1；尚未加入正式獎池，Figma延後。2451 root過／1缺ffmpeg略、前端347過；詳docs/design/candidates/407/README.md。未PR／CI／合併／部署。
+
 2026-11-13 #405 三天登入進度條已補：LoginRewards沿用七天login-reward-progress，value=Math.min(visits,3)、max=3，可及性標籤獨立。123真實2天登入在正式對話框驗收2／3與三分之二黃色，保留七天2／7。追加UI後前端347、型別／Vite／格式／UI／素材效能／release過；同一286檔完整root於本輪完成2451過／0敗／1缺ffmpeg略（622秒），root檔及伺服器無新改，詳LOGIN-THREE-DAY-PROGRESS-405。51842已更新，未PR／CI／合併／部署。
 
 2026-11-13 #403 後段配色續修：異色微型飛彈的後段亮條、顆粒與尾焰仍是暖橘，已改紫藍accent #a6a0ef／core #dfe7ff；保留冰青裝甲與深藍中軸、原版銅金及所有幾何／玩法。異色兩張縮圖重匯，正式設定E重播與Q原版／E異色配裝確認；51842已更新。相關繪圖35項、前端347及完整affected286檔2451過／0敗／1缺ffmpeg略（622秒）；型別／Vite／格式／UI／素材效能／minor release通過，證據work/missile-violet。未PR／CI／合併／部署。

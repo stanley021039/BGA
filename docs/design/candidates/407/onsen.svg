@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="duskSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="45%" stop-color="#312e81"/>
+      <stop offset="85%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="onsenWater" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#042f2e"/>
+      <stop offset="35%" stop-color="#115e59"/>
+      <stop offset="80%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#2dd4bf"/>
+    </linearGradient>
+    <linearGradient id="bambooStalk" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#713f12"/>
+      <stop offset="50%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#854d0e"/>
+    </linearGradient>
+    <radialGradient id="lanternGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#f59e0b" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#78350f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Evening Twilight Alpine Sky -->
+  <rect width="1600" height="900" fill="url(#duskSky)"/>
+
+  <!-- Distant Pine Forest Silhouette -->
+  <polygon points="0,480 80,440 160,490 280,430 420,490 560,420 720,480 920,430 1140,490 1340,420 1520,470 1600,440 1600,560 0,560" fill="#0f172a"/>
+
+  <!-- Bamboo Privacy Fence Screen (Left to Center Background) -->
+  <rect x="180" y="320" width="860" height="230" fill="#451a03"/>
+  <g fill="url(#bambooStalk)">
+    <rect x="200" y="310" width="22" height="245" rx="4"/><rect x="235" y="310" width="22" height="245" rx="4"/>
+    <rect x="270" y="310" width="22" height="245" rx="4"/><rect x="305" y="310" width="22" height="245" rx="4"/>
+    <rect x="340" y="310" width="22" height="245" rx="4"/><rect x="375" y="310" width="22" height="245" rx="4"/>
+    <rect x="410" y="310" width="22" height="245" rx="4"/><rect x="445" y="310" width="22" height="245" rx="4"/>
+    <rect x="480" y="310" width="22" height="245" rx="4"/><rect x="515" y="310" width="22" height="245" rx="4"/>
+    <rect x="550" y="310" width="22" height="245" rx="4"/><rect x="585" y="310" width="22" height="245" rx="4"/>
+    <rect x="620" y="310" width="22" height="245" rx="4"/><rect x="655" y="310" width="22" height="245" rx="4"/>
+    <rect x="690" y="310" width="22" height="245" rx="4"/><rect x="725" y="310" width="22" height="245" rx="4"/>
+    <rect x="760" y="310" width="22" height="245" rx="4"/><rect x="795" y="310" width="22" height="245" rx="4"/>
+    <rect x="830" y="310" width="22" height="245" rx="4"/><rect x="865" y="310" width="22" height="245" rx="4"/>
+    <rect x="900" y="310" width="22" height="245" rx="4"/><rect x="935" y="310" width="22" height="245" rx="4"/>
+    <rect x="970" y="310" width="22" height="245" rx="4"/><rect x="1005" y="310" width="22" height="245" rx="4"/>
+  </g>
+  <!-- Bamboo Fence Horizontal Binding Ties -->
+  <rect x="180" y="370" width="860" height="10" fill="#1c1917"/>
+  <rect x="180" y="470" width="860" height="10" fill="#1c1917"/>
+
+  <!-- Japanese Bonsai Pine Tree (Right Side Frame) -->
+  <path d="M1600,480 Q1460,450 1420,380 Q1380,310 1450,220 Q1420,250 1440,320 Q1470,390 1600,420 Z" fill="#292524"/>
+  <!-- Branch tufts (Pine needle cloud pads) -->
+  <ellipse cx="1380" cy="220" rx="80" ry="35" fill="#14532d"/>
+  <ellipse cx="1460" cy="180" rx="90" ry="40" fill="#166534"/>
+  <ellipse cx="1320" cy="300" rx="70" ry="30" fill="#14532d"/>
+  <ellipse cx="1400" cy="340" rx="75" ry="32" fill="#166534"/>
+
+  <!-- Stone Toro Lantern (Left Midground) -->
+  <circle cx="240" cy="510" r="100" fill="url(#lanternGlow)"/>
+  <!-- Lantern Granite Housing -->
+  <polygon points="210,480 240,430 270,480" fill="#475569"/>
+  <rect x="225" y="480" width="30" height="35" fill="#fef08a"/>
+  <rect x="215" y="515" width="50" height="15" fill="#334155"/>
+  <rect x="230" y="530" width="20" height="50" fill="#475569"/>
+
+  <!-- NATURAL STACKED VOLCANIC ROCK POOL BASIN -->
+  <!-- Flat Outdoor Flagstone Floor (Surrounding Pool) -->
+  <rect y="540" width="1600" height="360" fill="#1c1917"/>
+  <ellipse cx="800" cy="740" rx="680" ry="150" fill="#292524"/>
+
+  <!-- Volcanic Perimeter Boulders (Rim of Onsen) -->
+  <g fill="#44403c" stroke="#1c1917" stroke-width="4">
+    <!-- Back Rim Stones -->
+    <ellipse cx="440" cy="620" rx="55" ry="35"/>
+    <ellipse cx="530" cy="610" rx="60" ry="38"/>
+    <ellipse cx="630" cy="605" rx="65" ry="40"/>
+    <ellipse cx="740" cy="600" rx="70" ry="42"/>
+    <ellipse cx="860" cy="600" rx="68" ry="42"/>
+    <ellipse cx="980" cy="605" rx="65" ry="40"/>
+    <ellipse cx="1090" cy="615" rx="60" ry="38"/>
+    <ellipse cx="1190" cy="630" rx="55" ry="35"/>
+  </g>
+
+  <!-- Clear Jade/Teal Thermal Onsen Pool -->
+  <ellipse cx="800" cy="720" rx="480" ry="110" fill="url(#onsenWater)"/>
+  <!-- Pool Floor Shadow Depth -->
+  <ellipse cx="800" cy="735" rx="420" ry="75" fill="#042f2e" opacity="0.6"/>
+
+  <!-- Front Rim Volcanic Wet Stones -->
+  <g fill="#292524" stroke="#0c0a09" stroke-width="4">
+    <ellipse cx="380" cy="730" rx="70" ry="45"/>
+    <ellipse cx="490" cy="780" rx="80" ry="50"/>
+    <ellipse cx="640" cy="815" rx="90" ry="55"/>
+    <ellipse cx="800" cy="830" rx="95" ry="58"/>
+    <ellipse cx="960" cy="820" rx="90" ry="55"/>
+    <ellipse cx="1110" cy="785" rx="80" ry="50"/>
+    <ellipse cx="1230" cy="735" rx="70" ry="45"/>
+  </g>
+  <!-- Wet Stone Highlights -->
+  <ellipse cx="630" cy="800" rx="50" ry="15" fill="#57534e" opacity="0.5"/>
+  <ellipse cx="800" cy="815" rx="55" ry="16" fill="#57534e" opacity="0.5"/>
+  <ellipse cx="970" cy="805" rx="50" ry="15" fill="#57534e" opacity="0.5"/>
+
+  <!-- PURE STATIC RISING STEAM CLOUDS (Vector Curves & Opacities, NO ANIMATION) -->
+  <g fill="#ffffff" opacity="0.22">
+    <!-- Steam Swirl 1 -->
+    <path d="M580,680 Q640,610 610,540 Q580,480 640,410 Q680,470 650,550 Q620,620 580,680 Z"/>
+    <!-- Steam Swirl 2 (Center) -->
+    <path d="M780,690 Q850,600 810,510 Q780,440 850,360 Q890,440 860,520 Q820,610 780,690 Z"/>
+    <!-- Steam Swirl 3 -->
+    <path d="M980,680 Q930,590 970,520 Q1010,450 960,390 Q1020,440 990,530 Q960,600 980,680 Z"/>
+    <!-- Ambient Fog Clouds hovering directly over water -->
+    <ellipse cx="720" cy="690" rx="180" ry="25"/>
+    <ellipse cx="880" cy="680" rx="190" ry="28"/>
+    <ellipse cx="800" cy="650" rx="140" ry="20" opacity="0.15"/>
+  </g>
+
+  <!-- Clear Flat Stepping Stone Platform in Front (Player Standing Area) -->
+  <ellipse cx="800" cy="875" rx="220" ry="30" fill="#44403c" stroke="#1c1917" stroke-width="3"/>
+  <ellipse cx="800" cy="875" rx="190" ry="20" fill="#57534e" opacity="0.4"/>
+</svg>
