@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, useId, onMounted, onBeforeUnmount } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { attackEffects, fitsAttackSlot } from '../../stores/attack-loadout';
 import { entranceEffectGroups } from '../../services/effect-variants';
@@ -15,6 +15,8 @@ import UiDialog from '../../components/UiDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 const lobby = useLobbyStore(),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null);
+const expanded = ref(true),
+  controlsId = useId();
 const settings = ref({ q: 'barrage', e: 'beam', r: 'guanyin_barrage', entrance: 'classic' }),
   pending = ref(false),
   error = ref('');
@@ -56,17 +58,29 @@ async function command(action: string) {
 </script>
 <template>
   <LobbyBackdrop :training-loadout="settings" />
-  <UiPanel title="特效訓練場" class="training-toolbar" density="compact">
-    <div class="training-actions">
-      <UiButton label="設定" icon="settings" @click="dialog?.open()" />
-      <SceneBotControls />
+  <UiPanel title="特效訓練場" class="training-toolbar" density="compact" tone="translucent">
+    <template #actions>
       <UiButton
-        label="補滿能量"
-        :disabled="pending || !lobby.connected"
-        @click="command('refill')"
+        :label="expanded ? '收合訓練面板' : '展開訓練面板'"
+        :icon="expanded ? 'minimize' : 'expand'"
+        icon-only
+        :aria-expanded="expanded"
+        :aria-controls="controlsId"
+        @click="expanded = !expanded"
       />
+    </template>
+    <div v-show="expanded" :id="controlsId">
+      <div class="training-actions">
+        <UiButton label="設定" icon="settings" @click="dialog?.open()" />
+        <SceneBotControls />
+        <UiButton
+          label="補滿能量"
+          :disabled="pending || !lobby.connected"
+          @click="command('refill')"
+        />
+      </div>
+      <StatusSlot :message="error || lobby.attackStatus || lobby.presenceStatus" :error="!!error" />
     </div>
-    <StatusSlot :message="error || lobby.attackStatus || lobby.presenceStatus" :error="!!error" />
   </UiPanel>
   <UiDialog ref="dialog" title="訓練設定">
     <div class="training-settings">
