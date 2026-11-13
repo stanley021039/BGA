@@ -393,7 +393,12 @@ function initializeApp(config, dataLock, acquired) {
   };
   const authorCombatBonus = (userId) =>
     !!userId && !!require('./achievements/redemption').redeemedAt(db, userId, 'other');
-  const makeLobby = (requireReady = false) =>
+  const botCharacters = builtinCharacters.map((character) => ({
+    id: character.id,
+    name: character.name,
+    image: character.expressions.neutral,
+  }));
+  const makeLobby = (requireReady = false, options = {}) =>
     createLobby(undefined, (userId) => portraitUrl(userId), undefined, authorCombatBonus, {
       attackLoadout: (userId) => require('./profiles/settings').getAttackSettings(db, userId),
       startDelayMs: 5000,
@@ -401,6 +406,8 @@ function initializeApp(config, dataLock, acquired) {
       expandedMap: requireReady,
       onFinish: requireReady ? recordArenaAchievements : undefined,
       practiceBots: config.achievementPurpose === 'test' ? config.arenaPracticeBots : undefined,
+      botCharacters,
+      ...options,
     });
   const lobby = makeLobby();
   const roomSpace = createRoomSpace(undefined, undefined, (playerId, room) => {
@@ -844,7 +851,12 @@ function initializeApp(config, dataLock, acquired) {
     }
   };
   function recordArenaAchievements(match) {
-    if (achievementPurpose !== 'production' || match.practiceBots?.length) return;
+    if (
+      achievementPurpose !== 'production' ||
+      match.practiceBots?.length ||
+      match.players.some((player) => player.id.startsWith('scene-bot:'))
+    )
+      return;
     const eligible = match.players.filter((p) => !p.forfeited && p.damageDealt > 0);
     if (
       eligible.length < 2 ||
@@ -1232,7 +1244,7 @@ function initializeApp(config, dataLock, acquired) {
     require('./achievements/bonus-rewards').owned(achievementStore, user.id).entrances.includes(id);
   const lobbyPractice = require('./tutorials/lobby-arena').createLobbyPractice();
   acquired.push(() => lobbyPractice.clear());
-  const makeLobbyHandlers = (lobby, media = withLobbyMedia) =>
+  const makeLobbyHandlers = (lobby, media = withLobbyMedia, options = {}) =>
     createLobbyHandlers({
       attackLoadout: (user) => require('./profiles/settings').getAttackSettings(db, user.id),
       entranceAllowed,
@@ -1246,8 +1258,31 @@ function initializeApp(config, dataLock, acquired) {
       lobbyCharacter,
       expressionLabels,
       characterMedia,
+      ...options,
     });
   const lobbyHandlers = makeLobbyHandlers(lobby);
+  const trainingGrounds = require('./rooms/training-grounds').createTrainingGrounds((user) => {
+    const settings = { q: 'barrage', e: 'beam', r: 'guanyin_barrage', entrance: 'classic' };
+    const trainingLobby = makeLobby(false, { training: true, attackLoadout: () => settings });
+    const handlers = makeLobbyHandlers(
+      trainingLobby,
+      (_user, view) => ({ ...view, serverNow: Date.now() }),
+      { attackLoadout: () => settings, entranceAllowed: () => true },
+    );
+    handlers.view = (user) => ({
+      ...trainingLobby.view(user, { entrance: settings.entrance }),
+      serverNow: Date.now(),
+    });
+    handlers.teleport = (user) => ({
+      ...trainingLobby.teleport(user, settings.entrance),
+      serverNow: Date.now(),
+    });
+    trainingLobby.view(user);
+    trainingLobby.bots(user, { action: 'add', mode: 'stationary' });
+    trainingLobby.training(user, 'refill', settings.entrance);
+    return { settings, lobby: trainingLobby, handlers, characters: botCharacters };
+  });
+  acquired.push(() => trainingGrounds.clear());
   const arenaRooms = require('./rooms/arena-rooms').createArenaRooms(
     () => makeLobby(true),
     (roomLobby) =>
@@ -1265,10 +1300,12 @@ function initializeApp(config, dataLock, acquired) {
   const LOBBY_CHANNEL = { code: '__LOBBY__' };
   const lobbyStream = createStateStream({
     project: (_channel, _playerId, entry) =>
-      (entry.context?.arena ? arenaRooms.handlers(entry.user.id) : lobbyHandlers).view(
-        entry.user,
-        entry.context?.entrance,
-      ),
+      (entry.context?.training
+        ? trainingGrounds.get(entry.user).handlers
+        : entry.context?.arena
+          ? arenaRooms.handlers(entry.user.id)
+          : lobbyHandlers
+      ).view(entry.user, entry.context?.entrance),
     valid: (entry) => !!auth.sessionFrom(entry.req),
     sweepMs: 250,
     minGapMs: 400,
@@ -1839,6 +1876,7 @@ function initializeApp(config, dataLock, acquired) {
           const context = {
             entrance: url.searchParams.get('entrance'),
             arena: url.searchParams.has('arena'),
+            training: url.searchParams.has('training'),
           };
           if (!lobbyStream.subscribe(LOBBY_CHANNEL, { req, res, user, context }))
             throw new HttpError(429, 'STREAM_LIMIT', '大廳連線太多，請關閉舊分頁');
@@ -1861,12 +1899,41 @@ function initializeApp(config, dataLock, acquired) {
           : null;
         if (botRoomId && !botRoom) throw new HttpError(404, 'ARENA_ROOM_GONE', '這場試玩已結束');
         const scopedLobby =
+          (url.searchParams.has('training') && url.pathname.startsWith('/api/lobby')
+            ? trainingGrounds.get(user).handlers
+            : null) ||
           botRoom?.handlers ||
           (url.searchParams.has('arena') && url.pathname.startsWith('/api/lobby')
             ? arenaRooms.handlers(user.id)
             : lobbyHandlers);
         if (url.pathname === '/api/lobby' && req.method === 'GET')
           return send(lobbyChanged(scopedLobby.view(user, url.searchParams.get('entrance'))));
+        if (url.pathname === '/api/lobby/bots' && ['GET', 'POST'].includes(req.method)) {
+          if (
+            url.searchParams.has('arena') &&
+            !url.searchParams.has('training') &&
+            !arenaRooms.view(user.id).currentId
+          )
+            throw new HttpError(409, 'ARENA_ROOM_REQUIRED', '請先加入競技場房間');
+          if (req.method === 'POST') limitRate(roomRate, 'scene-bots:' + user.id, 60);
+          const result = scopedLobby.bots(user, req.method === 'POST' ? data : undefined);
+          lobbyChanged();
+          return send(result);
+        }
+        if (
+          url.pathname === '/api/lobby/training' &&
+          req.method === 'GET' &&
+          url.searchParams.has('training')
+        )
+          return send({ settings: { ...trainingGrounds.get(user).settings } });
+        if (
+          url.pathname === '/api/lobby/training' &&
+          req.method === 'POST' &&
+          url.searchParams.has('training')
+        ) {
+          limitRate(roomRate, 'training:' + user.id, 90);
+          return send(lobbyChanged(trainingGrounds.configure(user, data)));
+        }
         if (url.pathname === '/api/lobby/practice' && req.method === 'POST') {
           limitRate(roomRate, 'lobby-practice:' + user.id, 120);
           return send(lobbyPractice.command(user, data));

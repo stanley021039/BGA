@@ -10,9 +10,15 @@ const {
 } = require('../src/profiles/appearance');
 const { imageOf } = require('../src/profiles/uploads');
 
-test('ten bundled image characters have neutral art and optional expressions', () => {
-  assert.equal(builtinCharacters.length, 10);
-  assert.equal(new Set(builtinCharacters.map((character) => character.id)).size, 10);
+test('all bundled image characters have neutral art and optional expressions', () => {
+  assert.equal(
+    builtinCharacters.length,
+    10 + require('../public/shared/character-additions.json').characters.length,
+  );
+  assert.equal(
+    new Set(builtinCharacters.map((character) => character.id)).size,
+    builtinCharacters.length,
+  );
   for (const character of builtinCharacters) {
     assert.deepEqual(validateAppearance(character.appearance), character.appearance);
     assert.ok(character.expressions.neutral);

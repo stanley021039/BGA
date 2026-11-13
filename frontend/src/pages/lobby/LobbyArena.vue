@@ -9,6 +9,7 @@ import {
 } from '../../contracts/lobby-arena';
 import sceneRules from '../../../../public/shared/scene-rules.json';
 import AttackChoices from '../../components/AttackChoices.vue';
+import SceneBotControls from '../../components/SceneBotControls.vue';
 import UiField from '../../components/UiField.vue';
 import SceneHazards from '../../components/SceneHazards.vue';
 import AudioSettings from '../../engines/audio-settings.js';
@@ -472,6 +473,7 @@ function start(mode: string) {
         title="開戰設定"
         description="設定角色類型、選隊與配裝。每招命中同一對手最多得 1 分。"
       >
+        <SceneBotControls />
         <UiField
           label="角色類型"
           control="select"

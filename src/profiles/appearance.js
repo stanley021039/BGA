@@ -52,6 +52,21 @@ const builtinCharacters = slugs.map((slug, index) => {
   };
 });
 const defaults = { ...builtinCharacters[0].appearance };
+for (const character of require('../../public/shared/character-additions.json').characters) {
+  builtinCharacters.push({
+    id: character.id,
+    name: character.name,
+    source: character.source,
+    expressions: Object.fromEntries(
+      Object.entries(character.expressions).map(([expression, asset]) => [
+        expression,
+        versionedAsset('/assets/characters/' + asset.file),
+      ]),
+    ),
+    labels: expressionLabels,
+    appearance: { version: 5, characterId: character.id, expression: 'neutral' },
+  });
+}
 const legacyColors = {
   skin: ['#f6d6b8', '#dca77c', '#b87955', '#8b583e', '#5d392d', '#9ab483', '#a6acd0'],
   hair: ['#2b2020', '#60432c', '#ab7043', '#d3ae70', '#5a4b72', '#a74c55'],
@@ -125,7 +140,7 @@ function validateAppearance(input) {
   const value = normalizeAppearance(input);
   if (
     typeof value.characterId !== 'string' ||
-    !/^(?:builtin:[a-z]+|user:[a-f0-9-]{36})$/.test(value.characterId) ||
+    !/^(?:builtin:[a-z]+(?:-[a-z]+)*|user:[a-f0-9-]{36})$/.test(value.characterId) ||
     typeof value.expression !== 'string' ||
     !(
       Object.hasOwn(expressionLabels, value.expression) ||

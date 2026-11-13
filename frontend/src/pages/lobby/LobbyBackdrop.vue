@@ -41,7 +41,11 @@ import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // the site header, painted surfaces (background, border, shadow) and text.
 const INTERACTIVE =
   'a, button, input, select, textarea, label, summary, dialog, [role="button"], [contenteditable], .game-tile, [data-site-header]';
-const props = defineProps<{ arenaPage?: boolean; arenaWarmup?: boolean }>();
+const props = defineProps<{
+  arenaPage?: boolean;
+  arenaWarmup?: boolean;
+  trainingLoadout?: { q: string; e: string; r: string };
+}>();
 const expressionNoticeKey = ref(0);
 const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
@@ -402,10 +406,11 @@ defineExpose({ openChat });
     :enabled="sceneEnabled"
     :battle="battlePlaying"
     :locked-loadout="
-      battlePlaying
+      props.trainingLoadout ||
+      (battlePlaying
         ? lobby.snapshot?.arena?.match?.players.find((p) => p.id === lobby.snapshot?.selfId)
             ?.loadout
-        : undefined
+        : undefined)
     "
     :message="
       (lobby.attackStatus === '已向最近玩家發射特效' ? '' : lobby.attackStatus) ||

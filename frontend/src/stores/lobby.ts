@@ -24,6 +24,7 @@ import {
 import type { InteractionSource } from '../services/interaction-source';
 import type { BarrageEvent } from '../contracts/social';
 import { entranceEffect } from '../services/entrance-effects';
+import { sceneApiPath } from '../services/scene-scope';
 type AttackSlot = 'q' | 'e' | 'r';
 type Movement = { x: number; y: number } | { dx: number; dy: number };
 import { useLobbyBackgroundStore } from './lobby-background';
@@ -119,10 +120,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       10000,
     );
     try {
-      const scopedPath =
-        location.pathname === '/arena' && path.startsWith('/api/lobby')
-          ? path + (path.includes('?') ? '&' : '?') + 'arena=1'
-          : path;
+      const scopedPath = sceneApiPath(path);
       const value = await requestJson(scopedPath, {
         method: body ? 'POST' : 'GET',
         body,
@@ -204,9 +202,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     const epoch = generation,
       account = identity.value,
       source = new EventSource(
-        '/api/lobby/events?entrance=' +
-          encodeURIComponent(entranceEffect.value) +
-          (location.pathname === '/arena' ? '&arena=1' : ''),
+        sceneApiPath('/api/lobby/events?entrance=' + encodeURIComponent(entranceEffect.value)),
       );
     stream = source;
     source.addEventListener('open', () => {

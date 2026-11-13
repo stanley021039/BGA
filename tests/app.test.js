@@ -170,7 +170,10 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
     );
     const options = await (await fetch(base + '/api/profile/options', { headers })).json();
     const appearance = { ...options.characters[2].appearance, expression: 'happy' };
-    assert.equal(options.characters.length, 10);
+    assert.equal(
+      options.characters.length,
+      require('../src/profiles/appearance').builtinCharacters.length,
+    );
     assert.equal(options.expressionLabels.happy, '開心');
     assert.equal((await fetch(base + '/api/community/avatars', { headers })).status, 404);
     assert.equal((await fetch(base + '/avatar-picker.js', { headers })).status, 404);

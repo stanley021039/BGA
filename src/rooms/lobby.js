@@ -22,6 +22,7 @@ const { createSceneCombat, authorSpeed } = require('./scene-combat');
 const { createAttackTimeline } = require('./attack-timeline');
 const { sceneWalkWithSpeed } = require('../../frontend/src/engines/scene-path.js');
 const { randomBytes } = require('node:crypto');
+const { botSettings, createBotDriver } = require('./scene-bots');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
 // Percentages of the lobby page background, below the site header.
@@ -50,6 +51,10 @@ function createLobby(
   arenaOptions = {},
 ) {
   const expanded = !!arenaOptions.expandedMap;
+  const sceneBots = new Map(),
+    botDriver = createBotDriver(random);
+  let nextBotNumber = 1;
+  const botCharacters = arenaOptions.botCharacters || [];
   let wide = expanded;
   let activePortals = [];
   function buildMap(layout, wide, offsets, pattern) {
@@ -259,7 +264,7 @@ function createLobby(
         actor.bushEnteredAt = 0;
         actor.moveId++;
         actor.updatedAt = now();
-        const loadout = arenaOptions.attackLoadout?.(p.id);
+        const loadout = sceneBots.get(p.id) || arenaOptions.attackLoadout?.(p.id);
         actor.lockedAttackLoadout = loadout
           ? Object.freeze({ q: loadout.q, e: loadout.e, r: loadout.r || '' })
           : null;
@@ -299,7 +304,17 @@ function createLobby(
     barrages = [],
     attacks = [],
     receipts = new Map();
+  function removeBot(id) {
+    sceneBots.delete(id);
+    visitors.delete(id);
+    for (let i = attacks.length - 1; i >= 0; i--)
+      if (attacks[i].fromId === id || attacks[i].toId === id) attacks.splice(i, 1);
+  }
   function clean(time) {
+    for (const [id, bot] of sceneBots)
+      if (!visitors.has(bot.ownerId) || time - visitors.get(bot.ownerId).seenAt > PRESENCE_MS) {
+        removeBot(id);
+      } else if (visitors.has(id)) visitors.get(id).seenAt = time;
     for (const [id, visitor] of visitors)
       if (time - visitor.seenAt > PRESENCE_MS) visitors.delete(id);
     timeline.advance(attacks, visitors.values(), time, advance);
@@ -489,8 +504,13 @@ function createLobby(
       if (visitors.size >= MAX_VISITORS) throw new HttpError(503, 'LOBBY_FULL', '大廳目前已滿');
       const seed = [...user.id].reduce((sum, char) => sum + char.charCodeAt(0), 0);
       // Arrive in the open gutters beside the three-card game carousel.
-      const x = seed % 2 ? 67 + (seed % 3) * 2 : 4 + (seed % 3) * 3,
-        y = 40 + (seed % 4) * 10;
+      const x =
+          arenaOptions.training && !sceneBots.has(user.id)
+            ? 72
+            : seed % 2
+              ? 67 + (seed % 3) * 2
+              : 4 + (seed % 3) * 3,
+        y = arenaOptions.training && !sceneBots.has(user.id) ? 70 : 40 + (seed % 4) * 10;
       visitor = {
         id: user.id,
         x,
@@ -532,6 +552,20 @@ function createLobby(
     enter(user, entrance);
     const time = now();
     for (const visitor of visitors.values()) advance(visitor, time);
+    botDriver.drive({
+      time,
+      bots: [...sceneBots.values()],
+      positions: visitors,
+      events: attacks,
+      active: arena.active,
+      cast: (bot, slot) =>
+        attack(bot.user, {
+          requestId: 'bot-' + randomBytes(12).toString('hex'),
+          aspectRatio: 1.6,
+          slot,
+          effect: bot[slot],
+        }),
+    });
     const visible = new Map();
     const canView = (id) => {
       if (!visible.has(id)) visible.set(id, canSee(user.id, id, time));
@@ -596,7 +630,9 @@ function createLobby(
           remainingMs: remainingMs(visitor, time),
           facing: visitor.facing,
           moving: Math.hypot(visitor.targetX - visitor.x, visitor.targetY - visitor.y) > 0.05,
-          image: portrait(visitor.id),
+          image: sceneBots.has(visitor.id)
+            ? botCharacters.find((c) => c.id === sceneBots.get(visitor.id).characterId)?.image
+            : portrait(visitor.id),
           emote: visitor.emote && visitor.emote.until > time ? visitor.emote : null,
           entrance: visitor.entrance || 'classic',
         })),
@@ -722,6 +758,7 @@ function createLobby(
         .targets(visitors.values())
         .filter(
           (actor) =>
+            !(sceneBots.has(self.id) && sceneBots.has(actor.ownerId || actor.id)) &&
             arena.canPair(self.id, actor.ownerId || actor.id) &&
             canSee(self.id, actor.ownerId || actor.id, time),
         ),
@@ -918,6 +955,95 @@ function createLobby(
     arena.command(user, input, visitors, combat.reset);
     return view(user);
   }
+  function bots(user, input = { action: 'list' }) {
+    enter(user);
+    if (!input || !['list', 'add', 'update', 'remove', 'replay', 'reset'].includes(input.action))
+      throw new HttpError(400, 'INVALID_SCENE_BOT', '機器人操作不正確');
+    const limit = expanded ? 15 : 3;
+    if (input.action !== 'list') {
+      if (arena.view(visitors).match?.phase === 'running')
+        throw new HttpError(409, 'ARENA_LOCKED', '對戰中不能調整機器人');
+      let bot = sceneBots.get(input.id);
+      if (input.action !== 'add' && (!bot || bot.ownerId !== user.id))
+        throw new HttpError(403, 'BOT_NOT_OWNED', '只能調整自己加入的機器人');
+      if (input.action === 'add' || input.action === 'update') {
+        const settings = botSettings(input, botCharacters);
+        if (
+          expanded &&
+          arena
+            .view(visitors)
+            .teams.filter((member) => member.id !== bot?.id && member.team === settings.team)
+            .length >= 8
+        )
+          throw new HttpError(409, 'TEAM_FULL', '這隊已滿 8 人');
+        if (input.action === 'add') {
+          if (sceneBots.size >= limit)
+            throw new HttpError(409, 'SCENE_BOTS_FULL', `最多 ${limit} 隻機器人`);
+          const id = 'scene-bot:' + randomBytes(12).toString('hex');
+          bot = {
+            id,
+            ownerId: user.id,
+            user: { id, display_name: '陪練機器人 ' + nextBotNumber++ },
+            ...settings,
+          };
+          sceneBots.set(id, bot);
+          const actor = enter(bot.user, bot.entrance),
+            self = visitors.get(user.id),
+            index = sceneBots.size - 1;
+          actor.x = actor.targetX = Math.max(
+            8,
+            Math.min(92, self.x + (self.x > 50 ? -1 : 1) * (12 + (index % 3) * 9)),
+          );
+          actor.y = actor.targetY = Math.max(18, Math.min(92, self.y + (index % 2 ? -10 : 10)));
+          if (arenaOptions.training) {
+            actor.x = actor.targetX = 88 - (index % 2) * 8;
+            actor.y = actor.targetY = 78 - index * 16;
+          }
+        } else Object.assign(bot, settings);
+        const actor = visitors.get(bot.id);
+        actor.entrance = bot.entrance;
+        actor.teleportId++;
+        if (expanded) {
+          arena.command(bot.user, { action: 'team', team: bot.team }, visitors, combat.reset);
+          arena.command(bot.user, { action: 'ready', ready: true }, visitors, combat.reset);
+        }
+      } else if (input.action === 'remove') {
+        if (expanded)
+          arena.command(bot.user, { action: 'team', team: null }, visitors, combat.reset);
+        removeBot(bot.id);
+      } else if (input.action === 'replay') visitors.get(bot.id).teleportId++;
+      else {
+        combat.reset(visitors.get(bot.id), now());
+        if (arenaOptions.training) visitors.get(bot.id).energy = combatRules.energy.lobbyMaximum;
+      }
+    }
+    return {
+      limit,
+      selfId: user.id,
+      characters: botCharacters,
+      bots: [...sceneBots.values()].map(({ user, ...bot }) => ({
+        ...bot,
+        name: user.display_name,
+      })),
+    };
+  }
+  function training(user, action, entrance) {
+    if (!arenaOptions.training) throw new HttpError(403, 'TRAINING_ONLY', '僅限訓練場');
+    const self = enter(user, entrance);
+    if (action === 'reset') {
+      for (const actor of visitors.values()) {
+        combat.reset(actor, now());
+        actor.energy = combatRules.energy.lobbyMaximum;
+        actor.lastAttacks = {};
+        actor.kda = { kills: 0, deaths: 0, assists: 0 };
+      }
+      botDriver.clear();
+      attacks.length = 0;
+    }
+    if (['refill', 'reset'].includes(action)) self.energy = combatRules.energy.lobbyMaximum;
+    if (action === 'replay' || action === 'settings') self.teleportId++;
+    return view(user);
+  }
   function leaveArenaRoom(user) {
     arena.finish(now(), visitors);
     if (arena.active(user.id) && visitors.has(user.id)) {
@@ -928,6 +1054,8 @@ function createLobby(
     arena.view(visitors);
   }
   return {
+    training,
+    bots,
     leaveArenaRoom,
     hasActiveArenaPlayer: arena.active,
     arena: arenaCommand,

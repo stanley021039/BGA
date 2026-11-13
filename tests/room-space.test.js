@@ -12,6 +12,40 @@ function room(code = 'AAAAAA') {
     ],
   };
 }
+test('game bots walk and return real scene attacks without changing the board-game version', () => {
+  let clock = 1000;
+  const space = createRoomSpace(
+      () => clock,
+      () => 0.25,
+    ),
+    game = room();
+  game.players[1].bot = true;
+  let snapshot = space.view(game, 'one');
+  const initial = snapshot.visitors[1].x;
+  for (let i = 0; i < 10; i++) {
+    clock += 400;
+    snapshot = space.view(game, 'one');
+  }
+  assert.notEqual(snapshot.visitors[1].x, initial);
+  space.move(game, 'one', { x: 80, y: 38 });
+  clock += 6000;
+  space.view(game, 'one');
+  space.move(
+    game,
+    'one',
+    { action: 'attack', slot: 'q', aspectRatio: 1.6, requestId: 'room-hit-bot-0001' },
+    'beam',
+  );
+  let returned = false;
+  for (let i = 0; i < 30; i++) {
+    clock += 400;
+    snapshot = space.view(game, 'one');
+    if (snapshot.attacks.some((e) => e.fromId === 'two')) returned = true;
+  }
+  assert.ok(returned);
+  assert.equal(game.version, 7);
+  assert.equal(space.view(room(), 'one').attacks.length, 0);
+});
 test('movement is isolated by room instance, including reused room codes', () => {
   let now = 1000;
   const space = createRoomSpace(() => now),

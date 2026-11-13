@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import SkillGuide from './SkillGuide.vue';
+import UiLink from './UiLink.vue';
 import sceneRules from '../../../public/shared/scene-rules.json';
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { attackEffectGroups } from '../services/effect-variants';
@@ -110,6 +111,7 @@ function play(id: string) {
 }
 </script>
 <template>
+  <UiLink href="/arena?training=1" label="進入訓練場" target="_blank" rel="noopener" />
   <SkillGuide />
   <div class="attack-choices" :class="{ 'attack-choices-expanded': expandedList }"
     ><div
