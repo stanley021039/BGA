@@ -416,7 +416,8 @@ test('retired codes reject new claims and revoke only code and achievement acces
     404,
   );
   const other = await f.api(2, 'achievements/redeem', { code: '我愛作者' });
-  assert.equal(other.bonusRewards.backgrounds.length, 10);
+  assert.deepEqual(other.bonusRewards.backgrounds, ['default', 'castle']);
+  assert.equal(other.redemption.draws, 300);
   assert.deepEqual(unlocked(other), []);
   const pack = await f.api(2, 'achievements/redeem', { code: '新手大禮包' });
   assert.equal(pack.redemption.label, '新手大禮包');

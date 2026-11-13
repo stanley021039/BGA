@@ -1,5 +1,6 @@
 import timing from '../../../public/shared/attack-timing.json';
-import { crystalReflection } from '../../../public/shared/scene-rules.json';
+import { crystalReflection, shield } from '../../../public/shared/scene-rules.json';
+import attackEffects from '../../../public/shared/attack-effects.json';
 
 const TAU = Math.PI * 2;
 const clamp = (value) => Math.max(0, Math.min(1, value));
@@ -801,6 +802,7 @@ function drawDualWhips(ctx, options, phases, scale, elapsed) {
 }
 
 export function createOrdinaryAttack(ctx, options) {
+  if (options.effect === 'shield') return createHexBarrier(ctx, options);
   if (options.effect === 'crystal_reflection') return createReflection(ctx, options);
   if (options.effect === 'venom_thorn') {
     const scale = Math.min(1.5, options.width / 330, options.height / 165);
@@ -866,6 +868,183 @@ export function createOrdinaryAttack(ctx, options) {
       }
       ctx.restore();
     });
+  };
+}
+
+function createHexBarrier(ctx, options) {
+  const alternate = options.alternatePalette === 'shield_alt';
+  const definition = attackEffects.find(
+    (effect) => effect.id === (alternate ? 'shield_alt' : 'shield'),
+  );
+  const [primary, shade, highlight] = definition.artworkColors;
+  const points = (x, y, radius) =>
+    Array.from({ length: 6 }, (_, k) => {
+      const angle = (k * TAU) / 6 - Math.PI / 2;
+      return [x + Math.cos(angle) * radius, y + Math.sin(angle) * radius];
+    });
+  const margin = Math.min(
+    options.from.x,
+    options.width - options.from.x,
+    options.from.y,
+    options.height - options.from.y,
+  );
+  const radius = Math.max(
+    4,
+    Math.min(84, options.width * 0.21, options.height * 0.4, margin / 1.12 - 3),
+  );
+  const rim = points(0, 0, radius),
+    inner = points(0, 0, radius - 5),
+    back = points(-5, 5, radius);
+  const cells = [];
+  for (let q = -2; q <= 2; q++)
+    for (let row = -2; row <= 2; row++) {
+      if (Math.abs(q + row) > 2) continue;
+      const r = radius * 0.17;
+      const x = Math.sqrt(3) * r * (q + row / 2),
+        y = r * 1.5 * row;
+      cells.push({ x, y, polygon: points(x, y, r - 1) });
+    }
+  function trace(vertices) {
+    ctx.beginPath();
+    ctx.moveTo(...vertices[0]);
+    for (const point of vertices.slice(1)) ctx.lineTo(...point);
+    ctx.closePath();
+  }
+  return (elapsed) => {
+    if (!Number.isFinite(elapsed) || elapsed < 0 || elapsed >= shield.durationMs) return;
+    const reveal = clamp(elapsed / 160),
+      fade = clamp((shield.durationMs - elapsed) / 220);
+    // readAnchor is translated by the shared stage. Do not follow twice.
+    const center = options.readAnchor ? options.from : options.readCaster?.() || options.from;
+    ctx.save();
+    ctx.translate(center.x, center.y);
+    ctx.scale(0.9 + reveal * 0.1, 0.9 + reveal * 0.1);
+    ctx.lineJoin = ctx.lineCap = 'round';
+    ctx.globalAlpha = reveal * fade;
+    trace(back);
+    ctx.strokeStyle = shade;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    for (let k = 0; k < 6; k++) {
+      trace([back[k], back[(k + 1) % 6], rim[(k + 1) % 6], rim[k]]);
+      ctx.fillStyle = k % 2 ? shade : primary;
+      ctx.globalAlpha = reveal * fade * 0.17;
+      ctx.fill();
+    }
+    ctx.save();
+    trace(rim);
+    ctx.clip();
+    const face = ctx.createLinearGradient(-radius, -radius, radius, radius);
+    face.addColorStop(0, primary);
+    face.addColorStop(0.48, shade);
+    face.addColorStop(1, highlight);
+    trace(rim);
+    ctx.fillStyle = face;
+    ctx.globalAlpha = reveal * fade * 0.055;
+    ctx.fill();
+    for (const [index, cell] of cells.entries()) {
+      const pulse = (Math.sin(elapsed / 280 - cell.y / 13 - index * 0.16) + 1) / 2;
+      trace(cell.polygon);
+      ctx.strokeStyle = primary;
+      ctx.lineWidth = 0.8;
+      ctx.globalAlpha = reveal * fade * (0.17 + pulse * 0.18);
+      ctx.stroke();
+      ctx.globalAlpha = reveal * fade * (0.015 + pulse * 0.045);
+      ctx.fillStyle = primary;
+      ctx.fill();
+      if (index % 3 === 1) {
+        ctx.globalAlpha = reveal * fade * 0.5;
+        if (alternate) {
+          line(
+            ctx,
+            [
+              [cell.x - 3, cell.y + 4],
+              [cell.x, cell.y - 4],
+              [cell.x + 3, cell.y + 2],
+            ],
+            highlight,
+            0.8,
+          );
+          line(
+            ctx,
+            [
+              [cell.x, cell.y],
+              [cell.x + 4, cell.y - 2],
+            ],
+            primary,
+            0.8,
+          );
+        } else
+          line(
+            ctx,
+            [
+              [cell.x - 4, cell.y - 2],
+              [cell.x, cell.y - 2],
+              [cell.x, cell.y + 3],
+              [cell.x + 3, cell.y + 3],
+            ],
+            highlight,
+            0.8,
+          );
+      }
+    }
+    ctx.restore();
+    ctx.globalAlpha = reveal * fade;
+    trace(rim);
+    ctx.strokeStyle = primary;
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = primary;
+    ctx.shadowBlur = 9;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    trace(inner);
+    ctx.strokeStyle = highlight;
+    ctx.lineWidth = 0.8;
+    if (alternate) ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let k = 0; k < 6; k++) {
+      const a = rim[k],
+        b = inner[k];
+      line(ctx, [a, back[k]], shade, 1);
+      const x = a[0] * 0.94,
+        y = a[1] * 0.94;
+      ctx.globalAlpha = reveal * fade * 0.85;
+      if (alternate) {
+        trace([
+          [x, y - 4],
+          [x + 3, y],
+          [x, y + 4],
+          [x - 3, y],
+        ]);
+        ctx.strokeStyle = highlight;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else
+        line(
+          ctx,
+          [
+            [x - 3, y],
+            [x + 3, y],
+          ],
+          highlight,
+          1.5,
+        );
+      line(ctx, [b, [b[0] * 0.9, b[1] * 0.9]], primary, 1);
+    }
+    const progress = (elapsed / 230) % 6,
+      edge = Math.floor(progress),
+      t = progress - edge;
+    const a = rim[edge],
+      b = rim[(edge + 1) % 6];
+    const tip = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    ctx.globalAlpha = reveal * fade;
+    line(ctx, [a, tip], highlight, 2);
+    ctx.beginPath();
+    ctx.arc(...tip, 2.5, 0, TAU);
+    ctx.fillStyle = highlight;
+    ctx.fill();
+    ctx.restore();
   };
 }
 

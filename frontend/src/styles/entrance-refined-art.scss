@@ -1,0 +1,622 @@
+.stitch-vfx[data-entrance-refined] {
+  .ice-facet {
+    fill: var(--refined-metal);
+    stroke: var(--refined-highlight);
+    stroke-width: 1;
+  }
+  .ice-shadow {
+    fill: var(--refined-shadow);
+    fill-opacity: 0.25;
+  }
+  .ice-spine {
+    fill: none;
+    stroke: var(--refined-highlight);
+    stroke-width: 1.2;
+  }
+  .ice-etch {
+    fill: none;
+    stroke: var(--refined-primary);
+    stroke-width: 0.8;
+  }
+  .ice-wing-motion {
+    transform-origin: 0 0;
+    animation: refined-ice-wing var(--refined-duration) ease-out both;
+  }
+  .ice-wing-reverse {
+    animation-name: refined-ice-wing-reverse;
+  }
+  .ice-flower {
+    fill: none;
+    stroke: var(--refined-highlight);
+    stroke-width: 1.3;
+  }
+  .ice-flower-turn {
+    animation: refined-ice-flower var(--refined-duration) ease-out both;
+  }
+  .ice-flower-heart {
+    fill: var(--refined-primary);
+    fill-opacity: 0.35;
+  }
+  .ice-tail {
+    animation: refined-ice-tail var(--refined-duration) ease-out both;
+  }
+  .ice-floor {
+    animation: refined-ice-floor var(--refined-duration) ease-out both;
+  }
+  .ice-seals {
+    fill: none;
+    stroke: var(--refined-highlight);
+    stroke-width: 1;
+    animation: refined-ice-flower var(--refined-duration) ease-out both;
+  }
+  .entrance-refined-art {
+    position: absolute;
+    inset: 0;
+    width: 320px;
+    height: 260px;
+    overflow: visible;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: refined-entrance-reveal var(--refined-duration) ease-out both;
+  }
+  .metal {
+    fill: var(--refined-metal);
+    stroke: var(--refined-shadow);
+    stroke-width: 1;
+  }
+  .edge {
+    fill: none;
+    stroke: var(--refined-highlight);
+    stroke-width: 1.3;
+  }
+  .gem {
+    fill: var(--refined-highlight);
+    stroke: var(--refined-primary);
+    stroke-width: 0.8;
+  }
+  .engraving {
+    fill: none;
+    stroke: var(--refined-highlight);
+    stroke-width: 1;
+  }
+  .treasury-arch {
+    stroke: var(--refined-primary);
+    stroke-width: 1;
+    opacity: 0.55;
+  }
+  .treasury-gate {
+    fill: var(--refined-shadow);
+    fill-opacity: 0.18;
+    stroke: var(--refined-primary);
+    stroke-width: 2;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: refined-gate-open var(--refined-duration) ease-out both;
+    .gate-inner {
+      fill: none;
+      stroke: var(--refined-highlight);
+      stroke-width: 0.8;
+      stroke-dasharray: 4 3;
+    }
+  }
+  .treasury-weapon {
+    animation: refined-weapon-launch var(--refined-duration) cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+  .treasury-ground {
+    opacity: 0.55;
+  }
+  .dragon-art .metal {
+    fill: var(--refined-metal);
+    stroke: var(--refined-shadow);
+  }
+  .dragon-membrane {
+    fill: var(--refined-shadow);
+    fill-opacity: 0.42;
+    stroke: var(--refined-primary);
+    stroke-width: 1.6;
+  }
+  .dragon-wing-bones {
+    stroke: var(--refined-primary);
+    stroke-width: 3;
+  }
+  .dragon-wing-sheen {
+    stroke: var(--refined-highlight);
+    stroke-width: 0.8;
+    opacity: 0.7;
+  }
+  .dragon-wing-motion {
+    transform-origin: 0 0;
+    animation: refined-dragon-wing var(--refined-duration) ease-out both;
+  }
+  .dragon-wing-right .dragon-wing-motion {
+    animation-name: refined-dragon-wing-right;
+  }
+  .dragon-body {
+    animation: refined-dragon-rise var(--refined-duration) ease-out both;
+  }
+  .dragon-scales {
+    fill: none;
+    stroke: var(--refined-primary);
+    stroke-width: 1.2;
+  }
+  .dragon-plating,
+  .dragon-head-sheen {
+    fill: none;
+    stroke: var(--refined-primary);
+    stroke-width: 1.5;
+  }
+  .dragon-neck-plates {
+    fill: none;
+    stroke: var(--refined-primary);
+    stroke-width: 2.5;
+  }
+  .dragon-neck-ridge {
+    fill: none;
+    stroke: var(--refined-primary);
+    stroke-width: 1.4;
+  }
+  .dragon-brow,
+  .dragon-nostril {
+    fill: var(--refined-shadow);
+    stroke: var(--refined-primary);
+    stroke-width: 0.8;
+  }
+  .dragon-eye-slit {
+    fill: none;
+    stroke: var(--refined-primary);
+    stroke-width: 1.2;
+  }
+  .dragon-claws.metal {
+    fill: var(--refined-primary);
+    stroke: var(--refined-shadow);
+  }
+  .dragon-claws,
+  .dragon-teeth {
+    fill: none;
+    stroke: var(--refined-primary);
+    stroke-width: 1.6;
+  }
+  .dragon-eyes {
+    fill: var(--refined-highlight);
+    filter: drop-shadow(0 0 3px var(--refined-highlight));
+  }
+  .dragon-jaw {
+    fill: var(--refined-shadow);
+    stroke: var(--refined-primary);
+    stroke-width: 0.8;
+  }
+  .dragon-runes {
+    fill: var(--refined-highlight);
+    opacity: 0.65;
+  }
+  .dragon-breath {
+    stroke: var(--refined-highlight);
+    stroke-width: 4;
+    filter: drop-shadow(0 0 3px var(--refined-highlight));
+    stroke-dasharray: 300;
+    animation: refined-dragon-breath var(--refined-duration) ease-out both;
+    .breath-core {
+      stroke: var(--refined-primary);
+      stroke-width: 1;
+    }
+  }
+  .dragon-fragments {
+    fill: var(--refined-shadow);
+    stroke: var(--refined-primary);
+    stroke-width: 1;
+    animation: refined-dragon-fragments var(--refined-duration) ease-out both;
+  }
+  .dragon-ground {
+    stroke: var(--refined-highlight);
+    stroke-width: 1;
+    opacity: 0.55;
+  }
+  .storm-corona {
+    stroke: var(--refined-primary);
+    stroke-width: 7;
+    opacity: 0.3;
+    filter: drop-shadow(0 0 4px var(--refined-primary));
+  }
+  .storm-core {
+    stroke: var(--refined-highlight);
+    stroke-width: 1.9;
+    stroke-dasharray: 100;
+  }
+  .storm-channel {
+    animation: refined-storm-strike var(--refined-duration) ease-out both;
+  }
+  .storm-channel-1 {
+    animation-name: refined-storm-side;
+  }
+  .storm-channel-2 {
+    animation-name: refined-storm-side-right;
+  }
+  .storm-forks {
+    stroke: var(--refined-primary);
+    stroke-width: 1.2;
+    animation: refined-storm-forks var(--refined-duration) ease-out both;
+  }
+  .storm-ground {
+    stroke: var(--refined-shadow);
+    stroke-width: 2;
+    animation: refined-storm-ground var(--refined-duration) ease-out both;
+  }
+  .storm-ground-core {
+    stroke: var(--refined-highlight);
+    stroke-width: 1.3;
+  }
+  .storm-impact {
+    animation: refined-storm-ground var(--refined-duration) ease-out both;
+  }
+  .storm-sparks {
+    stroke: var(--refined-highlight);
+    stroke-width: 1.7;
+    animation: refined-storm-ground var(--refined-duration) ease-out both;
+  }
+  .storm-runes {
+    fill: none;
+    stroke: var(--refined-highlight);
+    stroke-width: 1.1;
+    animation: refined-storm-forks var(--refined-duration) ease-out both;
+  }
+  .storm-ribbon {
+    stroke: var(--refined-primary);
+    stroke-dasharray: 5 4;
+    opacity: 0.65;
+  }
+}
+.stitch-vfx[data-entrance-refined][data-entrance-variant] {
+  .ice-wing-motion .ice-etch {
+    stroke-dasharray: 3 2;
+  }
+  .ice-flower-heart {
+    fill-opacity: 0;
+  }
+  .treasury-arch {
+    stroke-dasharray: 9 4 2 4;
+  }
+  .dragon-wing-sheen {
+    stroke-dasharray: 4 3;
+  }
+}
+@keyframes refined-ice-wing {
+  0%,
+  6% {
+    opacity: 0;
+    transform: rotate(55deg) scale(0.2);
+  }
+  28% {
+    opacity: 1;
+    transform: rotate(-6deg) scale(1.03);
+  }
+  55%,
+  72% {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.06);
+  }
+}
+@keyframes refined-ice-wing-reverse {
+  0%,
+  9% {
+    opacity: 0;
+    transform: rotate(52deg) scale(0.2);
+  }
+  32% {
+    opacity: 1;
+    transform: rotate(-4deg) scale(1.03);
+  }
+  58%,
+  74% {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: rotate(-6deg) scale(1.06);
+  }
+}
+@keyframes refined-ice-flower {
+  0%,
+  10% {
+    opacity: 0;
+    transform: scale(0.1) rotate(-25deg);
+  }
+  35%,
+  70% {
+    opacity: 0.9;
+    transform: scale(1) rotate(0);
+  }
+  94%,
+  100% {
+    opacity: 0;
+    transform: scale(1.18) rotate(20deg);
+  }
+}
+@keyframes refined-ice-tail {
+  0%,
+  15% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  39%,
+  70% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  94%,
+  100% {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+@keyframes refined-ice-floor {
+  0%,
+  8% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  29%,
+  66% {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+  94%,
+  100% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes refined-entrance-reveal {
+  0% {
+    opacity: 0;
+  }
+  12%,
+  74% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes refined-gate-open {
+  0%,
+  5% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  18% {
+    opacity: 1;
+    transform: scale(1.13);
+  }
+  27%,
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  92%,
+  100% {
+    opacity: 0;
+    transform: scale(0.65);
+  }
+}
+@keyframes refined-weapon-launch {
+  0%,
+  14% {
+    opacity: 0;
+    transform: translateY(10px) scaleY(0.12);
+  }
+  31% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+  51% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+  65% {
+    opacity: 0.8;
+    transform: translate(var(--weapon-drift), -46px) scaleY(1.1);
+  }
+  76%,
+  100% {
+    opacity: 0;
+    transform: translate(var(--weapon-drift), -72px) scaleY(0.8);
+  }
+}
+@keyframes refined-dragon-wing {
+  0%,
+  6% {
+    opacity: 0;
+    transform: rotate(42deg) scaleX(0.2);
+  }
+  30% {
+    opacity: 1;
+    transform: rotate(-5deg) scaleX(1);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(4deg);
+  }
+  79% {
+    opacity: 0.65;
+    transform: rotate(-3deg);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(9deg);
+  }
+}
+@keyframes refined-dragon-wing-right {
+  0%,
+  9% {
+    opacity: 0;
+    transform: rotate(39deg) scaleX(0.2);
+  }
+  34% {
+    opacity: 1;
+    transform: rotate(-7deg) scaleX(1);
+  }
+  57% {
+    opacity: 1;
+    transform: rotate(2deg);
+  }
+  81% {
+    opacity: 0.65;
+    transform: rotate(-4deg);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(8deg);
+  }
+}
+@keyframes refined-dragon-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.85);
+    transform-origin: 160px 100px;
+  }
+  28%,
+  67% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-9px) scale(1.02);
+  }
+}
+@keyframes refined-dragon-breath {
+  0%,
+  31% {
+    opacity: 0;
+    stroke-dashoffset: 300;
+  }
+  46% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  63% {
+    opacity: 0.8;
+    stroke-dashoffset: -20;
+  }
+  84%,
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -300;
+  }
+}
+@keyframes refined-dragon-fragments {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  18% {
+    opacity: 0.7;
+  }
+  39%,
+  100% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes refined-storm-strike {
+  0%,
+  10% {
+    opacity: 0;
+    stroke-dashoffset: 100;
+  }
+  17%,
+  26% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  37% {
+    opacity: 0.2;
+  }
+  46% {
+    opacity: 0.9;
+  }
+  73%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes refined-storm-side {
+  0%,
+  20% {
+    opacity: 0;
+    stroke-dashoffset: 100;
+  }
+  29%,
+  35% {
+    opacity: 0.85;
+    stroke-dashoffset: 0;
+  }
+  62%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes refined-storm-side-right {
+  0%,
+  25% {
+    opacity: 0;
+    stroke-dashoffset: 100;
+  }
+  34%,
+  43% {
+    opacity: 0.85;
+    stroke-dashoffset: 0;
+  }
+  69%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes refined-storm-forks {
+  0%,
+  17% {
+    opacity: 0;
+  }
+  26% {
+    opacity: 0.85;
+  }
+  42% {
+    opacity: 0.3;
+  }
+  54% {
+    opacity: 0.8;
+  }
+  78%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes refined-storm-ground {
+  0%,
+  22% {
+    opacity: 0;
+    transform: scaleX(0.45);
+    transform-origin: 160px 185px;
+  }
+  37% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  67% {
+    opacity: 0.6;
+  }
+  88%,
+  100% {
+    opacity: 0;
+    transform: scaleX(1.12);
+  }
+}

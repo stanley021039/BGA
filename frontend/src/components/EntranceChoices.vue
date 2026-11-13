@@ -2,7 +2,7 @@
 import '../styles/entrance-preview.scss';
 import MotionPolicy from '../engines/motion-policy.js';
 
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { entranceEffectGroups } from '../services/effect-variants';
 import { requestJson } from '../services/http';
 import { sizedImage } from '../services/image-size';
@@ -17,6 +17,7 @@ import {
 import { usePreferencesStore } from '../stores/preferences';
 import EffectVariantGroup from './EffectVariantGroup.vue';
 import UiChoiceCard from './UiChoiceCard.vue';
+const props = defineProps<{ image?: string; name?: string }>();
 const prefs = usePreferencesStore();
 const unlocked = ref<string[]>([]);
 const allowed = (id: string) => isFreeEntrance(id) || unlocked.value.includes(id);
@@ -53,6 +54,10 @@ function choose(groupId: string, id: EntranceEffectId) {
   play(groupId, id);
 }
 onBeforeUnmount(() => stop?.());
+watch(
+  () => props.image,
+  () => stop?.(),
+);
 </script>
 <template>
   <div class="entrance-grid" role="group" aria-label="可用進場特效">
@@ -81,10 +86,10 @@ onBeforeUnmount(() => stop?.());
           aria-hidden="true"
           ><span class="entrance-preview-actor"
             ><img
-              :src="sizedImage('/assets/characters/traveler-neutral.png', 128)"
+              :src="sizedImage(image || '/assets/characters/traveler-neutral.png', 128)"
               alt=""
               draggable="false"
-            /><span>小雨</span></span
+            /><span>{{ name || '玩家' }}</span></span
           ></span
         ><template #label
           ><strong class="ui-choice-label">{{ effect.label }}</strong

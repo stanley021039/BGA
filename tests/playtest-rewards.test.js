@@ -41,6 +41,8 @@ test('isolated playtests unlock only rewards and preserve real achievement progr
     store = new AchievementStore(check),
     first = store.list(id);
   assert.ok(first.achievements.every((achievement) => !achievement.unlockedAt));
+  assert.equal(require('../src/achievements/code-packs').availableTickets(check, id), 0);
+  assert.deepEqual(require('../src/achievements/redemption').grants(check, id), {});
   assert.ok(first.rewards.every((reward) => reward.claimedAt));
   assert.equal(first.bonusRewards.entrances.length, 24);
   assert.equal(first.bonusRewards.backgrounds.length, 10);

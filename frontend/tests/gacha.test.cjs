@@ -96,6 +96,21 @@ const state = () => ({
     totalWeight: 20,
   })),
 });
+
+test('reward ticket receipts keep their debit separate from coins and reject mixed voucher modes', () => {
+  const r = { ...receipt(), cost: 0, useTickets: true, ticketCost: 1, rewardTickets: 299 };
+  assert.equal(contract.readGachaReceipt(r, 'draw').rewardTickets, 299);
+  assert.equal(contract.readGachaState({ ...state(), rewardTickets: 300 }).rewardTickets, 300);
+  for (const change of [
+    { ticketCost: 10 },
+    { rewardTickets: -1 },
+    { voucher: true },
+    { thirdLogin: true },
+    { useTickets: false },
+  ])
+    assert.throws(() => contract.readGachaReceipt({ ...r, ...change }, 'draw'));
+  assert.throws(() => contract.readGachaReceipt({ ...receipt(), ticketCost: 1 }, 'draw'));
+});
 test('gacha receipts reject inconsistent pool, costs, duplicates and unsafe wallet values', () => {
   assert.equal(contract.readGachaReceipt(receipt(), 'draw').results[0].label, '電磁軌道砲');
   assert.equal(contract.readGachaReceipt({ ...receipt(), pool: 'combat' }, 'draw').pool, 'combat');

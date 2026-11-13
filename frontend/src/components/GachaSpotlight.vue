@@ -58,6 +58,9 @@ const attackChants: Partial<Record<string, readonly [string, string]>> = {
   zero_equation: ['將未知數交給我。', '當最後一道等式成立，一切歸零。'],
 };
 const rewardChants: Partial<Record<string, readonly [string, string]>> = {
+  'entrances:arrival-coffin-dance': ['黑人抬轎，鼓點開路。', '今夜不送別，只迎我登場'],
+  'entrances:arrival-math-dimension': ['萬象入式，星軌為盤。', '解開無窮，演算我的降臨。'],
+  'entrances:arrival-delivery-scooter': ['穿過街燈，甩開長夜。', '你點的驚喜，現在送到！'],
   'frames:observatory': ['把星座對準刻度。', '讓這句話沿著天球的軌道飛去。'],
   'media:observatory': ['星儀轉到正北。', '讓每一次跳動，接上同一條星軌。'],
   'frames:abyssal-glass': ['把話說給沉海的珊瑚聽。', '看那道光，從深處浮上來。'],

@@ -501,7 +501,7 @@ test('every new palette is an independent draw and exchange reward with the orig
   ]) {
     assert.equal(poolItems('attacks').find((item) => item.id === id)?.rarity, 'epic', id);
   }
-  assert.equal(variants.length, 31);
+  assert.equal(variants.length, 40);
   assert.deepEqual(
     new Set(variants.map((e) => e.variantOf)),
     new Set([...starters, ...entrances].map((e) => e.id)),

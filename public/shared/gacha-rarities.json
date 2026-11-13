@@ -155,5 +155,14 @@
   "sounds:ping-voice-poor-thing": "rare",
   "sounds:ping-voice-answer-me": "rare",
   "sounds:ping-voice-yare-yare": "rare",
-  "sounds:ping-voice-i-am-gay": "epic"
+  "sounds:ping-voice-i-am-gay": "epic",
+  "entrances:arrival-gift-box": "rare",
+  "entrances:arrival-hero-faceplant": "epic",
+  "entrances:arrival-coffin-dance": "legendary",
+  "entrances:arrival-math-dimension": "legendary",
+  "entrances:arrival-heart-bubbles": "common",
+  "entrances:arrival-glass-break": "rare",
+  "entrances:arrival-star-courier": "common",
+  "entrances:arrival-brush-creation": "rare",
+  "entrances:arrival-delivery-scooter": "legendary"
 }

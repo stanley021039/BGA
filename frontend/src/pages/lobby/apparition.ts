@@ -1,4 +1,10 @@
-import { entranceVariant, type EntranceEffectId } from '../../services/entrance-effects';
+import {
+  arrivalEffects,
+  entranceEffects,
+  entranceVariant,
+  type EntranceEffectId,
+} from '../../services/entrance-effects';
+import { isArrival, playArrival } from '../../services/arrival-effects';
 import { playEntranceBackdrop, playEntranceBody } from '../../services/entrance-body';
 import {
   acquireEffectContext,
@@ -17,7 +23,9 @@ type Effect = (scene: Scene) => () => void;
 interface Scene {
   anchor: HTMLElement;
   layer: HTMLElement;
+  host: HTMLElement;
   palette?: string;
+  paletteColors?: Record<string, string>;
   variantId?: string;
   img: HTMLImageElement | null;
   /** Image centre and feet, in layer coordinates. */
@@ -36,6 +44,7 @@ const DURATION: Record<EntranceEffectId, number> = {
   rift: 1200,
   particles: 1500,
   ...Object.fromEntries(stitchEntrances.map((effect) => [effect.id, effect.duration])),
+  ...Object.fromEntries(arrivalEffects.map((effect) => [effect.id, effect.duration])),
 };
 
 function element(scene: Scene, className: string, left: number, top: number) {
@@ -169,11 +178,31 @@ const classic: Effect = (scene) => {
   return finish;
 };
 
+function detailColors(scene: Scene, id: string): readonly string[] {
+  const definition = entranceEffects.find((effect) => effect.id === (scene.variantId || id));
+  return definition && 'detailColors' in definition ? definition.detailColors || [] : [];
+}
+function useDetailPalette(node: HTMLElement, colors: readonly string[]) {
+  node.style.setProperty('--entrance-palette', 'none');
+  for (const [index, name] of ['primary', 'accent', 'highlight'].entries())
+    node.style.setProperty('--entrance-detail-' + name, colors[index]);
+  node.classList.add('is-detailed-entrance');
+}
 // A: dark purple vortex twisting shut, then a crack ring.
 const smoke: Effect = (scene) => {
   const vortex = element(scene, 'lobby-fx-smoke', scene.cx, scene.cy),
     ring = element(scene, 'lobby-fx-ring', scene.cx, scene.cy),
     timer = setTimeout(finish, DURATION.smoke);
+  const colors = detailColors(scene, 'smoke');
+  if (colors.length === 3) {
+    useDetailPalette(vortex, colors);
+    useDetailPalette(ring, colors);
+    vortex.dataset.detailVariant = scene.variantId ? 'alternate' : 'original';
+    vortex.innerHTML =
+      '<svg viewBox="-100 -100 200 200" aria-hidden="true"><circle r="72" class="smoke-engraving"/>' +
+      '<path d="M-76-20C-48-82 62-79 74-12M-64 40C-23 86 65 59 69 4M-34-67C32-94 84-18 48 45" class="smoke-flow"/>' +
+      '<path d="M-62-35L-68-51M-28-67L-30-84M18-71L22-89M56-45L68-56M70 0L87 0M52 48L64 61M8 71L9 88M-39 59L-50 74M-69 12L-86 15" class="smoke-marks"/></svg>';
+  }
   function finish() {
     clearTimeout(timer);
     vortex.remove();
@@ -187,26 +216,49 @@ const sparks: Effect = (scene) => {
   const size = 260,
     { node, scale } = canvas(scene, size),
     context = node.getContext('2d')!,
+    colors = detailColors(scene, 'sparks'),
     sparksList = Array.from({ length: 70 }, () => ({
       angle: Math.random() * Math.PI * 2,
       radius: 90 + Math.random() * 40,
       delay: Math.random() * 0.25,
       spin: 2 + Math.random() * 2,
     }));
+  if (colors.length === 3) node.style.setProperty('--entrance-palette', 'none');
   context.scale(scale, scale);
   const stop = animate(
     DURATION.sparks,
     (t) => {
       context.clearRect(0, 0, size, size);
       const c = size / 2;
-      for (const spark of sparksList) {
+      for (const [index, spark] of sparksList.entries()) {
         const p = Math.min(1, Math.max(0, (t - spark.delay) / 0.5));
         if (p <= 0 || t > 0.62) continue;
         const r = spark.radius * (1 - ease(p)),
           a = spark.angle + p * spark.spin;
-        context.fillStyle = `rgba(255, ${200 + Math.round(40 * p)}, 90, ${0.4 + 0.6 * p})`;
+        context.fillStyle =
+          colors[index % 3] || `rgba(255, ${200 + Math.round(40 * p)}, 90, ${0.4 + 0.6 * p})`;
+        context.globalAlpha = 0.4 + 0.6 * p;
         context.beginPath();
-        context.arc(c + Math.cos(a) * r, c + Math.sin(a) * r, 1.5 + p * 1.5, 0, Math.PI * 2);
+        const x = c + Math.cos(a) * r,
+          y = c + Math.sin(a) * r,
+          point = 1.5 + p * 1.5;
+        if (colors.length === 3 && index % 4 === 0) {
+          if (scene.variantId) {
+            for (let corner = 0; corner < 8; corner++) {
+              const angle = (corner * Math.PI) / 4;
+              const radius = point * (corner % 2 ? 0.65 : 2.2);
+              if (corner === 0)
+                context.moveTo(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+              else context.lineTo(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+            }
+          } else {
+            context.moveTo(x, y - point * 2.2);
+            context.lineTo(x + point, y);
+            context.lineTo(x, y + point * 2.2);
+            context.lineTo(x - point, y);
+          }
+          context.closePath();
+        } else context.arc(x, y, point, 0, Math.PI * 2);
         context.fill();
       }
       const orb = t < 0.5 ? t / 0.5 : 1,
@@ -214,11 +266,26 @@ const sparks: Effect = (scene) => {
         radius = 8 + orb * 14 + flare * 70,
         alpha = t < 0.5 ? orb * 0.9 : 0.9 * (1 - flare);
       const glow = context.createRadialGradient(c, c, 0, c, c, radius);
-      glow.addColorStop(0, `rgba(255, 250, 220, ${alpha})`);
-      glow.addColorStop(0.4, `rgba(255, 210, 90, ${alpha * 0.8})`);
-      glow.addColorStop(1, 'rgba(255, 190, 60, 0)');
+      glow.addColorStop(0, colors[2] || 'rgba(255, 250, 220, 1)');
+      glow.addColorStop(0.4, colors[0] || 'rgba(255, 210, 90, 0.8)');
+      glow.addColorStop(1, colors[0] ? colors[0] + '00' : 'rgba(255, 190, 60, 0)');
+      context.globalAlpha = alpha;
       context.fillStyle = glow;
       context.fillRect(0, 0, size, size);
+      if (colors.length === 3 && t > 0.12 && t < 0.9) {
+        context.globalAlpha = Math.sin(((t - 0.12) / 0.78) * Math.PI) * 0.85;
+        context.lineWidth = 1.5;
+        if (scene.variantId) context.setLineDash([3, 4]);
+        for (let k = 0; k < 3; k++) {
+          const turn = t * 5 + (k * Math.PI * 2) / 3;
+          context.beginPath();
+          context.arc(c, c, 24 + flare * 65 + k * 4, turn, turn + 1.35);
+          context.strokeStyle = colors[k];
+          context.stroke();
+        }
+        context.setLineDash([]);
+      }
+      context.globalAlpha = 1;
     },
     finish,
   );
@@ -261,6 +328,19 @@ const rift: Effect = (scene) => {
   const tear = element(scene, 'lobby-fx-rift', scene.cx, scene.cy),
     dust = element(scene, 'lobby-fx-dust', scene.cx, scene.feet),
     timer = setTimeout(finish, DURATION.rift);
+  const colors = detailColors(scene, 'rift');
+  if (colors.length === 3) {
+    useDetailPalette(tear, colors);
+    useDetailPalette(dust, colors);
+    tear.dataset.detailVariant = scene.variantId ? 'alternate' : 'original';
+    tear.innerHTML =
+      '<svg viewBox="-60 -100 120 200" aria-hidden="true">' +
+      '<g class="rift-wall rift-wall-left"><path d="M-5-96L-18-65-9-44-28-17-17 11-33 39-18 67-28 93" class="rift-edge"/>' +
+      '<path d="M-18-65L-46-55-51-29M-28-17L-48 4-42 26M-33 39L-54 53" class="rift-veins"/></g>' +
+      '<g class="rift-wall rift-wall-right"><path d="M5-96L18-65 9-44 28-17 17 11 33 39 18 67 28 93" class="rift-edge"/>' +
+      '<path d="M18-65L46-55 51-29M28-17L48 4 42 26M33 39L54 53" class="rift-veins"/></g>' +
+      '<path d="M-48-70L-40-57-56-53Z M47-45L56-32 40-30Z M-44 34L-55 49-40 46Z M43 64L53 78 39 82Z" class="rift-shards"/></svg>';
+  }
   function finish() {
     clearTimeout(timer);
     tear.remove();
@@ -310,6 +390,9 @@ const particles: Effect = (scene) => {
     context = node.getContext('2d')!,
     offsetX = (size - width) / 2,
     offsetY = (size - height) / 2;
+  // The sampled portrait shares this canvas. Tint only travelling dots, never
+  // the assembled character through a filter over the whole surface.
+  node.style.setProperty('--entrance-palette', 'none');
   context.scale(scale, scale);
   const stop = animate(
     DURATION.particles,
@@ -318,7 +401,8 @@ const particles: Effect = (scene) => {
       context.globalAlpha = t > 0.85 ? 1 - (t - 0.85) / 0.15 : 1;
       for (const dot of dots) {
         const p = ease(Math.min(1, Math.max(0, (t - dot.delay) / 0.45)));
-        context.fillStyle = dot.color;
+        // ui-check-allow hex: Travelling mint dots are artwork; assembled portrait pixels keep their sampled colours.
+        context.fillStyle = scene.variantId && p < 0.65 ? '#6ff1bd' : dot.color;
         context.fillRect(
           offsetX + dot.fromX + (dot.x - dot.fromX) * p,
           offsetY + dot.fromY + (dot.y - dot.fromY) * p,
@@ -387,8 +471,14 @@ export function apparate(
     scene: Scene = {
       anchor,
       layer: follow,
+      host: layer,
       variantId: variant?.id,
       palette: variant && entrancePalette(variant),
+      paletteColors:
+        variant?.colors &&
+        Object.fromEntries(
+          Object.entries(variant.colors).filter(([, color]) => typeof color === 'string'),
+        ),
       img,
       cx: box.left - origin.left + box.width / 2,
       cy: box.top - origin.top + box.height / 2,
@@ -411,8 +501,10 @@ export function apparate(
   followFrame = requestAnimationFrame(track);
   anchor.dataset.entrance = base;
   anchor.classList.add('is-apparating');
-  const cancel = (effects[base] || classic)(scene);
-  const cancelBody = playEntranceBody(anchor, img, base, duration);
+  const cancel = isArrival(base)
+    ? playArrival(scene, base, duration)
+    : (effects[base] || classic)(scene);
+  const cancelBody = isArrival(base) ? () => {} : playEntranceBody(anchor, img, base, duration);
   const cancelBackdrop = base.startsWith('stitch-') ? playEntranceBackdrop(follow, duration) : null;
   let done = false,
     releaseMotion = () => {};

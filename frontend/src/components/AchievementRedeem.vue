@@ -2,6 +2,8 @@
 import BarrageFrames from '../engines/barrage-frames.js';
 
 import { ref } from 'vue';
+import UiDialog from './UiDialog.vue';
+import UiLink from './UiLink.vue';
 import { useMutation } from '../composables/mutation';
 import UiButton from './UiButton.vue';
 import UiField from './UiField.vue';
@@ -9,7 +11,16 @@ import UiList from './UiList.vue';
 import UiListRow from './UiListRow.vue';
 import StatusSlot from './StatusSlot.vue';
 import { array, record, text } from '../services/validation';
-const gift = ref<{ label: string; requested: number; items: string[] }[]>([]),
+const notice = ref<InstanceType<typeof UiDialog> | null>(null),
+  rewardName = ref(''),
+  draws = ref(0);
+const gift = ref<
+    {
+      label: string;
+      requested: number;
+      items: { label: string; rarityLabel: string; duplicate: boolean; fragments: number }[];
+    }[]
+  >([]),
   repeated = ref(false);
 const emit = defineEmits<{ redeemed: [] }>(),
   code = ref(''),
@@ -21,12 +32,22 @@ async function redeem() {
     const data = await request('/api/achievements/redeem', { code: code.value });
     label = text(record(record(data).redemption).label) || label;
     const result = record(record(data).redemption);
+    rewardName.value = label;
+    draws.value = Number.isSafeInteger(result.draws) ? Number(result.draws) : 0;
     gift.value = array(result.rewards).map((value) => {
       const row = record(value);
       return {
         label: text(row.label),
         requested: Number(row.requested) || 0,
-        items: array(row.items).map((item) => text(record(item).label)),
+        items: array(row.items).map((item) => {
+          const r = record(item);
+          return {
+            label: text(r.label),
+            rarityLabel: text(r.rarityLabel),
+            duplicate: r.duplicate === true,
+            fragments: Number(r.fragments) || 0,
+          };
+        }),
       };
     });
     repeated.value = result.alreadyRedeemed === true;
@@ -37,10 +58,10 @@ async function redeem() {
     window.dispatchEvent(new Event('achievement-rewards-updated'));
     emit('redeemed');
   });
-  if (success)
-    mutation.message.value = repeated.value
-      ? '已兌換過，保留原有獎勵，不會重新抽取。'
-      : '兌換成功！' + label + '已加入收藏，可立即套用。';
+  if (success) {
+    mutation.message.value = repeated.value ? '已兌換過，不會重複發放。' : '兌換成功。';
+    await notice.value?.open();
+  }
 }
 </script>
 <template>
@@ -65,25 +86,32 @@ async function redeem() {
       />
     </form>
     <StatusSlot :message="mutation.message.value" :error="mutation.failed.value" />
-    <div
-      v-if="gift.length"
-      class="starter-reward-receipt"
-      role="region"
-      aria-label="新手大禮包獎勵"
-    >
-      <h3>新手大禮包{{ repeated ? '（原兌換結果）' : '' }}</h3>
-      <p>進場、攻擊各5種，其餘各3種；只抽未擁有的獎勵，不足時給剩餘全部。</p>
-      <UiList
-        ><UiListRow v-for="row in gift" :key="row.label"
-          ><div
-            ><strong>{{ row.label }} · {{ row.items.length }}／{{ row.requested }}</strong
-            ><p>{{
-              row.items.length ? row.items.join('、') : '目前已全部擁有，沒有可追加的項目。'
-            }}</p></div
-          ></UiListRow
-        ></UiList
-      >
-    </div>
+    <UiDialog ref="notice" :title="repeated ? '已兌換過' : '兌換成功'" compact>
+      <div class="starter-reward-receipt">
+        <h3>{{ rewardName }}</h3>
+        <p v-if="repeated">以下為原兌換內容，不會重新抽取或發放。</p>
+        <p v-if="draws"
+          ><strong>{{ draws }} 張抽卡券</strong> · 到抽卡機自行使用</p
+        >
+        <UiList>
+          <UiListRow v-for="row in gift" :key="row.label">
+            <div
+              ><strong>{{ row.label }}</strong>
+              <p v-for="item in row.items" :key="item.label"
+                >{{ item.label }}<span v-if="item.rarityLabel"> · {{ item.rarityLabel }}</span
+                ><span v-if="item.duplicate"> · 重複轉 {{ item.fragments }} 碎片</span></p
+              >
+            </div>
+          </UiListRow>
+        </UiList>
+        <p v-if="!gift.length && !draws">這組兌換碼已經領取過。</p>
+      </div>
+      <div class="reward-receipt-actions"
+        ><UiLink v-if="draws" href="/gacha" label="前往抽卡機" variant="primary" /><UiButton
+          label="知道了"
+          @click="notice?.close()"
+      /></div>
+    </UiDialog>
   </section>
 </template>
 <style lang="scss">
@@ -102,5 +130,11 @@ async function redeem() {
 .starter-reward-receipt {
   margin-block-start: var(--stitch-space-24);
   overflow-wrap: anywhere;
+}
+.reward-receipt-actions {
+  display: flex;
+  gap: var(--stitch-space-12);
+  flex-wrap: wrap;
+  margin-block-start: var(--stitch-space-16);
 }
 </style>

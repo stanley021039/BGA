@@ -81,7 +81,7 @@ const source = fs
       .replace(/^export /gm, '');
     return (
       `const createOrdinaryAttack = (() => {
-      const timing = attackTiming, { crystalReflection } = combatRules;
+      const timing = attackTiming, { crystalReflection, shield } = combatRules;
       ${ordinary}
       return createOrdinaryAttack;
     })();` + '\n'

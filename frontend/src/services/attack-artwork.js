@@ -79,6 +79,7 @@ function drawSacredArrow(ctx, x, y, angle, color) {
 }
 
 const nativePalettes = new Set([
+  'shield_alt',
   'barrage_alt',
   'giga_drill_alt',
   'starburst_stream_alt',

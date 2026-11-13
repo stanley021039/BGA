@@ -446,11 +446,17 @@ async function resumeUnrevealedDraw() {
   );
   if (receipt) await show(receipt, { announce: true });
 }
-async function draw(count: 1 | 10, selectedPool = pool.value, voucher = false, thirdLogin = false) {
+async function draw(
+  count: 1 | 10,
+  selectedPool = pool.value,
+  voucher = false,
+  thirdLogin = false,
+  useTickets = false,
+) {
   const userId = session.user?.id;
   const share = openSpectate.value;
   captureTrader();
-  const receipt = await store.draw(selectedPool, count, voucher, thirdLogin);
+  const receipt = await store.draw(selectedPool, count, voucher, thirdLogin, useTickets);
   if (receipt && userId && session.user?.id === userId) {
     rememberUnrevealedDraw(userId, receipt.requestId);
     publishSpectate('close');
@@ -791,6 +797,22 @@ const newCount = computed(() =>
                   @click="draw(10, 'all', false, true)"
                 />
                 <UiButton
+                  v-if="(store.state.rewardTickets ?? 0) > 0"
+                  label="使用抽卡券 · 單抽"
+                  icon="gift"
+                  :disabled="locked"
+                  :pending="store.pending"
+                  @click="draw(1, pool, false, false, true)"
+                />
+                <UiButton
+                  v-if="(store.state.rewardTickets ?? 0) > 0"
+                  label="使用抽卡券 · 十連"
+                  icon="gift"
+                  :disabled="locked || (store.state.rewardTickets ?? 0) < 10"
+                  :pending="store.pending"
+                  @click="draw(10, pool, false, false, true)"
+                />
+                <UiButton
                   v-if="store.state.voucherAvailable"
                   label="使用傳說單抽券"
                   icon="gift"
@@ -802,7 +824,14 @@ const newCount = computed(() =>
               <div class="gacha-buttons"
                 ><UiButton label="查看本池機率" icon="help" @click="tab = 'odds'"
               /></div>
-              <p v-if="store.state.wallet.coins < 100" class="gacha-note">聖潔石不足。</p>
+              <p v-if="(store.state.rewardTickets ?? 0) > 0" class="gacha-note"
+                >抽卡券 {{ store.state.rewardTickets }} 張 · 每抽使用 1 張</p
+              >
+              <p
+                v-if="store.state.wallet.coins < 100 && !(store.state.rewardTickets ?? 0)"
+                class="gacha-note"
+                >聖潔石不足。</p
+              >
             </div>
           </UiPanel>
           <UiPanel title="收藏與兌換"

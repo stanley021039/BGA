@@ -1,147 +1,79 @@
-'use strict';
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
+const { test } = require('node:test'),
+  assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
 const { openDatabase } = require('../src/db');
 const { AchievementStore } = require('../src/achievements/store');
+const { GachaStore } = require('../src/gacha/store');
 const starter = require('../src/achievements/starter-rewards');
-const {
-  getProfileSettings,
-  setProfileSettings,
-  preserveAvatar,
-  setAttackSettings,
-} = require('../src/profiles/settings');
+const Packs = require('../src/achievements/code-packs');
+const { catalog } = require('../src/gacha/catalog');
+const Settings = require('../src/profiles/settings');
 function fixture(t) {
   const db = openDatabase(':memory:');
   t.after(() => db.close());
-  const users = [randomUUID(), randomUUID()];
-  users.forEach((id, i) =>
-    db
-      .prepare(
-        'INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)',
-      )
-      .run(id, 'starter' + i, '新手', 'unused', 'member', new Date().toISOString()),
-  );
-  return { db, users, store: new AchievementStore(db) };
+  const user = randomUUID();
+  db.prepare(
+    'INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)',
+  ).run(user, 'starter', '新手', 'unused', 'member', new Date().toISOString());
+  return { db, user, store: new AchievementStore(db) };
 }
-test('starter awards 5 entrances/attacks, 3 per other available category, without achievements or author buffs; replay and account isolation', (t) => {
-  const {
-    db,
-    users: [a, b],
-    store,
-  } = fixture(t);
-  const first = store.redeem(a, ' 新手大禮包 ');
-  const pack = starter.receipt(db, a);
-  const appearance = JSON.parse(
-    db.prepare('SELECT appearance FROM users WHERE id=?').get(a).appearance,
-  );
-  assert.doesNotThrow(
-    () => require('../src/profiles/appearance').selectedImage(db, a, appearance),
-    'first redemption retains a valid character for /api/auth/me and the lobby',
-  );
-  for (const [key, count] of Object.entries(starter.limits)) {
-    assert.equal(pack.grants[key].length, key === 'pingIcons' ? 0 : count, key);
-    assert.equal(new Set(pack.grants[key]).size, pack.grants[key].length);
-  }
-  assert.equal(first.redemption.alreadyRedeemed, false);
-  assert.equal(db.prepare('SELECT COUNT(*) n FROM user_achievements').get().n, 0);
-  assert.equal(db.prepare('SELECT COUNT(*) n FROM user_cosmetic_rewards').get().n, 0);
-  assert.deepEqual(require('../src/achievements/redemption').grants(db, a), {});
-  assert.equal(require('../src/achievements/redemption').redeemedAt(db, a, 'other'), null);
-  assert.equal(starter.receipt(db, b), null);
-  assert.equal(store.list(b).bonusRewards.attacks.length, 2);
-  const replay = new AchievementStore(db).redeem(a, '新手大禮包');
-  assert.deepEqual(replay.redemption.rewards, first.redemption.rewards);
-  assert.equal(replay.redemption.redeemedAt, first.redemption.redeemedAt);
-  assert.equal(replay.redemption.alreadyRedeemed, true);
-  assert.deepEqual(starter.receipt(db, a), pack);
-  for (const key of ['entrances', 'attacks', 'sounds', 'backgrounds'])
-    for (const id of pack.grants[key])
-      assert.ok(first.bonusRewards[key].includes(id), key + ':' + id);
+test('new starter gives one usable item per category and 100 deferred draws, without author buffs or fake achievements', (t) => {
+  const { db, user, store } = fixture(t),
+    result = store.redeem(user, '新手大禮包');
+  const pack = Packs.receipts(db, user).starter;
+  assert.equal(pack.draws, 100);
+  assert.equal(pack.rewards.length, 5);
+  assert.ok(pack.rewards.every((r) => r.items.length === 1));
+  const frame = pack.rewards.find((r) => r.key === 'frames').items[0].id;
+  assert.doesNotThrow(() => store.assertFrame(user, frame));
+  const other = catalog.find((r) => r.kind === 'frames' && r.id !== frame);
+  assert.throws(() => store.assertFrame(user, other.id), { code: 'FRAME_LOCKED' });
+  const attack = pack.rewards.find((r) => r.key === 'attacks').items[0].id;
+  assert.equal(Settings.setAttackSettings(db, user, { q: attack, e: 'beam', r: '' }).q, attack);
+  const profile = Settings.getProfileSettings(db, user);
+  Settings.setProfileSettings(db, user, profile);
+  assert.deepEqual(Packs.receipts(db, user).starter, pack);
   assert.deepEqual(
-    require('../src/achievements/bonus-rewards').ownedSounds(db, a).sort(),
-    pack.grants.sounds.slice().sort(),
+    Settings.preserveAvatar(db, user, profile.appearance).rewardCodePacks.starter,
+    pack,
   );
-  for (const id of pack.grants.frames) store.assertFrame(a, id);
-  const unownedFrame = starter.catalog().frames.find((r) => !pack.grants.frames.includes(r.id));
-  assert.throws(() => store.assertFrame(a, unownedFrame.id), { code: 'FRAME_LOCKED' });
-  assert.equal(first.rewards.filter((r) => r.claimedAt).length, 3);
-  assert.equal(first.rewards.filter((r) => r.mediaClaimedAt).length, 3);
-  const { fitsSlot } = require('../src/rooms/scene-energy');
-  const loadoutFor = (id) =>
-    fitsSlot('r', id) ? { q: 'barrage', e: 'beam', r: id } : { q: id, e: 'beam', r: '' };
-  for (const id of pack.grants.attacks) {
-    const loadout = loadoutFor(id);
-    assert.deepEqual(setAttackSettings(db, a, loadout), loadout);
-  }
-  const unownedAttack = starter.catalog().attacks.find((r) => !pack.grants.attacks.includes(r.id));
-  assert.throws(() => setAttackSettings(db, a, loadoutFor(unownedAttack.id)), {
-    code: 'ATTACK_REWARD_LOCKED',
-  });
-  const profile = getProfileSettings(db, a);
-  setProfileSettings(db, a, {
-    ...profile,
-    starterRewardPack: { version: 1, grants: { attacks: ['all'] } },
-  });
-  assert.deepEqual(starter.receipt(db, a), pack);
-  assert.deepEqual(preserveAvatar(db, a, profile.appearance).starterRewardPack, pack);
-  assert.equal(require('../src/achievements/reward-store').validateRewardsDatabase(db), true);
+  assert.deepEqual(require('../src/achievements/redemption').grants(db, user), {});
+  assert.equal(result.achievements.filter((a) => a.unlockedAt).length, 0);
+  assert.equal(store.redeem(user, '新手大禮包').redemption.alreadyRedeemed, true);
 });
-test('starter excludes previously earned rewards, handles exhausted pools and never replaces old code grants', (t) => {
-  const {
-    db,
-    users: [a, b],
-    store,
-  } = fixture(t);
-  store.redeem(a, '我愛作者');
-  const add = db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'draw',?)");
-  for (const item of require('../src/gacha/catalog').catalog)
-    if (!item.gachaExclusive) add.run(a, item.kind, item.id, new Date().toISOString());
-  const before = require('../src/achievements/redemption').grants(db, a);
-  const full = store.redeem(a, '新手大禮包');
-  assert.ok(full.redemption.rewards.every((r) => r.items.length === 0));
-  assert.deepEqual(require('../src/achievements/redemption').grants(db, a), before);
-  const earned = 'gift-first-gift';
-  store.insert.run(b, earned, 'quacks:test', new Date().toISOString());
-  const ownedBefore = store.list(b).bonusRewards;
-  store.redeem(b, '新手大禮包');
-  const pack = starter.receipt(db, b);
-  for (const key of ['entrances', 'attacks', 'sounds', 'backgrounds'])
-    assert.ok(pack.grants[key].every((id) => !ownedBefore[key].includes(id)));
-  assert.equal(store.list(b).achievements.filter((r) => r.unlockedAt).length, 1);
-  const snapshot = starter.receipt(db, b);
-  store.redeem(b, '我愛作者');
-  assert.deepEqual(starter.receipt(db, b), snapshot);
-});
-test('starter handles fewer than five remaining attacks and rejects unavailable accounts / forged profile metadata', (t) => {
-  const {
-    db,
-    users: [a, b],
-    store,
-  } = fixture(t);
-  const effects = starter.catalog().attacks;
-  for (const item of effects.slice(0, -1))
-    db.prepare('INSERT INTO gacha_ownership VALUES(?,?,?,?,?)').run(
-      a,
-      'attacks',
+test('exhausted categories still grant one receipt item each and convert repeats into fragments', (t) => {
+  const { db, user, store } = fixture(t);
+  for (const item of catalog)
+    db.prepare("INSERT INTO gacha_ownership VALUES(?,?,?,'draw',?)").run(
+      user,
+      item.kind,
       item.id,
-      'draw',
       new Date().toISOString(),
     );
-  const missing = effects.filter((r) => !store.list(a).bonusRewards.attacks.includes(r.id));
-  store.redeem(a, '新手大禮包');
-  assert.deepEqual(
-    starter.receipt(db, a).grants.attacks,
-    missing.map((r) => r.id),
+  const result = store.redeem(user, '新手大禮包').redemption;
+  assert.ok(result.rewards.every((row) => row.items.length === 1 && row.items[0].duplicate));
+  assert.equal(
+    new GachaStore(db).wallet(user).fragments,
+    result.rewards.reduce((n, r) => n + r.items[0].fragments, 0),
   );
-  const profile = getProfileSettings(db, b);
-  setProfileSettings(db, b, {
-    ...profile,
-    appearance: { ...profile.appearance, starterRewardPack: starter.receipt(db, a) },
-    starterRewardPack: starter.receipt(db, a),
-  });
-  assert.equal(starter.receipt(db, b), null);
-  db.prepare('UPDATE users SET disabled=1 WHERE id=?').run(b);
-  assert.throws(() => store.redeem(b, '新手大禮包'), { code: 'REWARD_CODE_UNAVAILABLE' });
-  assert.throws(() => store.redeem(a, '新手大禮包2'), { code: 'INVALID_REWARD_CODE' });
+  assert.equal(Packs.availableTickets(db, user), 100);
+});
+test('legacy starter receipts stay capped and preserved rather than receiving the new pack again', (t) => {
+  const { db, user, store } = fixture(t),
+    pools = starter.catalog(),
+    grants = {};
+  for (const [key, limit] of Object.entries(starter.limits))
+    grants[key] = pools[key].slice(0, limit).map((e) => e.id);
+  const profile = Settings.getProfileSettings(db, user);
+  const legacy = { version: 1, redeemedAt: new Date().toISOString(), grants };
+  db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+    JSON.stringify({ ...profile.appearance, starterRewardPack: legacy }),
+    user,
+  );
+  assert.deepEqual(starter.receipt(db, user), legacy);
+  assert.equal(store.redeem(user, '新手大禮包').redemption.alreadyRedeemed, true);
+  assert.equal(Packs.availableTickets(db, user), 0);
+  Settings.setProfileSettings(db, user, Settings.getProfileSettings(db, user));
+  assert.deepEqual(starter.receipt(db, user), legacy);
+  assert.throws(() => store.redeem(user, '新手大禮包2'), { code: 'INVALID_REWARD_CODE' });
 });

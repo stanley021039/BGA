@@ -58,6 +58,7 @@ export interface GachaCheckin {
   wallet?: GachaWallet;
 }
 export interface GachaState {
+  rewardTickets?: number;
   wallet: GachaWallet;
   voucherAvailable: boolean;
   epicTenAvailable: boolean;
@@ -112,6 +113,9 @@ export type GachaReceipt =
       drawCount?: number;
       voucher?: true;
       thirdLogin?: true;
+      useTickets?: true;
+      ticketCost?: number;
+      rewardTickets?: number;
       fragmentsGained: number;
       wallet: GachaWallet;
       at: string;
@@ -238,6 +242,7 @@ export function readGachaState(value: unknown): GachaState {
     wallet: readWallet(r.wallet),
     voucherAvailable: r.voucherAvailable === true,
     epicTenAvailable: r.epicTenAvailable === true,
+    rewardTickets: integer(r.rewardTickets ?? 0),
     items,
     pools,
     odds: readGachaOdds(r.odds),
@@ -273,13 +278,17 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
   });
   const voucher = r.voucher === true;
   const thirdLogin = r.thirdLogin === true;
+  const useTickets = r.useTickets === true;
   if (
     (r.voucher !== undefined && !voucher) ||
     (r.thirdLogin !== undefined && !thirdLogin) ||
     (voucher && thirdLogin) ||
+    (r.useTickets !== undefined && !useTickets) ||
+    (!useTickets && (r.ticketCost !== undefined || r.rewardTickets !== undefined)) ||
+    (useTickets && (voucher || thirdLogin || r.ticketCost !== results.length)) ||
     (thirdLogin && (results.length !== 10 || results[9]?.rarity !== 'epic' || r.pool !== 'all')) ||
     ![1, 10].includes(results.length) ||
-    common.cost !== (voucher || thirdLogin ? 0 : results.length * 100) ||
+    common.cost !== (voucher || thirdLogin || useTickets ? 0 : results.length * 100) ||
     (voucher && (results.length !== 1 || results[0].rarity !== 'legendary'))
   )
     throw Error('抽卡結果數量不正確');
@@ -300,6 +309,13 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
     fragmentsGained,
     ...(voucher ? { voucher: true } : {}),
     ...(thirdLogin ? { thirdLogin: true } : {}),
+    ...(useTickets
+      ? {
+          useTickets: true,
+          ticketCost: integer(r.ticketCost),
+          rewardTickets: integer(r.rewardTickets),
+        }
+      : {}),
     ...(r.drawCount === undefined ? {} : { drawCount: integer(r.drawCount) }),
   };
 }

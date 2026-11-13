@@ -556,7 +556,12 @@ onBeforeUnmount(() => {
           : '點選即套用；進入好友大廳時會向其他玩家播放。'
       }}</span></template
     >
-    <EntranceChoices />
+    <EntranceChoices
+      :image="
+        profile.data?.characters.find((c) => c.id === profile.data?.appearance.characterId)
+          ?.expressions.neutral
+      "
+    />
   </ResourcePanel>
   <ResourcePanel
     v-if="section === 'attack'"
