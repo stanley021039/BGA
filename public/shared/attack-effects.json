@@ -750,7 +750,7 @@
     "id": "crystal_reflection",
     "label": "晶能叱返",
     "color": "#69e3f4",
-    "description": "晶體屏障維持 0.8 秒，擋下期間命中的可反彈投射物。鎖定第一位攻擊者，將該玩家命中的各段以原招式與配色慢速彈回。彈回的攻擊無法再次反彈。",
+    "description": "晶體屏障維持0.8秒，擋下所有普通攻擊；鎖定首位攻擊者，將其命中段慢速彈回。大招與已反彈的攻擊除外。",
     "gachaOnly": true,
     "damageMultiplier": 0
   },
@@ -758,7 +758,7 @@
     "id": "crystal_reflection_alt",
     "label": "晶能叱返（琥珀迴響異色）",
     "color": "#ffc361",
-    "description": "晶體屏障維持 0.8 秒，擋下期間命中的可反彈投射物。鎖定第一位攻擊者，將該玩家命中的各段以原招式與配色慢速彈回。彈回的攻擊無法再次反彈。",
+    "description": "晶體屏障維持0.8秒，擋下所有普通攻擊；鎖定首位攻擊者，將其命中段慢速彈回。大招與已反彈的攻擊除外。",
     "gachaOnly": true,
     "damageMultiplier": 0,
     "variantOf": "crystal_reflection",

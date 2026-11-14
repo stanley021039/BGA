@@ -8,7 +8,12 @@ import { createStitchAttack } from './attack-stitch.js';
 import { createNewAttack } from './attack-new.js';
 import { createOrdinaryAttack } from './attack-ordinary.js';
 import combatRules from '../../../public/shared/scene-rules.json';
-import { attackVariant, attackPalette, attackArtworkKind } from './attack-variants.js';
+import {
+  attackVariant,
+  attackPalette,
+  attackArtworkKind,
+  isReflectableAttack,
+} from './attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
 // Full detail for one attack on its own canvas; a shared stage lowers these by load.
 const FULL_DETAIL = { density: 1, glow: 1 };
@@ -91,10 +96,78 @@ const nativePalettes = new Set([
   'venom_thorn_alt',
 ]);
 
+// Return imprints for attacks without a standalone projectile renderer.
+// These share the shield's clock and canvas; no extra scene, timer or particle pool.
+function drawReturnImprint(ctx, effect, color, from, target, elapsed, travelMs) {
+  const p = Math.max(0, Math.min(1, elapsed / travelMs));
+  const dx = target.x - from.x,
+    dy = target.y - from.y;
+  const length = Math.hypot(dx, dy);
+  const size = Math.min(1, Math.max(0.5, length / 280));
+  ctx.save();
+  ctx.translate(from.x + dx * p, from.y + dy * p);
+  ctx.rotate(Math.atan2(dy, dx));
+  ctx.scale(size, size);
+  ctx.globalAlpha = Math.max(0, Math.min(1, (travelMs + 160 - elapsed) / 160));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  if (effect === 'orbital') {
+    ctx.moveTo(-8, -38);
+    ctx.lineTo(-8, 24);
+    ctx.moveTo(8, -38);
+    ctx.lineTo(8, 24);
+    ctx.moveTo(-18, 24);
+    ctx.lineTo(18, 24);
+    ctx.lineWidth = 6;
+  } else if (effect === 'beam') {
+    ctx.moveTo(-72, 0);
+    ctx.lineTo(12, 0);
+    ctx.moveTo(0, -16);
+    ctx.lineTo(0, 16);
+    ctx.lineWidth = 9;
+  } else if (effect === 'chain_lightning') {
+    for (let i = 0; i < 9; i++) {
+      const x = -72 + i * 10,
+        y = i % 2 ? 13 * Math.sin(elapsed / 70 + i) : -9;
+      if (i) ctx.lineTo(x, y);
+      else ctx.moveTo(x, y);
+    }
+  } else if (effect === 'singularity') {
+    for (let i = 0; i < 3; i++) {
+      ctx.moveTo(25, 0);
+      ctx.ellipse(0, 0, 25, 8 + i * 6, elapsed / 280 + i, 0, Math.PI * 2);
+    }
+  } else if (effect === 'flame_vortex') {
+    for (let i = 0; i < 6; i++) {
+      const angle = elapsed / 190 + (i * Math.PI) / 3;
+      ctx.moveTo(Math.cos(angle) * 8, Math.sin(angle) * 8);
+      ctx.quadraticCurveTo(
+        Math.cos(angle + 0.6) * 38,
+        Math.sin(angle + 0.6) * 38,
+        Math.cos(angle + 1.3) * 22,
+        Math.sin(angle + 1.3) * 22,
+      );
+    }
+  } else {
+    ctx.arc(-8, 0, 32, -1.3, 1.3);
+    ctx.moveTo(10, -27);
+    ctx.quadraticCurveTo(48, 0, 10, 27);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, elapsed > travelMs ? 10 + (elapsed - travelMs) / 6 : 4, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function createReturnArtwork(context, options, hit, from) {
   const id = hit.reflectedEffect;
   const effect = attackArtworkKind(id);
-  if (!combatRules.crystalReflection.projectiles.includes(effect)) return;
+  if (!isReflectableAttack(id)) return;
   const phase = attackTiming[effect]?.find((stage) => stage[2] === hit.reflectedPhase);
   if (!phase) return;
   const definition = attackEffects.find((entry) => entry.id === effect);
@@ -107,6 +180,19 @@ function createReturnArtwork(context, options, hit, from) {
       : context;
   const to = { x: hit.x, y: hit.y };
   const { travelMs } = combatRules.crystalReflection;
+  if (
+    [
+      'beam',
+      'orbital',
+      'singularity',
+      'blade_aura',
+      'blade_aura_crimson',
+      'chain_lightning',
+      'flame_vortex',
+    ].includes(effect)
+  )
+    return (elapsed, target) =>
+      drawReturnImprint(ctx, effect, definition.color, from, target, elapsed, travelMs);
   if (effect === 'arrow_volley') {
     return (elapsed, target) => {
       const dx = target.x - from.x,

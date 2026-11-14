@@ -9,7 +9,7 @@ import {
 import sceneRules from '../../../public/shared/scene-rules.json';
 import attackEffects from '../../../public/shared/attack-effects.json';
 
-import { attackArtworkKind } from '../services/attack-variants.js';
+import { attackArtworkKind, isReflectableAttack } from '../services/attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
 import combatRules from '../../../public/shared/scene-rules.json';
 import { validPassage, type Passage } from '../engines/scene-path.js';
@@ -606,7 +606,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                     (kind !== 'crystal_reflection' ||
                       hit.phase !== 'reflection' ||
                       !attackEffects.some((effect) => effect.id === reflectedEffect) ||
-                      !combatRules.crystalReflection.projectiles.includes(reflectedKind) ||
+                      !isReflectableAttack(reflectedEffect) ||
                       !attackTiming[reflectedKind as keyof typeof attackTiming]?.some(
                         (stage) => stage[2] === reflectedPhase,
                       ))

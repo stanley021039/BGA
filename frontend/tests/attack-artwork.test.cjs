@@ -90,7 +90,7 @@ const source = fs
   .replace(/^import .*attack-area.js';\n/m, '')
   .replace(/^import .*attack-revision.js';\n/m, '')
   .replace(/^import attackEffects .*attack-effects.json';\n/m, '')
-  .replace(/^import .*attack-variants.js';\n/m, () =>
+  .replace(/^import \{[^}]*\} from '.\/attack-variants.js';\n/m, () =>
     fs
       .readFileSync(path.join(__dirname, '../src/services/attack-variants.js'), 'utf8')
       .replace(/^import .*\n/m, 'const definitions = attackEffects;\n')
@@ -237,7 +237,7 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
   assert.equal(timers.size, 0);
   return { colors, arcs, lines, transforms, scales, texts, positions, rotations };
 }
-test('crystal closes after 800 ms and reflects each supported projectile with its own art', () => {
+test('crystal closes after 800 ms and renders every ordinary attack return and variant', () => {
   const { crystalReflection } = require('../../public/shared/scene-rules.json');
   const timing = require('../../public/shared/attack-timing.json');
   const reflect = (reflectedEffect, reflectedPhase, pending = true) =>
@@ -265,10 +265,13 @@ test('crystal closes after 800 ms and reflects each supported projectile with it
     readHits: () => [],
   });
   assert.equal(idle.arcs.length, 0);
-  for (const effect of crystalReflection.projectiles) {
-    const art = reflect(effect, timing[effect][0][2]);
-    assert.ok(art.lines.length || art.arcs.length, effect);
-    assert.ok(!art.texts.includes('43,210'), effect);
+  const definitions = require('../../public/shared/attack-effects.json');
+  for (const effect of definitions.filter(
+    (e) => !e.area && !e.ultimate && e.damageMultiplier !== 0,
+  )) {
+    const art = reflect(effect.id, timing[effect.variantOf || effect.id][0][2]);
+    assert.ok(art.lines.length || art.arcs.length, effect.id);
+    assert.ok(!art.texts.includes('43,210'), effect.id);
   }
   const arrow = reflect('arrow_volley', 'hit1');
   assert.ok(arrow.colors.includes('#ff5a24'));

@@ -765,7 +765,7 @@ test('Rainbow Bear cast snapshots accept all four phases for the caster and targ
   }
 });
 
-test('lobby snapshot retains the reflected projectile variant and rejects non-projectile returns', () => {
+test('lobby snapshot accepts ordinary attack returns and rejects ultimate returns', () => {
   const { createLobby } = require('../../src/rooms/lobby');
   let now = 1000;
   const lobby = createLobby(() => now);
@@ -793,6 +793,10 @@ test('lobby snapshot retains the reflected projectile variant and rejects non-pr
     snapshot.attacks.find((event) => event.effect === 'crystal_reflection_alt').hits[0];
   assert.equal(hit(read(raw)).reflectedEffect, 'tidal_blades_alt');
   assert.equal(hit(read(raw)).reflectedPhase, 'hit1');
+  const beam = structuredClone(raw);
+  hit(beam).reflectedEffect = 'beam_alt';
+  hit(beam).reflectedPhase = 'impact';
+  assert.equal(hit(read(beam)).reflectedEffect, 'beam_alt');
   const corrupted = structuredClone(raw);
   hit(corrupted).reflectedEffect = 'starburst_stream';
   assert.throws(() => read(corrupted), /反彈招式資料格式不正確/);

@@ -1,4 +1,4 @@
-const { attackKind } = require('./attack-kind');
+const { attackKind, isReflectableAttack } = require('./attack-kind');
 const { rules: pickupRules } = require('./lobby-pickups');
 const timing = require('../../public/shared/attack-timing.json');
 const rules = require('../../public/shared/scene-rules.json');
@@ -19,7 +19,6 @@ const {
   settleMs: reflectionSettleMs,
   maximumReturns,
 } = rules.crystalReflection;
-const reflectable = new Set(rules.crystalReflection.projectiles);
 
 // No per-projectile timers. Polls/commands advance this bounded scene clock.
 // Actor references remain private, never in serialized snapshots.
@@ -45,8 +44,9 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
     const effect = attackKind(originalEffect);
     const guard = reflections.get(actor);
     if (
-      !reflectable.has(effect) ||
+      !isReflectableAttack(originalEffect) ||
       !guard ||
+      !combat.canHit(source, actor, job.at, effect) ||
       guard.state.lifeId !== actor.lifeId ||
       job.at < guard.event.at ||
       job.at >= guard.event.at + reflectionWindow
@@ -81,6 +81,12 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       source: {
         id: actor.id,
         health: 1,
+        combatEpoch: actor.combatEpoch || 0,
+        matchId: actor.matchId || null,
+        slot: 'q',
+        originX: actor.x,
+        originY: actor.y,
+        archetype: actor.archetype,
         energyActor: actor,
         energyLifeId: actor.lifeId,
         reflectionBudget: guard.state.energyBudget,
@@ -313,7 +319,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
         if (map.get(actor.id) !== actor || actor.health <= 0 || actor.lifeId !== job.lifeId) {
           hit.missed = true;
         } else {
-          // A reflected projectile settles here and never re-enters intercept().
+          // A reflected hit settles here and never re-enters intercept().
           Object.assign(
             hit,
             combat.hit(job.source, actor, at, job.effect, job.weight, 'reflection'),
