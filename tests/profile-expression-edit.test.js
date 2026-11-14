@@ -14,9 +14,9 @@ const {
   setSharing,
 } = require('../src/profiles/uploads');
 const png = fs.readFileSync(
-  path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+  path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
 );
-const gif = fs.readFileSync(path.join(__dirname, '../public/assets/characters/traveler-happy.gif'));
+const gif = fs.readFileSync(path.join(__dirname, 'fixtures/retired-characters/traveler-happy.gif'));
 const image = { mime: 'image/png', base64: png.toString('base64') };
 test('expression edits keep identity and sounds; deleting cleans owner and shared avatar references atomically', async () => {
   const db = openDatabase(':memory:');
@@ -74,7 +74,7 @@ test('expression edits keep identity and sounds; deleting cleans owner and share
     };
     const friend = {
       version: 5,
-      characterId: 'builtin:traveler',
+      characterId: 'builtin:community-asian',
       expression: 'happy',
       avatar: { kind: 'character', characterId: c.id, expression: e },
     };

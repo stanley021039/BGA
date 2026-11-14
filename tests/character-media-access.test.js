@@ -10,13 +10,11 @@ const { createCharacterMediaAccess } = require('../src/profiles/media');
 const { defaults } = require('../src/profiles/appearance');
 
 const png = fs.readFileSync(
-  path.join(__dirname, '..', 'public/assets/characters/traveler-neutral.png'),
+  path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
 );
-const gif = fs.readFileSync(
-  path.join(__dirname, '..', 'public/assets/characters/traveler-happy.gif'),
-);
+const gif = fs.readFileSync(path.join(__dirname, 'fixtures/retired-characters/traveler-happy.gif'));
 const replacement = fs.readFileSync(
-  path.join(__dirname, '..', 'public/assets/characters/woods-happy.gif'),
+  path.join(__dirname, 'fixtures/retired-characters/woods-happy.gif'),
 );
 const upload = (bytes) => ({ base64: bytes.toString('base64') });
 

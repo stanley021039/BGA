@@ -78,10 +78,10 @@ test('custom named image expressions appear in profile, avatar, and room interac
     });
     assert.equal(friend.status, 200);
     const png = fs.readFileSync(
-      path.join(__dirname, '..', 'public/assets/characters/traveler-neutral.png'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
     );
     const gif = fs.readFileSync(
-      path.join(__dirname, '..', 'public/assets/characters/traveler-happy.gif'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-happy.gif'),
     );
     const main = await request('profile/characters', cookie, {
       name: '測試角色',

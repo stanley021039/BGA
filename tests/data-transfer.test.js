@@ -30,7 +30,7 @@ const { characterImagePng } = require('./helpers/character-image-fixture.cjs');
 const password = 'synthetic-test-password';
 const mp3 = Buffer.concat([Buffer.from([255, 251, 144, 100]), Buffer.alloc(830)]);
 const png = fs.readFileSync(
-  path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+  path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
 );
 const errorCode = (code) => (error) => error.code === code;
 function expressionWav(samples = 25) {

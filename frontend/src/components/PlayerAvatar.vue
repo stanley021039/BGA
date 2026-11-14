@@ -8,8 +8,8 @@ const failed = ref(false),
     sizedImage(
       props.avatar ||
         (props.bot
-          ? '/assets/characters/sunny-neutral.png'
-          : '/assets/characters/traveler-neutral.png'),
+          ? '/assets/characters/community-necron-neutral.webp'
+          : '/assets/characters/community-asian-neutral.webp'),
       128,
     ),
   );

@@ -774,7 +774,9 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
           >
             <EntrancePreview
               :effect="entranceEffect"
-              :image="selected?.expressions.neutral || '/assets/characters/traveler-neutral.png'"
+              :image="
+                selected?.expressions.neutral || '/assets/characters/community-asian-neutral.webp'
+              "
               :size="128"
               :name="nickname || session.user?.displayName || '玩家'"
             />

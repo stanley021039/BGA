@@ -1,6 +1,6 @@
 # 角色生成提示詞與來源
 
-使用內建 `image_gen`，不是 CLI／API fallback。最終十六位、各六表情，共 96 張透明 WebP，清單見 [character-additions.json](../../../../public/shared/character-additions.json)。原始總圖複本保存在本機 `work/scene-bots-408/sources`；每張總圖的來源檔名與 SHA256 也記於清單。原有十位 Kenney 角色維持原圖與來源；新增素材標記 ImageGen。
+使用內建 `image_gen`，不是 CLI／API fallback。2026-11-14 最終角色改為三十位、各六表情，共 180 張透明 WebP，清單見 [character-additions.json](../../../../public/shared/character-additions.json)。原始總圖複本保存在本機 `work/scene-bots-408/sources`；每張總圖的來源檔名與 SHA256 也記於清單。舊十位 Kenney 角色已退出選單並移除公開圖檔，舊 ID／網址僅轉接新角色，不再提供舊圖。測試夾具中的四份 PNG／GIF 只驗證上傳及還原，不屬於執行期角色。
 
 下列整理最終生成／修訂的提示詞組。各輪只變更使用者指定細節，角色名稱後來另外改為使用者指定名稱，沒有重新生成圖像。照片只作造型參考，沒有辨識照片中人物。
 

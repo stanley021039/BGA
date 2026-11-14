@@ -9,51 +9,13 @@ const expressionLabels = {
   thinking: '思考',
   angry: '生氣',
 };
-const slugs = [
-  'traveler',
-  'woods',
-  'mage',
-  'knight',
-  'sunny',
-  'harbor',
-  'bloom',
-  'ember',
-  'starlight',
-  'meadow',
-];
-const names = [
-  '藍衣冒險者',
-  '綠衣旅人',
-  '城市旅人',
-  '街頭夥伴',
-  '小機器人',
-  '綠皮殭屍',
-  '飛躍少年',
-  '敏捷女孩',
-  '綠衫玩家',
-  '荒野士兵',
-];
-const builtinCharacters = slugs.map((slug, index) => {
-  const expressions = {};
-  for (const expression of Object.keys(expressionLabels)) {
-    if (index >= 6 && ['surprised', 'thinking'].includes(expression)) continue;
-    const extension = expression === 'happy' ? 'gif' : 'png';
-    expressions[expression] = versionedAsset(
-      `/assets/characters/${slug}-${expression}.${extension}`,
-    );
-  }
-  return {
-    id: `builtin:${slug}`,
-    name: names[index],
-    expressions,
-    labels: expressionLabels,
-    source: 'Kenney',
-    appearance: { version: 5, characterId: `builtin:${slug}`, expression: 'neutral' },
-  };
-});
-const defaults = { ...builtinCharacters[0].appearance };
-for (const character of require('../../public/shared/character-additions.json').characters) {
-  builtinCharacters.push({
+const retiredCharacters = require('../../public/shared/character-retirements.json');
+function canonicalCharacterId(id) {
+  const slug = typeof id === 'string' && id.startsWith('builtin:') ? id.slice(8) : '';
+  return Object.hasOwn(retiredCharacters, slug) ? 'builtin:' + retiredCharacters[slug] : id;
+}
+const builtinCharacters = require('../../public/shared/character-additions.json').characters.map(
+  (character) => ({
     id: character.id,
     name: character.name,
     source: character.source,
@@ -65,7 +27,23 @@ for (const character of require('../../public/shared/character-additions.json').
     ),
     labels: expressionLabels,
     appearance: { version: 5, characterId: character.id, expression: 'neutral' },
-  });
+  }),
+);
+const defaults = {
+  version: 5,
+  characterId: canonicalCharacterId('builtin:traveler'),
+  expression: 'neutral',
+};
+function retiredCharacterAsset(pathname) {
+  const match =
+    /^\/assets\/characters\/([a-z]+)-(neutral|happy|sad|surprised|thinking|angry)\.(?:png|gif)$/.exec(
+      pathname,
+    );
+  if (!match || !Object.hasOwn(retiredCharacters, match[1])) return null;
+  const character = builtinCharacters.find(
+    (c) => c.id === canonicalCharacterId('builtin:' + match[1]),
+  );
+  return character?.expressions[match[2]]?.split('?')[0] || null;
 }
 const legacyColors = {
   skin: ['#f6d6b8', '#dca77c', '#b87955', '#8b583e', '#5d392d', '#9ab483', '#a6acd0'],
@@ -130,10 +108,19 @@ function normalizeAppearance(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) invalid();
   const version = Number(input.version);
   if (version === 5)
-    return { version: 5, characterId: input.characterId, expression: input.expression };
-  if (version === 4) return { version: 5, characterId: input.skinId, expression: 'neutral' };
+    return {
+      version: 5,
+      characterId: canonicalCharacterId(input.characterId),
+      expression: input.expression,
+    };
+  if (version === 4)
+    return { version: 5, characterId: canonicalCharacterId(input.skinId), expression: 'neutral' };
   if ([1, 2, 3].includes(version))
-    return { version: 5, characterId: legacyId(input), expression: 'neutral' };
+    return {
+      version: 5,
+      characterId: canonicalCharacterId(legacyId(input)),
+      expression: 'neutral',
+    };
   invalid();
 }
 function validateAppearance(input) {
@@ -151,6 +138,7 @@ function validateAppearance(input) {
   return value;
 }
 function characterFor(db, userId, id) {
+  id = canonicalCharacterId(id);
   const builtin = builtinCharacters.find((character) => character.id === id);
   if (builtin) return builtin;
   if (!/^user:[a-f0-9-]{36}$/.test(id || '')) return null;
@@ -221,6 +209,9 @@ module.exports = {
   expressionLabels,
   builtinCharacters,
   defaults,
+  retiredCharacters,
+  canonicalCharacterId,
+  retiredCharacterAsset,
   normalizeAppearance,
   validateAppearance,
   characterFor,

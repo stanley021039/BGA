@@ -5,9 +5,9 @@ const fs = require('node:fs'),
   crypto = require('node:crypto'),
   sharp = require('sharp');
 const manifest = require('../public/shared/character-additions.json');
-test('sixteen new characters have six compressed transparent expressions with verified content hashes', async () => {
-  assert.equal(manifest.characters.length, 16);
-  assert.equal(new Set(manifest.characters.map((c) => c.id)).size, 16);
+test('thirty characters have six compressed transparent expressions with verified content hashes', async () => {
+  assert.equal(manifest.characters.length, 30);
+  assert.equal(new Set(manifest.characters.map((c) => c.id)).size, 30);
   for (const character of manifest.characters) {
     assert.deepEqual(Object.keys(character.expressions), [
       'neutral',

@@ -141,6 +141,7 @@ const {
   characterFor,
   galleryFor,
   selectedImage,
+  retiredCharacterAsset,
 } = require('./profiles/appearance');
 const {
   createCharacter,
@@ -680,7 +681,11 @@ function initializeApp(config, dataLock, acquired) {
     } else {
       const file = assetPath(selected.url);
       ({ bytes, etag } = readStatic(path.join(__dirname, '..', 'public', file)));
-      mime = file.endsWith('.gif') ? 'image/gif' : 'image/png';
+      mime = file.endsWith('.webp')
+        ? 'image/webp'
+        : file.endsWith('.gif')
+          ? 'image/gif'
+          : 'image/png';
     }
     const version = createHash('sha256')
       .update(selected.url)
@@ -3447,16 +3452,24 @@ function initializeApp(config, dataLock, acquired) {
       }
       if (url.pathname.startsWith('/assets/characters/')) {
         auth.requireUser(req);
-        const asset = builtinCharacters
-          .flatMap((character) => Object.values(character.expressions).map(assetPath))
-          .find((value) => value === url.pathname);
+        const asset =
+          builtinCharacters
+            .flatMap((character) => Object.values(character.expressions).map(assetPath))
+            .find((value) => value === url.pathname) || retiredCharacterAsset(url.pathname);
         if (!asset) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
         const { bytes, version } = readStatic(path.join(__dirname, '..', 'public', asset));
         return sendImage(
           req,
           res,
           url,
-          { bytes, mime: asset.endsWith('.gif') ? 'image/gif' : 'image/png' },
+          {
+            bytes,
+            mime: asset.endsWith('.webp')
+              ? 'image/webp'
+              : asset.endsWith('.gif')
+                ? 'image/gif'
+                : 'image/png',
+          },
           url.searchParams.get('v') === version,
         );
       }

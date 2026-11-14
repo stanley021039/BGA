@@ -15,7 +15,7 @@ test('each account can upload twenty characters and the twenty-first is rejected
     const owner = db.prepare('SELECT id FROM users WHERE username=?').get('characteradmin').id;
     const image = {
       base64: fs
-        .readFileSync(path.join(__dirname, '../public/assets/characters/traveler-neutral.png'))
+        .readFileSync(path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'))
         .toString('base64'),
     };
     for (let i = 1; i <= 20; i++) createCharacter(db, owner, { name: '角色' + i, ...image });

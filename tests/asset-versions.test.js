@@ -14,7 +14,7 @@ const { createAuth } = require('../src/auth');
 
 // Images carry their file's content version (?v=) so browsers keep them until
 // the bytes change (#316).
-const file = path.join(__dirname, '../public/assets/characters/traveler-neutral.png');
+const file = path.join(__dirname, '../public/assets/characters/community-asian-neutral.webp');
 function response() {
   const headers = {};
   return {
@@ -37,26 +37,32 @@ test('a static file is cached for good only when the URL names its current bytes
     sendStatic({ url, headers: {} }, res, file);
     return res.headers['cache-control'];
   };
-  assert.equal(send('/assets/characters/traveler-neutral.png?v=' + version), PRIVATE_IMMUTABLE);
-  assert.equal(send('/assets/characters/traveler-neutral.png?v=stale-version'), PRIVATE_REVALIDATE);
-  assert.equal(send('/assets/characters/traveler-neutral.png'), PRIVATE_REVALIDATE);
+  assert.equal(
+    send('/assets/characters/community-asian-neutral.webp?v=' + version),
+    PRIVATE_IMMUTABLE,
+  );
+  assert.equal(
+    send('/assets/characters/community-asian-neutral.webp?v=stale-version'),
+    PRIVATE_REVALIDATE,
+  );
+  assert.equal(send('/assets/characters/community-asian-neutral.webp'), PRIVATE_REVALIDATE);
 });
 
 test('versioned asset URLs keep their query and leave other URLs alone', () => {
   const { version } = readStatic(file);
   assert.equal(
-    versionedAsset('/assets/characters/traveler-neutral.png'),
-    '/assets/characters/traveler-neutral.png?v=' + version,
+    versionedAsset('/assets/characters/community-asian-neutral.webp'),
+    '/assets/characters/community-asian-neutral.webp?v=' + version,
   );
   assert.equal(
-    versionedAsset('/assets/characters/traveler-neutral.png?size=256'),
-    '/assets/characters/traveler-neutral.png?size=256&v=' + version,
+    versionedAsset('/assets/characters/community-asian-neutral.webp?size=256'),
+    '/assets/characters/community-asian-neutral.webp?size=256&v=' + version,
   );
-  const once = versionedAsset('/assets/characters/traveler-neutral.png');
+  const once = versionedAsset('/assets/characters/community-asian-neutral.webp');
   assert.equal(versionedAsset(once), once, 'versioning twice changes nothing');
   for (const url of ['/assets/missing.png', '/assets/music/abc', '/characters/x', null, 'data:x'])
     assert.equal(versionedAsset(url), url);
-  assert.equal(assetPath(once), '/assets/characters/traveler-neutral.png');
+  assert.equal(assetPath(once), '/assets/characters/community-asian-neutral.webp');
 });
 
 test('built-in character images the API hands out are versioned and cached for good', async (t) => {
@@ -70,14 +76,17 @@ test('built-in character images the API hands out are versioned and cached for g
   });
   const headers = { Cookie: login.headers.get('set-cookie').split(';')[0] };
   const options = await (await fetch(f.base + '/api/profile/options', { headers })).json();
-  const url = options.characters.find((c) => c.id === 'builtin:traveler').expressions.neutral;
-  assert.match(url, /^\/assets\/characters\/traveler-neutral\.png\?v=[\w-]{12}$/);
+  const url = options.characters.find((c) => c.id === 'builtin:community-asian').expressions
+    .neutral;
+  assert.match(url, /^\/assets\/characters\/community-asian-neutral\.webp\?v=[\w-]{12}$/);
   const current = await fetch(f.base + url, { headers });
   assert.equal(current.status, 200);
   assert.equal(current.headers.get('cache-control'), PRIVATE_IMMUTABLE);
   const thumbnail = await fetch(f.base + url.replace('?', '?size=256&'), { headers });
   assert.equal(thumbnail.status, 200);
-  const stale = await fetch(f.base + '/assets/characters/traveler-neutral.png?v=old', { headers });
+  const stale = await fetch(f.base + '/assets/characters/community-asian-neutral.webp?v=old', {
+    headers,
+  });
   assert.equal(stale.headers.get('cache-control'), PRIVATE_REVALIDATE);
   const gifts = await (await fetch(f.base + '/api/community/gifts', { headers })).json();
   const builtin = gifts.gifts.find((gift) => gift.image?.startsWith('/assets/gifts/'));

@@ -50,7 +50,7 @@ test('collection permissions, avatar sharing/revocation and character deletion s
       ).cookie;
     assert.equal((await get('collection/avatars')).status, 401);
     const png = fs.readFileSync(
-      path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
     );
     const artwork = (
       await post('artworks', host, {
@@ -70,7 +70,11 @@ test('collection permissions, avatar sharing/revocation and character deletion s
     assert.equal(shared.owned, false);
     assert.equal(shared.shared, true);
     assert.equal((await fetch(base + artwork.url, { headers: { Cookie: friend } })).status, 200);
-    const appearance = { version: 5, characterId: 'builtin:mage', expression: 'neutral' };
+    const appearance = {
+      version: 5,
+      characterId: 'builtin:community-mechanicus',
+      expression: 'neutral',
+    };
     assert.equal(
       (
         await post('profile/settings', friend, {
@@ -89,7 +93,11 @@ test('collection permissions, avatar sharing/revocation and character deletion s
     assert.equal((await get('profile/settings', friend)).data.avatar.kind, 'character');
     await post('profile/settings', friend, {
       appearance,
-      avatar: { kind: 'character', characterId: 'builtin:mage', expression: 'neutral' },
+      avatar: {
+        kind: 'character',
+        characterId: 'builtin:community-mechanicus',
+        expression: 'neutral',
+      },
     });
     assert.equal((await post('artworks/' + artwork.id + '/delete', friend, {})).status, 404);
     const character = (
@@ -107,8 +115,8 @@ test('collection permissions, avatar sharing/revocation and character deletion s
     });
     await post('profile/characters/' + character.slice(5) + '/delete', host, {});
     const fallback = (await get('profile/settings', friend)).data;
-    assert.equal(fallback.appearance.characterId, 'builtin:traveler');
-    assert.equal(fallback.avatar.characterId, 'builtin:mage');
+    assert.equal(fallback.appearance.characterId, 'builtin:community-asian');
+    assert.equal(fallback.avatar.characterId, 'builtin:community-mechanicus');
     assert.equal((await fetch(base + '/collection', { headers: { Cookie: host } })).status, 503); // API-only app: pages come from the Vue build (#233).
   } finally {
     await app.close();

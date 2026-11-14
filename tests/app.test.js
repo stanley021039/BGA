@@ -115,7 +115,7 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
     const emoteOptions = await (await fetch(base + '/api/lobby/emotes', { headers })).json();
     assert.ok(
       emoteOptions.emotes.some(
-        (emote) => emote.expression === 'happy' && emote.image.split('?')[0].endsWith('happy.gif'),
+        (emote) => emote.expression === 'happy' && emote.image.split('?')[0].endsWith('happy.webp'),
       ),
     );
     const lobbyEmote = await fetch(base + '/api/lobby/emote', {
@@ -195,10 +195,10 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
     const view = await (await fetch(base + '/api/state?code=' + code, { headers })).json();
     assert.match(view.players[0].avatar, /^\/characters\/[a-f0-9-]+\?v=[\w-]{16}&size=256$/);
     const avatar = await fetch(base + view.players[0].avatar, { headers });
-    assert.equal(avatar.headers.get('content-type'), 'image/gif');
-    assert.equal(Buffer.from(await avatar.arrayBuffer()).toString('ascii', 0, 6), 'GIF89a');
+    assert.equal(avatar.headers.get('content-type'), 'image/webp');
+    assert.equal(Buffer.from(await avatar.arrayBuffer()).toString('ascii', 0, 4), 'RIFF');
     const png = fs.readFileSync(
-      path.join(__dirname, '..', 'public/assets/characters/traveler-neutral.png'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
     );
     const upload = await fetch(base + '/api/profile/characters', {
       method: 'POST',
@@ -228,7 +228,7 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
     );
     assert.equal(rejected.status, 400);
     const gif = fs.readFileSync(
-      path.join(__dirname, '..', 'public/assets/characters/traveler-happy.gif'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-happy.gif'),
     );
     const expression = await fetch(
       base + '/api/profile/characters/' + own.id.slice(5) + '/expressions',

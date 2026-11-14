@@ -88,7 +88,7 @@ watch(
           aria-hidden="true"
           ><span class="entrance-preview-actor"
             ><img
-              :src="sizedImage(image || '/assets/characters/traveler-neutral.png', 128)"
+              :src="sizedImage(image || '/assets/characters/community-asian-neutral.webp', 128)"
               alt=""
               draggable="false"
             /><span>{{ name || '玩家' }}</span></span

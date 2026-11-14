@@ -47,7 +47,7 @@ test('private account artwork can be copied into a character, expression, and gi
       invite: invite.body.code,
     });
     const png = fs.readFileSync(
-      path.join(__dirname, '..', 'public/assets/characters/traveler-neutral.png'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
     );
     const art = await post('artworks', owner.cookie, {
       name: '我的畫作',

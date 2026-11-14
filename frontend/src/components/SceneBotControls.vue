@@ -35,7 +35,7 @@ const state = ref<State | null>(null),
 const arena =
   location.pathname === '/arena' && !new URLSearchParams(location.search).has('training');
 const form = ref({
-  characterId: 'builtin:traveler',
+  characterId: 'builtin:community-asian',
   entrance: 'classic',
   q: 'barrage',
   e: 'beam',

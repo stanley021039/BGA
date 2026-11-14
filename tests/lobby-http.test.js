@@ -288,7 +288,7 @@ test('lobby HTTP masks private character image and sound bytes from unrelated vi
   const peer = await member('lobby_peer'),
     outsider = await member('lobby_outsider');
   const png = require('node:fs').readFileSync(
-    require('node:path').join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+    require('node:path').join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
   );
   const created = await f.post('/api/profile/characters', {
     name: 'Private lobby actor',

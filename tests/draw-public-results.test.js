@@ -14,7 +14,7 @@ const { rejoinPlayer } = require('../src/rooms/membership');
 
 const uuid = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const png = fs.readFileSync(
-  path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+  path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
 );
 const base64 = png.toString('base64');
 function game(count = 2) {
