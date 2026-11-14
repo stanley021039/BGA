@@ -557,6 +557,10 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       return movement && movement.updateUntil + statusSettleMs >= time;
     });
   }
-  return { prepare, armReflection, advance, needsFastUpdates };
+  // Boss ordinary patterns return as a bounded energy imprint through the same guard budget.
+  function interceptBoss(source, target, at, weight, actors) {
+    return intercept('barrage', source, target, { at, weight, phase: 'hit1' }, actors);
+  }
+  return { prepare, armReflection, advance, needsFastUpdates, interceptBoss };
 }
 module.exports = { createAttackTimeline };

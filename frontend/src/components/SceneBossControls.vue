@@ -7,7 +7,13 @@ import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
 import { sizedImage } from '../services/image-size';
 import StatusSlot from './StatusSlot.vue';
-type Entry = { id: string; name: string; description: string; image: string };
+type Entry = {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  abilities: { id: string; slot: string; name: string }[];
+};
 type Boss = { id: string; bossId: string; name: string; ownerId: string };
 type State = { selfId: string; limit: number; catalog: Entry[]; bosses: Boss[] };
 const dialog = ref<InstanceType<typeof UiDialog> | null>(null),
@@ -59,6 +65,12 @@ function open() {
         :alt="selected.name"
       />
       <p>{{ selected?.description }}。生命為一般角色的8倍，擊倒後會重生。</p>
+      <UiPanel v-if="selected" title="專屬招式" density="compact">
+        <p v-for="skill in selected.abilities" :key="skill.id"
+          >{{ skill.slot === 'r' ? '蓄力大招' : '普通招式' }}：{{ skill.name
+          }}{{ skill.slot === 'r' ? '（蓄力2.6秒）' : '' }}</p
+        >
+      </UiPanel>
       <UiButton
         label="加入 Boss"
         :disabled="pending || !state || state.bosses.length >= state.limit"

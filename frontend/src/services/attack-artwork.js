@@ -1,4 +1,5 @@
 import { createAreaAttack } from './attack-area.js';
+import { createBossArtwork } from './boss-artwork.js';
 import { createRevisionAttack } from './attack-revision.js';
 import attackEffects from '../../../public/shared/attack-effects.json';
 /* Adapted from user 攻擊.zip: 15_4 full artwork plus 8 independent obsidian crescent variants.
@@ -235,6 +236,8 @@ function createReturnArtwork(context, options, hit, from) {
 // One attack drawn into a context owned by the caller: draw(now) paints a frame
 // (without clearing) and returns false once the attack has finished.
 export function createAttackScene(context, options) {
+  const boss = createBossArtwork(context, options);
+  if (boss) return boss;
   if (attackArtworkKind(options.effect) === 'susanoo') {
     options = { ...options, effect: 'susanoo' };
   }

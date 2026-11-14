@@ -1,93 +1,26 @@
 const { versionedAsset } = require('../http/asset-version');
+const abilities = require('../../public/shared/boss-abilities.json');
 const definitions = [
-  [
-    'mutalith',
-    '漩渦獸',
-    'orbit',
-    0.65,
-    ['singularity', 'flame_vortex', 'chain_lightning'],
-    '繞行拉扯，交替漩渦與雷擊',
-  ],
-  [
-    'cthulhu',
-    '克蘇魯',
-    'pursue',
-    0.55,
-    ['chains', 'singularity', 'frost_spikes'],
-    '緩慢追獵，以鎖鏈與寒霜封路',
-  ],
-  [
-    'gatanozoa',
-    '加坦杰厄',
-    'anchor',
-    0.35,
-    ['venom_thorn', 'beam', 'quicksand_trap'],
-    '定點盤踞，觸腕與光線交替',
-  ],
-  [
-    'arkveld',
-    '鎖刃龍',
-    'pounce',
-    1.05,
-    ['chains', 'venom_thorn', 'shadow_lunge'],
-    '追擊逼近，鎖鏈與翼刃橫掃',
-  ],
-  [
-    'greeza',
-    '格利札',
-    'blink',
-    1.1,
-    ['refracting_prism', 'chain_lightning', 'singularity'],
-    '錯位閃現，折射與雷擊交替',
-  ],
-  [
-    'hyper-zetton',
-    '海帕杰頓',
-    'stalk',
-    1.2,
-    ['shadow_lunge', 'barrage', 'flame_vortex'],
-    '迂迴突進，突刺後接連射',
-  ],
-  [
-    'colossal',
-    '超巨型巨人',
-    'march',
-    0.4,
-    ['flame_vortex', 'orbital', 'blade_aura'],
-    '大步逼近，熱浪與重擊輪替',
-  ],
-  [
-    'steel-behemoth',
-    '無人機航空母艦機器・SAGIUS',
-    'strafe',
-    0.7,
-    ['funnel', 'micro_missiles', 'railgun'],
-    '側向巡航，以浮游砲與飛彈壓制',
-  ],
-  [
-    'prismatic-void',
-    '次元生命體・XENORPH',
-    'drift',
-    0.8,
-    ['refracting_prism', 'tidal_blades', 'magnetic_disc'],
-    '飄移迴旋，折射與能量波輪替',
-  ],
-  [
-    'gyo',
-    '魚',
-    'crawl',
-    0.45,
-    ['venom_thorn', 'quicksand_trap', 'seeking_talismans'],
-    '緩慢爬行，觸管與污濁能量侵襲',
-  ],
+  ['mutalith', '漩渦獸', 'orbit', 0.65, '繞行拉扯，交替漩渦與雷擊'],
+  ['cthulhu', '克蘇魯', 'pursue', 0.55, '緩慢追獵，以鎖鏈與寒霜封路'],
+  ['gatanozoa', '加坦杰厄', 'anchor', 0.35, '定點盤踞，觸腕與光線交替'],
+  ['arkveld', '鎖刃龍', 'pounce', 1.05, '追擊逼近，鎖鏈與翼刃橫掃'],
+  ['greeza', '格利札', 'blink', 1.1, '錯位閃現，折射與雷擊交替'],
+  ['hyper-zetton', '海帕杰頓', 'stalk', 1.2, '迂迴突進，突刺後接連射'],
+  ['colossal', '超巨型巨人', 'march', 0.4, '大步逼近，熱浪與重擊輪替'],
+  ['steel-behemoth', '無人機航空母艦機器・SAGIUS', 'strafe', 0.7, '側向巡航，以浮游砲與飛彈壓制'],
+  ['prismatic-void', '次元生命體・XENORPH', 'drift', 0.8, '飄移迴旋，折射與能量波輪替'],
+  ['gyo', '魚', 'crawl', 0.45, '緩慢爬行，觸管與污濁能量侵襲'],
+  ['thanos', '薩諾龜', 'conquer', 0.65, '沉穩逼近，寶石蓄力'],
 ];
-const bosses = definitions.map(([id, name, movement, speed, sequence, description]) => ({
+const bosses = definitions.map(([id, name, movement, speed, description]) => ({
   id,
   name,
   movement,
   speed,
-  sequence,
-  description,
+  sequence: abilities.filter((a) => a.boss === id).map((a) => a.id),
+  abilities: abilities.filter((a) => a.boss === id),
+  description: description.split('，')[0] + '，專屬普攻與蓄力大招',
   image: versionedAsset('/assets/characters/boss-' + id + '.webp'),
 }));
 function bossFor(id) {
@@ -97,6 +30,8 @@ function bossFor(id) {
 function driveBoss(bot, actor, target, time, state) {
   if (actor.lifeId !== state.lifeId) {
     state.lifeId = actor.lifeId;
+    state.step = 0;
+    actor.bossCharge = 0;
     state.pending = null;
     state.attackAt = time + 1200;
     state.moveAt = time + 400;
@@ -137,6 +72,10 @@ function driveBoss(bot, actor, target, time, state) {
       x = target.x;
       y = target.y + 9;
     }
+    if (spec.movement === 'conquer') {
+      x = target.x - side * 13;
+      y = target.y + 6;
+    }
     if (spec.movement === 'strafe') {
       x = target.x + side * 23;
       y = 40 + (phase % 3) * 12;
@@ -162,19 +101,26 @@ function driveBoss(bot, actor, target, time, state) {
   }
   if (state.pending) {
     if (time < state.pending.until) return null;
-    const effect = state.pending.effect;
     state.pending = null;
     actor.bossIntent = null;
     state.step++;
-    state.attackAt = time + (spec.movement === 'anchor' ? 3700 : 3000);
-    return effect;
+    actor.bossCharge = (state.step % 3) * 50;
+    state.attackAt = time + (state.step % 3 === 0 ? 4200 : 2600);
+    return null;
   }
   if (time >= state.attackAt) {
     const effect = spec.sequence[state.step % spec.sequence.length];
-    state.pending = { effect, until: time + 1000 };
-    actor.bossIntent = { effect, until: time + 1000 };
+    const ability = abilities.find((a) => a.id === effect);
+    state.pending = { effect, until: time + ability.windup + ability.duration };
+    actor.bossIntent = {
+      effect,
+      name: ability.name,
+      ultimate: ability.slot === 'r',
+      until: time + ability.windup,
+    };
     actor.targetX = actor.x;
     actor.targetY = actor.y;
+    return effect;
   }
   return null;
 }

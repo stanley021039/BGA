@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MotionPolicy from '../../engines/motion-policy.js';
+import bossAbilities from '../../../../public/shared/boss-abilities.json';
 import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
@@ -434,7 +435,13 @@ window.addEventListener('resize', positionBubble);
         </g>
       </svg>
     </div>
-    <span v-if="visitor.bossIntent" class="scene-boss-warning" role="status">蓄力中・準備閃避</span>
+    <span v-if="visitor.bossIntent" class="scene-boss-warning" role="status"
+      >{{
+        bossAbilities.find((a) => a.id === visitor.bossIntent?.effect)?.slot === 'r'
+          ? '大招蓄力'
+          : '準備攻擊'
+      }}・{{ bossAbilities.find((a) => a.id === visitor.bossIntent?.effect)?.name }}</span
+    >
     <SceneHealth
       v-if="visitor.maxHealth"
       :visitor="visitor"

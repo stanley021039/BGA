@@ -47,7 +47,15 @@ function createBotDriver(random = Math.random) {
   const states = new Map();
   let driving = false,
     lastTick = -Infinity;
-  function drive({ time, bots, positions, events, cast, active = () => false }) {
+  function drive({
+    time,
+    bots,
+    positions,
+    events,
+    cast,
+    castBoss = () => {},
+    active = () => false,
+  }) {
     if (driving || time - lastTick < 400) return;
     lastTick = time;
     driving = true;
@@ -82,7 +90,7 @@ function createBotDriver(random = Math.random) {
           const effect = driveBoss(bot, actor, target, time, state);
           if (effect) {
             try {
-              cast({ ...bot, q: effect }, 'q');
+              castBoss(bot, effect, target, time);
               casts++;
             } catch (error) {
               if (!(error instanceof HttpError)) throw error;

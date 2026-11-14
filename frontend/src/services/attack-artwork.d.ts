@@ -1,4 +1,6 @@
 export type AttackArtworkOptions = {
+  bossFrom?: { x: number; y: number };
+  bossAim?: { x: number; y: number };
   effect: string;
   ageMs?: number;
   coverClips?: readonly Path2D[];

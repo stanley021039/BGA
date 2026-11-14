@@ -55,9 +55,11 @@ test('boss capacity is global and independent of three bots; ownership, input an
     code: 'LOBBY_BOSS_ONLY',
   });
 });
-test('all ten boss patterns wind up before casting, cycle their attacks and stay in bounds', () => {
-  const valid = new Set(require('../public/shared/attack-effects.json').map((e) => e.id));
-  assert.equal(new Set(bosses.map((b) => b.movement)).size, 10);
+test('all eleven boss patterns wind up before casting, cycle their attacks and stay in bounds', () => {
+  const definitions = require('../public/shared/boss-abilities.json');
+  const valid = new Set(definitions.map((e) => e.id));
+  assert.equal(valid.size, 33);
+  assert.equal(new Set(bosses.map((b) => b.movement)).size, 11);
   for (const spec of bosses) {
     assert.ok(
       spec.sequence.every((e) => valid.has(e)),
@@ -68,15 +70,18 @@ test('all ten boss patterns wind up before casting, cycle their attacks and stay
       target = { x: 60, y: 65 };
     const state = { moveAt: 0, attackAt: 0 };
     const bot = { bossId: spec.id };
-    assert.equal(driveBoss(bot, actor, target, 0, state), null);
-    assert.equal(actor.bossIntent.until, 1000);
-    assert.equal(driveBoss(bot, actor, target, 999, state), null);
-    assert.equal(driveBoss(bot, actor, target, 1000, state), spec.sequence[0]);
-    assert.equal(actor.bossIntent, null);
-    for (let n = 1; n < 3; n++) {
+    for (let n = 0; n < 3; n++) {
       const at = state.attackAt;
-      driveBoss(bot, actor, target, at, state);
-      assert.equal(driveBoss(bot, actor, target, at + 1000, state), spec.sequence[n]);
+      const ability = definitions.find((a) => a.id === spec.sequence[n]);
+      assert.equal(driveBoss(bot, actor, target, at, state), ability.id);
+      assert.equal(actor.bossIntent.until, at + ability.windup);
+      assert.equal(actor.bossIntent.ultimate, n === 2);
+      assert.equal(driveBoss(bot, actor, target, at + ability.windup - 1, state), null);
+      assert.equal(
+        driveBoss(bot, actor, target, at + ability.windup + ability.duration, state),
+        null,
+      );
+      assert.equal(actor.bossIntent, null);
     }
     assert.ok(actor.targetX >= 12 && actor.targetX <= 88);
     assert.ok(actor.targetY >= 65 && actor.targetY <= 88);
@@ -100,8 +105,8 @@ test('paralysis cancels a boss windup and blink; respawn requires a fresh windup
   actor.immobileUntil = 0;
   assert.equal(driveBoss(bot, actor, target, 4000, state), null);
   assert.equal(state.attackAt, 5200);
-  assert.equal(driveBoss(bot, actor, target, 5200, state), null);
-  assert.equal(driveBoss(bot, actor, target, 6200, state), 'refracting_prism');
+  assert.equal(driveBoss(bot, actor, target, 5200, state), 'boss_greeza_q');
+  assert.equal(driveBoss(bot, actor, target, 6200, state), null);
 });
 test('boss driver uses a bounded shared clock, excludes other NPCs and stops for dead bosses', () => {
   const driver = createBotDriver(() => 0.5),
@@ -113,18 +118,18 @@ test('boss driver uses a bounded shared clock, excludes other NPCs and stops for
   positions.set('human', { id: 'human', x: 55, y: 55, health: 100 });
   for (let time = 0; time < 9000; time += 400) {
     const count = cast.length;
-    driver.drive({ time, bots, positions, events: [], cast: (b) => cast.push(b.id) });
+    driver.drive({ time, bots, positions, events: [], castBoss: (b) => cast.push(b.id) });
     assert.ok(cast.length - count <= 1);
   }
   assert.ok(bots.every((b) => cast.includes(b.id)));
   positions.delete('human');
   const count = cast.length;
   for (let time = 10000; time < 15000; time += 400)
-    driver.drive({ time, bots, positions, events: [], cast: (b) => cast.push(b.id) });
+    driver.drive({ time, bots, positions, events: [], castBoss: (b) => cast.push(b.id) });
   assert.equal(cast.length, count);
   driver.clear();
   positions.set('human', { id: 'human', x: 55, y: 55, health: 100 });
   for (const b of bots) positions.get(b.id).health = 0;
-  driver.drive({ time: 20000, bots, positions, events: [], cast: (b) => cast.push(b.id) });
+  driver.drive({ time: 20000, bots, positions, events: [], castBoss: (b) => cast.push(b.id) });
   assert.equal(cast.length, count);
 });

@@ -68,6 +68,9 @@ test('attack previews frame both regular and area effects around the stage cente
 });
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
+  .replace(/^import .*boss-artwork.js';\n/m, () =>
+    require('../../tests/helpers/boss-artwork-module.cjs')(),
+  )
   .replace(/^import .*motion-lifetime.js';\n/m, '')
   .replace(/^import combatRules .*scene-rules.json';\n/m, '')
   .replace(/^import .*attack-stitch.js';\n/m, '')

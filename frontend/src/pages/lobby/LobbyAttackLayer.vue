@@ -8,6 +8,7 @@ import { attackColor, attackOptions } from '../../services/attack-placement';
 import { sizedImage } from '../../services/image-size';
 import { playHeroFlight } from '../../services/scene-hero-flight.js';
 import SceneEquation from '../../components/SceneEquation.vue';
+import BossTelegraphs from '../../components/BossTelegraphs.vue';
 import { homingScale } from '../../services/attack-homing.js';
 const props = withDefaults(
   defineProps<{
@@ -168,6 +169,8 @@ function play(event: LobbyAttack) {
     return { x: box.left - origin.left + box.width / 2, y: box.top - origin.top + box.height / 2 };
   };
   const added = stage.add(event.id, {
+    bossFrom: { x: event.fromX, y: event.fromY },
+    bossAim: { x: event.toX, y: event.toY },
     ...options,
     coverClips: wallClips(event, width, height),
     readCaster,
@@ -282,6 +285,11 @@ onBeforeUnmount(() => {
     </div>
   </Teleport>
   <div ref="layer" class="lobby-attack-layer" aria-hidden="true">
+    <BossTelegraphs
+      v-if="connected"
+      :events="snapshot?.attacks || []"
+      :now="snapshot?.serverNow || 0"
+    />
     <canvas ref="surface" :class="{ 'is-camera-canvas': readCamera }"></canvas>
     <span
       v-for="impact in coverImpacts"

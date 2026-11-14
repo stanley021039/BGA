@@ -243,6 +243,36 @@ test('server KDA and measured central passage survive the real Vue contract; old
   assert.equal(read(raw).visitors[0].kda.kills, 0);
   assert.equal(read(raw).visitors[0].passage, null);
 });
+test('all boss abilities and settled hits survive the actual lobby contract without becoming player barrage', () => {
+  const { createLobby } = require('../../src/rooms/lobby'),
+    { bosses } = require('../../src/rooms/scene-bosses');
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  for (const spec of bosses) {
+    let clock = 1000;
+    const user = { id: 'boss-reader', display_name: 'Reader' },
+      lobby = createLobby(
+        () => clock,
+        () => '/test',
+        () => 0.5,
+      );
+    const id = lobby.bosses(user, { action: 'add', bossId: spec.id }).bosses[0].id;
+    lobby.view(user);
+    clock = 2200;
+    for (const ability of spec.abilities) {
+      let raw = lobby.view(user);
+      raw.serverNow = clock;
+      const parsed = read(raw),
+        event = parsed.attacks.filter((a) => a.fromId === id).at(-1);
+      assert.equal(event.effect, ability.id);
+      assert.equal(event.slot, ability.slot);
+      clock += ability.windup + ability.duration;
+      raw = lobby.view(user);
+      raw.serverNow = clock;
+      assert.doesNotThrow(() => read(raw));
+      clock += ability.slot === 'r' ? 4200 : 2600;
+    }
+  }
+});
 test('new waiting rooms save through the real party action store with a null round token', async () => {
   const pinia = require('pinia'),
     { MusicQuizRoom } = require('../../src/games/musicquiz');

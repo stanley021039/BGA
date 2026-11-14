@@ -24,6 +24,7 @@ const { sceneWalkWithSpeed } = require('../../frontend/src/engines/scene-path.js
 const { randomBytes } = require('node:crypto');
 const { botSettings, createBotDriver } = require('./scene-bots');
 const { bosses: bossCatalog, bossFor } = require('./scene-bosses');
+const { createBossCombat, abilityFor } = require('./boss-combat');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
 // Percentages of the lobby page background, below the site header.
@@ -300,6 +301,7 @@ function createLobby(
     (actors, time) => pickups.advance(actors, time),
     (source) => (source.matchId ? walls : null),
   );
+  const bossCombat = createBossCombat(combat, timeline.interceptBoss);
   let background = { id: 'default', changedAt: now(), nextChangeAt: 0 };
   const visitors = new Map(),
     barrages = [],
@@ -319,6 +321,7 @@ function createLobby(
     for (const [id, visitor] of visitors)
       if (time - visitor.seenAt > PRESENCE_MS) visitors.delete(id);
     timeline.advance(attacks, visitors.values(), time, advance);
+    bossCombat.advance(attacks, visitors, time, advance, (id) => sceneBots.has(id));
     arena.finish(time, visitors);
     pickups.advance(visitors.values(), time);
     for (let i = attacks.length - 1; i >= 0; i--)
@@ -559,6 +562,12 @@ function createLobby(
       positions: visitors,
       events: attacks,
       active: arena.active,
+      castBoss: (bot, effect, target, at) => {
+        if (attacks.length >= 40) return;
+        const actor = visitors.get(bot.id);
+        const event = bossCombat.prepare(bot, actor, effect, target, at);
+        if (event) attacks.push(event);
+      },
       cast: (bot, slot) =>
         attack(bot.user, {
           requestId: 'bot-' + randomBytes(12).toString('hex'),
@@ -617,6 +626,8 @@ function createLobby(
           ...(sceneBots.get(visitor.id)?.bossId
             ? {
                 bossId: sceneBots.get(visitor.id).bossId,
+                energy: visitor.bossCharge || 0,
+                energyMaximum: 100,
                 bossIntent: visitor.bossIntent?.until > time ? visitor.bossIntent : null,
               }
             : {}),

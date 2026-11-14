@@ -7,6 +7,7 @@ import {
   type LobbyArena,
 } from './lobby-arena';
 import sceneRules from '../../../public/shared/scene-rules.json';
+import bossAbilities from '../../../public/shared/boss-abilities.json';
 import attackEffects from '../../../public/shared/attack-effects.json';
 
 import { attackArtworkKind, isReflectableAttack } from '../services/attack-variants.js';
@@ -703,7 +704,9 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           damage: finite(a.damage) ? Math.max(0, a.damage) : undefined,
           critical: a.critical === true,
           ...(a.weakened === true && { weakened: true }),
-          effect: attackEffects.some((e) => e.id === a.effect) ? String(a.effect) : 'barrage',
+          effect: [...attackEffects, ...bossAbilities].some((e) => e.id === a.effect)
+            ? String(a.effect)
+            : 'barrage',
           slot: a.slot === 'r' ? 'r' : a.slot === 'e' ? 'e' : 'q',
           id: text(a.id),
           fromId: text(a.fromId),

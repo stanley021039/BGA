@@ -6,9 +6,9 @@ const sharp = require('sharp');
 const fs = require('node:fs'),
   path = require('node:path'),
   crypto = require('node:crypto');
-test('ten boss assets are bounded transparent WebP with verified source and output metadata', async () => {
+test('eleven boss assets are bounded transparent WebP with verified source and output metadata', async () => {
   const manifest = require('../public/shared/boss-art.json');
-  assert.equal(manifest.bosses.length, 10);
+  assert.equal(manifest.bosses.length, 11);
   for (const c of manifest.bosses) {
     const b = fs.readFileSync(path.join(__dirname, '../public/assets/characters', c.file));
     assert.equal(b.length, c.bytes);
@@ -40,7 +40,7 @@ test('boss HTTP requires authentication, validates scope and serves sized versio
     'Content-Type': 'application/json',
   };
   const state = await (await fetch(f.base + '/api/lobby/bosses', { headers })).json();
-  assert.equal(state.catalog.length, 10);
+  assert.equal(state.catalog.length, 11);
   assert.equal(state.limit, 2);
   const boss = state.catalog[0];
   assert.match(boss.image, /\?v=/);
