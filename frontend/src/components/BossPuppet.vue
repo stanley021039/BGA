@@ -48,29 +48,39 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <span ref="node" class="boss-puppet" aria-hidden="true">
-    <img class="boss-still" :src="src" alt="" draggable="false" style="animation: none" />
-    <span class="boss-action" data-boss-action>
-      <span
+  <div
+    ref="node"
+    class="boss-puppet"
+    :class="{ 'is-facing-left': visitor.facing === 'left' }"
+    aria-hidden="true"
+  >
+    <svg class="boss-still" viewBox="0 0 256 256">
+      <image :href="src" width="256" height="256" />
+    </svg>
+    <div class="boss-action" data-boss-action>
+      <div
         v-for="part in ['lower', 'torso', 'head']"
         :key="part"
         class="boss-part"
         :data-boss-part="part"
       >
-        <img :src="src" alt="" draggable="false" style="animation: none" />
-      </span>
-    </span>
-  </span>
+        <svg viewBox="0 0 256 256"><image :href="src" width="256" height="256" /></svg>
+      </div>
+    </div>
+  </div>
 </template>
 <style scoped>
 .boss-puppet {
   display: inline-block;
   position: relative;
 }
-.boss-still {
+.boss-puppet svg {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+}
+.boss-puppet.is-facing-left svg {
+  transform: scaleX(-1);
 }
 .boss-action,
 .boss-part {
@@ -86,11 +96,6 @@ onBeforeUnmount(() => {
 }
 .boss-puppet[data-animated] .boss-action {
   visibility: visible;
-}
-.boss-part img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 .boss-part[data-boss-part='head'] {
   clip-path: inset(0 0 58% 0);

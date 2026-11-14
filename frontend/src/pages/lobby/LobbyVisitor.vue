@@ -466,12 +466,12 @@ window.addEventListener('resize', positionBubble);
 </template>
 <style scoped>
 .lobby-avatar[data-scene-boss] .scene-avatar-image {
-  width: min(210px, 44vh);
-  height: min(218px, 46vh);
+  width: min(210px, 44vh, 32vw);
+  height: min(218px, 46vh, 33.2vw);
   object-fit: contain;
 }
 .lobby-avatar[data-scene-boss] > span:last-child {
-  max-width: 190px;
+  max-width: min(190px, 30vw);
   white-space: normal;
   text-align: center;
 }
