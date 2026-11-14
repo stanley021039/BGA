@@ -256,8 +256,14 @@ test('all boss abilities and settled hits survive the actual lobby contract with
         () => 0.5,
       );
     const id = lobby.bosses(user, { action: 'add', bossId: spec.id }).bosses[0].id;
+    const pending = lobby.view(user);
+    pending.serverNow = clock;
+    assert.equal(read(pending).bossArrivals[0].spawnAt, 6000);
+    clock = 6000;
     lobby.view(user);
-    clock = 2200;
+    clock = 6700;
+    lobby.view(user);
+    clock = 7900;
     for (const ability of spec.abilities) {
       let raw = lobby.view(user);
       raw.serverNow = clock;

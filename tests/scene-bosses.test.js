@@ -42,6 +42,7 @@ test('boss capacity is global and independent of three bots; ownership, input an
   assert.throws(() => lobby.bosses(alice, { action: 'add', bossId: 'hacked', health: 99999 }), {
     code: 'INVALID_BOSS',
   });
+  advance(5000);
   const actor = lobby.view(alice).visitors.find((v) => v.id === boss.id);
   assert.ok(actor.bossId);
   assert.ok(actor.maxHealth >= 8000000);
@@ -51,9 +52,7 @@ test('boss capacity is global and independent of three bots; ownership, input an
   advance(16000);
   assert.equal(lobby.bosses(bob).bosses.length, 0);
   assert.throws(() => fixture({ training: true }).lobby.bosses(alice), { code: 'LOBBY_BOSS_ONLY' });
-  assert.throws(() => fixture({ expandedMap: true }).lobby.bosses(alice), {
-    code: 'LOBBY_BOSS_ONLY',
-  });
+  assert.equal(fixture({ expandedMap: true }).lobby.bosses(alice).limit, 1);
 });
 test('all eleven boss patterns wind up before casting, cycle their attacks and stay in bounds', () => {
   const definitions = require('../public/shared/boss-abilities.json');

@@ -8,6 +8,7 @@ import UiButton from './UiButton.vue';
 import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
 import StatusSlot from './StatusSlot.vue';
+const props = defineProps<{ locked?: boolean }>();
 type Bot = {
   id: string;
   name: string;
@@ -38,13 +39,14 @@ const form = ref({
   q: 'barrage',
   e: 'beam',
   r: 'guanyin_barrage',
-  mode: 'idle',
+  mode: arena ? 'attack' : 'idle',
   team: 'blue',
 });
 const editable = computed(
   () =>
-    !selected.value ||
-    state.value?.bots.find((b) => b.id === selected.value)?.ownerId === state.value?.selfId,
+    !props.locked &&
+    (!selected.value ||
+      state.value?.bots.find((b) => b.id === selected.value)?.ownerId === state.value?.selfId),
 );
 function choose(id: string) {
   selected.value = id;
@@ -102,6 +104,7 @@ onMounted(() => {
 </script>
 <template>
   <div class="scene-bot-controls">
+    <p v-if="locked">對戰中不可調整機器人；可切換到 Boss 分頁新增 Boss。</p>
     <p v-if="state">{{ state.bots.length }}／{{ state.limit }} 隻；只可調整自己加入的機器人。</p>
     <UiField
       label="選擇機器人"
@@ -129,7 +132,11 @@ onMounted(() => {
             >{{ character.name }}</option
           ></UiField
         >
-        <UiField label="行為" control="select" v-model="form.mode" :disabled="pending || !editable"
+        <UiField
+          label="行為"
+          control="select"
+          v-model="form.mode"
+          :disabled="arena || pending || !editable"
           ><option value="idle">純走動</option><option value="attack">主動攻擊</option></UiField
         >
         <UiField

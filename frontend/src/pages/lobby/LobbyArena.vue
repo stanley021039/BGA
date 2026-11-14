@@ -9,7 +9,7 @@ import {
 } from '../../contracts/lobby-arena';
 import sceneRules from '../../../../public/shared/scene-rules.json';
 import AttackChoices from '../../components/AttackChoices.vue';
-import SceneBotControls from '../../components/SceneBotControls.vue';
+import SceneNpcControls from '../../components/SceneNpcControls.vue';
 import UiField from '../../components/UiField.vue';
 import SceneHazards from '../../components/SceneHazards.vue';
 import AudioSettings from '../../engines/audio-settings.js';
@@ -473,7 +473,7 @@ function start(mode: string) {
         title="開戰設定"
         description="設定角色類型、選隊與配裝。每招命中同一對手最多得 1 分。"
       >
-        <SceneBotControls />
+        <SceneNpcControls />
         <UiField
           label="角色類型"
           control="select"
@@ -835,6 +835,7 @@ function start(mode: string) {
           <UiListRow>餘燼：停留 1 秒後，每秒扣 5% 最大血量。</UiListRow>
           <UiListRow
             >WASD／方向鍵移動 · Q／E 普通招式 · R 大招 · C 瞬移（{{
+              lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId)?.teleportCost ??
               sceneRules.energy.lobbyTeleportCost
             }}
             能量）</UiListRow
@@ -936,6 +937,7 @@ function start(mode: string) {
         {{ hp }}%</p
       >
       <div class="lobby-arena-actions">
+        <SceneNpcControls :bots-locked="true" />
         <UiButton
           icon="leave"
           icon-only

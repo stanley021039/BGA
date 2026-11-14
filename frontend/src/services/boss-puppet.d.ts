@@ -11,6 +11,7 @@ export function createBossPuppet(
   update(
     state: {
       moving: boolean;
+      arrivalAt?: number;
       facing?: 'left' | 'right';
       intent?: { effect: string; until: number } | null;
       health?: number;

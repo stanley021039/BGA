@@ -69,6 +69,9 @@ export interface SceneEquationPuzzle {
   rejectedOptions: number[];
 }
 export interface LobbyVisitor {
+  bossArrivalAt?: number;
+  bossBlessingMs?: number;
+  teleportCost?: number;
   bossId?: string;
   bossIntent?: { effect: string; until: number } | null;
   concealed?: boolean;
@@ -194,6 +197,7 @@ export interface AttackHead {
   exploded?: boolean;
 }
 export interface LobbySnapshot {
+  bossArrivals?: { id: string; name: string; at: number; spawnAt: number; x: number; y: number }[];
   arena?: LobbyArena | null;
   arenaRoom?: { currentId: string | null; rooms: { id: string; name: string; count: number }[] };
   attacks: LobbyAttack[];
@@ -433,6 +437,13 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         : 0,
       energyMaximum: readEnergyMaximum(item.energyMaximum),
       health: finite(item.health) ? item.health : undefined,
+      bossArrivalAt: finite(item.bossArrivalAt) ? item.bossArrivalAt : 0,
+      teleportCost: finite(item.teleportCost)
+        ? Math.max(0, Math.min(combatRules.energy.lobbyTeleportCost, item.teleportCost))
+        : combatRules.energy.lobbyTeleportCost,
+      bossBlessingMs: finite(item.bossBlessingMs)
+        ? Math.max(0, Math.min(15000, item.bossBlessingMs))
+        : 0,
       heroFlightUntil: finite(item.heroFlightUntil) ? item.heroFlightUntil : 0,
       sealedUntil: finite(item.sealedUntil) ? item.sealedUntil : 0,
       ...(finite(item.blackoutUntil) ? { blackoutUntil: item.blackoutUntil } : {}),
@@ -519,6 +530,22 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
     throw Error('大廳角色身分不一致。');
   return {
     arena: readLobbyArena(row.arena),
+    bossArrivals: array(row.bossArrivals || [])
+      .slice(0, 2)
+      .map((value) => {
+        const a = record(value);
+        if (
+          !text(a.id) ||
+          !text(a.name) ||
+          !finite(a.at) ||
+          !finite(a.spawnAt) ||
+          a.spawnAt - a.at !== 5000 ||
+          !coordinate(a.x) ||
+          !coordinate(a.y)
+        )
+          throw Error('Boss登場資料格式不正確。');
+        return { id: text(a.id), name: text(a.name), at: a.at, spawnAt: a.spawnAt, x: a.x, y: a.y };
+      }),
     ...(row.arenaRoom ? { arenaRoom: readArenaRooms(row.arenaRoom) } : {}),
     // Older lobby servers sent plain messages without the room event discriminator.
     barrages: readBarrages(

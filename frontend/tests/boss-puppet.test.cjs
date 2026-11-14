@@ -88,3 +88,21 @@ test('organic, flying, mechanical, stalking and heavy bosses have different gait
   assert.equal(new Set(profiles.map((p) => p.gait)).size, 5);
   assert.ok(profiles.every((p) => p.period >= 1000 && p.sway <= 3.5 && p.lift <= 7));
 });
+test('boss fall is finite, seeks the authoritative arrival time and is not replayed by late snapshots', () => {
+  const f = fixture(),
+    puppet = f.scope.create(f.element(), 'thanos');
+  const state = { moving: false, connected: true, health: 100, arrivalAt: 1000 };
+  puppet.update(state, 1200);
+  const fall = f.created.find((a) => a.options.duration === 1100);
+  assert.ok(fall);
+  assert.equal(fall.currentTime, 200);
+  assert.equal(fall.frames[1].offset, 700 / 1100);
+  puppet.update(state, 1300);
+  assert.equal(f.created.filter((a) => a.options.duration === 1100).length, 1);
+  puppet.dispose();
+  assert.ok(f.created.every((a) => a.cancelled));
+  const late = f.scope.create(f.element(), 'thanos');
+  late.update(state, 3000);
+  assert.equal(f.created.filter((a) => a.options.duration === 1100).length, 1);
+  late.dispose();
+});

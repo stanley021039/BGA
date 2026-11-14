@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { requestJson } from '../services/http';
+import { sceneApiPath } from '../services/scene-scope';
 import UiButton from './UiButton.vue';
 import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
@@ -13,7 +14,7 @@ type Entry = {
   image: string;
   abilities: { id: string; slot: string; name: string }[];
 };
-type Boss = { id: string; bossId: string; name: string; ownerId: string };
+type Boss = { id: string; bossId: string; name: string; ownerId: string; arrived?: boolean };
 type State = { selfId: string; limit: number; catalog: Entry[]; bosses: Boss[] };
 const state = ref<State | null>(null),
   bossId = ref('mutalith'),
@@ -26,7 +27,7 @@ async function command(action = 'list', id?: string) {
   error.value = '';
   try {
     state.value = (await requestJson(
-      '/api/lobby/bosses',
+      sceneApiPath('/api/lobby/bosses'),
       action === 'list'
         ? undefined
         : {
@@ -47,7 +48,7 @@ onMounted(() => {
 </script>
 <template>
   <div class="scene-boss-controls">
-    <p>最多兩隻，與陪練機器人分開計算。Boss會主動攻擊，蓄力時可先移動閃避。</p>
+    <p>與機器人分開計算；加入後預告五秒，再從空中登場。Boss會主動攻擊。</p>
     <p v-if="state">目前 {{ state.bosses.length }}／{{ state.limit }} 隻</p>
     <UiField label="選擇 Boss" control="select" v-model="bossId" :disabled="pending">
       <option v-for="boss in state?.catalog || []" :key="boss.id" :value="boss.id">{{
@@ -75,7 +76,7 @@ onMounted(() => {
     <UiPanel
       v-for="boss in state?.bosses || []"
       :key="boss.id"
-      :title="boss.name"
+      :title="boss.name + (!boss.arrived ? ' · 即將登場' : '')"
       density="compact"
     >
       <div v-if="boss.ownerId === state?.selfId" class="scene-boss-actions">

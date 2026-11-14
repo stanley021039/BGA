@@ -21,6 +21,8 @@ export function createBossPuppet(node, id) {
     castKey = '',
     attack = null,
     hit = null,
+    arrival = null,
+    arrivalKey = 0,
     previousHealth,
     live = true;
   const parts = ['head', 'torso', 'lower'].map((part) =>
@@ -42,6 +44,7 @@ export function createBossPuppet(node, id) {
     clearGait();
     attack?.cancel();
     hit?.cancel();
+    arrival?.cancel();
     owners.delete(node);
     release();
     node.removeAttribute('data-animated');
@@ -60,6 +63,21 @@ export function createBossPuppet(node, id) {
       return;
     }
     const next = state.moving ? 'walk' : 'idle';
+    if (state.arrivalAt && arrivalKey !== state.arrivalAt && now - state.arrivalAt < 1100) {
+      arrivalKey = state.arrivalAt;
+      arrival = animate(
+        node,
+        [
+          { transform: 'translateY(-75vh) scale(.8,1.15)', offset: 0 },
+          { transform: 'translateY(0) scale(1.18,.78)', offset: 700 / 1100 },
+          { transform: 'translateY(-12px) scale(.96,1.05)', offset: 0.83 },
+          { transform: 'translateY(0) scale(1,1)', offset: 1 },
+        ],
+        { duration: 1100, easing: 'cubic-bezier(.4,0,1,1)' },
+        null,
+      );
+      if (arrival) arrival.currentTime = Math.max(0, now - state.arrivalAt);
+    }
     if (next !== gait) {
       gait = next;
       clearGait();

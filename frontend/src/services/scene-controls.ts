@@ -67,7 +67,8 @@ export function useSceneControls(options: {
       (until.flight || 0) > now.value ||
       (!(action in sceneDirections) && (until.seal || 0) > now.value) ||
       (action === 'c' &&
-        ((until.teleportBlocked || 0) > now.value || energy.value < (options.teleportCost ?? 0))) ||
+        ((until.teleportBlocked || 0) > now.value ||
+          energy.value < (own.value?.teleportCost ?? options.teleportCost ?? 0))) ||
       (action === 'r' && energy.value < energyMaximum.value)
     );
   }

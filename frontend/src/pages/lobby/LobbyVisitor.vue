@@ -142,6 +142,10 @@ watch(
 watch(
   [() => props.arrive, () => props.visitor.teleportId],
   async ([value, id], previous) => {
+    if (props.visitor.bossId) {
+      emit('arrived');
+      return;
+    }
     if (!value && !(previous && id > 0 && id !== previous[1])) return;
     await nextTick();
     const layer = node.value?.closest<HTMLElement>('.lobby-backdrop');
@@ -243,7 +247,11 @@ watch(
       moveFrame = 0;
       if (disposed || epoch !== revision || document.hidden || !props.connected) return;
       const position =
-        (visitor.archetype || visitor.pickupEffects?.speedUntil) && !visitor.passage
+        (visitor.archetype ||
+          visitor.pickupEffects?.speedUntil ||
+          visitor.bossId ||
+          visitor.bossBlessingMs) &&
+        !visitor.passage
           ? interpolateSceneVisitor(visitor, time - started)
           : sceneWalkWithSpeed(
               visitor,

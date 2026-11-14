@@ -25,6 +25,7 @@ function refresh() {
   puppet?.update(
     {
       moving: props.visitor.moving,
+      arrivalAt: props.visitor.bossArrivalAt,
       facing: props.visitor.facing,
       intent: props.visitor.bossIntent,
       health: props.visitor.health,

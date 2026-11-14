@@ -9,6 +9,7 @@ import { sizedImage } from '../../services/image-size';
 import { playHeroFlight } from '../../services/scene-hero-flight.js';
 import SceneEquation from '../../components/SceneEquation.vue';
 import BossTelegraphs from '../../components/BossTelegraphs.vue';
+import BossLandingImpacts from '../../components/BossLandingImpacts.vue';
 import { homingScale } from '../../services/attack-homing.js';
 const props = withDefaults(
   defineProps<{
@@ -285,6 +286,12 @@ onBeforeUnmount(() => {
     </div>
   </Teleport>
   <div ref="layer" class="lobby-attack-layer" aria-hidden="true">
+    <BossLandingImpacts
+      v-if="connected"
+      :arrivals="snapshot?.bossArrivals || []"
+      :now="snapshot?.serverNow || 0"
+      :still="still"
+    />
     <BossTelegraphs
       v-if="connected"
       :events="snapshot?.attacks || []"

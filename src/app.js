@@ -1917,6 +1917,12 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/lobby' && req.method === 'GET')
           return send(lobbyChanged(scopedLobby.view(user, url.searchParams.get('entrance'))));
         if (url.pathname === '/api/lobby/bosses' && ['GET', 'POST'].includes(req.method)) {
+          if (
+            url.searchParams.has('arena') &&
+            !url.searchParams.has('training') &&
+            !arenaRooms.view(user.id).currentId
+          )
+            throw new HttpError(409, 'ARENA_ROOM_REQUIRED', '請先加入競技場房間');
           if (req.method === 'POST') limitRate(roomRate, 'scene-bosses:' + user.id, 30);
           const result = scopedLobby.bosses(user, req.method === 'POST' ? data : undefined);
           lobbyChanged();

@@ -264,3 +264,18 @@ test('cooldown timers pause in background, resume without replay and dispose all
   assert.equal(f.listeners.size, 0);
   assert.equal(await f.controls.run('q'), false);
 });
+test('teleport input uses the synchronized discounted cost and restores the normal gate', async () => {
+  const f = fixture();
+  try {
+    const own = f.state.snapshot.visitors[0];
+    own.energy = 15;
+    own.teleportCost = 10;
+    await vue.nextTick();
+    assert.equal(f.controls.disabled('c'), false);
+    own.teleportCost = 20;
+    await vue.nextTick();
+    assert.equal(f.controls.disabled('c'), true);
+  } finally {
+    f.dispose();
+  }
+});

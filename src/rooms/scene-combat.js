@@ -13,8 +13,12 @@ const damageMultipliers = new Map(
   attackEffects.map((effect) => [effect.id, effect.damageMultiplier ?? 1]),
 );
 
-function authorSpeed(actor) {
-  return (actor.authorBonus ? rules.authorBonus.speedMultiplier : 1) * (actor.bossSpeed || 1);
+function authorSpeed(actor, time = actor.combatAt || 0) {
+  return (
+    (actor.authorBonus ? rules.authorBonus.speedMultiplier : 1) *
+    (actor.bossSpeed || 1) *
+    (time < (actor.bossBlessingUntil || 0) ? 1.08 : 1)
+  );
 }
 // Radius as a percentage of the scene's longer edge, independent of aspect ratio.
 function sceneDistance(from, to, aspectRatio) {
@@ -31,6 +35,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     (actor.guanyinActive ? rules.guanyinBonus.multiplier : 1) *
     profile(actor).health;
   function reset(actor, time) {
+    actor.bossBlessingUntil = 0;
     actor.bossIntent = null;
     actor.energy ||= 0;
     actor.energyWalkMs = 0;
@@ -570,7 +575,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       babylon
         ? portion *
             (critical ? rules.damage.criticalMultiplier : 1) *
-            (time < (from.guanyinUntil || 0) ? rules.guanyinBonus.multiplier : 1)
+            (time < (from.guanyinUntil || 0) ? rules.guanyinBonus.multiplier : 1) *
+            (validCaster && time < (caster.bossBlessingUntil || 0) ? 1.1 : 1)
         : base *
             weight *
             (damageMultipliers.get(effect) ?? 1) *
@@ -578,6 +584,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
             (areaEffects.has(effect) ? rules.areaDamageMultiplier : 1) *
             (critical ? rules.damage.criticalMultiplier : 1) *
             (from.authorBonus ? rules.authorBonus.damageMultiplier : 1) *
+            (validCaster && time < (caster.bossBlessingUntil || 0) ? 1.1 : 1) *
             (time < (from.guanyinUntil || 0) ? rules.guanyinBonus.multiplier : 1),
     );
     let blockedPercent = 0;
@@ -679,17 +686,21 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     to.health = Math.max(0, to.health - damage);
     to.lastHitAt = to.regenAt = time;
     if (!to.health) {
-      stats(to).deaths++;
-      if (from.id && from.id !== to.id) stats(from).kills++;
-      for (const [id, entry] of helpers)
-        if (id !== from.id && id !== to.id) stats(entry.actor).assists++;
+      if (!policy.isObjective?.(to)) {
+        stats(to).deaths++;
+        if (from.id && from.id !== to.id) stats(from).kills++;
+        for (const [id, entry] of helpers)
+          if (id !== from.id && id !== to.id) stats(entry.actor).assists++;
+      }
       contributions.delete(to);
       clearDeath(to, time);
+      policy.onKill?.(from, to, time);
     }
     policy.onHit?.(from, to, time, damage);
     return { damage, critical, ...(weakened && { weakened }) };
   }
   function clearDeath(actor, time) {
+    actor.bossBlessingUntil = 0;
     actor.bijuuSlowUntil =
       actor.strongSlowUntil =
       actor.orangeSlowUntil =
@@ -809,6 +820,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
           }
         : {}),
       energy: actor.energy || 0,
+      teleportCost: teleportCost(actor, time),
+      bossBlessingMs: living ? Math.max(0, (actor.bossBlessingUntil || 0) - time) : 0,
       energyMaximum: energy.maximum(actor),
       health: actor.health,
       maxHealth: actor.maxHealth,
@@ -878,8 +891,15 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       severed: actor.severed === true,
     };
   }
+  function teleportCost(actor, time = actor.combatAt || 0) {
+    return (
+      rules.energy.lobbyTeleportCost *
+      (actor.health > 0 && time < (actor.bossBlessingUntil || 0) ? 0.5 : 1)
+    );
+  }
   return {
     rollChance,
+    teleportCost,
     reset,
     environmentDamage,
     advance,
