@@ -68,6 +68,8 @@ export interface SceneEquationPuzzle {
   rejectedOptions: number[];
 }
 export interface LobbyVisitor {
+  bossId?: string;
+  bossIntent?: { effect: string; until: number } | null;
   concealed?: boolean;
   heroFlightUntil?: number;
   sealedUntil?: number;
@@ -481,6 +483,16 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       id: text(item.id),
       name: text(item.name),
       image: text(item.image),
+      ...(typeof item.bossId === 'string' ? { bossId: item.bossId } : {}),
+      bossIntent:
+        item.bossIntent &&
+        typeof item.bossIntent === 'object' &&
+        finite((item.bossIntent as Record<string, unknown>).until)
+          ? {
+              effect: text((item.bossIntent as Record<string, unknown>).effect),
+              until: Number((item.bossIntent as Record<string, unknown>).until),
+            }
+          : null,
       x: Number(item.x),
       y: Number(item.y),
       targetX: Number(item.targetX),

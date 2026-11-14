@@ -765,6 +765,9 @@ function initializeApp(config, dataLock, acquired) {
       ),
       artwork = db.prepare('SELECT bytes FROM user_artworks WHERE id=?');
     return [
+      ...require('./rooms/scene-bosses').bosses.map(
+        (b) => () => readStatic(path.join(__dirname, '..', 'public', assetPath(b.image))).bytes,
+      ),
       ...[
         ...new Set(builtinCharacters.flatMap((c) => Object.values(c.expressions).map(assetPath))),
       ].map((file) => () => readStatic(path.join(__dirname, '..', 'public', file)).bytes),
@@ -1913,6 +1916,12 @@ function initializeApp(config, dataLock, acquired) {
             : lobbyHandlers);
         if (url.pathname === '/api/lobby' && req.method === 'GET')
           return send(lobbyChanged(scopedLobby.view(user, url.searchParams.get('entrance'))));
+        if (url.pathname === '/api/lobby/bosses' && ['GET', 'POST'].includes(req.method)) {
+          if (req.method === 'POST') limitRate(roomRate, 'scene-bosses:' + user.id, 30);
+          const result = scopedLobby.bosses(user, req.method === 'POST' ? data : undefined);
+          lobbyChanged();
+          return send(result);
+        }
         if (url.pathname === '/api/lobby/bots' && ['GET', 'POST'].includes(req.method)) {
           if (
             url.searchParams.has('arena') &&
@@ -3455,7 +3464,11 @@ function initializeApp(config, dataLock, acquired) {
         const asset =
           builtinCharacters
             .flatMap((character) => Object.values(character.expressions).map(assetPath))
-            .find((value) => value === url.pathname) || retiredCharacterAsset(url.pathname);
+            .find((value) => value === url.pathname) ||
+          require('./rooms/scene-bosses')
+            .bosses.map((b) => assetPath(b.image))
+            .find((p) => p === url.pathname) ||
+          retiredCharacterAsset(url.pathname);
         if (!asset) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
         const { bytes, version } = readStatic(path.join(__dirname, '..', 'public', asset));
         return sendImage(

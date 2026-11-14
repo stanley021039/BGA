@@ -23,6 +23,7 @@ const { createAttackTimeline } = require('./attack-timeline');
 const { sceneWalkWithSpeed } = require('../../frontend/src/engines/scene-path.js');
 const { randomBytes } = require('node:crypto');
 const { botSettings, createBotDriver } = require('./scene-bots');
+const { bosses: bossCatalog, bossFor } = require('./scene-bosses');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
 // Percentages of the lobby page background, below the site header.
@@ -613,6 +614,12 @@ function createLobby(
           id: visitor.id,
           name: visitor.name,
           archetype: visitor.archetype || null,
+          ...(sceneBots.get(visitor.id)?.bossId
+            ? {
+                bossId: sceneBots.get(visitor.id).bossId,
+                bossIntent: visitor.bossIntent?.until > time ? visitor.bossIntent : null,
+              }
+            : {}),
           concealed: !!(
             arena.active(visitor.id) &&
             bushAt(bushes, visitor) &&
@@ -631,7 +638,8 @@ function createLobby(
           facing: visitor.facing,
           moving: Math.hypot(visitor.targetX - visitor.x, visitor.targetY - visitor.y) > 0.05,
           image: sceneBots.has(visitor.id)
-            ? botCharacters.find((c) => c.id === sceneBots.get(visitor.id).characterId)?.image
+            ? bossFor(sceneBots.get(visitor.id).bossId)?.image ||
+              botCharacters.find((c) => c.id === sceneBots.get(visitor.id).characterId)?.image
             : portrait(visitor.id),
           emote: visitor.emote && visitor.emote.until > time ? visitor.emote : null,
           entrance: visitor.entrance || 'classic',
@@ -964,7 +972,7 @@ function createLobby(
       if (arena.view(visitors).match?.phase === 'running')
         throw new HttpError(409, 'ARENA_LOCKED', '對戰中不能調整機器人');
       let bot = sceneBots.get(input.id);
-      if (input.action !== 'add' && (!bot || bot.ownerId !== user.id))
+      if (input.action !== 'add' && (!bot || bot.bossId || bot.ownerId !== user.id))
         throw new HttpError(403, 'BOT_NOT_OWNED', '只能調整自己加入的機器人');
       if (input.action === 'add' || input.action === 'update') {
         const settings = botSettings(input, botCharacters);
@@ -977,7 +985,10 @@ function createLobby(
         )
           throw new HttpError(409, 'TEAM_FULL', '這隊已滿 8 人');
         if (input.action === 'add') {
-          if (sceneBots.size >= limit)
+          if (
+            [...sceneBots.values()].filter((b) => !b.bossId).length >= limit ||
+            visitors.size >= MAX_VISITORS
+          )
             throw new HttpError(409, 'SCENE_BOTS_FULL', `最多 ${limit} 隻機器人`);
           const id = 'scene-bot:' + randomBytes(12).toString('hex');
           bot = {
@@ -1021,10 +1032,62 @@ function createLobby(
       limit,
       selfId: user.id,
       characters: botCharacters,
-      bots: [...sceneBots.values()].map(({ user, ...bot }) => ({
-        ...bot,
-        name: user.display_name,
-      })),
+      bots: [...sceneBots.values()]
+        .filter((b) => !b.bossId)
+        .map(({ user, ...bot }) => ({
+          ...bot,
+          name: user.display_name,
+        })),
+    };
+  }
+  function bosses(user, input = { action: 'list' }) {
+    if (expanded || arenaOptions.training)
+      throw new HttpError(403, 'LOBBY_BOSS_ONLY', 'Boss僅能加入主大廳');
+    enter(user);
+    if (
+      !input ||
+      typeof input !== 'object' ||
+      Array.isArray(input) ||
+      Object.keys(input).some((k) => !['action', 'id', 'bossId'].includes(k)) ||
+      !['list', 'add', 'remove', 'reset'].includes(input.action)
+    )
+      throw new HttpError(400, 'INVALID_BOSS', 'Boss操作不正確');
+    const current = () => [...sceneBots.values()].filter((b) => b.bossId);
+    if (input.action === 'add') {
+      const spec = bossFor(input.bossId);
+      if (!spec) throw new HttpError(400, 'INVALID_BOSS', '請選擇有效Boss');
+      if (current().length >= 2 || visitors.size >= MAX_VISITORS)
+        throw new HttpError(409, 'BOSSES_FULL', '大廳最多兩隻Boss');
+      const id = 'scene-boss:' + randomBytes(12).toString('hex');
+      const bot = {
+        id,
+        ownerId: user.id,
+        bossId: spec.id,
+        mode: 'attack',
+        entrance: 'classic',
+        q: spec.sequence[0],
+        e: spec.sequence[1],
+        user: { id, display_name: spec.name },
+      };
+      sceneBots.set(id, bot);
+      const actor = enter(bot.user);
+      actor.bossSpeed = spec.speed;
+      actor.bossHealthMultiplier = 8;
+      combat.reset(actor, now());
+      actor.x = actor.targetX = current().length === 1 ? 25 : 75;
+      actor.y = actor.targetY = 65;
+    } else if (input.action !== 'list') {
+      const bot = sceneBots.get(input.id);
+      if (!bot?.bossId || bot.ownerId !== user.id)
+        throw new HttpError(403, 'BOSS_NOT_OWNED', '只能調整自己加入的Boss');
+      if (input.action === 'remove') removeBot(bot.id);
+      else combat.reset(visitors.get(bot.id), now());
+    }
+    return {
+      selfId: user.id,
+      limit: 2,
+      catalog: bossCatalog.map(({ sequence, speed, ...spec }) => spec),
+      bosses: current().map(({ user, ...b }) => ({ ...b, name: user.display_name })),
     };
   }
   function training(user, action, entrance) {
@@ -1054,6 +1117,7 @@ function createLobby(
     arena.view(visitors);
   }
   return {
+    bosses,
     training,
     bots,
     leaveArenaRoom,

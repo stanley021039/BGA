@@ -2,6 +2,7 @@ const { HttpError } = require('../http/errors');
 const { fitsSlot } = require('./scene-energy');
 const attacks = new Set(require('../../public/shared/attack-effects.json').map((e) => e.id));
 const palette = require('../../public/shared/entrance-palette.json');
+const { driveBoss } = require('./scene-bosses');
 const entrances = new Set(
   [
     ...palette.starters,
@@ -76,6 +77,19 @@ function createBotDriver(random = Math.random) {
           (a, b) =>
             Math.hypot(a.x - actor.x, a.y - actor.y) - Math.hypot(b.x - actor.x, b.y - actor.y),
         )[0];
+        if (bot.bossId) {
+          if (casts >= 1) continue;
+          const effect = driveBoss(bot, actor, target, time, state);
+          if (effect) {
+            try {
+              cast({ ...bot, q: effect }, 'q');
+              casts++;
+            } catch (error) {
+              if (!(error instanceof HttpError)) throw error;
+            }
+          }
+          continue;
+        }
         const attacking =
           bot.mode === 'attack' ||
           active(bot.id) ||

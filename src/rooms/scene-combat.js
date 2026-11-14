@@ -14,7 +14,7 @@ const damageMultipliers = new Map(
 );
 
 function authorSpeed(actor) {
-  return actor.authorBonus ? rules.authorBonus.speedMultiplier : 1;
+  return (actor.authorBonus ? rules.authorBonus.speedMultiplier : 1) * (actor.bossSpeed || 1);
 }
 // Radius as a percentage of the scene's longer edge, independent of aspect ratio.
 function sceneDistance(from, to, aspectRatio) {
@@ -26,10 +26,12 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
   const contributions = new WeakMap();
   const stats = (actor) => (actor.kda ||= { kills: 0, deaths: 0, assists: 0 });
   const healthFactor = (actor) =>
+    (actor.bossHealthMultiplier || 1) *
     (actor.authorBonus ? rules.authorBonus.healthMultiplier : 1) *
     (actor.guanyinActive ? rules.guanyinBonus.multiplier : 1) *
     profile(actor).health;
   function reset(actor, time) {
+    actor.bossIntent = null;
     actor.energy ||= 0;
     actor.energyWalkMs = 0;
     actor.lifeId = (actor.lifeId || 0) + 1;

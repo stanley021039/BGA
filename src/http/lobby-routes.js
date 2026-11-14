@@ -24,6 +24,9 @@ function createLobbyHandlers({
   function bots(user, data) {
     return lobby.bots(user, data);
   }
+  function bosses(user, data) {
+    return lobby.bosses(user, data);
+  }
   function move(user, data) {
     return withLobbyMedia(user, lobby.move(user, data));
   }
@@ -84,6 +87,6 @@ function createLobbyHandlers({
       throw new HttpError(403, 'BACKGROUND_LOCKED', '請先完成對應成就以解鎖這個背景');
     return withLobbyMedia(user, lobby.changeBackground(user, data));
   }
-  return { view, move, emotes, emote, barrage, background, teleport, attack, arena, bots };
+  return { view, move, emotes, emote, barrage, background, teleport, attack, arena, bots, bosses };
 }
 module.exports = { createLobbyHandlers };

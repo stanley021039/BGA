@@ -53,6 +53,7 @@ watch(
   { immediate: true, flush: 'post' },
 );
 const shortName = computed(() => {
+  if (props.visitor.bossId) return props.visitor.name;
   const chars = [...props.visitor.name];
   return chars.length > NAME_LIMIT ? chars.slice(0, NAME_LIMIT).join('') + '…' : props.visitor.name;
 });
@@ -325,6 +326,7 @@ window.addEventListener('resize', positionBubble);
     }"
     :data-ping-player="visitor.id"
     :data-arena-team="team"
+    :data-scene-boss="visitor.bossId || undefined"
     :data-arena-concealed="visitor.concealed || undefined"
     :aria-label="self ? visitor.name + '（你），點一下發表情，C 鍵瞬移、R 鍵施放大招' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
@@ -379,7 +381,7 @@ window.addEventListener('resize', positionBubble);
       />
       <img
         class="scene-avatar-image"
-        :src="sizedImage(visitor.emote?.image || visitor.image, 128)"
+        :src="sizedImage(visitor.emote?.image || visitor.image, visitor.bossId ? 256 : 128)"
         :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
         alt=""
         draggable="false"
@@ -432,6 +434,7 @@ window.addEventListener('resize', positionBubble);
         </g>
       </svg>
     </div>
+    <span v-if="visitor.bossIntent" class="scene-boss-warning" role="status">蓄力中・準備閃避</span>
     <SceneHealth
       v-if="visitor.maxHealth"
       :visitor="visitor"
@@ -444,6 +447,24 @@ window.addEventListener('resize', positionBubble);
   </component>
 </template>
 <style scoped>
+.lobby-avatar[data-scene-boss] .scene-avatar-image {
+  width: min(150px, 35vh);
+  height: min(156px, 36vh);
+  object-fit: contain;
+}
+.scene-boss-warning {
+  padding: var(--stitch-space-4);
+  border-radius: var(--stitch-radius-control);
+  background: var(--stitch-primary);
+  color: var(--stitch-on-primary);
+  font-weight: 800;
+  white-space: nowrap;
+}
+.lobby-avatar[data-scene-boss] > span:last-child {
+  max-width: 190px;
+  white-space: normal;
+  text-align: center;
+}
 .scene-avatar-portrait {
   position: relative;
   line-height: 0;

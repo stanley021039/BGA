@@ -489,7 +489,10 @@ $c03: 'body[data-visual-theme] [data-site-header].site-header.vue-site-header:ha
       display: block;
       inline-size: 100%;
       block-size: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      object-position: center;
+      box-sizing: border-box;
+      padding: 3px;
     }
     > span {
       font-size: 18px;
@@ -575,7 +578,10 @@ $c03: 'body[data-visual-theme] [data-site-header].site-header.vue-site-header:ha
       display: block;
       inline-size: 100%;
       block-size: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      object-position: center;
+      box-sizing: border-box;
+      padding: 3px;
     }
   }
   .vue-site-account-badge {
