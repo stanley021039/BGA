@@ -1286,7 +1286,7 @@ function initializeApp(config, dataLock, acquired) {
       serverNow: Date.now(),
     });
     trainingLobby.view(user);
-    trainingLobby.bots(user, { action: 'add', mode: 'stationary' });
+    trainingLobby.bots(user, { action: 'add', mode: 'idle' });
     trainingLobby.training(user, 'refill', settings.entrance);
     return { settings, lobby: trainingLobby, handlers, characters: botCharacters };
   });

@@ -36,7 +36,7 @@ function createBossCombat(combat, intercept = () => false) {
     });
     return event;
   }
-  function advance(events, positions, time, moveActor, isNpc) {
+  function advance(events, positions, time, moveActor) {
     for (const event of events) {
       const state = runtime.get(event),
         spec = abilityFor(event.effect);
@@ -58,7 +58,7 @@ function createBossCombat(combat, intercept = () => false) {
         if (at > time) break;
         state.next++;
         for (const victim of [...positions.values()]
-          .filter((v) => !isNpc(v.id) && v.health > 0)
+          .filter((v) => v.id !== caster.id && v.health > 0)
           .slice(0, 80)) {
           moveActor(victim, at);
           if (!inBossZones(state.zones, victim) || !combat.canHit(caster, victim, at, spec.id))

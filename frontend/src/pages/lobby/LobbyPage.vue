@@ -12,8 +12,7 @@ import LobbyBackdrop from './LobbyBackdrop.vue';
 import SceneKda from '../../components/SceneKda.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
-import SceneBotControls from '../../components/SceneBotControls.vue';
-import SceneBossControls from '../../components/SceneBossControls.vue';
+import SceneNpcControls from '../../components/SceneNpcControls.vue';
 import UiLink from '../../components/UiLink.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import UiField from '../../components/UiField.vue';
@@ -160,10 +159,7 @@ onBeforeUnmount(() => {
     >
     <GameCarousel v-model="selected" @create="open" @join="openJoin()"
       ><template #lobby-action
-        ><UiLink
-          href="/arena"
-          label="戰鬥競技場"
-          icon="shield" /><SceneBotControls /><SceneBossControls /><UiButton
+        ><UiLink href="/arena" label="戰鬥競技場" icon="shield" /><SceneNpcControls /><UiButton
           icon="chat"
           caption="對話"
           label="對話"

@@ -87,7 +87,7 @@ test('all authoritative warning shapes delay damage and hit only inside their lo
     assert.equal(g.player.health, g.player.maxHealth, spec.id);
   }
 });
-test('casts keep their aim, cannot damage a removed or respawned caster, and exclude other NPCs', () => {
+test('casts keep their aim, stop on respawn, and damage NPC opponents without self hits', () => {
   const f = fixture(),
     spec = abilities[0],
     event = f.system.prepare({ bossId: spec.boss }, f.boss, spec.id, f.player, 0);
@@ -125,7 +125,8 @@ test('casts keep their aim, cannot damage a removed or respawned caster, and exc
     () => {},
     (id) => id !== 'player',
   );
-  assert.equal(another.health, another.maxHealth);
+  assert.ok(another.health < another.maxHealth);
+  assert.equal(h.boss.health, h.boss.maxHealth);
 });
 test('crystal guard returns boss ordinary damage through its existing budget; ultimates remain unreflected', () => {
   const f = fixture(),

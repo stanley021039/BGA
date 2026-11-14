@@ -321,7 +321,7 @@ function createLobby(
     for (const [id, visitor] of visitors)
       if (time - visitor.seenAt > PRESENCE_MS) visitors.delete(id);
     timeline.advance(attacks, visitors.values(), time, advance);
-    bossCombat.advance(attacks, visitors, time, advance, (id) => sceneBots.has(id));
+    bossCombat.advance(attacks, visitors, time, advance);
     arena.finish(time, visitors);
     pickups.advance(visitors.values(), time);
     for (let i = attacks.length - 1; i >= 0; i--)
@@ -561,7 +561,7 @@ function createLobby(
       bots: [...sceneBots.values()],
       positions: visitors,
       events: attacks,
-      active: arena.active,
+      canTarget: (from, to) => arena.canPair(from.id, to.id) && canSee(from.id, to.id, time),
       castBoss: (bot, effect, target, at) => {
         if (attacks.length >= 40) return;
         const actor = visitors.get(bot.id);
@@ -777,7 +777,6 @@ function createLobby(
         .targets(visitors.values())
         .filter(
           (actor) =>
-            !(sceneBots.has(self.id) && sceneBots.has(actor.ownerId || actor.id)) &&
             arena.canPair(self.id, actor.ownerId || actor.id) &&
             canSee(self.id, actor.ownerId || actor.id, time),
         ),

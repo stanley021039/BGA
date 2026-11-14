@@ -514,6 +514,7 @@ defineExpose({ openChat });
             :follow-camera="expanded && visitor.id === lobby.snapshot?.selfId"
             @position="moveCamera"
             :reset="lobby.positionReset"
+            :server-now="sceneSnapshot?.serverNow"
             :open="opened"
             :connected="lobby.connected"
             :arrive="arrivals.has(visitor.id)"

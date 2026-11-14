@@ -24,7 +24,7 @@ function botSettings(input, characters) {
     throw new HttpError(400, 'INVALID_SCENE_BOT', '機器人設定不正確');
   const characterId = input.characterId ?? characters[0]?.id;
   const entrance = input.entrance ?? 'classic';
-  const mode = input.mode ?? 'retaliate';
+  const mode = input.mode ?? 'idle';
   const team = input.team ?? 'blue';
   const loadout = {
     q: input.q ?? 'barrage',
@@ -34,7 +34,7 @@ function botSettings(input, characters) {
   if (
     !characters.some((c) => c.id === characterId) ||
     !entrances.has(entrance) ||
-    !['stationary', 'idle', 'retaliate', 'attack'].includes(mode) ||
+    !['idle', 'attack'].includes(mode) ||
     !['red', 'blue'].includes(team) ||
     Object.entries(loadout).some(([slot, id]) => !attacks.has(id) || !fitsSlot(slot, id))
   )
@@ -54,7 +54,7 @@ function createBotDriver(random = Math.random) {
     events,
     cast,
     castBoss = () => {},
-    active = () => false,
+    canTarget = () => true,
   }) {
     if (driving || time - lastTick < 400) return;
     lastTick = time;
@@ -67,21 +67,11 @@ function createBotDriver(random = Math.random) {
         const actor = positions.get(bot.id);
         if (!actor?.health) continue;
         let state = states.get(bot.id);
-        if (!state)
-          states.set(
-            bot.id,
-            (state = { moveAt: time + 400, attackAt: time + 1200, aggroUntil: 0 }),
-          );
-        for (const event of events) {
-          if (ids.has(event.fromId) || event.fromId === bot.id || event.at < time - 5000) continue;
-          if (
-            event.hits?.some((hit) => hit.toId === bot.id && hit.damage > 0) ||
-            (event.toId === bot.id && event.damage > 0)
-          )
-            state.aggroUntil = time + 6000;
-        }
-        const humans = [...positions.values()].filter((p) => !ids.has(p.id) && p.health > 0);
-        const target = humans.sort(
+        if (!state) states.set(bot.id, (state = { moveAt: time + 400, attackAt: time + 1200 }));
+        const candidates = [...positions.values()].filter(
+          (p) => p.id !== actor.id && p.health > 0 && canTarget(actor, p),
+        );
+        const target = candidates.sort(
           (a, b) =>
             Math.hypot(a.x - actor.x, a.y - actor.y) - Math.hypot(b.x - actor.x, b.y - actor.y),
         )[0];
@@ -98,11 +88,8 @@ function createBotDriver(random = Math.random) {
           }
           continue;
         }
-        const attacking =
-          bot.mode === 'attack' ||
-          active(bot.id) ||
-          (bot.mode === 'retaliate' && state.aggroUntil > time);
-        if (time >= state.moveAt && (bot.mode !== 'stationary' || active(bot.id))) {
+        const attacking = bot.mode === 'attack';
+        if (time >= state.moveAt) {
           const chase = attacking && target;
           actor.targetX = Math.max(
             6,

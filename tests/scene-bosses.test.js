@@ -25,7 +25,7 @@ function fixture(options = {}) {
 }
 test('boss capacity is global and independent of three bots; ownership, input and scope are enforced', () => {
   const { lobby, advance } = fixture();
-  for (let i = 0; i < 3; i++) lobby.bots(alice, { action: 'add', mode: 'stationary' });
+  for (let i = 0; i < 3; i++) lobby.bots(alice, { action: 'add', mode: 'idle' });
   for (const spec of bosses.slice(0, 2)) lobby.bosses(alice, { action: 'add', bossId: spec.id });
   assert.equal(lobby.bots(alice).bots.length, 3);
   assert.equal(lobby.bosses(bob).bosses.length, 2);
@@ -108,7 +108,7 @@ test('paralysis cancels a boss windup and blink; respawn requires a fresh windup
   assert.equal(driveBoss(bot, actor, target, 5200, state), 'boss_greeza_q');
   assert.equal(driveBoss(bot, actor, target, 6200, state), null);
 });
-test('boss driver uses a bounded shared clock, excludes other NPCs and stops for dead bosses', () => {
+test('boss driver uses a bounded shared clock, targets other NPCs and stops for dead bosses', () => {
   const driver = createBotDriver(() => 0.5),
     cast = [];
   const bots = bosses.slice(0, 2).map((b, i) => ({ id: 'b' + i, bossId: b.id }));
@@ -126,10 +126,11 @@ test('boss driver uses a bounded shared clock, excludes other NPCs and stops for
   const count = cast.length;
   for (let time = 10000; time < 15000; time += 400)
     driver.drive({ time, bots, positions, events: [], castBoss: (b) => cast.push(b.id) });
-  assert.equal(cast.length, count);
+  assert.ok(cast.length > count, 'bosses can target one another without a human target');
+  const afterDuel = cast.length;
   driver.clear();
   positions.set('human', { id: 'human', x: 55, y: 55, health: 100 });
   for (const b of bots) positions.get(b.id).health = 0;
   driver.drive({ time: 20000, bots, positions, events: [], castBoss: (b) => cast.push(b.id) });
-  assert.equal(cast.length, count);
+  assert.equal(cast.length, afterDuel);
 });

@@ -109,7 +109,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       events: attacks.get(room) || [],
       bots: room.players
         .filter((p) => p.bot && !p.kicked)
-        .map((p) => ({ id: p.id, mode: 'retaliate', q: 'barrage', e: 'beam', r: '' })),
+        .map((p) => ({ id: p.id, mode: 'attack', q: 'barrage', e: 'beam', r: '' })),
       cast: (bot, slot) =>
         act(
           room,

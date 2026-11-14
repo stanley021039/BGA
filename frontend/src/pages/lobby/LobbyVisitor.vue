@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import MotionPolicy from '../../engines/motion-policy.js';
-import bossAbilities from '../../../../public/shared/boss-abilities.json';
+import BossPuppet from '../../components/BossPuppet.vue';
 import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
@@ -23,6 +23,7 @@ const props = defineProps<{
     reset: number;
     open: boolean;
     connected: boolean;
+    serverNow?: number;
     arrive?: boolean;
     followCamera?: boolean;
     showSummon?: boolean;
@@ -380,7 +381,16 @@ window.addEventListener('resize', positionBubble);
         :effect="visitor.summon.effect"
         :remaining-ms="visitor.summon.remainingMs"
       />
+      <BossPuppet
+        v-if="visitor.bossId"
+        class="scene-avatar-image"
+        :visitor="visitor"
+        :src="sizedImage(visitor.image, 256)"
+        :active="connected && !still"
+        :server-now="serverNow || Date.now()"
+      />
       <img
+        v-else
         class="scene-avatar-image"
         :src="sizedImage(visitor.emote?.image || visitor.image, visitor.bossId ? 256 : 128)"
         :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
@@ -435,13 +445,6 @@ window.addEventListener('resize', positionBubble);
         </g>
       </svg>
     </div>
-    <span v-if="visitor.bossIntent" class="scene-boss-warning" role="status"
-      >{{
-        bossAbilities.find((a) => a.id === visitor.bossIntent?.effect)?.slot === 'r'
-          ? '大招蓄力'
-          : '準備攻擊'
-      }}・{{ bossAbilities.find((a) => a.id === visitor.bossIntent?.effect)?.name }}</span
-    >
     <SceneHealth
       v-if="visitor.maxHealth"
       :visitor="visitor"
@@ -455,17 +458,9 @@ window.addEventListener('resize', positionBubble);
 </template>
 <style scoped>
 .lobby-avatar[data-scene-boss] .scene-avatar-image {
-  width: min(150px, 35vh);
-  height: min(156px, 36vh);
+  width: min(210px, 44vh);
+  height: min(218px, 46vh);
   object-fit: contain;
-}
-.scene-boss-warning {
-  padding: var(--stitch-space-4);
-  border-radius: var(--stitch-radius-control);
-  background: var(--stitch-primary);
-  color: var(--stitch-on-primary);
-  font-weight: 800;
-  white-space: nowrap;
 }
 .lobby-avatar[data-scene-boss] > span:last-child {
   max-width: 190px;

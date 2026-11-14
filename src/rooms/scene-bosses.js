@@ -112,6 +112,7 @@ function driveBoss(bot, actor, target, time, state) {
     const effect = spec.sequence[state.step % spec.sequence.length];
     const ability = abilities.find((a) => a.id === effect);
     state.pending = { effect, until: time + ability.windup + ability.duration };
+    actor.facing = target.x < actor.x ? 'left' : 'right';
     actor.bossIntent = {
       effect,
       name: ability.name,

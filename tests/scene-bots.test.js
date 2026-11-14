@@ -40,14 +40,16 @@ test('lobby bots have a global limit, private ownership and validated character/
   assert.equal(lobby.view(bob).visitors.filter((v) => v.image === characters[4].image).length, 1);
 });
 
-test('a stationary dummy stays still; a retaliating bot fires only after a real hit', () => {
+test('idle bots walk without attacking even after hits; attack mode actively fires', () => {
   const { lobby, advance } = fixture();
-  const bot = lobby.bots(alice, { action: 'add', mode: 'stationary' }).bots[0];
+  const bot = lobby.bots(alice, { action: 'add', mode: 'idle' }).bots[0];
   let snapshot = lobby.view(alice),
     start = snapshot.visitors.find((v) => v.id === bot.id);
   advance(4000);
   snapshot = lobby.view(alice);
-  assert.equal(snapshot.visitors.find((v) => v.id === bot.id).x, start.x);
+  advance(400);
+  snapshot = lobby.view(alice);
+  assert.notEqual(snapshot.visitors.find((v) => v.id === bot.id).x, start.x);
   assert.equal(snapshot.attacks.length, 0);
   lobby.attack(alice, {
     requestId: 'test-stationary-hit-0001',
@@ -62,8 +64,8 @@ test('a stationary dummy stays still; a retaliating bot fires only after a real 
     if (snapshot.visitors.find((v) => v.id === bot.id).health < start.health) dummyWasHit = true;
     assert.ok(!snapshot.attacks.some((e) => e.fromId === bot.id));
   }
-  assert.ok(dummyWasHit, 'stationary dummy must remain passive after a real hit');
-  lobby.bots(alice, { action: 'update', id: bot.id, mode: 'retaliate' });
+  assert.ok(dummyWasHit, 'idle bot must remain passive after a real hit');
+  lobby.bots(alice, { action: 'update', id: bot.id, mode: 'attack' });
   lobby.attack(alice, {
     requestId: 'test-human-attack-0001',
     aspectRatio: 1.6,
@@ -77,6 +79,36 @@ test('a stationary dummy stays still; a retaliating bot fires only after a real 
     if (snapshot.attacks.some((e) => e.fromId === bot.id)) retaliation = true;
   }
   assert.ok(retaliation, 'bot must use the real attack engine to return fire');
+});
+
+test('only walk and attack modes are accepted, with idle as the default', () => {
+  const { lobby } = fixture();
+  for (const mode of ['stationary', 'retaliate', 'unknown'])
+    assert.throws(() => lobby.bots(alice, { action: 'add', mode }), { code: 'INVALID_SCENE_BOT' });
+  assert.equal(lobby.bots(alice, { action: 'add' }).bots[0].mode, 'idle');
+});
+
+test('lobby bosses and active bots use real attacks against each other', () => {
+  const { lobby, advance } = fixture();
+  lobby.move(alice, { x: 95, y: 15 });
+  advance(10000);
+  lobby.view(alice);
+  const bot = lobby.bots(alice, { action: 'add', mode: 'attack', q: 'beam', e: 'beam' }).bots[0];
+  const boss = lobby.bosses(alice, { action: 'add', bossId: 'thanos' }).bosses[0];
+  let botHit = false,
+    bossHit = false;
+  for (let i = 0; i < 100; i++) {
+    advance(400);
+    const scene = lobby.view(alice);
+    botHit ||= scene.attacks.some(
+      (e) => e.fromId === bot.id && e.hits?.some((h) => h.toId === boss.id && h.damage > 0),
+    );
+    bossHit ||= scene.attacks.some(
+      (e) => e.fromId === boss.id && e.hits?.some((h) => h.toId === bot.id && h.damage > 0),
+    );
+  }
+  assert.ok(botHit, 'bot damages boss');
+  assert.ok(bossHit, 'boss damages bot');
 });
 
 test('expired owners remove their bots and training resets do not exist in the public lobby', () => {

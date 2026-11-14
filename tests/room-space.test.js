@@ -12,7 +12,7 @@ function room(code = 'AAAAAA') {
     ],
   };
 }
-test('game bots walk and return real scene attacks without changing the board-game version', () => {
+test('game bots walk and actively use real scene attacks without changing the board-game version', () => {
   let clock = 1000;
   const space = createRoomSpace(
       () => clock,
@@ -30,12 +30,6 @@ test('game bots walk and return real scene attacks without changing the board-ga
   space.move(game, 'one', { x: 80, y: 38 });
   clock += 6000;
   space.view(game, 'one');
-  space.move(
-    game,
-    'one',
-    { action: 'attack', slot: 'q', aspectRatio: 1.6, requestId: 'room-hit-bot-0001' },
-    'beam',
-  );
   let returned = false;
   for (let i = 0; i < 30; i++) {
     clock += 400;
