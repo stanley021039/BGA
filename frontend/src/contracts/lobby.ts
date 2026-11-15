@@ -73,7 +73,9 @@ export interface LobbyVisitor {
   bossBlessingMs?: number;
   teleportCost?: number;
   bossId?: string;
-  bossIntent?: { effect: string; until: number } | null;
+  bossPhase?: number;
+  bossPhaseLockMs?: number;
+  bossIntent?: { effect: string; until: number; attackRate?: number } | null;
   concealed?: boolean;
   heroFlightUntil?: number;
   sealedUntil?: number;
@@ -161,6 +163,7 @@ export interface LobbyAttackHit {
   critical: boolean;
 }
 export interface LobbyAttack {
+  bossAttackRate?: number;
   cancelled?: boolean;
   head?: AttackHead;
   rays?: { x: number; y: number }[];
@@ -496,6 +499,14 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       name: text(item.name),
       image: text(item.image),
       ...(typeof item.bossId === 'string' ? { bossId: item.bossId } : {}),
+      ...(typeof item.bossId === 'string'
+        ? {
+            bossPhase: [1, 2, 3].includes(Number(item.bossPhase)) ? Number(item.bossPhase) : 1,
+            bossPhaseLockMs: finite(item.bossPhaseLockMs)
+              ? Math.max(0, Math.min(2000, item.bossPhaseLockMs))
+              : 0,
+          }
+        : {}),
       bossIntent:
         item.bossIntent &&
         typeof item.bossIntent === 'object' &&
@@ -503,6 +514,11 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           ? {
               effect: text((item.bossIntent as Record<string, unknown>).effect),
               until: Number((item.bossIntent as Record<string, unknown>).until),
+              ...([1.15, 1.3].includes(
+                Number((item.bossIntent as Record<string, unknown>).attackRate),
+              )
+                ? { attackRate: Number((item.bossIntent as Record<string, unknown>).attackRate) }
+                : {}),
             }
           : null,
       x: Number(item.x),
@@ -564,12 +580,16 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           ![a.fromX, a.fromY, a.toX, a.toY].every(coordinate) ||
           !finite(a.at) ||
           !finite(a.until) ||
-          !(a.head && ['shaohua_devour', 'shaohua_devour_alt'].includes(String(a.effect))
-            ? Number.isSafeInteger(a.until - a.at) && a.until > a.at
-            : kind === 'susanoo'
-              ? a.until - a.at === 5000
-              : [1800, 4400].includes(a.until - a.at) ||
-                (kind === 'crystal_reflection' && a.until - a.at === reflectionLifetime))
+          !(bossAbilities.some((s) => s.id === a.effect)
+            ? (a.bossAttackRate === undefined ||
+                [1, 1.15, 1.3].includes(Number(a.bossAttackRate))) &&
+              a.until - a.at === Math.ceil(4400 / (Number(a.bossAttackRate) || 1))
+            : a.head && ['shaohua_devour', 'shaohua_devour_alt'].includes(String(a.effect))
+              ? Number.isSafeInteger(a.until - a.at) && a.until > a.at
+              : kind === 'susanoo'
+                ? a.until - a.at === 5000
+                : [1800, 4400].includes(a.until - a.at) ||
+                  (kind === 'crystal_reflection' && a.until - a.at === reflectionLifetime))
         )
           throw Error('大廳攻擊資料格式不正確。');
         return {
@@ -730,6 +750,9 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             : {}),
           damage: finite(a.damage) ? Math.max(0, a.damage) : undefined,
           critical: a.critical === true,
+          ...([1.15, 1.3].includes(Number(a.bossAttackRate))
+            ? { bossAttackRate: Number(a.bossAttackRate) }
+            : {}),
           ...(a.weakened === true && { weakened: true }),
           effect: [...attackEffects, ...bossAbilities].some((e) => e.id === a.effect)
             ? String(a.effect)

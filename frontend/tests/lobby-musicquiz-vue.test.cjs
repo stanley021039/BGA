@@ -51,6 +51,41 @@ function loader(mocks = {}) {
   };
 }
 
+test('enraged boss phase and cast rate survive the real lobby parser with bounded fallbacks', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  const { createSceneCombat } = require('../../src/rooms/scene-combat');
+  const { createBossCombat } = require('../../src/rooms/boss-combat');
+  const lobby = createLobby(() => 1000),
+    human = { id: 'human', display_name: 'Human' };
+  const raw = { ...lobby.view(human), serverNow: 1000 };
+  const boss = {
+    ...raw.visitors[0],
+    id: 'boss',
+    name: 'Boss',
+    bossId: 'thanos',
+    bossPhase: 2,
+    lifeId: 1,
+  };
+  const runtime = createBossCombat(createSceneCombat(() => 0.99));
+  const event = runtime.prepare({ bossId: 'thanos' }, boss, 'boss_thanos_q', raw.visitors[0], 1000);
+  boss.bossIntent = { effect: event.effect, until: 1000 + 700 / 1.15, attackRate: 1.15 };
+  raw.visitors.push(boss);
+  raw.attacks = [event];
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  const result = read(raw);
+  assert.equal(result.visitors.find((v) => v.id === 'boss').bossPhase, 2);
+  assert.equal(result.visitors.find((v) => v.id === 'boss').bossIntent.attackRate, 1.15);
+  assert.equal(result.attacks[0].bossAttackRate, 1.15);
+  const invalid = structuredClone(raw);
+  invalid.visitors.at(-1).bossPhase = 999;
+  invalid.visitors.at(-1).bossIntent.attackRate = 999;
+  const safe = read(invalid);
+  assert.equal(safe.visitors.at(-1).bossPhase, 1);
+  assert.equal(safe.visitors.at(-1).bossIntent.attackRate, undefined);
+  invalid.attacks[0].bossAttackRate = 999;
+  assert.throws(() => read(invalid));
+});
+
 function purchaseScene(room, actions) {
   const filename = path.join(__dirname, '../src/pages/musicquiz/MusicQuizScene.vue');
   const script = compileScript(parse(fs.readFileSync(filename, 'utf8')).descriptor, {

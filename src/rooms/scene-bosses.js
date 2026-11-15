@@ -1,5 +1,7 @@
 const { versionedAsset } = require('../http/asset-version');
 const abilities = require('../../public/shared/boss-abilities.json');
+const { phases } = require('../../public/shared/boss-rules.json');
+const { bossPhase, phaseStats } = require('./boss-phases');
 const definitions = [
   ['mutalith', '漩渦獸', 'orbit', 0.65, '繞行拉扯，交替漩渦與雷擊'],
   ['cthulhu', '克蘇魯', 'pursue', 0.55, '緩慢追獵，以鎖鏈與寒霜封路'],
@@ -19,6 +21,11 @@ const bosses = definitions.map(([id, name, movement, speed, description]) => ({
   movement,
   speed,
   sequence: abilities.filter((a) => a.boss === id).map((a) => a.id),
+  // Each phase has its own sequence slot; future phases may choose different IDs.
+  phases: phases.map((p) => ({
+    ...p,
+    sequence: abilities.filter((a) => a.boss === id).map((a) => a.id),
+  })),
   abilities: abilities.filter((a) => a.boss === id),
   description: description.split('，')[0] + '，專屬普攻與蓄力大招',
   image: versionedAsset('/assets/characters/boss-' + id + '.webp'),
@@ -33,6 +40,7 @@ function driveBoss(bot, actor, target, time, state) {
     state.step = 0;
     actor.bossCharge = 0;
     state.pending = null;
+    state.rate = actor.bossId ? phaseStats(actor).attackRate : 1;
     state.attackAt = time + 1200;
     state.moveAt = time + 400;
   }
@@ -47,6 +55,10 @@ function driveBoss(bot, actor, target, time, state) {
     return null;
   }
   state.step ||= 0;
+  const rate = actor.bossId ? phaseStats(actor).attackRate : 1;
+  if (state.rate && state.rate !== rate && !state.pending && state.attackAt > time)
+    state.attackAt = time + ((state.attackAt - time) * state.rate) / rate;
+  state.rate = rate;
   if (time >= state.moveAt && !state.pending) {
     const phase = state.step + Math.floor(time / 2500),
       side = phase % 2 ? 1 : -1;
@@ -105,19 +117,21 @@ function driveBoss(bot, actor, target, time, state) {
     actor.bossIntent = null;
     state.step++;
     actor.bossCharge = (state.step % 3) * 50;
-    state.attackAt = time + (state.step % 3 === 0 ? 4200 : 2600);
+    state.attackAt = time + (state.step % 3 === 0 ? 4200 : 2600) / rate;
     return null;
   }
   if (time >= state.attackAt) {
-    const effect = spec.sequence[state.step % spec.sequence.length];
+    const sequence = spec.phases[bossPhase(actor) - 1]?.sequence || spec.sequence;
+    const effect = sequence[state.step % sequence.length];
     const ability = abilities.find((a) => a.id === effect);
-    state.pending = { effect, until: time + ability.windup + ability.duration };
+    state.pending = { effect, until: time + (ability.windup + ability.duration) / rate };
     actor.facing = target.x < actor.x ? 'left' : 'right';
     actor.bossIntent = {
       effect,
       name: ability.name,
       ultimate: ability.slot === 'r',
-      until: time + ability.windup,
+      until: time + ability.windup / rate,
+      ...(rate !== 1 ? { attackRate: rate } : {}),
     };
     actor.targetX = actor.x;
     actor.targetY = actor.y;

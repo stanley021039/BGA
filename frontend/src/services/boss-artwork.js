@@ -4,6 +4,7 @@ import { drawBossStrike } from './boss-strike-art.js';
 export function createBossArtwork(ctx, options) {
   const spec = abilities.find((s) => s.id === options.effect);
   if (!spec) return null;
+  const rate = Math.max(1, Math.min(1.3, Number(options.bossAttackRate) || 1));
   const start = performance.now() - (options.ageMs || 0),
     aspect = options.aspectRatio || 1.6,
     d = Math.max(1, aspect);
@@ -28,7 +29,7 @@ export function createBossArtwork(ctx, options) {
       disposed = true;
     },
     draw(now) {
-      const age = now - start;
+      const age = (now - start) * rate;
       if (
         disposed ||
         age > 4200 ||

@@ -35,6 +35,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       energyBudget: {
         ordinaryEnergyRemaining: actor.ordinaryHitEnergy ?? rules.energy.ordinaryHit,
       },
+      bossBarBudget: {},
     };
     runtime.set(event, state);
     reflections.set(actor, { event, state });
@@ -90,6 +91,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
         energyActor: actor,
         energyLifeId: actor.lifeId,
         reflectionBudget: guard.state.energyBudget,
+        bossBarBudget: guard.state.bossBarBudget,
         authorBonus: actor.authorBonus,
         guanyinUntil: actor.guanyinUntil,
         kda: actor.kda,
@@ -122,6 +124,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       combatEpoch: self.combatEpoch || 0,
       matchId: self.matchId || null,
       castId: event.id,
+      bossBarBudget: {},
       slot: event.slot,
       originX: event.fromX,
       originY: event.fromY,

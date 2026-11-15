@@ -26,6 +26,8 @@ const { botSettings, createBotDriver } = require('./scene-bots');
 const { bosses: bossCatalog, bossFor } = require('./scene-bosses');
 const { createBossCombat, abilityFor } = require('./boss-combat');
 const { createBossRewards } = require('./boss-rewards');
+const { bossPhase } = require('./boss-phases');
+const { contact: bossContact } = require('../../public/shared/boss-rules.json');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
 // Percentages of the lobby page background, below the site header.
@@ -364,6 +366,7 @@ function createLobby(
       if (!bot.bossId || bot.arrived || time < bot.spawnAt) continue;
       bot.arrived = true;
       const actor = enter(bot.user);
+      actor.bossId = bot.bossId;
       const spec = bossFor(bot.bossId);
       actor.bossSpeed = spec.speed;
       actor.bossHealthMultiplier = 8;
@@ -632,6 +635,23 @@ function createLobby(
       bots: [...sceneBots.values()],
       positions: visitors,
       events: attacks,
+      isHuman: (actor) =>
+        !sceneBots.has(actor.id) && !arenaOptions.practiceBots?.some((b) => b.id === actor.id),
+      touchBoss: (bot, target, at) => {
+        const actor = visitors.get(bot.id);
+        if (!actor?.health || !combat.canHit(actor, target, at, 'boss_contact')) return false;
+        if (expanded && !walls.clear(actor, target)) return false;
+        const source = {
+          ...actor,
+          energyActor: actor,
+          energyLifeId: actor.lifeId,
+          ordinaryEnergyRemaining: 0,
+        };
+        const hit = combat.hit(source, target, at, 'boss_contact', bossContact.damageWeight);
+        if (hit.damage > 0)
+          target.dotPulse = { id: `boss-contact:${actor.id}:${target.lifeId}:${at}`, at, ...hit };
+        return hit.damage > 0;
+      },
       canTarget: (from, to) =>
         (bossPair(from, to, time) ?? arena.canPair(from.id, to.id)) && canSee(from.id, to.id, time),
       castBoss: (bot, effect, target, at) => {
@@ -709,6 +729,8 @@ function createLobby(
           ...(sceneBots.get(visitor.id)?.bossId
             ? {
                 bossId: sceneBots.get(visitor.id).bossId,
+                bossPhase: bossPhase(visitor),
+                bossPhaseLockMs: Math.max(0, (visitor.bossPhaseLockUntil || 0) - time),
                 bossArrivalAt: visitor.bossArrivalAt || 0,
                 energy: visitor.bossCharge || 0,
                 energyMaximum: 100,

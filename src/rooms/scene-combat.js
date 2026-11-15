@@ -5,6 +5,12 @@ const { attackKind } = require('./attack-kind');
 const rules = require('../../public/shared/scene-rules.json');
 const energy = require('./scene-energy');
 const { passageTarget } = require('../../frontend/src/engines/scene-path.js');
+const {
+  phaseStats,
+  capBossDamage,
+  advanceBossPhase,
+  bossHealingCeiling,
+} = require('./boss-phases');
 const attackEffects = require('../../public/shared/attack-effects.json');
 const areaEffects = new Set(
   attackEffects.filter((effect) => effect.area).map((effect) => effect.id),
@@ -17,6 +23,7 @@ function authorSpeed(actor, time = actor.combatAt || 0) {
   return (
     (actor.authorBonus ? rules.authorBonus.speedMultiplier : 1) *
     (actor.bossSpeed || 1) *
+    (actor.bossId ? phaseStats(actor).speed : 1) *
     (time < (actor.bossBlessingUntil || 0) ? 1.08 : 1)
   );
 }
@@ -35,6 +42,10 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     (actor.guanyinActive ? rules.guanyinBonus.multiplier : 1) *
     profile(actor).health;
   function reset(actor, time) {
+    if (actor.bossId) {
+      actor.bossPhase = 1;
+      actor.bossPhaseLockUntil = 0;
+    }
     actor.bossBlessingUntil = 0;
     actor.bossIntent = null;
     actor.energy ||= 0;
@@ -157,7 +168,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
           healing += (boundaries[i] - boundaries[i - 1]) * multiplier;
         }
         actor.health = Math.min(
-          actor.maxHealth,
+          bossHealingCeiling(actor),
           actor.health +
             Math.round(
               healing *
@@ -572,12 +583,13 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
           ? Math.round((weapons * salvo) / 4) - Math.round((weapons * (salvo - 1)) / 4)
           : (base * weight) / 3;
     const incoming = Math.round(
-      babylon
-        ? portion *
+      (caster.bossId ? phaseStats(caster).damage : 1) *
+        (babylon
+          ? portion *
             (critical ? rules.damage.criticalMultiplier : 1) *
             (time < (from.guanyinUntil || 0) ? rules.guanyinBonus.multiplier : 1) *
             (validCaster && time < (caster.bossBlessingUntil || 0) ? 1.1 : 1)
-        : base *
+          : base *
             weight *
             (damageMultipliers.get(effect) ?? 1) *
             (effect === 'explosion' ? 1.5 : 1) *
@@ -585,7 +597,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
             (critical ? rules.damage.criticalMultiplier : 1) *
             (from.authorBonus ? rules.authorBonus.damageMultiplier : 1) *
             (validCaster && time < (caster.bossBlessingUntil || 0) ? 1.1 : 1) *
-            (time < (from.guanyinUntil || 0) ? rules.guanyinBonus.multiplier : 1),
+            (time < (from.guanyinUntil || 0) ? rules.guanyinBonus.multiplier : 1)),
     );
     let blockedPercent = 0;
     if (time < (to.shieldResidualUntil || to.shieldUntil || 0)) {
@@ -617,12 +629,16 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
                 ? 1 - rules.excaliburGuard.reductionPercent / 100
                 : 1),
           );
-    const damage =
+    const damage = capBossDamage(
+      to,
       effect === 'zero_equation'
         ? Math.min(rawDamage, Math.max(0, to.health - 1))
         : effect === 'shaohua_devour'
           ? Math.round(rawDamage * outgoing)
-          : rawDamage;
+          : rawDamage,
+      time,
+      from.bossBarBudget,
+    );
     const weakened =
       damage > 0 &&
       (cover < 1 ||
@@ -634,7 +650,13 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     if (to.kind === 'fragment') {
       to.health = Math.max(0, to.health - damage);
       if (!to.health && to.owner.fragment === to && to.owner.health > 0) {
-        to.owner.health = Math.ceil(to.owner.health / 2);
+        to.owner.health -= capBossDamage(
+          to.owner,
+          Math.floor(to.owner.health / 2),
+          time,
+          from.bossBarBudget,
+        );
+        advanceBossPhase(to.owner, time);
         to.owner.lastHitAt = to.owner.regenAt = time;
         to.owner.fragment = null;
       }
@@ -684,6 +706,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     }
     policy.onDamage?.(from, to, time, Math.min(to.health, damage));
     to.health = Math.max(0, to.health - damage);
+    advanceBossPhase(to, time);
     to.lastHitAt = to.regenAt = time;
     if (!to.health) {
       if (!policy.isObjective?.(to)) {
@@ -700,6 +723,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     return { damage, critical, ...(weakened && { weakened }) };
   }
   function clearDeath(actor, time) {
+    actor.bossPhaseLockUntil = 0;
     actor.bossBlessingUntil = 0;
     actor.bijuuSlowUntil =
       actor.strongSlowUntil =
@@ -744,12 +768,17 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
   function environmentDamage(actor, time, fraction) {
     if (!actor.health) return;
     const reduction = time < (actor.pickupShieldUntil || 0) ? 0.7 : 1;
-    const damage = Math.min(
-      actor.health,
-      Math.max(1, Math.round(actor.maxHealth * fraction * reduction * profile(actor).defense)),
+    const damage = capBossDamage(
+      actor,
+      Math.min(
+        actor.health,
+        Math.max(1, Math.round(actor.maxHealth * fraction * reduction * profile(actor).defense)),
+      ),
+      time,
     );
     policy.onEnvironmentDamage?.(actor, time, damage);
     actor.health -= damage;
+    advanceBossPhase(actor, time);
     actor.dotPulse = { id: `terrain:${actor.lifeId}:${time}`, at: time, damage, critical: false };
     actor.lastHitAt = actor.regenAt = time;
     if (!actor.health) {

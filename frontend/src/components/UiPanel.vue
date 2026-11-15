@@ -12,7 +12,7 @@ withDefaults(
     as?: 'section' | 'div' | 'article' | 'aside';
     headingLevel?: 2 | 3;
     tone?: 'surface' | 'subtle' | 'selected' | 'raised' | 'translucent';
-    density?: 'regular' | 'compact';
+    density?: 'regular' | 'compact' | 'hud';
   }>(),
   { as: 'section', headingLevel: 2, tone: 'surface', density: 'regular' },
 );

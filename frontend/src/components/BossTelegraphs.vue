@@ -8,13 +8,15 @@ const warnings = computed(() =>
   props.events
     .flatMap((event) => {
       const spec = abilities.find((s) => s.id === event.effect);
-      if (!spec || event.cancelled || props.now > event.at + spec.windup + spec.duration) return [];
+      const rate = event.bossAttackRate || 1;
+      if (!spec || event.cancelled || props.now > event.at + (spec.windup + spec.duration) / rate)
+        return [];
       return [
         {
           id: event.id,
           name: spec.name,
           color: spec.color,
-          charged: props.now < event.at + spec.windup,
+          charged: props.now < event.at + spec.windup / rate,
           zones: bossZones(
             spec,
             { x: event.fromX, y: event.fromY },

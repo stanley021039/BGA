@@ -178,6 +178,7 @@ function play(event: LobbyAttack) {
   const added = stage.add(event.id, {
     bossFrom: { x: event.fromX, y: event.fromY },
     bossAim: { x: event.toX, y: event.toY },
+    bossAttackRate: event.bossAttackRate,
     ...options,
     coverClips: wallClips(event, width, height),
     readCaster,

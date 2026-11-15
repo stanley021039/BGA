@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, watch } from 'vue';
+import { createBossWarningSounds } from '../services/boss-warning-sounds.js';
 import type { LobbySnapshot } from '../contracts/lobby';
 import UiNotice from './UiNotice.vue';
 import warning from '../assets/boss-warning.svg';
@@ -11,6 +12,16 @@ const props = defineProps<{
 const pending = computed(() =>
   props.connected ? props.arrivals.filter((a) => props.now < a.spawnAt) : [],
 );
+let sounds: ReturnType<typeof createBossWarningSounds> | undefined;
+onMounted(() => {
+  sounds = createBossWarningSounds();
+  watch(
+    [() => props.arrivals, () => props.now, () => props.connected],
+    () => sounds?.update(props.arrivals, props.now, props.connected),
+    { immediate: true },
+  );
+});
+onUnmounted(() => sounds?.destroy());
 </script>
 <template>
   <Teleport to="body">

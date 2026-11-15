@@ -34,6 +34,10 @@
     gap: var(--stitch-space-12);
     padding: var(--stitch-panel-padding-compact);
   }
+  &[data-density='hud'] {
+    gap: var(--stitch-space-4);
+    padding: var(--stitch-space-8) var(--stitch-space-12);
+  }
   &[data-tone='subtle'] {
     background: var(--stitch-surface-subtle);
   }

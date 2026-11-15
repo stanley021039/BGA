@@ -2,11 +2,13 @@ const { randomBytes } = require('node:crypto');
 const abilities = require('../../public/shared/boss-abilities.json');
 const { bossZones, inBossZones } = require('../../frontend/src/engines/boss-geometry.js');
 const abilityFor = (id) => abilities.find((s) => s.id === id);
+const { phaseStats } = require('./boss-phases');
 function createBossCombat(combat, intercept = () => false) {
   const runtime = new WeakMap();
   function prepare(bot, actor, abilityId, aim, time) {
     const spec = abilityFor(abilityId);
     if (!spec || spec.boss !== bot.bossId) return null;
+    const rate = actor.bossId ? phaseStats(actor).attackRate : 1;
     const event = {
       id: randomBytes(12).toString('hex'),
       effect: spec.id,
@@ -20,7 +22,8 @@ function createBossCombat(combat, intercept = () => false) {
       toX: aim.x,
       toY: aim.y,
       at: time,
-      until: time + 4400,
+      until: time + Math.ceil(4400 / rate),
+      ...(rate !== 1 ? { bossAttackRate: rate } : {}),
       aspectRatio: 1.6,
       hits: [],
       damage: 0,
@@ -31,8 +34,10 @@ function createBossCombat(combat, intercept = () => false) {
       lifeId: actor.lifeId,
       epoch: actor.combatEpoch || 0,
       next: 0,
+      rate,
       zones: bossZones(spec, actor, aim),
       victims: new Map(),
+      bossBarBudget: {},
     });
     return event;
   }
@@ -54,7 +59,8 @@ function createBossCombat(combat, intercept = () => false) {
       }
       while (state.next < spec.pulses) {
         const at =
-          event.at + spec.windup + state.next * (spec.duration / Math.max(1, spec.pulses - 1));
+          event.at +
+          (spec.windup + state.next * (spec.duration / Math.max(1, spec.pulses - 1))) / state.rate;
         if (at > time) break;
         state.next++;
         for (const victim of [...positions.values()]
@@ -72,6 +78,7 @@ function createBossCombat(combat, intercept = () => false) {
             originY: event.fromY,
             slot: spec.slot,
             ordinaryEnergyRemaining: 0,
+            bossBarBudget: state.bossBarBudget,
           };
           if (spec.slot !== 'r' && intercept(source, victim, at, spec.damage, positions)) continue;
           const hit = combat.hit(source, victim, at, spec.id, spec.damage);

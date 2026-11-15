@@ -3,6 +3,8 @@ const { fitsSlot } = require('./scene-energy');
 const attacks = new Set(require('../../public/shared/attack-effects.json').map((e) => e.id));
 const palette = require('../../public/shared/entrance-palette.json');
 const { driveBoss } = require('./scene-bosses');
+const { sceneDistance } = require('./scene-combat');
+const { contact } = require('../../public/shared/boss-rules.json');
 const entrances = new Set(
   [
     ...palette.starters,
@@ -45,6 +47,7 @@ function botSettings(input, characters) {
 // Uses the existing scene projection clock; no extra timers or per-bot loops.
 function createBotDriver(random = Math.random) {
   const states = new Map();
+  const contacts = new Map();
   let driving = false,
     lastTick = -Infinity;
   function drive({
@@ -55,11 +58,19 @@ function createBotDriver(random = Math.random) {
     cast,
     castBoss = () => {},
     canTarget = () => true,
+    isHuman,
+    touchBoss = () => {},
   }) {
     if (driving || time - lastTick < 400) return;
     lastTick = time;
     driving = true;
     const ids = new Set(bots.map((b) => b.id));
+    const bossIds = new Set(bots.filter((b) => b.bossId).map((b) => b.id));
+    const human = isHuman || ((p) => !ids.has(p.id));
+    for (const [id, entry] of contacts) {
+      const p = positions.get(id);
+      if (!p || !p.health || p.lifeId !== entry.lifeId || time >= entry.until) contacts.delete(id);
+    }
     for (const id of states.keys()) if (!ids.has(id)) states.delete(id);
     let casts = 0;
     try {
@@ -71,11 +82,23 @@ function createBotDriver(random = Math.random) {
         const candidates = [...positions.values()].filter(
           (p) => p.id !== actor.id && p.health > 0 && canTarget(actor, p),
         );
+        const rank = (p) => (bot.bossId ? (human(p) ? 0 : bossIds.has(p.id) ? 2 : 1) : 0);
         const target = candidates.sort(
           (a, b) =>
+            rank(a) - rank(b) ||
             Math.hypot(a.x - actor.x, a.y - actor.y) - Math.hypot(b.x - actor.x, b.y - actor.y),
         )[0];
         if (bot.bossId) {
+          for (const victim of candidates) {
+            if (
+              bossIds.has(victim.id) ||
+              contacts.has(victim.id) ||
+              sceneDistance(actor, victim, 1.6) > contact.radius
+            )
+              continue;
+            if (touchBoss(bot, victim, time) !== false)
+              contacts.set(victim.id, { lifeId: victim.lifeId, until: time + contact.intervalMs });
+          }
           if (casts >= 1) continue;
           const effect = driveBoss(bot, actor, target, time, state);
           if (effect) {
@@ -125,6 +148,7 @@ function createBotDriver(random = Math.random) {
     drive,
     clear: () => {
       states.clear();
+      contacts.clear();
       lastTick = -Infinity;
     },
   };

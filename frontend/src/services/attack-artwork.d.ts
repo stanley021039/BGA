@@ -1,5 +1,6 @@
 export type AttackArtworkOptions = {
   bossFrom?: { x: number; y: number };
+  bossAttackRate?: number;
   bossAim?: { x: number; y: number };
   effect: string;
   ageMs?: number;

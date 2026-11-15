@@ -18,16 +18,18 @@ const mod = new Module(file, module);
 mod.filename = file;
 mod.paths = module.paths;
 mod.require = (name) =>
-  name === './UiPanel.vue'
-    ? {
-        default: {
-          setup:
-            (_, { slots }) =>
-            () =>
-              h('section', {}, slots.default?.()),
-        },
-      }
-    : require(name);
+  name.endsWith('scene-rules.json')
+    ? { default: require('../../public/shared/scene-rules.json') }
+    : name === './UiPanel.vue'
+      ? {
+          default: {
+            setup:
+              (_, { slots }) =>
+              () =>
+                h('section', {}, slots.default?.()),
+          },
+        }
+      : require(name);
 mod._compile(
   ts.transpileModule(script.content, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
@@ -57,11 +59,11 @@ test('boss HUD exposes separate named authoritative health bars, clamps values a
     boss('c'),
   ]);
   const meters = [...doc.querySelectorAll('progress')];
-  assert.equal(meters.length, 2);
-  assert.equal(meters[0].getAttribute('value'), '1000');
-  assert.equal(meters[0].getAttribute('max'), '1000');
-  assert.equal(meters[0].getAttribute('aria-label'), 'Boss a的生命值');
-  assert.equal(meters[1].getAttribute('value'), '0');
+  assert.equal(meters.length, 6);
+  assert.equal(meters[0].getAttribute('value'), '333');
+  assert.equal(meters[0].getAttribute('max'), '333');
+  assert.equal(meters[0].getAttribute('aria-label'), 'Boss a的第1條生命值');
+  assert.equal(meters[3].getAttribute('value'), '0');
   assert.match(doc.body.textContent, /已擊倒/);
   assert.doesNotMatch(doc.body.textContent, /Boss c/);
 });
@@ -74,11 +76,18 @@ test('boss HUD clears on disconnect/removal and follows fresh health or respawn 
     assert.equal((await render(visitors, connected)).querySelectorAll('progress').length, 0);
   }
   assert.equal(
-    (await render([boss('a', 250)])).querySelector('progress').getAttribute('value'),
+    (await render([boss('a', 250)])).querySelectorAll('progress')[2].getAttribute('value'),
     '250',
   );
   assert.equal(
     (await render([boss('a', 1000)])).querySelector('progress').getAttribute('value'),
-    '1000',
+    '333',
+  );
+  const doc = await render([{ ...boss('a', 600), bossPhase: 2, bossPhaseLockMs: 1500 }]);
+  assert.match(doc.body.textContent, /狂暴/);
+  assert.match(doc.body.textContent, /鎖血 2秒/);
+  assert.deepEqual(
+    [...doc.querySelectorAll('progress')].map((p) => Number(p.getAttribute('value'))),
+    [0, 266, 334],
   );
 });

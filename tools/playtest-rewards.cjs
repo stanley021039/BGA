@@ -23,7 +23,12 @@ function unlockPlaytestRewards(dbFile) {
       "INSERT INTO gacha_ownership(user_id,kind,reward_id,source,acquired_at) VALUES(?,?,?,'draw',?) ON CONFLICT(user_id,kind,reward_id) DO UPDATE SET source='draw' WHERE gacha_ownership.source='legacy'",
     );
     const kinds = new Set(['frames', 'media', 'entrances', 'sounds', 'backgrounds']);
-    const rewardsToGrant = catalog.filter((item) => kinds.has(item.kind) && !item.gachaExclusive);
+    const rewardsToGrant = catalog.filter(
+      (item) =>
+        item.kind === 'attacks' ||
+        item.kind === 'entrances' ||
+        (kinds.has(item.kind) && !item.gachaExclusive),
+    );
     const at = new Date().toISOString();
     // Preview achievement rewards without consuming either one-time code.
     transaction(db, () => {
@@ -36,6 +41,8 @@ function unlockPlaytestRewards(dbFile) {
       players: users.length,
       achievementDefinitions: definitions.length,
       frames: rewards.length,
+      attacks: rewardsToGrant.filter((item) => item.kind === 'attacks').length,
+      entrances: rewardsToGrant.filter((item) => item.kind === 'entrances').length,
     };
   } finally {
     db.close();

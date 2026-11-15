@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import type { LobbyVisitor } from '../contracts/lobby';
 import UiPanel from './UiPanel.vue';
+import sceneRules from '../../../public/shared/scene-rules.json';
 const props = defineProps<{ visitors: LobbyVisitor[]; connected: boolean }>();
 const bosses = computed(() =>
   props.connected
@@ -17,6 +18,25 @@ const bosses = computed(() =>
     : [],
 );
 const health = (boss: LobbyVisitor) => Math.max(0, Math.min(boss.maxHealth!, boss.health!));
+const hp = (value: number) =>
+  (value / sceneRules.unitScale).toLocaleString('zh-TW', { maximumFractionDigits: 1 });
+const phase = (boss: LobbyVisitor) =>
+  boss.bossPhase ||
+  (health(boss) <= Math.ceil(boss.maxHealth! / 3)
+    ? 3
+    : health(boss) <= Math.ceil((boss.maxHealth! * 2) / 3)
+      ? 2
+      : 1);
+const phaseLabel = (boss: LobbyVisitor) =>
+  ['', '第一階段', '狂暴', '極度狂暴'][phase(boss)] +
+  ((boss.bossPhaseLockMs || 0) > 0
+    ? ' · 鎖血 ' + Math.ceil(boss.bossPhaseLockMs! / 1000) + '秒'
+    : '');
+const barFloor = (boss: LobbyVisitor, bar: number) => Math.ceil((boss.maxHealth! * (3 - bar)) / 3);
+const barMax = (boss: LobbyVisitor, bar: number) =>
+  Math.ceil((boss.maxHealth! * (4 - bar)) / 3) - barFloor(boss, bar);
+const barHealth = (boss: LobbyVisitor, bar: number) =>
+  Math.max(0, Math.min(barMax(boss, bar), health(boss) - barFloor(boss, bar)));
 </script>
 <template>
   <Teleport to="body">
@@ -24,20 +44,28 @@ const health = (boss: LobbyVisitor) => Math.max(0, Math.min(boss.maxHealth!, bos
       <UiPanel
         v-for="boss in bosses"
         :key="boss.id"
-        density="compact"
+        density="hud"
         tone="translucent"
         class="boss-health-entry"
         :data-boss-id="boss.id"
       >
         <div class="boss-health-caption">
-          <strong>{{ boss.name }}</strong>
-          <span>{{ health(boss) }} / {{ boss.maxHealth }} HP</span>
+          <strong
+            >{{ boss.name
+            }}<small class="boss-phase-label"> · {{ phaseLabel(boss) }}</small></strong
+          >
+          <span>{{ hp(health(boss)) }} / {{ hp(boss.maxHealth!) }} HP</span>
         </div>
-        <progress
-          :value="health(boss)"
-          :max="boss.maxHealth"
-          :aria-label="boss.name + '的生命值'"
-        />
+        <div class="boss-health-bars">
+          <progress
+            v-for="bar in 3"
+            :key="bar"
+            :value="barHealth(boss, bar)"
+            :max="barMax(boss, bar)"
+            :aria-label="boss.name + '的第' + bar + '條生命值'"
+            :data-active="phase(boss) === bar"
+          />
+        </div>
         <span v-if="health(boss) === 0" class="boss-health-defeated">已擊倒</span>
       </UiPanel>
     </div>
@@ -84,21 +112,29 @@ const health = (boss: LobbyVisitor) => Math.max(0, Math.min(boss.maxHealth!, bos
   appearance: none;
   display: block;
   inline-size: 100%;
-  block-size: 12px;
+  block-size: 6px;
   border: var(--stitch-border);
   border-radius: var(--stitch-radius-pill);
   overflow: hidden;
   background: var(--stitch-line);
-  accent-color: var(--stitch-danger-ink);
+  accent-color: var(--stitch-boss-health-fill);
 }
 .boss-health-entry progress::-webkit-progress-bar {
   background: var(--stitch-line);
 }
 .boss-health-entry progress::-webkit-progress-value {
-  background: var(--stitch-danger-ink);
+  background: var(--stitch-boss-health-fill);
 }
 .boss-health-entry progress::-moz-progress-bar {
-  background: var(--stitch-danger-ink);
+  background: var(--stitch-boss-health-fill);
+}
+.boss-health-bars {
+  display: grid;
+  gap: var(--stitch-space-4);
+}
+.boss-phase-label {
+  font-size: inherit;
+  color: var(--stitch-boss-health-fill);
 }
 .boss-health-defeated {
   color: var(--stitch-ink);

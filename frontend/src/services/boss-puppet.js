@@ -118,8 +118,9 @@ export function createBossPuppet(node, id) {
     if (spec && intent.until > now && intent.until !== castKey) {
       castKey = intent.until;
       attack?.cancel();
-      const duration = spec.windup + spec.duration,
-        at = spec.windup / duration;
+      const rate = Math.max(1, Math.min(1.3, Number(intent.attackRate) || 1));
+      const duration = (spec.windup + spec.duration) / rate,
+        at = spec.windup / (spec.windup + spec.duration);
       const force = (spec.slot === 'r' ? 1.6 : 1) * (state.facing === 'left' ? -1 : 1);
       attack = animate(
         node.querySelector('[data-boss-action]'),
@@ -149,7 +150,7 @@ export function createBossPuppet(node, id) {
         { duration, easing: 'ease-out' },
         null,
       );
-      if (attack) attack.currentTime = Math.max(0, now - (intent.until - spec.windup));
+      if (attack) attack.currentTime = Math.max(0, now - (intent.until - spec.windup / rate));
     }
     if (previousHealth !== undefined && state.health < previousHealth) {
       hit?.cancel();

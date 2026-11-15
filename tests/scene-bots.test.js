@@ -88,7 +88,7 @@ test('only walk and attack modes are accepted, with idle as the default', () => 
   assert.equal(lobby.bots(alice, { action: 'add' }).bots[0].mode, 'idle');
 });
 
-test('lobby bosses and active bots use real attacks against each other', () => {
+test('active bots still damage bosses while bosses prioritise the human player', () => {
   const { lobby, advance } = fixture();
   lobby.move(alice, { x: 95, y: 15 });
   advance(10000);
@@ -103,12 +103,11 @@ test('lobby bosses and active bots use real attacks against each other', () => {
     botHit ||= scene.attacks.some(
       (e) => e.fromId === bot.id && e.hits?.some((h) => h.toId === boss.id && h.damage > 0),
     );
-    bossHit ||= scene.attacks.some(
-      (e) => e.fromId === boss.id && e.hits?.some((h) => h.toId === bot.id && h.damage > 0),
-    );
+    bossHit ||= scene.attacks.some((e) => e.fromId === boss.id && e.toId === alice.id);
+    assert.ok(!scene.attacks.some((e) => e.fromId === boss.id && e.toId !== alice.id));
   }
   assert.ok(botHit, 'bot damages boss');
-  assert.ok(bossHit, 'boss damages bot');
+  assert.ok(bossHit, 'boss chooses the human rather than a nearby bot');
 });
 
 test('expired owners remove their bots and training resets do not exist in the public lobby', () => {

@@ -44,7 +44,18 @@ test('isolated playtests unlock only rewards and preserve real achievement progr
   assert.equal(require('../src/achievements/code-packs').availableTickets(check, id), 0);
   assert.deepEqual(require('../src/achievements/redemption').grants(check, id), {});
   assert.ok(first.rewards.every((reward) => reward.claimedAt));
-  assert.equal(first.bonusRewards.entrances.length, 24);
+  const catalog = require('../src/gacha/catalog').catalog;
+  const previews = catalog.filter((item) => ['attacks', 'entrances'].includes(item.kind));
+  const owned = check.prepare('SELECT kind,reward_id FROM gacha_ownership WHERE user_id=?').all(id);
+  for (const item of previews)
+    assert.ok(
+      owned.some((row) => row.kind === item.kind && row.reward_id === item.id),
+      item.id,
+    );
+  assert.equal(
+    first.bonusRewards.entrances.length,
+    catalog.filter((item) => item.kind === 'entrances').length,
+  );
   assert.equal(first.bonusRewards.backgrounds.length, 10);
   assert.deepEqual(first.bonusRewards.openings, ['home-family', 'soul-world']);
   store.insert.run(id, 'all-first-table', 'fixture-real-game', new Date().toISOString());
