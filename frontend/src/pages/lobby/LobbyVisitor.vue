@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import MotionPolicy from '../../engines/motion-policy.js';
 import BossPuppet from '../../components/BossPuppet.vue';
+import BearCompanion from '../../components/BearCompanion.vue';
 import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
@@ -383,6 +384,11 @@ window.addEventListener('resize', positionBubble);
       }}</div
     >
     <div v-show="visitor.health !== 0" class="scene-avatar-portrait">
+      <BearCompanion
+        v-if="connected && visitor.bearCompanion"
+        :index="visitor.bearCompanion.index"
+        :last-drain="visitor.bearCompanion.lastDrain"
+      />
       <SummonArtwork
         v-if="showSummon && connected && !still && visitor.summon"
         :key="visitor.summon.until"

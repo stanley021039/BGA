@@ -52,7 +52,8 @@ function createBossCombat(combat, intercept = () => false) {
         !caster.health ||
         caster.lifeId !== state.lifeId ||
         (caster.combatEpoch || 0) !== state.epoch ||
-        caster.immobileUntil > event.at
+        caster.immobileUntil > event.at ||
+        (caster.bossInterruptedAt || 0) > event.at
       ) {
         event.cancelled = true;
         continue;
@@ -79,14 +80,16 @@ function createBossCombat(combat, intercept = () => false) {
             slot: spec.slot,
             ordinaryEnergyRemaining: 0,
             bossBarBudget: state.bossBarBudget,
+            bossAbilityId: spec.id,
           };
           if (spec.slot !== 'r' && intercept(source, victim, at, spec.damage, positions)) continue;
           const hit = combat.hit(source, victim, at, spec.id, spec.damage);
           if (hit.damage > 0 && victim.health > 0) {
-            if (spec.slow) victim.slowUntil = Math.max(victim.slowUntil || 0, at + spec.slow);
+            if (spec.slow && combat.canControl(victim, at))
+              victim.slowUntil = Math.max(victim.slowUntil || 0, at + spec.slow);
             if (spec.root && state.next === spec.pulses) combat.freeze(victim, at, spec.root);
             if (spec.drain) victim.energy = Math.max(0, (victim.energy || 0) - spec.drain);
-            if (spec.pull) {
+            if (spec.pull && combat.canControl(victim, at)) {
               const dx = event.toX - victim.x,
                 dy = event.toY - victim.y,
                 L = Math.hypot(dx, dy) || 1;

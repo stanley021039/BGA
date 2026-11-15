@@ -11,9 +11,9 @@ export function bossMotionProfile(id) {
     return { gait: 'stalk', period: 1050, sway: 2.5, lift: 4 };
   return { gait: 'heavy', period: 1450, sway: 1.3, lift: 3 };
 }
-// Two lobby bosses, three gait tracks plus one cast and one hit each; no JS frame loop.
+// Up to five lobby bosses, bounded native tracks per actor; no JS frame loop.
 export function createBossPuppet(node, id) {
-  if (!node?.animate || owners.size >= 2 || !motionAllowed()) return null;
+  if (!node?.animate || owners.size >= 5 || !motionAllowed()) return null;
   owners.add(node);
   const profile = bossMotionProfile(id),
     tracks = new Set();

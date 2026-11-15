@@ -503,7 +503,7 @@ export function apparate(
   anchor.dataset.entrance = base;
   anchor.classList.add('is-apparating');
   const cancel = isArrival(base)
-    ? playArrival(scene, base, duration)
+    ? playArrival(scene, base, duration, DURATION[base] || duration)
     : (effects[base] || classic)(scene);
   const cancelBody = isArrival(base) ? () => {} : playEntranceBody(anchor, img, base, duration);
   const cancelBackdrop = base.startsWith('stitch-') ? playEntranceBackdrop(follow, duration) : null;

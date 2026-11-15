@@ -1,9 +1,5 @@
-// Compress the complete authored choreography, including alternate versions.
-const shorter: Record<string, number> = {
-  'stitch-stand-time': 4200,
-  'stitch-gilgamesh': 3800,
-  'stitch-hyorinmaru': 3600,
-};
-export function entrancePlaybackDuration(id: string, authoredMs: number): number {
-  return Math.min(authoredMs, shorter[id.replace(/-alt$/, '')] ?? authoredMs);
+// One ceiling for every entrance, including future additions and alternate versions.
+export const MAX_ENTRANCE_DURATION_MS = 1500;
+export function entrancePlaybackDuration(_id: string, authoredMs: number): number {
+  return Math.min(authoredMs, MAX_ENTRANCE_DURATION_MS);
 }

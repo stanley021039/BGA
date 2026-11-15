@@ -51,6 +51,12 @@ test('boss puppets cap native tracks, synchronise windup and impact, and release
     first = f.scope.create(f.element(), 'cthulhu'),
     second = f.scope.create(f.element(), 'thanos');
   assert.ok(first && second);
+  const extra = [
+    f.scope.create(f.element(), 'gyo'),
+    f.scope.create(f.element(), 'arkveld'),
+    f.scope.create(f.element(), 'mutalith'),
+  ];
+  assert.ok(extra.every(Boolean));
   assert.equal(f.scope.create(f.element(), 'gyo'), null);
   const spec = require('../../public/shared/boss-abilities.json').find(
     (a) => a.boss === 'thanos' && a.slot === 'r',
@@ -74,6 +80,7 @@ test('boss puppets cap native tracks, synchronise windup and impact, and release
   assert.ok(f.scope.create(f.element(), 'gyo'), 'released quota can be reused');
   for (const stop of [...f.callbacks]) stop();
   second.dispose();
+  extra.forEach((p) => p.dispose());
   assert.ok(f.created.every((a) => a.cancelled));
   const third = f.scope.create(f.element(), 'greeza');
   third.update({ ...state, intent: null }, 1000);

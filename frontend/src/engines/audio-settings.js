@@ -256,7 +256,7 @@ let AudioSettings;
     // Reuse the existing short double tone; warning is a distinct once-per-round cue.
     if (kind === 'countdown-warning') kind = 'turn';
     const cues = {
-      'boss-warning': ['/assets/game-sounds/boss-warning.wav', 2400],
+      'boss-warning': ['/assets/game-sounds/boss-warning-megaman-x4.mp3', 6643],
       'arena-countdown': ['/assets/game-sounds/arena-countdown-tick.mp3', 480],
       'arena-countdown-bell': ['/assets/game-sounds/arena-countdown-bell.mp3', 820],
       'ping-ping': ['/assets/game-sounds/ping-ping.wav', 1126],

@@ -13,7 +13,7 @@ const bosses = computed(() =>
             Number.isFinite(v.maxHealth) &&
             v.maxHealth! > 0,
         )
-        .slice(0, 2)
+        .slice(0, 5)
     : [],
 );
 const health = (boss: LobbyVisitor) => Math.max(0, Math.min(boss.maxHealth!, boss.health!));
@@ -27,13 +27,19 @@ const phase = (boss: LobbyVisitor) =>
       : 1);
 const phaseLabel = (boss: LobbyVisitor) =>
   ['', '第一階段', '二階段・狂暴', '最終階段'][phase(boss)] +
-  ((boss.bossPhaseLockMs || 0) > 0
-    ? ' · 鎖血 ' + Math.ceil(boss.bossPhaseLockMs! / 1000) + '秒'
-    : '');
+  ((boss.bossPhaseLockMs || 0) > 0 ? ' · 鎖血' : '') +
+  ((boss.bossControlImmuneMs || 0) > 0 ? ' · 免控' : '');
 </script>
 <template>
   <Teleport to="body">
-    <div v-if="bosses.length" class="boss-health-hud" aria-label="Boss 生命值">
+    <div
+      v-if="bosses.length"
+      class="boss-health-hud"
+      :class="{ 'has-many-bosses': bosses.length > 2 }"
+      :tabindex="bosses.length > 2 ? 0 : undefined"
+      aria-label="Boss 生命值"
+      @keydown.stop
+    >
       <UiPanel
         v-for="boss in bosses"
         :key="boss.id"
@@ -82,6 +88,13 @@ const phaseLabel = (boss: LobbyVisitor) =>
 }
 .boss-health-entry {
   min-inline-size: 0;
+}
+.boss-health-hud.has-many-bosses {
+  max-block-size: min(42dvh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  pointer-events: auto;
 }
 .boss-health-caption {
   display: grid;

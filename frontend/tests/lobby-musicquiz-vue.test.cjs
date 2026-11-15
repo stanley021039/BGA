@@ -888,3 +888,24 @@ test('lobby snapshot accepts ordinary attack returns and rejects ultimate return
     assert.throws(() => read(broken));
   }
 });
+
+test('boss immunity and rainbow companion metadata survive snapshots and reject invalid figures', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  const raw = {
+    ...createLobby(() => 1000).view({ id: 'human', display_name: 'Human' }),
+    serverNow: 1000,
+  };
+  raw.visitors[0].bossId = 'thanos';
+  raw.visitors[0].bossControlImmuneMs = 4500;
+  raw.visitors[0].bearCompanion = { index: 4, remainingMs: 2500, lastDrain: 10 };
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  const parsed = read(raw).visitors[0];
+  assert.equal(parsed.bossControlImmuneMs, 4500);
+  assert.equal(parsed.bearCompanion.index, 4);
+  assert.equal(parsed.bearCompanion.lastDrain, 10);
+  raw.visitors[0].bearCompanion.index = 5;
+  assert.throws(() => read(raw));
+  raw.visitors[0].bearCompanion.index = 0;
+  raw.visitors[0].bearCompanion.remainingMs = 3001;
+  assert.throws(() => read(raw));
+});

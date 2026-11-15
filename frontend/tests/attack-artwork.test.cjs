@@ -71,6 +71,23 @@ const source = fs
   .replace(/^import .*boss-artwork.js';\n/m, () =>
     require('../../tests/helpers/boss-artwork-module.cjs')(),
   )
+  .replace(
+    /^import bossAbilities .*boss-abilities.json';\n/m,
+    () =>
+      'const bossAbilities=' +
+      JSON.stringify(require('../../public/shared/boss-abilities.json')) +
+      ';\n',
+  )
+  .replace(/^import .*boss-geometry.js';\n/m, () =>
+    require('node:fs')
+      .readFileSync(path.join(__dirname, '../src/engines/boss-geometry.js'), 'utf8')
+      .replace(/^export /gm, ''),
+  )
+  .replace(/^import .*boss-strike-art.js';\n/m, () =>
+    require('node:fs')
+      .readFileSync(path.join(__dirname, '../src/services/boss-strike-art.js'), 'utf8')
+      .replace(/^export /gm, ''),
+  )
   .replace(/^import .*motion-lifetime.js';\n/m, '')
   .replace(/^import combatRules .*scene-rules.json';\n/m, '')
   .replace(/^import .*attack-stitch.js';\n/m, '')
@@ -828,4 +845,31 @@ test('expanded arena renders the camera viewport at lobby pixel density', () => 
   arena.frame(17);
   assert.equal(arena.canvas.style.transform, 'translate3d(720px, 900px, 0)');
   assert.deepEqual(arena.transforms.at(-1).slice(4), [-640, -800]);
+});
+
+test('crystal reflection paints each boss ordinary strike through its original renderer', () => {
+  const abilities = require('../../public/shared/boss-abilities.json');
+  for (const spec of abilities.filter((s) => s.slot !== 'r')) {
+    const art = run('crystal_reflection', '#69e3f4', 100, () => 0.5, {
+      readHits: () => [
+        {
+          x: 640,
+          y: 380,
+          pathX: 120,
+          pathY: 240,
+          toId: 'boss',
+          phase: 'reflection',
+          reflectedEffect: 'barrage',
+          reflectedBossEffect: spec.id,
+          reflectedPhase: 'hit1',
+          delayMs: 800,
+          pending: false,
+          damage: 1234,
+          critical: false,
+        },
+      ],
+    });
+    assert.ok(art.lines.length || art.arcs.length, spec.id);
+    assert.ok(art.texts.includes('1,234'), spec.id);
+  }
 });

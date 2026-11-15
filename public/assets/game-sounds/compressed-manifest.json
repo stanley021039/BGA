@@ -217,15 +217,6 @@
       "sha256": "ee60dfe0fd4493e9ed22aebb12656fa18cd120c456c5640bcf67704fba8f8305",
       "sourceBytes": 26924,
       "bytes": 7820
-    },
-    {
-      "directory": "game-sounds",
-      "source": "boss-warning.wav",
-      "file": "boss-warning.mp3",
-      "sourceSha256": "1dcb67a47b1411e6af9cedada71b6a5082e27f0ebc4ba174af6dbf5de4d006e8",
-      "sha256": "5230abd1364770847654765a07719d645ce20bc3a112e0f91f18d4421ef6aaa3",
-      "sourceBytes": 105644,
-      "bytes": 27405
     }
   ]
 }

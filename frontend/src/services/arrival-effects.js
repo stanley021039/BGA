@@ -16,7 +16,7 @@ let instance = 0;
 
 // The common apparate owner enforces the six-effect limit and motion lifetime.
 // Animate the real image; independent front/back SVG layers keep occlusion.
-export function playArrival(scene, id, duration) {
+export function playArrival(scene, id, duration, authoredDuration = duration) {
   const { anchor, img } = scene;
   if (!img || !img.naturalWidth) return () => {};
   const document = img.ownerDocument;
@@ -126,7 +126,7 @@ export function playArrival(scene, id, duration) {
     }
     lastDraw = now;
     try {
-      draw(now - start);
+      draw(((now - start) * authoredDuration) / duration);
     } catch {
       stop();
       return;

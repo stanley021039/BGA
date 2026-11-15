@@ -23,6 +23,7 @@ const lobby = useLobbyStore(),
   session = useSessionStore();
 const self = computed(() => lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId));
 const entryNoticeKey = ref(0);
+const npcMinimized = ref(false);
 watch(
   () => lobby.entryPending,
   (pending, previous) => {
@@ -408,10 +409,24 @@ onBeforeUnmount(() => {
     <RoomPings />
   </div>
   <Teleport to="body">
-    <aside class="lobby-scene-summary" aria-label="場景戰鬥資訊與夥伴管理">
-      <UiPanel density="compact" tone="translucent">
+    <aside class="lobby-scene-stats" aria-label="場景戰鬥資訊">
+      <UiPanel density="hud" tone="translucent">
         <SceneKda :value="self?.kda" :self="self" :connected="lobby.connected" />
-        <SceneNpcControls />
+      </UiPanel>
+    </aside>
+    <aside class="lobby-scene-npc" aria-label="場景夥伴管理">
+      <UiPanel density="hud" tone="translucent">
+        <div class="lobby-scene-npc-tools">
+          <div v-show="!npcMinimized"><SceneNpcControls variant="ghost" /></div>
+          <UiButton
+            :icon="npcMinimized ? 'users' : 'minimize'"
+            icon-only
+            variant="ghost"
+            :label="npcMinimized ? '展開機器人與 Boss' : '最小化機器人與 Boss'"
+            :aria-expanded="!npcMinimized"
+            @click="npcMinimized = !npcMinimized"
+          />
+        </div>
       </UiPanel>
     </aside>
   </Teleport>

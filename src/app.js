@@ -3558,7 +3558,9 @@ function initializeApp(config, dataLock, acquired) {
         '/market': 'market.html',
         '/assets/game-sounds/entrance-soul-world.mp3': 'assets/game-sounds/entrance-soul-world.mp3',
         '/assets/game-sounds/turn.wav': 'assets/game-sounds/turn.wav',
-        '/assets/game-sounds/boss-warning.wav': 'assets/game-sounds/boss-warning.wav',
+        '/assets/game-sounds/boss-warning.wav': 'assets/game-sounds/boss-warning-megaman-x4.mp3',
+        '/assets/game-sounds/boss-warning-megaman-x4.mp3':
+          'assets/game-sounds/boss-warning-megaman-x4.mp3',
         '/assets/game-sounds/arena-countdown-tick.mp3':
           'assets/game-sounds/arena-countdown-tick.mp3',
         '/assets/game-sounds/arena-countdown-bell.mp3':

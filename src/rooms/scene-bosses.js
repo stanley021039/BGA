@@ -2,6 +2,7 @@ const { versionedAsset } = require('../http/asset-version');
 const abilities = require('../../public/shared/boss-abilities.json');
 const { phases } = require('../../public/shared/boss-rules.json');
 const { bossPhase, phaseStats } = require('./boss-phases');
+const bossInteractions = require('./boss-interactions');
 const definitions = [
   ['mutalith', '漩渦獸', 'orbit', 0.65, '繞行拉扯，交替漩渦與雷擊'],
   ['cthulhu', '克蘇魯', 'pursue', 0.55, '緩慢追獵，以鎖鏈與寒霜封路'],
@@ -39,6 +40,8 @@ function driveBoss(bot, actor, target, time, state) {
     state.lifeId = actor.lifeId;
     state.step = 0;
     actor.bossCharge = 0;
+    state.appliedRDelayMs = 0;
+    actor.bossRDelayMs = 0;
     state.pending = null;
     state.rate = actor.bossId ? phaseStats(actor).attackRate : 1;
     state.attackAt = time + 1200;
@@ -59,7 +62,36 @@ function driveBoss(bot, actor, target, time, state) {
   if (state.rate && state.rate !== rate && !state.pending && state.attackAt > time)
     state.attackAt = time + ((state.attackAt - time) * state.rate) / rate;
   state.rate = rate;
-  if (time >= state.moveAt && !state.pending) {
+  const cycle = bossInteractions.cycleState(actor, time);
+  const bursting = cycle && ['dash', 'teleport'].includes(cycle.mode);
+  if (bursting && time >= (state.burstMoveAt || 0)) {
+    const points = [
+      [12, 6],
+      [-12, 6],
+      [12, -6],
+      [-12, -6],
+    ].map(([dx, dy]) => ({
+      x: Math.max(12, Math.min(88, target.x + dx)),
+      y: Math.max(16, Math.min(88, target.y + dy)),
+    }));
+    const destination =
+      points.find((p) => Math.hypot(p.x - target.x, p.y - target.y) >= 8) || points[0];
+    actor.targetX = cycle.mode === 'dash' ? target.x : destination.x;
+    actor.targetY = cycle.mode === 'dash' ? target.y : destination.y;
+    actor.moveId++;
+    if (cycle.mode === 'teleport') {
+      actor.x = actor.targetX;
+      actor.y = actor.targetY;
+      actor.teleportId++;
+      actor.bossBlinkSafeUntil = time + bossInteractions.finalCycle.teleportContactGraceMs;
+    }
+    state.burstMoveAt =
+      time +
+      (cycle.mode === 'teleport'
+        ? bossInteractions.finalCycle.teleportIntervalMs
+        : bossInteractions.finalCycle.dashRetargetMs);
+  }
+  if (!bursting && time >= state.moveAt && !state.pending) {
     const phase = state.step + Math.floor(time / 2500),
       side = phase % 2 ? 1 : -1;
     let x = target.x - side * 9,
@@ -104,7 +136,7 @@ function driveBoss(bot, actor, target, time, state) {
     actor.targetY = Math.max(65, Math.min(88, y));
     actor.facing = x < actor.x ? 'left' : 'right';
     actor.moveId++;
-    if (spec.movement === 'blink') {
+    if (spec.movement === 'blink' && time >= (actor.teleportBlockedUntil || 0)) {
       actor.x = actor.targetX;
       actor.y = actor.targetY;
       actor.teleportId++;
@@ -116,14 +148,34 @@ function driveBoss(bot, actor, target, time, state) {
     state.pending = null;
     actor.bossIntent = null;
     state.step++;
-    actor.bossCharge = (state.step % 3) * 50;
+    if (state.step % 3 === 0) {
+      actor.bossCharge = 0;
+      actor.bossRDelayMs = 0;
+      state.appliedRDelayMs = 0;
+    } else {
+      const suppressed = time < (actor.energyDebuffUntil || 0);
+      actor.bossCharge = Math.min(100, (actor.bossCharge || 0) + (suppressed ? 45 : 50));
+      if (suppressed)
+        actor.bossRDelayMs = Math.min(
+          bossInteractions.rules.drainDelayMaximumMs,
+          (actor.bossRDelayMs || 0) + 5 * bossInteractions.rules.drainDelayPerEnergyMs,
+        );
+    }
     state.attackAt = time + (state.step % 3 === 0 ? 4200 : 2600) / rate;
     return null;
   }
   if (time >= state.attackAt) {
+    if (time < (actor.sealedUntil || 0)) return null;
     const sequence = spec.phases[bossPhase(actor) - 1]?.sequence || spec.sequence;
     const effect = sequence[state.step % sequence.length];
     const ability = abilities.find((a) => a.id === effect);
+    if (ability.slot === 'r') {
+      const extra = Math.max(0, (actor.bossRDelayMs || 0) - (state.appliedRDelayMs || 0));
+      state.attackAt += extra;
+      state.appliedRDelayMs = (state.appliedRDelayMs || 0) + extra;
+      if (time < state.attackAt) return null;
+      actor.bossCharge = 100;
+    }
     state.pending = { effect, until: time + (ability.windup + ability.duration) / rate };
     actor.facing = target.x < actor.x ? 'left' : 'right';
     actor.bossIntent = {

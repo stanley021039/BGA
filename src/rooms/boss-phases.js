@@ -1,4 +1,5 @@
 const { phases, phaseLockMs } = require('../../public/shared/boss-rules.json');
+const { beginPhaseImmunity } = require('./boss-interactions');
 // Cast sources carry an inert shared token; mutable budgets stay out of actor state.
 const castTargets = new WeakMap();
 function bossPhase(actor) {
@@ -27,11 +28,14 @@ function capBossDamage(actor, damage, time = actor.combatAt || 0, budget) {
   }
   return Math.min(damage, Math.max(0, actor.health - floor));
 }
-function advanceBossPhase(actor, time = actor.combatAt || 0) {
+function advanceBossPhase(actor, time = actor.combatAt || 0, random = Math.random) {
   if (!actor.bossId) return;
   const previous = actor.bossPhase || 1;
   actor.bossPhase = bossPhase(actor);
-  if (actor.health > 0 && actor.bossPhase > previous) actor.bossPhaseLockUntil = time + phaseLockMs;
+  if (actor.health > 0 && actor.bossPhase > previous) {
+    actor.bossPhaseLockUntil = time + phaseLockMs;
+    beginPhaseImmunity(actor, time, actor.bossPhase, random);
+  }
 }
 function bossHealingCeiling(actor) {
   return actor.bossId ? Math.ceil((actor.maxHealth * (4 - bossPhase(actor))) / 3) : actor.maxHealth;

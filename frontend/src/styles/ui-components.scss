@@ -4,6 +4,15 @@
 // needs a different size adds its own scoped class, never a new colour.
 
 // Shared components also render outside their page (for example room media).
+:root body[data-visual-theme] .game-library[data-card-carousel] .game-tile {
+  background: var(--stitch-carousel-card-bg);
+}
+:root body[data-visual-theme] .game-library[data-card-carousel] .tile-image {
+  background: transparent;
+}
+:root body[data-visual-theme] .game-library[data-card-carousel] .tile-image > img {
+  opacity: var(--stitch-carousel-cover-opacity);
+}
 // Keep accessible descriptions available without depending on legacy CSS.
 .ui-sr-only {
   position: absolute;

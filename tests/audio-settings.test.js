@@ -521,7 +521,14 @@ test('boss warning follows effect volume and the global mute switch', () => {
   const ui = harness();
   ui.api.set('effects', { enabled: true, volume: 0.25 });
   const clip = ui.api.playEffect('boss-warning');
-  assert.equal(clip.src, '/assets/game-sounds/boss-warning.wav');
+  assert.equal(clip.src, '/assets/game-sounds/boss-warning-megaman-x4.mp3');
+  const recording = require('node:fs').readFileSync(
+    path.join(__dirname, '../public/assets/game-sounds/boss-warning-megaman-x4.mp3'),
+  );
+  assert.equal(
+    createHash('sha256').update(recording).digest('hex'),
+    '767abc2dac81f92b45387070d51897b35fc4159f7c9ff8ae84a2cf643129ad11',
+  );
   assert.equal(clip.volume, 0.25);
   ui.api.set('effects', { enabled: false });
   assert.equal(clip.paused, true);

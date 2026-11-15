@@ -41,7 +41,17 @@ test('boss HTTP requires authentication, validates scope and serves sized versio
   };
   const state = await (await fetch(f.base + '/api/lobby/bosses', { headers })).json();
   assert.equal(state.catalog.length, 11);
-  assert.equal(state.limit, 2);
+  assert.equal(state.limit, 5);
+  const sound = await fetch(f.base + '/assets/game-sounds/boss-warning-megaman-x4.mp3', {
+    headers,
+  });
+  assert.equal(sound.status, 200);
+  assert.match(sound.headers.get('content-type'), /audio\/mpeg/);
+  const recording = Buffer.from(await sound.arrayBuffer());
+  assert.equal(
+    crypto.createHash('sha256').update(recording).digest('hex'),
+    '767abc2dac81f92b45387070d51897b35fc4159f7c9ff8ae84a2cf643129ad11',
+  );
   const boss = state.catalog[0];
   assert.match(boss.image, /\?v=/);
   assert.equal((await fetch(f.base + boss.image)).status, 401);
@@ -67,6 +77,8 @@ test('boss HTTP requires authentication, validates scope and serves sized versio
     });
   assert.equal((await post({ action: 'add', bossId: boss.id })).status, 200);
   assert.equal((await post({ action: 'add', bossId: 'prismatic-void' })).status, 200);
+  for (const bossId of ['greeza', 'cthulhu', 'hyper-zetton'])
+    assert.equal((await post({ action: 'add', bossId })).status, 200);
   assert.equal((await post({ action: 'add', bossId: 'greeza' })).status, 409);
   assert.equal((await post({ action: 'add', bossId: 'greeza', health: 1 })).status, 400);
   assert.equal((await post({ action: 'list' }, '?training=1')).status, 403);

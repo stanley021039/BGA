@@ -23,12 +23,12 @@ function fixture(options = {}) {
     advance: (ms) => (time += ms),
   };
 }
-test('boss capacity is global and independent of three bots; ownership, input and scope are enforced', () => {
+test('boss capacity is global and independent of five bots; ownership, input and scope are enforced', () => {
   const { lobby, advance } = fixture();
-  for (let i = 0; i < 3; i++) lobby.bots(alice, { action: 'add', mode: 'idle' });
-  for (const spec of bosses.slice(0, 2)) lobby.bosses(alice, { action: 'add', bossId: spec.id });
-  assert.equal(lobby.bots(alice).bots.length, 3);
-  assert.equal(lobby.bosses(bob).bosses.length, 2);
+  for (let i = 0; i < 5; i++) lobby.bots(alice, { action: 'add', mode: 'idle' });
+  for (const spec of bosses.slice(0, 5)) lobby.bosses(alice, { action: 'add', bossId: spec.id });
+  assert.equal(lobby.bots(alice).bots.length, 5);
+  assert.equal(lobby.bosses(bob).bosses.length, 5);
   assert.throws(() => lobby.bosses(bob, { action: 'add', bossId: 'arkveld' }), {
     code: 'BOSSES_FULL',
   });

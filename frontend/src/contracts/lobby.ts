@@ -75,6 +75,8 @@ export interface LobbyVisitor {
   bossId?: string;
   bossPhase?: number;
   bossPhaseLockMs?: number;
+  bossControlImmuneMs?: number;
+  bearCompanion?: { index: number; remainingMs: number; lastDrain: number };
   bossIntent?: { effect: string; until: number; attackRate?: number } | null;
   concealed?: boolean;
   heroFlightUntil?: number;
@@ -149,6 +151,7 @@ export interface LobbyAttackHit {
   coverImpact?: { x: number; y: number };
   reflectionIndex?: number;
   reflectedEffect?: string;
+  reflectedBossEffect?: string;
   reflectedPhase?: string;
   aimX?: number;
   aimY?: number;
@@ -163,6 +166,7 @@ export interface LobbyAttackHit {
   critical: boolean;
 }
 export interface LobbyAttack {
+  bearIndex?: number;
   bossAttackRate?: number;
   cancelled?: boolean;
   head?: AttackHead;
@@ -505,6 +509,29 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             bossPhaseLockMs: finite(item.bossPhaseLockMs)
               ? Math.max(0, Math.min(2000, item.bossPhaseLockMs))
               : 0,
+            ...(finite(item.bossControlImmuneMs) && item.bossControlImmuneMs > 0
+              ? { bossControlImmuneMs: Math.min(5000, item.bossControlImmuneMs) }
+              : {}),
+          }
+        : {}),
+      ...(item.bearCompanion !== undefined
+        ? {
+            bearCompanion: (() => {
+              const b = record(item.bearCompanion);
+              if (
+                !Number.isSafeInteger(b.index) ||
+                Number(b.index) < 0 ||
+                Number(b.index) > 4 ||
+                !finite(b.remainingMs) ||
+                b.remainingMs <= 0 ||
+                b.remainingMs > 3000 ||
+                !finite(b.lastDrain) ||
+                b.lastDrain < 0 ||
+                b.lastDrain > 10
+              )
+                throw Error('彩虹熊附身資料格式不正確。');
+              return { index: Number(b.index), remainingMs: b.remainingMs, lastDrain: b.lastDrain };
+            })(),
           }
         : {}),
       bossIntent:
@@ -547,7 +574,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
   return {
     arena: readLobbyArena(row.arena),
     bossArrivals: array(row.bossArrivals || [])
-      .slice(0, 2)
+      .slice(0, 5)
       .map((value) => {
         const a = record(value);
         if (
@@ -580,6 +607,11 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           ![a.fromX, a.fromY, a.toX, a.toY].every(coordinate) ||
           !finite(a.at) ||
           !finite(a.until) ||
+          (a.bearIndex !== undefined &&
+            (kind !== 'rainbow_bear' ||
+              !Number.isSafeInteger(a.bearIndex) ||
+              Number(a.bearIndex) < 0 ||
+              Number(a.bearIndex) > 4)) ||
           !(bossAbilities.some((s) => s.id === a.effect)
             ? (a.bossAttackRate === undefined ||
                 [1, 1.15, 1.3].includes(Number(a.bossAttackRate))) &&
@@ -648,6 +680,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                 const hits = a.hits.map((value) => {
                   const hit = record(value);
                   const reflectedEffect = text(hit.reflectedEffect);
+                  const reflectedBossEffect = text(hit.reflectedBossEffect);
                   const reflectedPhase = text(hit.reflectedPhase);
                   const reflectedKind = attackArtworkKind(reflectedEffect);
                   if (
@@ -674,6 +707,13 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                     throw Error('反彈招式資料格式不正確。');
                   const reflectionIndex = hit.reflectionIndex;
                   if (
+                    hit.reflectedBossEffect !== undefined &&
+                    (kind !== 'crystal_reflection' ||
+                      hit.phase !== 'reflection' ||
+                      !bossAbilities.some((s) => s.id === reflectedBossEffect && s.slot !== 'r'))
+                  )
+                    throw Error('Boss反彈招式格式不正確。');
+                  if (
                     reflectionIndex !== undefined &&
                     (kind !== 'crystal_reflection' ||
                       !reflectedEffect ||
@@ -687,6 +727,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                       ? { reflectionIndex: Number(reflectionIndex) }
                       : {}),
                     ...(reflectedEffect ? { reflectedEffect, reflectedPhase } : {}),
+                    ...(reflectedBossEffect ? { reflectedBossEffect } : {}),
                     ...(hit.aimX !== undefined && coordinate(hit.aimX) && coordinate(hit.aimY)
                       ? { aimX: hit.aimX, aimY: hit.aimY }
                       : {}),
@@ -750,6 +791,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             : {}),
           damage: finite(a.damage) ? Math.max(0, a.damage) : undefined,
           critical: a.critical === true,
+          ...(a.bearIndex !== undefined ? { bearIndex: Number(a.bearIndex) } : {}),
           ...([1.15, 1.3].includes(Number(a.bossAttackRate))
             ? { bossAttackRate: Number(a.bossAttackRate) }
             : {}),

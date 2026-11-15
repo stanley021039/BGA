@@ -12,4 +12,5 @@ export function playArrival(
   },
   id: string,
   duration: number,
+  authoredDuration?: number,
 ): () => void;

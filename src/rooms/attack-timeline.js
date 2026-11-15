@@ -4,6 +4,7 @@ const timing = require('../../public/shared/attack-timing.json');
 const rules = require('../../public/shared/scene-rules.json');
 const { inAttackArea, selectBijuuDirections } = require('./attack-targets');
 const { sceneDistance } = require('./scene-combat');
+const { drainBossCharge } = require('./boss-interactions');
 const {
   prepareSpecial,
   advanceSpecial,
@@ -114,6 +115,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
   }
   function prepare(event, self, targets, actors = targets) {
     const effect = attackKind(event.effect);
+    if (effect === 'rainbow_bear') event.bearIndex = combat.rollInteger(0, 4);
     if (effect === 'bijuu_beam')
       event.rays = selectBijuuDirections(self, actors, event.aspectRatio);
     const source = {
@@ -433,9 +435,11 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
           hit.toX = actor.x;
           hit.toY = actor.y;
           if (actor.kind !== 'fragment') {
-            combat.freeze(actor, job.at, duration);
-            actor.stasisUntil = job.at + duration;
-            actor.sealedUntil = Math.max(actor.sealedUntil || 0, job.at + duration);
+            const effective = combat.freeze(actor, job.at, duration);
+            if (effective) {
+              actor.stasisUntil = job.at + effective;
+              actor.sealedUntil = Math.max(actor.sealedUntil || 0, job.at + effective);
+            }
           }
           continue;
         }
@@ -458,7 +462,8 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
         if (actor.health > 0 && actor.kind !== 'fragment') {
           if (effect === 'starburst_stream' && !attached && hit.damage > 0) {
             state.lockedTarget = actor;
-            actor.energy = Math.floor(energyBefore / 2);
+            if (actor.bossId) drainBossCharge(actor, (actor.bossCharge || 0) / 2);
+            else actor.energy = Math.floor(energyBefore / 2);
           }
           if (effect === 'rainbow_bear' && job.phase === 'hug' && hit.damage > 0) {
             state.lockedTarget = actor;
@@ -466,8 +471,12 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
               actor.kissedUntil || 0,
               job.at + rules.rainbowBear.durationMs,
             );
+            if (!state.bearRolled) {
+              state.bearRolled = true;
+              combat.attachBear(state.source, actor, job.at, event.bearIndex);
+            }
           }
-          if (effect === 'zero_equation') combat.trapEquation(actor, event.id);
+          if (effect === 'zero_equation') combat.trapEquation(actor, event.id, job.at);
         }
         if (
           effect === 'black_coffin' &&
@@ -481,7 +490,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
           movement.applied = true;
           movement.updateUntil =
             job.at + (movement.frost ? rules.frost.durationMs : rules.bladeHaste.durationMs);
-          if (movement.frost) {
+          if (movement.frost && combat.canControl(actor, job.at)) {
             if (actor.health > 0 && (actor.slowUntil || 0) <= job.at)
               actor.slowUntil = job.at + rules.frost.durationMs;
           } else {
@@ -562,7 +571,10 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
   }
   // Boss ordinary patterns return as a bounded energy imprint through the same guard budget.
   function interceptBoss(source, target, at, weight, actors) {
-    return intercept('barrage', source, target, { at, weight, phase: 'hit1' }, actors);
+    const result = intercept('barrage', source, target, { at, weight, phase: 'hit1' }, actors);
+    if (result?.job && source.bossAbilityId)
+      result.job.hit.reflectedBossEffect = source.bossAbilityId;
+    return result;
   }
   return { prepare, armReflection, advance, needsFastUpdates, interceptBoss };
 }

@@ -24,7 +24,7 @@ function fixture(options = {}) {
 
 test('lobby bots have a global limit, private ownership and validated character/loadout', () => {
   const { lobby } = fixture();
-  for (let i = 0; i < 3; i++) lobby.bots(alice, { action: 'add' });
+  for (let i = 0; i < 5; i++) lobby.bots(alice, { action: 'add' });
   assert.throws(() => lobby.bots(bob, { action: 'add' }), { code: 'SCENE_BOTS_FULL' });
   const bot = lobby.bots(alice).bots[0];
   assert.throws(() => lobby.bots(bob, { action: 'remove', id: bot.id }), { code: 'BOT_NOT_OWNED' });
@@ -36,7 +36,7 @@ test('lobby bots have a global limit, private ownership and validated character/
     { code: 'INVALID_SCENE_BOT' },
   );
   lobby.bots(alice, { action: 'remove', id: bot.id });
-  assert.equal(lobby.bots(bob, { action: 'add', characterId: characters[4].id }).bots.length, 3);
+  assert.equal(lobby.bots(bob, { action: 'add', characterId: characters[4].id }).bots.length, 5);
   assert.equal(lobby.view(bob).visitors.filter((v) => v.image === characters[4].image).length, 1);
 });
 

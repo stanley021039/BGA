@@ -1,5 +1,8 @@
 import { createAreaAttack } from './attack-area.js';
 import { createBossArtwork } from './boss-artwork.js';
+import bossAbilities from '../../../public/shared/boss-abilities.json';
+import { bossZones } from '../engines/boss-geometry.js';
+import { drawBossStrike } from './boss-strike-art.js';
 import { createRevisionAttack } from './attack-revision.js';
 import attackEffects from '../../../public/shared/attack-effects.json';
 /* Adapted from user 攻擊.zip: 15_4 full artwork plus 8 independent obsidian crescent variants.
@@ -166,6 +169,35 @@ function drawReturnImprint(ctx, effect, color, from, target, elapsed, travelMs) 
 }
 
 function createReturnArtwork(context, options, hit, from) {
+  const bossSpec = bossAbilities.find((s) => s.id === hit.reflectedBossEffect && s.slot !== 'r');
+  if (bossSpec)
+    return (elapsed, target) => {
+      const aspect = options.aspectRatio || 1.6,
+        d = Math.max(1, aspect);
+      const origin = { x: (from.x / options.width) * 100, y: (from.y / options.height) * 100 };
+      const aim = { x: (target.x / options.width) * 100, y: (target.y / options.height) * 100 };
+      const zones = bossZones(bossSpec, origin, aim, aspect);
+      const travel = combatRules.crystalReflection.travelMs;
+      const age =
+        elapsed <= travel
+          ? (elapsed / travel) * bossSpec.windup
+          : bossSpec.windup + elapsed - travel;
+      context.save();
+      context.scale((options.width * d) / (100 * aspect), (options.height * d) / 100);
+      drawBossStrike(
+        context,
+        bossSpec,
+        zones,
+        {
+          ...options,
+          bossFrom: origin,
+          bossAim: aim,
+          readCaster: () => ({ x: from.x, y: from.y, width: 0, height: 0 }),
+        },
+        age,
+      );
+      context.restore();
+    };
   const id = hit.reflectedEffect;
   const effect = attackArtworkKind(id);
   if (!isReflectableAttack(id)) return;

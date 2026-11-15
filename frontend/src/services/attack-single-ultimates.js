@@ -418,16 +418,18 @@ export function createSingleUltimate(ctx, options, picture) {
       const takeoff = first - 238;
       const charge = singleProgress((elapsed - 590) / 175);
       const flight = singleProgress((elapsed - takeoff) / (first - takeoff));
+      const launchIndex = (options.bearIndex ?? 2) - 2;
       for (const index of [-2, -1, 0, 1, 2]) {
-        const fade = index ? 1 - singleProgress((elapsed - takeoff) / 140) : 1;
-        if (!fade || (arrival && index)) continue;
+        const lead = index === launchIndex;
+        const fade = lead ? 1 : 1 - singleProgress((elapsed - takeoff) / 140);
+        if (!fade || (arrival && !lead)) continue;
         const entrance = singleProgress((elapsed - 90 - (index + 2) * 55) / 430);
         if (!entrance) continue;
         const twist = 1 - entrance;
         const wiggle = Math.sin(elapsed / 29 + index * 2.1);
         const x = caster.x + (index * 63 + wiggle * 13 * twist) * scale;
         const y = caster.y - (42 - Math.abs(index) * 12) * scale;
-        const p = index ? 0 : flight;
+        const p = lead ? flight : 0;
         const currentX = x + (target.x - x) * p;
         const currentY =
           y +
@@ -436,12 +438,11 @@ export function createSingleUltimate(ctx, options, picture) {
           twist * (15 + Math.cos(elapsed / 35 + index) * 12) * scale;
         ctx.save();
         ctx.globalAlpha = fade * (arrival ? 1 - singleProgress((elapsed - first) / 290) : entrance);
-        const lead = index === 0;
         const radius = 104 * scale * (0.63 + 0.37 * entrance) * (lead ? 1 + 0.85 * charge : 1);
         ctx.translate(currentX, currentY);
         ctx.rotate(wiggle * twist * 0.53 + (lead && p > 0 ? Math.sin(p * Math.PI) * 0.26 : 0));
         ctx.scale(1 + wiggle * twist * 0.22, 1 - wiggle * twist * 0.17);
-        if (!index && charge > 0 && !arrival)
+        if (lead && charge > 0 && !arrival)
           ring(0, 22 * scale, (24 + 25 * charge) * scale, color, 3 * scale);
         ring(0, 25 * scale, 24 * scale, color, 3 * scale);
         const left = -radius / 2;

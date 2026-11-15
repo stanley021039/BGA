@@ -4,6 +4,7 @@ const { HttpError } = require('../http/errors');
 const { attackKind } = require('./attack-kind');
 const rules = require('../../public/shared/scene-rules.json');
 const energy = require('./scene-energy');
+const bossInteractions = require('./boss-interactions');
 const { passageTarget } = require('../../frontend/src/engines/scene-path.js');
 const {
   phaseStats,
@@ -24,6 +25,7 @@ function authorSpeed(actor, time = actor.combatAt || 0) {
     (actor.authorBonus ? rules.authorBonus.speedMultiplier : 1) *
     (actor.bossSpeed || 1) *
     (actor.bossId ? phaseStats(actor).speed : 1) *
+    bossInteractions.burstSpeed(actor, time) *
     (time < (actor.bossBlessingUntil || 0) ? 1.08 : 1)
   );
 }
@@ -43,6 +45,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     profile(actor).health;
   function reset(actor, time) {
     if (actor.bossId) {
+      bossInteractions.resetBossInteractions(actor);
       actor.bossPhase = 1;
       actor.bossPhaseLockUntil = 0;
     }
@@ -90,6 +93,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     actor.severed = false;
     actor.drillDot = null;
     actor.ordinaryDot = null;
+    actor.bearCompanion = null;
     actor.dotPulse = null;
     actor.knockback = null;
     actor.pickupSpeedAt =
@@ -125,6 +129,32 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       actor.dotPulse = { id: `${actor.lifeId}:${at}`, at, ...result };
     }
     collect(actor);
+    const bear = actor.bearCompanion;
+    if (bear) {
+      const owner = bear.source.energyActor || bear.source;
+      if (
+        !actor.health ||
+        !owner.health ||
+        owner.lifeId !== bear.source.energyLifeId ||
+        policy.sourcePresent?.(owner) === false ||
+        !canContinueCast(bear.source, actor, time)
+      ) {
+        actor.bearCompanion = null;
+      } else {
+        while (bear.nextAt <= time && bear.nextAt <= bear.until) {
+          const amount = rollInteger(rules.rainbowBear.drainMin, rules.rainbowBear.drainMax);
+          if (actor.bossId) bear.lastDrain = bossInteractions.drainBossCharge(actor, amount);
+          else {
+            const before = actor.energy || 0;
+            actor.energy = Math.max(0, before - amount);
+            bear.lastDrain = before - actor.energy;
+          }
+          bear.nextAt += rules.rainbowBear.drainIntervalMs;
+        }
+        if (time >= bear.until) actor.bearCompanion = null;
+      }
+    }
+    bossInteractions.advanceCycle(actor, time, random);
     if (actor.respawnAt && time >= actor.respawnAt) {
       const oldX = actor.x;
       actor.authorBonus = entitled;
@@ -232,11 +262,18 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     if (effect === 'excalibur') actor.excaliburUntil = time + rules.excaliburGuard.durationMs;
   }
   function freeze(actor, time, duration = 1000) {
+    duration = bossInteractions.paralysisDuration(actor, time, duration);
+    if (!duration) return 0;
     actor.immobileUntil = Math.max(actor.immobileUntil || 0, time + duration);
     actor.targetX = actor.x;
     actor.targetY = actor.y;
+    return duration;
   }
-  function trapEquation(actor, id) {
+  function trapEquation(actor, id, time = actor.combatAt || 0) {
+    if (actor.bossId) {
+      actor.bossEquationUntil = time + bossInteractions.rules.weaknessMs;
+      return;
+    }
     const digit = () => 2 + Math.floor(random() * 7);
     const a = digit(),
       b = digit(),
@@ -373,14 +410,16 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     if (!actor.health || actor.kind === 'fragment') return;
     const owner = from.energyActor || from;
     const valid = owner.health > 0 && (!from.energyActor || owner.lifeId === from.energyLifeId);
+    const controllable = !bossInteractions.immune(actor, time);
     if (effect === 'chain_lightning' && random() < 0.1) freeze(actor, time, 1000);
     if (
       ['tidal_blades', 'magnetic_disc'].includes(effect) &&
+      controllable &&
       random() < (effect === 'tidal_blades' ? 0.15 : 0.1)
     )
       actor.slowUntil = Math.max(actor.slowUntil || 0, time + 1500);
     if (firstContact) {
-      if (effect === 'chains') {
+      if (effect === 'chains' && controllable) {
         if (random() < 0.2)
           actor.strongSlowUntil = Math.max(actor.strongSlowUntil || 0, time + 1500);
         if (random() < 0.3) actor.slowUntil = Math.max(actor.slowUntil || 0, time + 1500);
@@ -393,30 +432,38 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       if (effect === 'seeking_talismans') actor.energyDebuffUntil = time + 2000;
       if (effect === 'sakura_swarm') actor.regenDebuffUntil = time + 2000;
     }
-    if (effect === 'reaper_seal')
-      actor.sealedUntil = Math.max(actor.sealedUntil || 0, time + rules.reaperSeal.durationMs);
-    if (effect === 'gate_of_heroes') {
-      freeze(actor, time, rules.heroLanding.knockupMs);
-      actor.knockback = {
-        id: `${actor.lifeId}:${time}`,
-        fromX: actor.x,
-        fromY: actor.y,
-        at: time,
-        durationMs: rules.heroLanding.knockupMs,
-        vertical: true,
-      };
+    if (effect === 'reaper_seal') {
+      if (actor.bossId) bossInteractions.sealBoss(actor, time, rules.reaperSeal.durationMs);
+      else actor.sealedUntil = Math.max(actor.sealedUntil || 0, time + rules.reaperSeal.durationMs);
+    }
+    if (effect === 'gate_of_heroes' && controllable) {
+      const duration = freeze(actor, time, rules.heroLanding.knockupMs);
+      if (duration)
+        actor.knockback = {
+          id: `${actor.lifeId}:${time}`,
+          fromX: actor.x,
+          fromY: actor.y,
+          at: time,
+          durationMs: duration,
+          vertical: true,
+        };
     }
     if (effect === 'bijuu_beam') {
       const config = effect === 'chains' ? rules.chains : rules.bijuuImmobilize;
       if (random() < (config.immobilizeChance ?? config.chance))
         freeze(actor, time, config.immobilizeMs ?? config.durationMs);
-      if (random() < config.slowChance)
+      if (controllable && random() < config.slowChance)
         actor.bijuuSlowUntil = Math.max(
           actor.bijuuSlowUntil || 0,
           Math.max(time, actor.immobileUntil || 0) + rules.frost.durationMs,
         );
     }
-    if (firstContact && effect === 'orbital' && random() < rules.orbitalTeleportBlock.chance)
+    if (
+      firstContact &&
+      controllable &&
+      effect === 'orbital' &&
+      random() < rules.orbitalTeleportBlock.chance
+    )
       actor.teleportBlockedUntil = Math.max(
         actor.teleportBlockedUntil || 0,
         time + rules.orbitalTeleportBlock.durationMs,
@@ -435,14 +482,18 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       );
     if (effect === 'giant_orange_cat') {
       freeze(actor, time, rules.orangeCat.immobilizeMs);
-      actor.slowUntil = Math.max(
-        actor.slowUntil || 0,
-        actor.immobileUntil + rules.orangeCat.slowMs,
-      );
+      if (controllable)
+        actor.slowUntil = Math.max(
+          actor.slowUntil || 0,
+          Math.max(time, actor.immobileUntil || 0) + rules.orangeCat.slowMs,
+        );
     }
-    if (effect === 'giant_orange_cat')
-      actor.orangeSlowUntil = actor.immobileUntil + rules.orangeCat.slowMs;
-    if (effect === 'dimension_cleave' && !actor.severed) {
+    if (effect === 'giant_orange_cat' && controllable)
+      actor.orangeSlowUntil = Math.max(time, actor.immobileUntil || 0) + rules.orangeCat.slowMs;
+    if (effect === 'dimension_cleave' && actor.bossId) {
+      actor.bossArmorUntil = time + bossInteractions.rules.weaknessMs;
+    }
+    if (effect === 'dimension_cleave' && !actor.bossId && !actor.severed) {
       const angle = random() * Math.PI * 2;
       let point = {
         x: Math.max(
@@ -472,7 +523,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         stealableAt: time + rules.fragment.ownerOnlyMs,
       };
     }
-    if (effect === 'singularity' && phase === 'finish') {
+    if (controllable && effect === 'singularity' && phase === 'finish') {
       const distance = sceneDistance(actor, origin, aspect);
       if (distance > 0) {
         const fraction = Math.min(1, rules.singularityPull / distance);
@@ -498,25 +549,41 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       }
     }
     if (effect === 'giga_drill') {
-      const dx = (actor.x - origin.x) * aspect,
-        dy = actor.y - origin.y;
-      const distance = Math.hypot(dx, dy) || 1;
-      const fromX = actor.x,
-        fromY = actor.y;
-      actor.x = Math.max(
-        1,
-        Math.min(99, actor.x + ((dx / distance) * 12 * Math.max(1, aspect)) / aspect),
-      );
-      actor.y = Math.max(1, Math.min(99, actor.y + (dy / distance) * 12 * Math.max(1, aspect)));
-      Object.assign(actor, passageTarget({ x: fromX, y: fromY }, actor, actor.passage));
-      freeze(actor, time, 450);
-      actor.moveId = (actor.moveId || 0) + 1;
-      actor.knockback = { id: `${actor.lifeId}:${time}`, fromX, fromY, at: time };
+      if (controllable && (!actor.bossId || time >= (actor.bossParalysisProtectUntil || 0))) {
+        const dx = (actor.x - origin.x) * aspect,
+          dy = actor.y - origin.y;
+        const distance = Math.hypot(dx, dy) || 1;
+        const fromX = actor.x,
+          fromY = actor.y;
+        actor.x = Math.max(
+          1,
+          Math.min(99, actor.x + ((dx / distance) * 12 * Math.max(1, aspect)) / aspect),
+        );
+        actor.y = Math.max(1, Math.min(99, actor.y + (dy / distance) * 12 * Math.max(1, aspect)));
+        Object.assign(actor, passageTarget({ x: fromX, y: fromY }, actor, actor.passage));
+        freeze(actor, time, 450);
+        actor.moveId = (actor.moveId || 0) + 1;
+        actor.knockback = { id: `${actor.lifeId}:${time}`, fromX, fromY, at: time };
+      }
       actor.drillDot = { from, nextAt: time + 1000, remaining: 3 };
     }
   }
   function rollChance(chance) {
     return random() < chance;
+  }
+  function rollInteger(min, max) {
+    return min + Math.min(max - min, Math.floor(random() * (max - min + 1)));
+  }
+  function attachBear(from, actor, time, index) {
+    if (!actor.health || random() >= rules.rainbowBear.lingerChance) return false;
+    actor.bearCompanion = {
+      source: from,
+      index,
+      until: time + rules.rainbowBear.durationMs,
+      nextAt: time + rules.rainbowBear.drainIntervalMs,
+      lastDrain: 0,
+    };
+    return true;
   }
   function targets(actors) {
     return [...actors].flatMap((actor) =>
@@ -614,9 +681,18 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         : 1;
     const rawDamage =
       effect === 'shaohua_devour'
-        ? Math.min(to.health - 1, Math.round(Math.max(0, to.health * 0.9) * cover))
+        ? Math.min(
+            to.health - 1,
+            Math.round(
+              Math.max(
+                0,
+                to.health * (to.bossId ? bossInteractions.rules.devourCurrentHealthFraction : 0.9),
+              ) * cover,
+            ),
+          )
         : Math.round(
             incoming *
+              (1 + bossInteractions.vulnerability(to, time)) *
               cover *
               (profile(from).damage +
                 (from.pickupAttackBonus ??
@@ -656,7 +732,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
           time,
           from.bossBarBudget,
         );
-        advanceBossPhase(to.owner, time);
+        advanceBossPhase(to.owner, time, random);
         to.owner.lastHitAt = to.owner.regenAt = time;
         to.owner.fragment = null;
       }
@@ -672,7 +748,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       energy.hit(from, to, effect, damage, phase);
     if (damage > 0 && phase !== 'ordinary-dot' && validCaster) {
       if (['funnel', 'plasma_pulse', 'railgun'].includes(effect))
-        to.energy = Math.max(0, (to.energy || 0) - (effect === 'railgun' ? 10 : 5));
+        if (to.bossId) bossInteractions.drainBossCharge(to, effect === 'railgun' ? 10 : 5);
+        else to.energy = Math.max(0, (to.energy || 0) - (effect === 'railgun' ? 10 : 5));
       if (effect === 'refracting_prism') {
         const count = from.healCount || 0;
         if (count < 3) {
@@ -706,7 +783,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     }
     policy.onDamage?.(from, to, time, Math.min(to.health, damage));
     to.health = Math.max(0, to.health - damage);
-    advanceBossPhase(to, time);
+    advanceBossPhase(to, time, random);
     to.lastHitAt = to.regenAt = time;
     if (!to.health) {
       if (!policy.isObjective?.(to)) {
@@ -723,6 +800,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     return { damage, critical, ...(weakened && { weakened }) };
   }
   function clearDeath(actor, time) {
+    actor.bearCompanion = null;
+    if (actor.bossId) bossInteractions.resetBossInteractions(actor);
     actor.bossPhaseLockUntil = 0;
     actor.bossBlessingUntil = 0;
     actor.bijuuSlowUntil =
@@ -778,7 +857,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     );
     policy.onEnvironmentDamage?.(actor, time, damage);
     actor.health -= damage;
-    advanceBossPhase(actor, time);
+    advanceBossPhase(actor, time, random);
     actor.dotPulse = { id: `terrain:${actor.lifeId}:${time}`, at: time, damage, critical: false };
     actor.lastHitAt = actor.regenAt = time;
     if (!actor.health) {
@@ -901,6 +980,18 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       ...(living && actor.summon?.until > time
         ? { summon: { ...actor.summon, remainingMs: actor.summon.until - time } }
         : {}),
+      ...(living && actor.bearCompanion?.until > time
+        ? {
+            bearCompanion: {
+              index: actor.bearCompanion.index,
+              remainingMs: actor.bearCompanion.until - time,
+              lastDrain: actor.bearCompanion.lastDrain,
+            },
+          }
+        : {}),
+      ...(living && actor.bossId && time < (actor.bossControlImmuneUntil || 0)
+        ? { bossControlImmuneMs: actor.bossControlImmuneUntil - time }
+        : {}),
       knockback:
         actor.knockback && actor.combatAt - actor.knockback.at < 1200
           ? { ...actor.knockback }
@@ -939,6 +1030,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     canContinueCast,
     view,
     freeze,
+    canControl: (actor, time) => !bossInteractions.immune(actor, time),
     canMove,
     trapEquation,
     solveEquation,
@@ -949,6 +1041,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     collect,
     cast,
     rollBabylonDamage,
+    rollInteger,
+    attachBear,
   };
 }
 module.exports = { createSceneCombat, sceneDistance, authorSpeed };

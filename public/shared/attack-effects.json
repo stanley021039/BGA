@@ -217,7 +217,7 @@
     "id": "shaohua_devour",
     "label": "大嘴少華・宅宅吞",
     "color": "#ffb858",
-    "description": "咬中扣至目標當前生命10%；2秒內咬不到，自身當前生命減半。",
+    "description": "咬中扣至目標當前生命10%；對Boss最多扣當前生命50%。2秒內咬不到，自身當前生命減半。",
     "gachaOnly": true,
     "ultimate": true
   },
@@ -225,7 +225,7 @@
     "id": "shaohua_devour_alt",
     "label": "大嘴少華・宅宅吞（蝕月金環異色）",
     "color": "#a895ef",
-    "description": "咬中扣至目標當前生命10%；2秒內咬不到，自身當前生命減半。",
+    "description": "咬中扣至目標當前生命10%；對Boss最多扣當前生命50%。2秒內咬不到，自身當前生命減半。",
     "gachaOnly": true,
     "variantOf": "shaohua_devour",
     "ultimate": true
@@ -940,7 +940,7 @@
     "id": "rainbow_bear",
     "label": "彩虹獸・熊甲寶貝",
     "color": "#ff80ba",
-    "description": "首次命中標記3秒，使對方傷害−30%，並鎖定同一目標追擊。",
+    "description": "隨機一隻飛出追擊；首次命中標記3秒、對方傷害−30%。50%機率留下親吻3秒，每秒扣1–10能量。",
     "gachaOnly": true,
     "ultimate": true,
     "damageMultiplier": 2
@@ -969,7 +969,7 @@
     "id": "rainbow_bear_alt",
     "label": "彩虹獸・熊甲寶貝（極光絨夢異色）",
     "color": "#80edfb",
-    "description": "首次命中標記3秒，使對方傷害−30%，並鎖定同一目標追擊。",
+    "description": "隨機一隻飛出追擊；首次命中標記3秒、對方傷害−30%。50%機率留下親吻3秒，每秒扣1–10能量。",
     "gachaOnly": true,
     "ultimate": true,
     "damageMultiplier": 2,

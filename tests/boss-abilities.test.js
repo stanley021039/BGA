@@ -143,6 +143,7 @@ test('crystal guard returns boss ordinary damage through its existing budget; ul
   );
   assert.equal(f.player.health, f.player.maxHealth);
   assert.equal(guard.hits.length, 1);
+  assert.equal(guard.hits[0].reflectedBossEffect, spec.id);
   f.timeline.advance([guard], f.positions.values(), 2200, () => {});
   assert.ok(f.boss.health < f.boss.maxHealth);
   const g = fixture(),

@@ -51,22 +51,25 @@ const boss = (id, health = 750) => ({
   health,
   maxHealth: 1000,
 });
-test('boss HUD exposes separate named authoritative health bars, clamps values and caps the lobby at two', async () => {
+test('boss HUD exposes separate named authoritative health bars, clamps values and caps the lobby at five', async () => {
   const doc = await render([
     { id: 'player', health: 90, maxHealth: 100 },
     boss('a', 1200),
     boss('b', -20),
     boss('c'),
+    boss('d'),
+    boss('e'),
+    boss('f'),
   ]);
   const meters = [...doc.querySelectorAll('progress')];
-  assert.equal(meters.length, 2);
+  assert.equal(meters.length, 5);
   assert.equal(meters[0].getAttribute('value'), '1000');
   assert.equal(meters[0].getAttribute('max'), '1000');
   assert.equal(meters[0].getAttribute('aria-label'), 'Boss a的總生命值（三階段）');
   assert.equal(meters[1].getAttribute('value'), '0');
-  assert.equal(doc.querySelectorAll('.boss-health-divider').length, 4);
+  assert.equal(doc.querySelectorAll('.boss-health-divider').length, 10);
   assert.match(doc.body.textContent, /已擊倒/);
-  assert.doesNotMatch(doc.body.textContent, /Boss c/);
+  assert.doesNotMatch(doc.body.textContent, /Boss f/);
 });
 test('boss HUD clears on disconnect/removal and follows fresh health or respawn snapshots', async () => {
   for (const [visitors, connected] of [
@@ -86,7 +89,8 @@ test('boss HUD clears on disconnect/removal and follows fresh health or respawn 
   );
   const doc = await render([{ ...boss('a', 600), bossPhase: 2, bossPhaseLockMs: 1500 }]);
   assert.match(doc.body.textContent, /狂暴/);
-  assert.match(doc.body.textContent, /鎖血 2秒/);
+  assert.match(doc.body.textContent, /鎖血/);
+  assert.doesNotMatch(doc.body.textContent, /秒/);
   assert.deepEqual(
     [...doc.querySelectorAll('progress')].map((p) => Number(p.getAttribute('value'))),
     [600],
@@ -97,4 +101,14 @@ test('boss HUD clears on disconnect/removal and follows fresh health or respawn 
 test('boss HP uses the same unscaled numeric units as damage popups', async () => {
   const doc = await render([{ ...boss('a', 8790000), maxHealth: 8960000 }]);
   assert.match(doc.body.textContent, /總生命 8,790,000 \/ 8,960,000 HP/);
+});
+
+test('control immunity label has no countdown and five bars remain scrollable', async () => {
+  const doc = await render(
+    Array.from({ length: 5 }, (_, i) => ({ ...boss(String(i)), bossControlImmuneMs: 4500 })),
+  );
+  assert.equal(doc.querySelectorAll('progress').length, 5);
+  assert.match(doc.body.textContent, /免控/);
+  assert.doesNotMatch(doc.body.textContent, /4.5|秒/);
+  assert.ok(doc.querySelector('[tabindex="0"]'));
 });

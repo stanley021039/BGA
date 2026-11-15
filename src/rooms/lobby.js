@@ -27,7 +27,7 @@ const { bosses: bossCatalog, bossFor } = require('./scene-bosses');
 const { createBossCombat, abilityFor } = require('./boss-combat');
 const { createBossRewards } = require('./boss-rewards');
 const { bossPhase } = require('./boss-phases');
-const { contact: bossContact } = require('../../public/shared/boss-rules.json');
+const { contact: bossContact, lobbyLimits } = require('../../public/shared/boss-rules.json');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
 // Percentages of the lobby page background, below the site header.
@@ -303,7 +303,8 @@ function createLobby(
     if (
       from.id === to.id ||
       time < (from.bossArrivalAt || 0) + 700 ||
-      time < (to.bossArrivalAt || 0) + 700
+      time < (to.bossArrivalAt || 0) + 700 ||
+      (isBoss(from.id) && time < (from.bossBlinkSafeUntil || 0))
     )
       return false;
     if (!expanded) return arena.canPair(from.id, to.id);
@@ -327,6 +328,7 @@ function createLobby(
   );
   const combat = createSceneCombat(random, authorBonus, {
     ...arena,
+    sourcePresent: (actor) => visitors.get(actor.id) === actor,
     canHit: (from, to, time, effect) =>
       bossPair(from, to, time) ?? arena.canHit(from, to, time, effect),
     onDamage: (from, to, time, damage) => {
@@ -1084,7 +1086,7 @@ function createLobby(
     enter(user);
     if (!input || !['list', 'add', 'update', 'remove', 'replay', 'reset'].includes(input.action))
       throw new HttpError(400, 'INVALID_SCENE_BOT', '機器人操作不正確');
-    const limit = expanded ? 15 : 3;
+    const limit = expanded ? 15 : lobbyLimits.bots;
     if (input.action !== 'list') {
       if (arena.view(visitors).match?.phase === 'running')
         throw new HttpError(409, 'ARENA_LOCKED', '對戰中不能調整機器人');
@@ -1176,7 +1178,7 @@ function createLobby(
     if (input.action === 'add') {
       const spec = bossFor(input.bossId);
       if (!spec) throw new HttpError(400, 'INVALID_BOSS', '請選擇有效Boss');
-      const limit = expanded ? 1 : 2;
+      const limit = expanded ? 1 : lobbyLimits.bosses;
       if (
         current().length >= limit ||
         visitors.size + current().filter((b) => !b.arrived).length >= MAX_VISITORS
@@ -1184,7 +1186,7 @@ function createLobby(
         throw new HttpError(
           409,
           'BOSSES_FULL',
-          expanded ? '競技場最多一隻Boss' : '大廳最多兩隻Boss',
+          expanded ? '競技場最多一隻Boss' : '大廳最多五隻Boss',
         );
       const id = 'scene-boss:' + randomBytes(12).toString('hex');
       const bot = {
@@ -1194,7 +1196,7 @@ function createLobby(
         mode: 'attack',
         spawnAt: now() + 5000,
         arrived: false,
-        spawnX: current().length === 0 ? 25 : 75,
+        spawnX: [25, 75, 10, 50, 90].find((x) => !current().some((b) => b.spawnX === x)) ?? 50,
         entrance: 'classic',
         q: spec.sequence[0],
         e: spec.sequence[1],
@@ -1210,7 +1212,7 @@ function createLobby(
     }
     return {
       selfId: user.id,
-      limit: expanded ? 1 : 2,
+      limit: expanded ? 1 : lobbyLimits.bosses,
       catalog: bossCatalog.map(({ sequence, speed, ...spec }) => spec),
       bosses: current().map(({ user, ...b }) => ({ ...b, name: user.display_name })),
     };

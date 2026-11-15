@@ -35,7 +35,11 @@
   },
   "rainbowBear": {
     "durationMs": 3000,
-    "outgoingMultiplier": 0.7
+    "outgoingMultiplier": 0.7,
+    "lingerChance": 0.5,
+    "drainMin": 1,
+    "drainMax": 10,
+    "drainIntervalMs": 1000
   },
   "zeroEquation": {
     "wrongAnswerHpFraction": 0.05

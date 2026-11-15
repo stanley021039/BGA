@@ -213,28 +213,7 @@ onBeforeUnmount(() => {
           >
         </button>
       </div>
-      <div class="carousel-footer"
-        ><div class="carousel-controls"
-          ><div class="carousel-navigation"
-            ><UiButton
-              icon="previous"
-              icon-only
-              label="上一款遊戲"
-              @click="select(index - 1)" /><span
-              class="vue-carousel-counter"
-              role="status"
-              aria-live="polite"
-              :aria-label="
-                chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'
-              "
-              >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
-            ><UiButton
-              icon="next"
-              icon-only
-              label="下一款遊戲"
-              @click="select(index + 1)" /></div></div
-      ></div>
-      <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
+      <p class="ui-sr-only" role="status" aria-live="polite">{{ chosen.title }}</p>
     </div>
     <div class="carousel-actions"
       ><a v-if="chosen.guide" class="quiet carousel-guide" :href="chosen.guide"
@@ -258,21 +237,3 @@ onBeforeUnmount(() => {
     ></div>
   </section>
 </template>
-
-<style scoped>
-.game-carousel-section .carousel-controls {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-}
-.carousel-navigation {
-  display: flex;
-  align-items: center;
-  gap: var(--stitch-space-8);
-}
-@media (max-width: 900px) {
-  .game-carousel-section .carousel-controls {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-</style>
