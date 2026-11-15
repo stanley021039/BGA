@@ -20,6 +20,27 @@ body.scene-ui-hidden {
   inset-inline-end: var(--stitch-space-16);
   z-index: 3000;
 }
+.lobby-scene-summary {
+  display: none;
+  position: fixed;
+  inset-block-start: var(--stitch-space-16);
+  inset-inline-start: var(--stitch-space-16);
+  inline-size: min(360px, calc(100vw - var(--stitch-space-32)));
+  z-index: 30;
+}
+body.scene-ui-hidden .lobby-scene-summary {
+  display: block;
+}
+@media (max-width: 1100px) {
+  .lobby-scene-summary {
+    inset-block-start: 76px;
+    max-block-size: 170px;
+    overflow: auto;
+  }
+  body.scene-ui-hidden:has(.lobby-scene-summary) .boss-health-hud {
+    inset-block-start: 256px;
+  }
+}
 :root
   body[data-visual-theme]:has(.lobby-backdrop, .vue-site-shell)
   #site-header-app[data-site-header] {

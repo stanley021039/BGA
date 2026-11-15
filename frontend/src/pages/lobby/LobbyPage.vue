@@ -16,6 +16,7 @@ import SceneNpcControls from '../../components/SceneNpcControls.vue';
 import UiLink from '../../components/UiLink.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import UiField from '../../components/UiField.vue';
+import UiPanel from '../../components/UiPanel.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import '../../styles/lobby-create.scss';
 const lobby = useLobbyStore(),
@@ -406,4 +407,12 @@ onBeforeUnmount(() => {
     ></UiDialog>
     <RoomPings />
   </div>
+  <Teleport to="body">
+    <aside class="lobby-scene-summary" aria-label="場景戰鬥資訊與夥伴管理">
+      <UiPanel density="compact" tone="translucent">
+        <SceneKda :value="self?.kda" :self="self" :connected="lobby.connected" />
+        <SceneNpcControls />
+      </UiPanel>
+    </aside>
+  </Teleport>
 </template>

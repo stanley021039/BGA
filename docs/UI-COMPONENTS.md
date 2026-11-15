@@ -4,7 +4,13 @@
 
 競技場同一入口保留Boss管理（最多一隻），機器人行為固定主動攻擊；戰鬥中機器人設定鎖定。Boss登場用獨立WARNING圖與共用UiNotice做五秒預告，關閉動畫也保留必要警告；落地特效依權威時點清除。獵王祝福沿SceneKda既有狀態圖示列，瞬移耗能與按鍵／觸控鎖以伺服器teleportCost同步，不各自寫固定能量門檻。
 
-BossHealthHud共用於大廳與競技場，透過body層固定生命長條，獨立於角色與鏡頭。UiPanel density="hud"採半透明底、名稱與權威HP數字；每隻Boss用三條原生progress紅色填量，並顯示狂暴階段與換階段鎖血剩餘秒數。大廳最多兩組，競技場一組。HP以戰鬥unitScale換算顯示。手機戰鬥血條放在左上操作區之下，桌機避開左側操作區。斷線、移除及離開場景清除；零血顯示已擊倒，重生沿新快照回填。不增加逐條計時器或生命推測動畫，不攔截背景點擊，移除Boss身旁重複小血條。
+BossHealthHud共用於大廳與競技場，透過body層固定生命長條，獨立於角色與鏡頭。UiPanel density="hud"採半透明底、名稱與權威HP數字；每隻Boss用一條16px原生progress紅色填量，中間兩道刻線分成三段，顯示第一階段／二階段／最終階段及換階段鎖血剩餘秒數。大廳最多兩組，競技場一組。總生命顯示完整千分位數字，與傷害跳字使用相同原始單位，不單獨除以unitScale。桌機血條區寬度最多720px、水平置中；手機戰鬥血條放在左上操作區之下。斷線、移除及離開場景清除；零血顯示已擊倒，重生沿新快照回填。不增加逐條計時器或生命推測動畫，不攔截背景點擊，移除Boss身旁重複小血條。
+
+只顯示背景與角色模式以body層的lobby-scene-summary保留共用SceneKda（含加成）及SceneNpcControls，不解除原大廳的inert。小螢幕把恢復介面、戰鬥資訊及Boss血條分區，管理彈窗仍走UiDialog的body傳送層。關閉動態不停止戰績／狀態資料同步，也不能隱藏必要管理入口。
+
+進場特效時間以entrancePlaybackDuration與apparition共用，不為抽卡／收藏／房間各寫一份。較長的Stitch演出使用同倍率縮放整個CSS動畫時間軸，角色與舞台同時結束，不能只提早刪除畫面。現行完整時間表見docs/specs/ENTRANCE-TIMINGS-410.md；異色與原版等長。
+
+攻擊特效的訓練場與招式效果入口共用AttackChoiceTools，以16px間距排列並允許換行；收藏庫與設定頁放入UiPanel的actions槽位，AttackChoices設showTools=false避免重複。收藏庫純特效區不套用帶有空篩選／摘要保留槽的ResourcePanel，避免標題下出現無意義留白。操作與回能說明用16px內文及雙欄標籤對齊，窄螢幕只換內文行。
 
 BossArrivalNotice的WARNING每次新預告播放一次共用音效服務中的boss-warning警笛；同批多隻只播一次。跟隨effects音量／開關，預告取消、到期、斷線、離頁、隱藏或卸載即停止，不在恢復可見時重播舊預告。警笛由tools/generate-boss-warning.cjs原創合成，沒有第三方錄音；24000Hz單聲道PCM、2.2秒，僅需要時載入。
 

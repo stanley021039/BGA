@@ -17,6 +17,8 @@ import UiTabs from '../../components/UiTabs.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FrameChoices from '../../components/FrameChoices.vue';
 import AttackChoices from '../../components/AttackChoices.vue';
+import AttackChoiceTools from '../../components/AttackChoiceTools.vue';
+import UiPanel from '../../components/UiPanel.vue';
 import { attackEffectGroups, entranceEffectGroups } from '../../services/effect-variants';
 import EntranceChoices from '../../components/EntranceChoices.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
@@ -563,14 +565,15 @@ onBeforeUnmount(() => {
       "
     />
   </ResourcePanel>
-  <ResourcePanel
+  <UiPanel
     v-if="section === 'attack'"
+    title="攻擊特效"
     id="section-attack"
     class="collection-section"
     role="tabpanel"
     aria-labelledby="collection-tab-attack"
-    ><template #heading><h2>攻擊特效</h2></template
-    ><AttackChoices expanded-list
-  /></ResourcePanel>
+    ><template #actions><AttackChoiceTools /></template
+    ><AttackChoices expanded-list :show-tools="false"
+  /></UiPanel>
   <ConfirmDialog ref="confirmation" />
 </template>

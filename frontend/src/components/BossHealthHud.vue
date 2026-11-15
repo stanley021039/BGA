@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import type { LobbyVisitor } from '../contracts/lobby';
 import UiPanel from './UiPanel.vue';
-import sceneRules from '../../../public/shared/scene-rules.json';
 const props = defineProps<{ visitors: LobbyVisitor[]; connected: boolean }>();
 const bosses = computed(() =>
   props.connected
@@ -18,8 +17,7 @@ const bosses = computed(() =>
     : [],
 );
 const health = (boss: LobbyVisitor) => Math.max(0, Math.min(boss.maxHealth!, boss.health!));
-const hp = (value: number) =>
-  (value / sceneRules.unitScale).toLocaleString('zh-TW', { maximumFractionDigits: 1 });
+const hp = (value: number) => value.toLocaleString('zh-TW', { maximumFractionDigits: 0 });
 const phase = (boss: LobbyVisitor) =>
   boss.bossPhase ||
   (health(boss) <= Math.ceil(boss.maxHealth! / 3)
@@ -28,15 +26,10 @@ const phase = (boss: LobbyVisitor) =>
       ? 2
       : 1);
 const phaseLabel = (boss: LobbyVisitor) =>
-  ['', '第一階段', '狂暴', '極度狂暴'][phase(boss)] +
+  ['', '第一階段', '二階段・狂暴', '最終階段'][phase(boss)] +
   ((boss.bossPhaseLockMs || 0) > 0
     ? ' · 鎖血 ' + Math.ceil(boss.bossPhaseLockMs! / 1000) + '秒'
     : '');
-const barFloor = (boss: LobbyVisitor, bar: number) => Math.ceil((boss.maxHealth! * (3 - bar)) / 3);
-const barMax = (boss: LobbyVisitor, bar: number) =>
-  Math.ceil((boss.maxHealth! * (4 - bar)) / 3) - barFloor(boss, bar);
-const barHealth = (boss: LobbyVisitor, bar: number) =>
-  Math.max(0, Math.min(barMax(boss, bar), health(boss) - barFloor(boss, bar)));
 </script>
 <template>
   <Teleport to="body">
@@ -54,16 +47,20 @@ const barHealth = (boss: LobbyVisitor, bar: number) =>
             >{{ boss.name
             }}<small class="boss-phase-label"> · {{ phaseLabel(boss) }}</small></strong
           >
-          <span>{{ hp(health(boss)) }} / {{ hp(boss.maxHealth!) }} HP</span>
+          <span>總生命 {{ hp(health(boss)) }} / {{ hp(boss.maxHealth!) }} HP</span>
         </div>
         <div class="boss-health-bars">
           <progress
-            v-for="bar in 3"
-            :key="bar"
-            :value="barHealth(boss, bar)"
-            :max="barMax(boss, bar)"
-            :aria-label="boss.name + '的第' + bar + '條生命值'"
-            :data-active="phase(boss) === bar"
+            :value="health(boss)"
+            :max="boss.maxHealth"
+            :aria-label="boss.name + '的總生命值（三階段）'"
+          />
+          <span
+            v-for="divider in 2"
+            :key="divider"
+            class="boss-health-divider"
+            :style="{ left: (divider * 100) / 3 + '%' }"
+            aria-hidden="true"
           />
         </div>
         <span v-if="health(boss) === 0" class="boss-health-defeated">已擊倒</span>
@@ -77,7 +74,7 @@ const barHealth = (boss: LobbyVisitor, bar: number) =>
   inset-block-start: max(76px, env(safe-area-inset-top));
   inset-inline-start: 50%;
   transform: translateX(-50%);
-  inline-size: min(560px, calc(100vw - var(--stitch-space-32)));
+  inline-size: min(720px, calc(100vw - var(--stitch-space-32)));
   z-index: 31;
   pointer-events: none;
   display: grid;
@@ -88,12 +85,12 @@ const barHealth = (boss: LobbyVisitor, bar: number) =>
 }
 .boss-health-caption {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 23ch;
+  grid-template-columns: minmax(0, 1fr) 30ch;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--stitch-space-4) var(--stitch-space-16);
   color: var(--stitch-ink);
-  font-size: var(--stitch-text-label);
+  font-size: var(--stitch-text-body);
   line-height: var(--stitch-line-height-heading);
 }
 .boss-health-caption strong {
@@ -112,7 +109,7 @@ const barHealth = (boss: LobbyVisitor, bar: number) =>
   appearance: none;
   display: block;
   inline-size: 100%;
-  block-size: 6px;
+  block-size: var(--stitch-space-16);
   border: var(--stitch-border);
   border-radius: var(--stitch-radius-pill);
   overflow: hidden;
@@ -129,8 +126,14 @@ const barHealth = (boss: LobbyVisitor, bar: number) =>
   background: var(--stitch-boss-health-fill);
 }
 .boss-health-bars {
-  display: grid;
-  gap: var(--stitch-space-4);
+  position: relative;
+}
+.boss-health-divider {
+  position: absolute;
+  inset-block: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--stitch-surface);
 }
 .boss-phase-label {
   font-size: inherit;
@@ -147,10 +150,6 @@ const barHealth = (boss: LobbyVisitor, bar: number) =>
   :global(body.vue-lobby-battle .boss-health-hud),
   :global(body.vue-lobby-arena-focus .boss-health-hud) {
     inset-block-start: max(var(--stitch-space-16), env(safe-area-inset-top));
-    inset-inline-start: auto;
-    inset-inline-end: var(--stitch-space-16);
-    transform: none;
-    inline-size: min(560px, calc(100vw - 488px));
   }
 }
 @media (max-width: 700px) {
@@ -163,7 +162,7 @@ const barHealth = (boss: LobbyVisitor, bar: number) =>
     justify-self: end;
   }
   .boss-health-hud {
-    inset-block-start: max(174px, env(safe-area-inset-top));
+    inset-block-start: max(216px, env(safe-area-inset-top));
   }
   :global(body.vue-lobby-arena-focus .boss-health-hud),
   :global(body.vue-lobby-battle .boss-health-hud) {

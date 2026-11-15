@@ -27,6 +27,7 @@ import OpeningPicker from '../../components/OpeningPicker.vue';
 import LobbyBackgroundPicker from '../../components/LobbyBackgroundPicker.vue';
 import PingSymbol from '../../components/PingSymbol.vue';
 import AttackChoices from '../../components/AttackChoices.vue';
+import AttackChoiceTools from '../../components/AttackChoiceTools.vue';
 import UiPanel from '../../components/UiPanel.vue';
 import UiField from '../../components/UiField.vue';
 import UiCheckbox from '../../components/UiCheckbox.vue';
@@ -689,10 +690,15 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
           class="settings-attack-panel"
           title="攻擊特效"
           description="Q／E 普通招式，R 大招。"
-          ><template #actions><a href="/collection?section=attack">前往收藏庫 ↗</a></template
+          ><template #actions
+            ><AttackChoiceTools
+              ><UiLink
+                href="/collection?section=attack"
+                label="前往收藏庫" /></AttackChoiceTools></template
           ><AttackChoices
             v-if="activePanel === 'attack'"
             show-current
+            :show-tools="false"
             expanded-list /></UiPanel></section
       ><section
         v-show="activePanel === 'barrage'"

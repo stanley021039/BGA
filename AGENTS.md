@@ -60,6 +60,8 @@ GitHub 的跳過標記適用於 `push`／`pull_request`，其他事件需另核�
 
 ## UI 規則（必守；`npm run ui:check` 在 CI 檢查）
 
+新增Boss時也需規劃第一階段、二階段、最終階段；二階段起有獨特招式機制，後兩階段有局部外觀變化與加強的攻擊分鏡。先整理效果與玩家招式互動供確認，再實裝，不能把設計稿或單純倍率／換色記成已完成。沿用單條三段生命、同施放不跨段與換段鎖血規則；設計清單與目前提案見[Boss階段設計](docs/specs/BOSS-STAGE-DESIGN-410.md)。
+
 改任何頁面、元件或樣式前先讀 [共用 UI 元件與 token](docs/UI-COMPONENTS.md)。全站只有一種外觀：Stitch（Figma 第三份「00｜共用元件」）。
 
 **共用外觀（數值與用法見 UI-COMPONENTS.md）**

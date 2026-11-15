@@ -5,6 +5,7 @@ import {
   type EntranceEffectId,
 } from '../../services/entrance-effects';
 import { isArrival, playArrival } from '../../services/arrival-effects';
+import { entrancePlaybackDuration } from '../../services/entrance-timing';
 import { playEntranceBackdrop, playEntranceBody } from '../../services/entrance-body';
 import {
   acquireEffectContext,
@@ -527,5 +528,7 @@ export function apparate(
   }
   return finish;
 }
-export const entranceDuration = (kind: EntranceEffectId) =>
-  DURATION[entranceVariant(kind)?.variantOf ?? kind] || DURATION.classic;
+export const entranceDuration = (kind: EntranceEffectId) => {
+  const base = entranceVariant(kind)?.variantOf ?? kind;
+  return entrancePlaybackDuration(base, DURATION[base] || DURATION.classic);
+};

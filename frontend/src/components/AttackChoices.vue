@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import SkillGuide from './SkillGuide.vue';
-import UiLink from './UiLink.vue';
+import AttackChoiceTools from './AttackChoiceTools.vue';
 import sceneRules from '../../../public/shared/scene-rules.json';
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { attackEffectGroups } from '../services/effect-variants';
@@ -21,9 +20,15 @@ import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
 import UiTabs from './UiTabs.vue';
 withDefaults(
-  defineProps<{ showCurrent?: boolean; disableTeleport?: boolean; expandedList?: boolean }>(),
+  defineProps<{
+    showCurrent?: boolean;
+    disableTeleport?: boolean;
+    expandedList?: boolean;
+    showTools?: boolean;
+  }>(),
   {
     showCurrent: false,
+    showTools: true,
   },
 );
 const currentRevision = ref({ q: 0, e: 0, r: 0 });
@@ -111,10 +116,8 @@ function play(id: string) {
 }
 </script>
 <template>
-  <UiLink href="/arena?training=1" label="進入訓練場" target="_blank" rel="noopener" />
-  <SkillGuide />
   <div class="attack-choices" :class="{ 'attack-choices-expanded': expandedList }"
-    ><div
+    ><AttackChoiceTools v-if="showTools" /><div
       v-if="showCurrent"
       class="attack-current-previews"
       role="group"
@@ -146,16 +149,23 @@ function play(id: string) {
       </UiPanel> </div
     ><div class="attack-guide">
       <p
-        ><strong>操作</strong>　Q／E 普通招式，R 大招（大廳與競技場消耗
-        {{ sceneRules.energy.lobbyMaximum }} 能量）<span v-if="!disableTeleport">，C 瞬移</span
-        >。</p
+        ><strong>操作</strong
+        ><span
+          >Q／E 普通招式，R 大招（大廳與競技場消耗 {{ sceneRules.energy.lobbyMaximum }} 能量）<span
+            v-if="!disableTeleport"
+            >，C 瞬移</span
+          >。</span
+        ></p
       >
       <p
-        ><strong>回能</strong>　普通招式首段命中 +{{ sceneRules.energy.lobbyOrdinaryHit }}，受傷 +{{
-          sceneRules.energy.receivedHit
-        }}，移動每秒 +{{
-          sceneRules.energy.movementPerSecond
-        }}。第二、三段回能減半，第四段起不回能。大招命中不回能。</p
+        ><strong>回能</strong
+        ><span
+          >普通招式首段命中 +{{ sceneRules.energy.lobbyOrdinaryHit }}，受傷 +{{
+            sceneRules.energy.receivedHit
+          }}，移動每秒 +{{
+            sceneRules.energy.movementPerSecond
+          }}。第二、三段回能減半，第四段起不回能。大招命中不回能。</span
+        ></p
       > </div
     ><div class="attack-loadout" :class="{ 'has-confirm': $slots.confirm }"
       ><UiField
@@ -290,6 +300,17 @@ function play(id: string) {
 .attack-guide {
   display: grid;
   gap: var(--stitch-space-8);
+  line-height: var(--stitch-line-height-body);
+  font-size: var(--stitch-text-body);
+}
+.attack-guide p {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--stitch-space-16);
+  align-items: baseline;
+}
+.attack-guide strong {
+  white-space: nowrap;
 }
 .attack-confirm {
   align-self: end;
