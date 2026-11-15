@@ -167,7 +167,13 @@ function play(event: LobbyAttack) {
     if (!layer.value || !avatar?.isConnected || !visitor || visitor.health === 0) return null;
     const origin = layer.value.getBoundingClientRect();
     const box = (avatar.querySelector('.scene-avatar-portrait') || avatar).getBoundingClientRect();
-    return { x: box.left - origin.left + box.width / 2, y: box.top - origin.top + box.height / 2 };
+    return {
+      x: box.left - origin.left + box.width / 2,
+      y: box.top - origin.top + box.height / 2,
+      width: box.width,
+      height: box.height,
+      facingLeft: visitor.facing === 'left',
+    };
   };
   const added = stage.add(event.id, {
     bossFrom: { x: event.fromX, y: event.fromY },

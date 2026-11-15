@@ -4,7 +4,7 @@ module.exports = () =>
   'const createBossArtwork = (()=>{\nconst abilities=' +
   JSON.stringify(require('../../public/shared/boss-abilities.json')) +
   ';\n' +
-  ['../engines/boss-geometry.js', 'boss-artwork.js']
+  ['../engines/boss-geometry.js', 'boss-strike-art.js', 'boss-artwork.js']
     .map((p) =>
       fs
         .readFileSync(path.resolve(__dirname, '../../frontend/src/services', p), 'utf8')

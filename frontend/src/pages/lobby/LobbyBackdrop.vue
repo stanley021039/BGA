@@ -33,6 +33,7 @@ import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
 import LobbyAttackLayer from './LobbyAttackLayer.vue';
 import BossArrivalNotice from '../../components/BossArrivalNotice.vue';
+import BossHealthHud from '../../components/BossHealthHud.vue';
 import LobbyBackgroundArt from '../../components/LobbyBackgroundArt.vue';
 import LobbyBarrage from './LobbyBarrage.vue';
 import type { BarrageController, BarrageEvent } from '../../contracts/social';
@@ -404,6 +405,7 @@ async function openChat() {
 defineExpose({ openChat });
 </script>
 <template>
+  <BossHealthHud :visitors="sceneSnapshot?.visitors || []" :connected="sceneEnabled" />
   <MobileSceneControls
     :controls="controls"
     :enabled="sceneEnabled"

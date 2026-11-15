@@ -454,7 +454,7 @@ window.addEventListener('resize', positionBubble);
       </svg>
     </div>
     <SceneHealth
-      v-if="visitor.maxHealth"
+      v-if="visitor.maxHealth && (!visitor.bossId || visitor.health === 0)"
       :visitor="visitor"
       :self="self"
       :connected="connected"
