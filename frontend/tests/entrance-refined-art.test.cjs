@@ -56,6 +56,7 @@ test('refined imported effects namespace every local paint reference and clean b
   const player = load('stitch-entrances.ts', (id) => {
     if (id.endsWith('entrance-stitch.json')) return imported;
     if (id === './entrance-refined-art') return artwork;
+    if (id === './entrance-timing') return require('./helpers/entrance-timing.cjs');
     if (/\.(?:css|scss)$/.test(id)) return {};
     throw Error(id);
   });

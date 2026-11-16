@@ -56,7 +56,7 @@ test('independent avatar and character settings validate ownership, persist, and
     ).cookie;
     assert.equal((await get('profile/settings')).status, 401);
     const png = fs.readFileSync(
-      path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
     );
     const artwork = (
       await post('artworks', host, {
@@ -65,7 +65,11 @@ test('independent avatar and character settings validate ownership, persist, and
         base64: png.toString('base64'),
       })
     ).data;
-    const appearance = { version: 5, characterId: 'builtin:woods', expression: 'happy' },
+    const appearance = {
+        version: 5,
+        characterId: 'builtin:community-photo-blanket',
+        expression: 'happy',
+      },
       avatar = { kind: 'artwork', artworkId: artwork.id };
     assert.equal((await post('profile/settings', friend, { appearance, avatar })).status, 400);
     const saved = await post('profile/settings', host, { appearance, avatar });
@@ -84,8 +88,12 @@ test('independent avatar and character settings validate ownership, persist, and
     assert.equal(
       (
         await post('profile/settings', friend, {
-          appearance: { version: 5, characterId: 'builtin:traveler', expression: 'neutral' },
-          avatar: { kind: 'character', characterId: 'builtin:traveler', expression: 'neutral' },
+          appearance: { version: 5, characterId: 'builtin:community-asian', expression: 'neutral' },
+          avatar: {
+            kind: 'character',
+            characterId: 'builtin:community-asian',
+            expression: 'neutral',
+          },
           pings,
         })
       ).status,
@@ -127,17 +135,21 @@ test('independent avatar and character settings validate ownership, persist, and
     await post('artworks/' + artwork.id + '/delete', host, {});
     const fallback = (await get('profile/settings', host)).data;
     assert.equal(fallback.avatar.kind, 'character');
-    assert.equal(fallback.avatar.characterId, 'builtin:woods');
+    assert.equal(fallback.avatar.characterId, 'builtin:community-photo-blanket');
     assert.deepEqual(fallback.pings, {
       attention: { sound: { effect: 'ping-voice-senior' } },
       help: { sound: null },
     });
     const switched = await post('profile/settings', host, {
       appearance,
-      avatar: { kind: 'character', characterId: 'builtin:mage', expression: 'neutral' },
+      avatar: {
+        kind: 'character',
+        characterId: 'builtin:community-mechanicus',
+        expression: 'neutral',
+      },
     });
     assert.equal(switched.status, 200);
-    assert.equal(switched.data.appearance.characterId, 'builtin:woods');
+    assert.equal(switched.data.appearance.characterId, 'builtin:community-photo-blanket');
     const image = await fetch(base + '/api/profile/avatar', {
       headers: { Cookie: host },
       redirect: 'manual',
@@ -145,7 +157,7 @@ test('independent avatar and character settings validate ownership, persist, and
     assert.equal(image.status, 302);
     assert.match(
       image.headers.get('location'),
-      /^\/assets\/characters\/mage-neutral\.png\?v=[\w-]{12}$/,
+      /^\/assets\/characters\/community-mechanicus-neutral\.webp\?v=[\w-]{12}$/,
     );
     const shared = (
       await post('profile/characters', host, {
@@ -155,7 +167,11 @@ test('independent avatar and character settings validate ownership, persist, and
       })
     ).data.id;
     await post('profile/characters/' + shared.slice(5) + '/sharing', host, { shared: true });
-    const friendAvatar = { kind: 'character', characterId: 'builtin:mage', expression: 'neutral' };
+    const friendAvatar = {
+      kind: 'character',
+      characterId: 'builtin:community-mechanicus',
+      expression: 'neutral',
+    };
     assert.equal(
       (
         await post('profile/settings', friend, {
@@ -168,7 +184,7 @@ test('independent avatar and character settings validate ownership, persist, and
     await post('profile/characters/' + shared.slice(5) + '/sharing', host, { shared: false });
     const revoked = (await get('profile/settings', friend)).data;
     assert.deepEqual(revoked.avatar, friendAvatar);
-    assert.equal(revoked.appearance.characterId, 'builtin:traveler');
+    assert.equal(revoked.appearance.characterId, 'builtin:community-asian');
     for (const route of [
       '/',
       '/settings',

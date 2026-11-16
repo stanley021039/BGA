@@ -6,7 +6,7 @@ const fs = require('node:fs'),
 const { createAuth } = require('../src/auth');
 const { appFixture } = require('./helpers/app-fixture.cjs');
 const png = fs.readFileSync(
-  path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+  path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
 );
 function wave(samples = 24000, value = 100) {
   const bytes = Buffer.alloc(44 + samples * 2);

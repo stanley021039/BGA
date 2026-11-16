@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Deep Space Cosmic Sky Gradient -->
+    <linearGradient id="marsDeepSpace" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#050814"/>
+      <stop offset="42%" stop-color="#0b0f24"/>
+      <stop offset="78%" stop-color="#14122e"/>
+      <stop offset="100%" stop-color="#1f1430"/>
+    </linearGradient>
+
+    <!-- Subtle Indigo / Violet Nebulae Glow -->
+    <radialGradient id="nebulaSoft1" cx="32%" cy="28%" r="48%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.22"/>
+      <stop offset="45%" stop-color="#4338ca" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0b0f24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebulaSoft2" cx="78%" cy="22%" r="40%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.18"/>
+      <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0b0f24" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Phobos Moon Glow -->
+    <radialGradient id="phobosGlow" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#f8fafc" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#cbd5e1" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#475569" stop-opacity="0.2"/>
+    </radialGradient>
+
+    <!-- Mars Terrain Strata & Shading Gradients -->
+    <linearGradient id="ridgeFarSpace" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3c141e"/>
+      <stop offset="60%" stop-color="#541b18"/>
+      <stop offset="100%" stop-color="#6e251a"/>
+    </linearGradient>
+    <linearGradient id="ridgeMidSpace" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8c2e1b"/>
+      <stop offset="50%" stop-color="#6b2114"/>
+      <stop offset="100%" stop-color="#4d160e"/>
+    </linearGradient>
+    <linearGradient id="marsMainFloor" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a83f23"/>
+      <stop offset="28%" stop-color="#8c2e1b"/>
+      <stop offset="68%" stop-color="#671f11"/>
+      <stop offset="100%" stop-color="#380e08"/>
+    </linearGradient>
+
+    <!-- 3D Large Impact Crater Gradients (Left Foreground) -->
+    <linearGradient id="craterRimLit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="40%" stop-color="#ea580c"/>
+      <stop offset="80%" stop-color="#c2410c"/>
+      <stop offset="100%" stop-color="#7c2d12"/>
+    </linearGradient>
+    <linearGradient id="craterInnerShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1f0705"/>
+      <stop offset="55%" stop-color="#2d0a06"/>
+      <stop offset="100%" stop-color="#45120a"/>
+    </linearGradient>
+    <linearGradient id="craterDeepFloor" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#180403"/>
+      <stop offset="65%" stop-color="#2a0906"/>
+      <stop offset="100%" stop-color="#3d100b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 1. DEEP COSMIC SKY BACKGROUND -->
+  <rect width="1600" height="900" fill="url(#marsDeepSpace)"/>
+  <rect width="1600" height="500" fill="url(#nebulaSoft1)"/>
+  <rect width="1600" height="500" fill="url(#nebulaSoft2)"/>
+
+  <!-- Static Starlight Field -->
+  <g fill="#ffffff">
+    <circle cx="95" cy="65" r="1.2" opacity="0.75"/>
+    <circle cx="180" cy="140" r="0.9" opacity="0.45"/>
+    <circle cx="260" cy="80" r="1.6" opacity="0.85"/>
+    <circle cx="340" cy="190" r="1.0" opacity="0.5"/>
+    <circle cx="410" cy="110" r="2.2" opacity="0.9"/>
+    <circle cx="510" cy="55" r="1.1" opacity="0.6"/>
+    <circle cx="615" cy="165" r="0.8" opacity="0.4"/>
+    <circle cx="690" cy="95" r="1.8" opacity="0.85"/>
+    <circle cx="780" cy="45" r="1.3" opacity="0.7"/>
+    <circle cx="860" cy="130" r="1.0" opacity="0.5"/>
+    <circle cx="940" cy="75" r="2.0" opacity="0.92"/>
+    <circle cx="1030" cy="175" r="0.8" opacity="0.45"/>
+    <circle cx="1120" cy="60" r="1.5" opacity="0.8"/>
+    <circle cx="1210" cy="145" r="1.2" opacity="0.65"/>
+    <circle cx="1320" cy="85" r="2.4" opacity="0.95"/>
+    <circle cx="1410" cy="190" r="0.9" opacity="0.5"/>
+    <circle cx="1490" cy="50" r="1.4" opacity="0.8"/>
+    <circle cx="1540" cy="120" r="1.0" opacity="0.6"/>
+    <circle cx="130" cy="260" r="1.0" opacity="0.55"/>
+    <circle cx="480" cy="245" r="1.4" opacity="0.75"/>
+    <circle cx="820" cy="225" r="0.8" opacity="0.45"/>
+    <circle cx="1260" cy="240" r="1.3" opacity="0.7"/>
+    <circle cx="1440" cy="270" r="1.1" opacity="0.6"/>
+  </g>
+
+  <!-- Static 4-Point Micro Stars -->
+  <g transform="translate(410, 110)">
+    <line x1="-7" y1="0" x2="7" y2="0" stroke="#ffffff" stroke-width="0.7" opacity="0.85"/>
+    <line x1="0" y1="-7" x2="0" y2="7" stroke="#ffffff" stroke-width="0.7" opacity="0.85"/>
+    <circle cx="0" cy="0" r="2.2" fill="#ffffff"/>
+  </g>
+  <g transform="translate(1320, 85)">
+    <line x1="-8" y1="0" x2="8" y2="0" stroke="#c7d2fe" stroke-width="0.8" opacity="0.9"/>
+    <line x1="0" y1="-8" x2="0" y2="8" stroke="#c7d2fe" stroke-width="0.8" opacity="0.9"/>
+    <circle cx="0" cy="0" r="2.4" fill="#ffffff"/>
+  </g>
+
+  <!-- Martian Moon Phobos -->
+  <g transform="translate(1160, 130)">
+    <circle cx="0" cy="0" r="28" fill="#818cf8" opacity="0.08"/>
+    <path d="M-16,-6 C-12,-16 6,-18 16,-10 C22,-3 20,12 11,18 C1,22 -14,19 -18,10 C-22,3 -20,2 -16,-6 Z" fill="url(#phobosGlow)"/>
+    <ellipse cx="-4" cy="-2" rx="6" ry="4" fill="#334155" opacity="0.65"/>
+    <ellipse cx="6" cy="7" rx="3" ry="2" fill="#1e293b" opacity="0.5"/>
+  </g>
+
+  <!-- 2. MARTIAN HORIZON & DISTANT HIGHLAND RIDGES -->
+  <polygon points="0,410 160,380 340,405 520,365 740,395 990,345 1220,385 1450,340 1600,370 1600,470 0,470" fill="url(#ridgeFarSpace)" opacity="0.9"/>
+
+  <!-- Distant Crater Notch on Horizon -->
+  <g>
+    <ellipse cx="740" cy="397" rx="28" ry="7" fill="#240a08"/>
+    <path d="M714,396 Q740,401 766,396 Q740,404 714,396 Z" fill="#150302"/>
+    <path d="M712,395 Q740,391 768,395 Q740,393 712,395 Z" fill="#e05d2c" opacity="0.85"/>
+  </g>
+
+  <!-- Mid-distance Ochre Plateau & Jagged Escarpment -->
+  <path d="M0,450 Q280,410 560,435 T1120,420 Q1380,435 1600,415 L1600,530 L0,530 Z" fill="url(#ridgeMidSpace)"/>
+  <path d="M0,450 Q280,410 560,435 T1120,420 Q1380,435 1600,415" stroke="#ea580c" stroke-width="2.5" fill="none" opacity="0.55"/>
+
+  <!-- 3. VAST MARS BASIN TERRAIN -->
+  <rect y="490" width="1600" height="410" fill="url(#marsMainFloor)"/>
+
+  <!-- Geological Sediment Layers & Terracotta Wind Streaks -->
+  <g fill="#c2410c" opacity="0.22">
+    <ellipse cx="800" cy="520" rx="650" ry="12"/>
+    <ellipse cx="620" cy="565" rx="550" ry="14"/>
+    <ellipse cx="1020" cy="615" rx="520" ry="15"/>
+    <ellipse cx="780" cy="675" rx="680" ry="20"/>
+    <ellipse cx="840" cy="760" rx="720" ry="24"/>
+  </g>
+
+  <!-- 4. 3D IMPACT CRATER 2: Midground Right Crater -->
+  <g transform="translate(1310, 560)">
+    <ellipse cx="0" cy="0" rx="140" ry="52" fill="#782312" opacity="0.75"/>
+    <ellipse cx="0" cy="4" rx="150" ry="56" fill="#4d160e" opacity="0.4"/>
+    <path d="M-132,6 C-90,38 90,38 132,6 C110,48 -110,48 -132,6 Z" fill="#ea580c" opacity="0.9"/>
+    <path d="M-135,0 C-70,-32 70,-32 135,0 C75,-25 -75,-25 -135,0 Z" fill="#fdba74" opacity="0.8"/>
+    <path d="M-130,0 C-60,-24 60,-24 130,0 C80,24 -80,24 -130,0 Z" fill="#1b0504"/>
+    <ellipse cx="6" cy="8" rx="105" ry="32" fill="#2d0a06"/>
+    <ellipse cx="10" cy="10" rx="80" ry="22" fill="#150302"/>
+    <path d="M-120,2 C-40,24 50,14 110,-4 C70,22 -30,28 -120,2 Z" fill="#0d0202" opacity="0.85"/>
+    <polygon points="12,4 18,12 6,13" fill="#8c2e1b"/>
+    <polygon points="12,4 15,12 6,13" fill="#ea580c" opacity="0.7"/>
+  </g>
+
+  <!-- 5. 3D IMPACT CRATER 1: Prominent Foreground Left Crater -->
+  <g transform="translate(240, 715)">
+    <!-- Broad Raised Ejecta Rampart -->
+    <ellipse cx="0" cy="0" rx="260" ry="105" fill="#4f150c" opacity="0.6"/>
+    <ellipse cx="10" cy="15" rx="275" ry="110" fill="#2d0a06" opacity="0.45"/>
+
+    <!-- Rugged Raised Outer Rim Flank -->
+    <path d="M-245,10 C-210,65 -110,105 15,105 C140,105 230,65 250,10 C210,95 80,120 -5,120 C-125,120 -220,85 -245,10 Z" fill="url(#craterRimLit)"/>
+    <path d="M-230,25 C-140,85 50,95 210,25 C150,78 -60,82 -230,25 Z" fill="#f97316" opacity="0.75"/>
+
+    <!-- Sharp Illuminated Crest (North / Northwest Rim catching sunlight) -->
+    <path d="M-248,5 C-160,-55 80,-62 245,0 C170,-45 -90,-45 -248,5 Z" fill="#fed7aa" opacity="0.95"/>
+    <path d="M-240,8 C-155,-40 65,-48 238,4 C175,-32 -80,-35 -240,8 Z" fill="#fdba74" opacity="0.8"/>
+
+    <!-- Steep Deep Inner Shadow Wall -->
+    <path d="M-242,5 C-150,-45 70,-45 240,2 C160,55 -50,65 -242,5 Z" fill="url(#craterInnerShadow)"/>
+
+    <!-- Deep Sunken Crater Interior Floor -->
+    <ellipse cx="4" cy="18" rx="195" ry="68" fill="url(#craterDeepFloor)"/>
+    <ellipse cx="10" cy="22" rx="160" ry="50" fill="#120202"/>
+
+    <!-- Crater Rim Cast Shadow -->
+    <path d="M-235,10 C-110,58 35,48 185,-6 C135,46 -40,68 -235,10 Z" fill="#080101" opacity="0.95"/>
+
+    <!-- Internal Terrace Slumps -->
+    <path d="M-210,22 Q-120,52 -20,44 Q-120,46 -210,22 Z" fill="#671f11" opacity="0.7"/>
+    <path d="M-180,38 Q-90,62 30,52 Q-85,58 -180,38 Z" fill="#3a0e08" opacity="0.85"/>
+
+    <!-- Central Peak Uplift Formation -->
+    <polygon points="15,6 32,24 4,26" fill="#150302"/>
+    <polygon points="15,6 24,24 4,26" fill="#8c2e1b"/>
+    <polygon points="15,6 18,24 8,25" fill="#f97316" opacity="0.85"/>
+  </g>
+
+  <!-- 6. MARS BASIN FOREGROUND STRATA & SCATTERED IMPACT BOULDERS -->
+  <g>
+    <polygon points="1440,730 1520,680 1590,720 1560,780 1460,785" fill="#1a0504"/>
+    <polygon points="1455,735 1515,690 1575,725 1530,755 1475,760" fill="#8c2e1b" opacity="0.6"/>
+    <ellipse cx="1510" cy="780" rx="90" ry="20" fill="#100302" opacity="0.8"/>
+    <polygon points="1350,770 1400,740 1445,765 1430,810 1365,815" fill="#240705"/>
+    <polygon points="1360,775 1400,748 1435,770 1410,795 1375,800" fill="#a83f23" opacity="0.65"/>
+    <ellipse cx="1395" cy="810" rx="55" ry="14" fill="#120202" opacity="0.75"/>
+  </g>
+
+  <!-- 7. CLEAR, WIDE FLAT BASIN CENTER FOR 81x87 CHARACTER -->
+  <ellipse cx="820" cy="760" rx="380" ry="75" fill="#a83f23" opacity="0.25"/>
+  <ellipse cx="800" cy="800" rx="420" ry="70" fill="#671f11" opacity="0.35"/>
+</svg>

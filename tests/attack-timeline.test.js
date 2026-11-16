@@ -1,7 +1,7 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
-const { attackKind } = require('../src/rooms/attack-kind');
+const { attackKind, isReflectableAttack } = require('../src/rooms/attack-kind');
 const { fitsSlot } = require('../src/rooms/scene-energy');
 const { createAttackTimeline } = require('../src/rooms/attack-timeline');
 const { selectAttackTargets } = require('../src/rooms/attack-targets');
@@ -229,12 +229,152 @@ test('crystal blocks eligible stages and returns multiple stages only to the fir
   timeline.prepare(earlyProjectile, a, [b]);
   events.push(expired, straightBeam, lateProjectile, armedAgain, earlyProjectile);
   advance(4500);
-  assert.ok(straightBeam.hits[0].damage > 0);
+  assert.equal(straightBeam.hits[0].damage, 0);
   assert.ok(lateProjectile.hits[0].damage > 0, 'a hit at the exact expiry is outside the guard');
-  assert.equal(expired.hits.length, 0);
+  assert.equal(expired.hits.length, 1);
+  assert.equal(expired.hits[0].reflectedEffect, 'beam');
   assert.equal(armedAgain.hits[0].pending, false);
   assert.ok(armedAgain.hits[0].damage > 0);
 });
+test('crystal reflects each ordinary attack and variant, while ultimate attacks keep their normal hit', () => {
+  for (const definition of definitions.filter((e) => e.damageMultiplier !== 0)) {
+    const ordinary = fitsSlot('q', definition.id);
+    assert.equal(isReflectableAttack(definition.id), ordinary, definition.id);
+    if (!ordinary) continue;
+    const combat = createSceneCombat(() => 0.5);
+    const timeline = createAttackTimeline(combat);
+    const a = { id: 'a', x: 20, y: 50 },
+      b = { id: 'b', x: 28, y: 50 };
+    const actors = [a, b];
+    actors.forEach((actor) => combat.advance(actor, 0));
+    const event = {
+      id: 'cast',
+      effect: definition.id,
+      at: 0,
+      fromId: 'a',
+      toId: 'b',
+      fromX: 20,
+      fromY: 50,
+      toX: 28,
+      toY: 50,
+      aspectRatio: 1,
+    };
+    timeline.prepare(event, a, [b]);
+    const first = event.hits[0].delayMs;
+    timeline.advance([event], actors, first - 100, combat.advance);
+    const guard = {
+      effect: 'crystal_reflection_alt',
+      at: first - 100,
+      fromId: 'b',
+      toId: 'b',
+      fromX: b.x,
+      fromY: b.y,
+      toX: b.x,
+      toY: b.y,
+      aspectRatio: 1,
+    };
+    timeline.armReflection(guard, b);
+    timeline.advance([event, guard], actors, first, combat.advance);
+    assert.equal(b.health, 1200000, definition.id);
+    assert.equal(event.hits[0].damage, 0, definition.id);
+    assert.equal(guard.hits[0]?.reflectedEffect, definition.id, definition.id);
+    timeline.advance([event, guard], actors, first + 1500, combat.advance);
+    assert.ok(guard.hits[0].damage > 0, definition.id);
+  }
+  const f = fixture('explosion', [
+    { id: 'a', x: 20, y: 50 },
+    { id: 'b', x: 28, y: 50 },
+  ]);
+  const guard = { effect: 'crystal_reflection', at: 2700 };
+  const combat = createSceneCombat(() => 0.5),
+    timeline = createAttackTimeline(combat);
+  timeline.prepare(f.event, f.points[0], [f.points[1]]);
+  timeline.armReflection(guard, f.points[1]);
+  timeline.advance([f.event, guard], f.points, 2750, combat.advance);
+  assert.ok(f.event.hits[0].damage > 0);
+  assert.equal(guard.hits.length, 0);
+});
+
+test('crystal does not reflect attacks already rejected by cover or team policy', () => {
+  const combat = createSceneCombat(
+    () => 0.5,
+    () => false,
+    { canHit: () => false },
+  );
+  const timeline = createAttackTimeline(combat);
+  const actors = [
+    { id: 'a', x: 20, y: 50 },
+    { id: 'b', x: 28, y: 50 },
+  ];
+  actors.forEach((actor) => combat.advance(actor, 0));
+  const event = {
+    effect: 'beam',
+    at: 0,
+    fromId: 'a',
+    toId: 'b',
+    fromX: 20,
+    fromY: 50,
+    toX: 28,
+    toY: 50,
+    aspectRatio: 1,
+  };
+  const guard = { effect: 'crystal_reflection', at: 0 };
+  timeline.prepare(event, actors[0], [actors[1]]);
+  timeline.armReflection(guard, actors[1]);
+  timeline.advance([event, guard], actors, 450, combat.advance);
+  assert.equal(guard.hits.length, 0);
+  assert.equal(event.hits[0].blocked, true);
+  assert.equal(actors[1].health, 1200000);
+});
+
+test('reflected attacks preserve the defender arena epoch and cannot hit a respawned attacker', () => {
+  const combat = createSceneCombat(
+    () => 0.5,
+    () => false,
+    {
+      canHit: (from, to) => from.combatEpoch === to.combatEpoch && from.matchId === to.matchId,
+    },
+  );
+  const timeline = createAttackTimeline(combat);
+  const actors = ['a', 'b'].map((id, i) => ({
+    id,
+    x: 20 + i * 8,
+    y: 50,
+    matchId: 'arena-1',
+    combatEpoch: 'arena-1',
+  }));
+  actors.forEach((actor) => combat.advance(actor, 0));
+  const [a, b] = actors;
+  const event = {
+    id: 'beam',
+    effect: 'beam',
+    at: 0,
+    fromId: 'a',
+    toId: 'b',
+    fromX: 20,
+    fromY: 50,
+    toX: 28,
+    toY: 50,
+    aspectRatio: 1,
+  };
+  const guard = { effect: 'crystal_reflection', at: 0 };
+  timeline.prepare(event, a, [b]);
+  timeline.armReflection(guard, b);
+  timeline.advance([event, guard], actors, 1950, combat.advance);
+  assert.ok(guard.hits[0].damage > 0);
+  const health = a.health;
+  timeline.advance([event, guard], actors, 1950, combat.advance);
+  assert.equal(a.health, health);
+  const later = { ...event, id: 'later', at: 2500 };
+  const nextGuard = { effect: 'crystal_reflection', at: 2500 };
+  timeline.prepare(later, a, [b]);
+  timeline.armReflection(nextGuard, b);
+  timeline.advance([later, nextGuard], actors, 2950, combat.advance);
+  a.lifeId++;
+  timeline.advance([later, nextGuard], actors, 4450, combat.advance);
+  assert.equal(nextGuard.hits[0].missed, true);
+});
+
 test('Babylon/Ea has a double-strength second stage; the two dragoon salvos share the balanced combo total', () => {
   for (const [effect, first, last, total] of [
     ['gate_of_babylon', 2400, 3880, 761239],

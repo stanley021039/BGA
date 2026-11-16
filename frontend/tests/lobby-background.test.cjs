@@ -173,26 +173,28 @@ test('server cooldown failure preserves current background and displays the reas
   }
 });
 
-test('background motion persists independently of visibility and synchronizes storage changes', () => {
-  const saved = new Map(),
+test('legacy motion preferences cannot re-enable background animation or change visibility', () => {
+  const saved = new Map([['bga-lobby-background-animation-v1', 'on']]),
     f = fixture(
       () => {
         throw Error('must not request');
       },
       { saved },
     );
-  f.store.setAnimated(false);
   f.store.setVisible(false);
   f.store.setVisible(true);
-  assert.equal(f.store.animated, false);
+  assert.equal(f.store.visible, true);
+  assert.equal('setAnimated' in f.store, false);
   const next = fixture(() => {}, { saved });
-  assert.equal(next.store.animated, false);
+  assert.equal('animated' in next.store, false);
+  next.store.setVisible(false);
   saved.set('bga-lobby-background-animation-v1', 'on');
   next.storage('bga-lobby-background-animation-v1');
-  assert.equal(next.store.animated, true);
+  assert.equal(next.store.visible, false);
+  assert.equal('animated' in next.store, false);
   saved.clear();
   f.storage(null);
-  assert.equal(f.store.animated, true);
+  assert.equal(f.store.visible, true);
   next.close();
   f.close();
   assert.equal(f.listeners.size, 0);

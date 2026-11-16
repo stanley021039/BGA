@@ -24,20 +24,7 @@
     "windowMs": 800,
     "travelMs": 1500,
     "settleMs": 500,
-    "maximumReturns": 32,
-    "projectiles": [
-      "barrage",
-      "funnel",
-      "arrow_volley",
-      "railgun",
-      "plasma_pulse",
-      "micro_missiles",
-      "photon_sniper",
-      "returning_moon",
-      "tidal_blades",
-      "magnetic_disc",
-      "seeking_talismans"
-    ]
+    "maximumReturns": 32
   },
   "humanMalice": {
     "detonationRadius": 24
@@ -48,7 +35,11 @@
   },
   "rainbowBear": {
     "durationMs": 3000,
-    "outgoingMultiplier": 0.7
+    "outgoingMultiplier": 0.7,
+    "lingerChance": 0.5,
+    "drainMin": 1,
+    "drainMax": 10,
+    "drainIntervalMs": 1000
   },
   "zeroEquation": {
     "wrongAnswerHpFraction": 0.05

@@ -1,0 +1,81 @@
+{
+  "project": "https://stitch.google.com/projects/16226792553515652128",
+  "exportedAt": "2026-11-13",
+  "originalSha256": "86aec2ac61fd3bbfcb0c0cf7fd71f96014a4b486335b4f627a16d7a2637fea00",
+  "revisionSha256": "67a2997048c2bf5c6123fa3b6404df821376a5f6ccfcc23546eb52846e6e7c74",
+  "status": "design-candidate-not-in-reward-catalog",
+  "scenes": [
+    {
+      "id": "sakura",
+      "code": "VECTOR-01",
+      "title": "1. 櫻花樹",
+      "file": "sakura.svg",
+      "screen": "5cc615a290b045dabe1e9336bf0ae12c",
+      "bytes": 7612,
+      "sha256": "6db91e3a4209668857e184804d4620a5f893f2293dc7ac2ae7b38120b7d241e0"
+    },
+    {
+      "id": "moonlit_lake",
+      "code": "VECTOR-02",
+      "title": "2. 夜色湖面",
+      "file": "moonlit_lake.svg",
+      "screen": "5cc615a290b045dabe1e9336bf0ae12c",
+      "bytes": 5995,
+      "sha256": "076bdf856f09b57d40bef61d462ee6d3e4cbe79f08c86c8a576200fb7aa2096b"
+    },
+    {
+      "id": "presidential",
+      "code": "VECTOR-03",
+      "title": "3. 總統府",
+      "file": "presidential.svg",
+      "screen": "5cc615a290b045dabe1e9336bf0ae12c",
+      "bytes": 6509,
+      "sha256": "7e385106a5c7b28d96ca22b3c5742ee900ed5f69e0e5fc92c33c402f07662e9a"
+    },
+    {
+      "id": "mars",
+      "code": "VECTOR-04",
+      "title": "4. 火星表面",
+      "file": "mars.svg",
+      "screen": "cfa85176101c41fc8ab9fa44b889db18",
+      "bytes": 10426,
+      "sha256": "2d24d482fe358829a058c46d72a5406621cea2d9363e67226c6684205d89fc01"
+    },
+    {
+      "id": "cinema",
+      "code": "VECTOR-05",
+      "title": "5. 電影院",
+      "file": "cinema.svg",
+      "screen": "5cc615a290b045dabe1e9336bf0ae12c",
+      "bytes": 5228,
+      "sha256": "602bad880e18e9a55dee02abd019989aea2a85c5ad9040b5f391aaf94f7746f3"
+    },
+    {
+      "id": "bathroom",
+      "code": "VECTOR-06",
+      "title": "6. 浴室＋浴缸",
+      "file": "bathroom.svg",
+      "screen": "5cc615a290b045dabe1e9336bf0ae12c",
+      "bytes": 6143,
+      "sha256": "4073a60831b1f9c2c290b353330e942c1c9f8c179313a5bec333cc3e140ec41e"
+    },
+    {
+      "id": "onsen",
+      "code": "VECTOR-07",
+      "title": "7. 溫泉",
+      "file": "onsen.svg",
+      "screen": "5cc615a290b045dabe1e9336bf0ae12c",
+      "bytes": 6813,
+      "sha256": "d0741eb2a3bb3bd8d667bf20d9ffa26e0c503b6e63759e7da8d6175497255269"
+    },
+    {
+      "id": "battlefield",
+      "code": "VECTOR-08",
+      "title": "8. 戰場",
+      "file": "battlefield.svg",
+      "screen": "5cc615a290b045dabe1e9336bf0ae12c",
+      "bytes": 5588,
+      "sha256": "23ea70a757d435be849af9e1ea3eb3f652f4d4c20ae5619c1431453ceaadb4a6"
+    }
+  ]
+}

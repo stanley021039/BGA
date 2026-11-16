@@ -38,12 +38,30 @@ const speed = computed<Indicator | null>(() => {
   };
 });
 const permanent = computed<Indicator[]>(() =>
-  !props.skillOnly && props.connected && props.self?.health && status.value?.authorBonus
+  !props.skillOnly &&
+  props.connected &&
+  props.self?.health &&
+  status.value &&
+  (status.value.authorBonus || (props.self.bossBlessingMs || 0) > 0)
     ? statBoosts(status.value)
     : [],
 );
 function statBoosts(state: NonNullable<LobbyVisitor['combatStatus']>): Indicator[] {
   const boosts: Indicator[] = [];
+  if ((props.self?.bossBlessingMs || 0) > 0) {
+    boosts.push(
+      {
+        icon: 'attack-up',
+        tone: 'primary',
+        label: '獵王祝福 · 傷害 +10% · 移速 +8%',
+      },
+      {
+        icon: 'haste',
+        tone: 'success',
+        label: '瞬移耗能 −50% · ' + Math.ceil((props.self?.bossBlessingMs || 0) / 1000) + '秒',
+      },
+    );
+  }
   const temporary = state.guanyin ? 1.1 : 1;
   const percent = (factor: number) => Math.round((factor - 1) * 1000) / 10;
   const hp = (state.authorBonus ? 1.5 : 1) * temporary,

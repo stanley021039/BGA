@@ -12,15 +12,18 @@ import LobbyBackdrop from './LobbyBackdrop.vue';
 import SceneKda from '../../components/SceneKda.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
+import SceneNpcControls from '../../components/SceneNpcControls.vue';
 import UiLink from '../../components/UiLink.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import UiField from '../../components/UiField.vue';
+import UiPanel from '../../components/UiPanel.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import '../../styles/lobby-create.scss';
 const lobby = useLobbyStore(),
   session = useSessionStore();
 const self = computed(() => lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId));
 const entryNoticeKey = ref(0);
+const npcMinimized = ref(false);
 watch(
   () => lobby.entryPending,
   (pending, previous) => {
@@ -158,7 +161,7 @@ onBeforeUnmount(() => {
     >
     <GameCarousel v-model="selected" @create="open" @join="openJoin()"
       ><template #lobby-action
-        ><UiLink href="/arena" label="戰鬥競技場" icon="shield" /><UiButton
+        ><UiLink href="/arena" label="戰鬥競技場" icon="shield" /><SceneNpcControls /><UiButton
           icon="chat"
           caption="對話"
           label="對話"
@@ -405,4 +408,26 @@ onBeforeUnmount(() => {
     ></UiDialog>
     <RoomPings />
   </div>
+  <Teleport to="body">
+    <aside class="lobby-scene-stats" aria-label="場景戰鬥資訊">
+      <UiPanel density="hud" tone="translucent">
+        <SceneKda :value="self?.kda" :self="self" :connected="lobby.connected" />
+      </UiPanel>
+    </aside>
+    <aside class="lobby-scene-npc" aria-label="場景夥伴管理">
+      <UiPanel density="hud" tone="translucent">
+        <div class="lobby-scene-npc-tools">
+          <div v-show="!npcMinimized"><SceneNpcControls variant="ghost" /></div>
+          <UiButton
+            :icon="npcMinimized ? 'users' : 'minimize'"
+            icon-only
+            variant="ghost"
+            :label="npcMinimized ? '展開機器人與 Boss' : '最小化機器人與 Boss'"
+            :aria-expanded="!npcMinimized"
+            @click="npcMinimized = !npcMinimized"
+          />
+        </div>
+      </UiPanel>
+    </aside>
+  </Teleport>
 </template>

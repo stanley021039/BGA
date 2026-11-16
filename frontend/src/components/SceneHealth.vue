@@ -29,7 +29,10 @@ onBeforeUnmount(() => clearInterval(timer));
 <template>
   <div v-if="visitor.health === 0" class="scene-tombstone" role="status">
     <div class="scene-tombstone-caption">
-      <strong :title="visitor.name">{{ visitor.name }}</strong>
+      <strong :title="visitor.name + '死了'"
+        ><b class="scene-tombstone-name">{{ visitor.name }}</b
+        ><b>死了</b></strong
+      >
       <small>{{ seconds }} 秒後重生</small>
     </div>
     <img :src="tombstone" width="80" height="90" alt="" />
@@ -97,12 +100,21 @@ onBeforeUnmount(() => clearInterval(timer));
   font-size: var(--stitch-text-label);
 }
 .scene-tombstone strong {
+  display: flex;
   max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: inherit;
   font-size: var(--stitch-text-label);
+}
+.scene-tombstone-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scene-tombstone strong > b:last-child {
+  flex: none;
 }
 .scene-tombstone small {
   color: inherit;

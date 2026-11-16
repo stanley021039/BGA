@@ -68,6 +68,26 @@ test('attack previews frame both regular and area effects around the stage cente
 });
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
+  .replace(/^import .*boss-artwork.js';\n/m, () =>
+    require('../../tests/helpers/boss-artwork-module.cjs')(),
+  )
+  .replace(
+    /^import bossAbilities .*boss-abilities.json';\n/m,
+    () =>
+      'const bossAbilities=' +
+      JSON.stringify(require('../../public/shared/boss-abilities.json')) +
+      ';\n',
+  )
+  .replace(/^import .*boss-geometry.js';\n/m, () =>
+    require('node:fs')
+      .readFileSync(path.join(__dirname, '../src/engines/boss-geometry.js'), 'utf8')
+      .replace(/^export /gm, ''),
+  )
+  .replace(/^import .*boss-strike-art.js';\n/m, () =>
+    require('node:fs')
+      .readFileSync(path.join(__dirname, '../src/services/boss-strike-art.js'), 'utf8')
+      .replace(/^export /gm, ''),
+  )
   .replace(/^import .*motion-lifetime.js';\n/m, '')
   .replace(/^import combatRules .*scene-rules.json';\n/m, '')
   .replace(/^import .*attack-stitch.js';\n/m, '')
@@ -90,7 +110,7 @@ const source = fs
   .replace(/^import .*attack-area.js';\n/m, '')
   .replace(/^import .*attack-revision.js';\n/m, '')
   .replace(/^import attackEffects .*attack-effects.json';\n/m, '')
-  .replace(/^import .*attack-variants.js';\n/m, () =>
+  .replace(/^import \{[^}]*\} from '.\/attack-variants.js';\n/m, () =>
     fs
       .readFileSync(path.join(__dirname, '../src/services/attack-variants.js'), 'utf8')
       .replace(/^import .*\n/m, 'const definitions = attackEffects;\n')
@@ -237,7 +257,7 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
   assert.equal(timers.size, 0);
   return { colors, arcs, lines, transforms, scales, texts, positions, rotations };
 }
-test('crystal closes after 800 ms and reflects each supported projectile with its own art', () => {
+test('crystal closes after 800 ms and renders every ordinary attack return and variant', () => {
   const { crystalReflection } = require('../../public/shared/scene-rules.json');
   const timing = require('../../public/shared/attack-timing.json');
   const reflect = (reflectedEffect, reflectedPhase, pending = true) =>
@@ -265,10 +285,13 @@ test('crystal closes after 800 ms and reflects each supported projectile with it
     readHits: () => [],
   });
   assert.equal(idle.arcs.length, 0);
-  for (const effect of crystalReflection.projectiles) {
-    const art = reflect(effect, timing[effect][0][2]);
-    assert.ok(art.lines.length || art.arcs.length, effect);
-    assert.ok(!art.texts.includes('43,210'), effect);
+  const definitions = require('../../public/shared/attack-effects.json');
+  for (const effect of definitions.filter(
+    (e) => !e.area && !e.ultimate && e.damageMultiplier !== 0,
+  )) {
+    const art = reflect(effect.id, timing[effect.variantOf || effect.id][0][2]);
+    assert.ok(art.lines.length || art.arcs.length, effect.id);
+    assert.ok(!art.texts.includes('43,210'), effect.id);
   }
   const arrow = reflect('arrow_volley', 'hit1');
   assert.ok(arrow.colors.includes('#ff5a24'));
@@ -822,4 +845,31 @@ test('expanded arena renders the camera viewport at lobby pixel density', () => 
   arena.frame(17);
   assert.equal(arena.canvas.style.transform, 'translate3d(720px, 900px, 0)');
   assert.deepEqual(arena.transforms.at(-1).slice(4), [-640, -800]);
+});
+
+test('crystal reflection paints each boss ordinary strike through its original renderer', () => {
+  const abilities = require('../../public/shared/boss-abilities.json');
+  for (const spec of abilities.filter((s) => s.slot !== 'r')) {
+    const art = run('crystal_reflection', '#69e3f4', 100, () => 0.5, {
+      readHits: () => [
+        {
+          x: 640,
+          y: 380,
+          pathX: 120,
+          pathY: 240,
+          toId: 'boss',
+          phase: 'reflection',
+          reflectedEffect: 'barrage',
+          reflectedBossEffect: spec.id,
+          reflectedPhase: 'hit1',
+          delayMs: 800,
+          pending: false,
+          damage: 1234,
+          critical: false,
+        },
+      ],
+    });
+    assert.ok(art.lines.length || art.arcs.length, spec.id);
+    assert.ok(art.texts.includes('1,234'), spec.id);
+  }
 });

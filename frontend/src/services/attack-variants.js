@@ -8,6 +8,10 @@ export const attackVariant = (id) => {
 export const attackArtworkKind = (id) => byId.get(id)?.variantOf ?? id;
 export const isDefensiveAttack = (id) =>
   ['shield', 'sphere', 'crystal_reflection'].includes(attackArtworkKind(id));
+export const isReflectableAttack = (id) => {
+  const effect = byId.get(id);
+  return !!effect && !effect.area && !effect.ultimate && effect.damageMultiplier !== 0;
+};
 
 const gradientMethods = new Set([
   'createLinearGradient',

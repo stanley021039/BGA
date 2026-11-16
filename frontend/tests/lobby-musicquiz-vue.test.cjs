@@ -51,6 +51,41 @@ function loader(mocks = {}) {
   };
 }
 
+test('enraged boss phase and cast rate survive the real lobby parser with bounded fallbacks', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  const { createSceneCombat } = require('../../src/rooms/scene-combat');
+  const { createBossCombat } = require('../../src/rooms/boss-combat');
+  const lobby = createLobby(() => 1000),
+    human = { id: 'human', display_name: 'Human' };
+  const raw = { ...lobby.view(human), serverNow: 1000 };
+  const boss = {
+    ...raw.visitors[0],
+    id: 'boss',
+    name: 'Boss',
+    bossId: 'thanos',
+    bossPhase: 2,
+    lifeId: 1,
+  };
+  const runtime = createBossCombat(createSceneCombat(() => 0.99));
+  const event = runtime.prepare({ bossId: 'thanos' }, boss, 'boss_thanos_q', raw.visitors[0], 1000);
+  boss.bossIntent = { effect: event.effect, until: 1000 + 700 / 1.15, attackRate: 1.15 };
+  raw.visitors.push(boss);
+  raw.attacks = [event];
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  const result = read(raw);
+  assert.equal(result.visitors.find((v) => v.id === 'boss').bossPhase, 2);
+  assert.equal(result.visitors.find((v) => v.id === 'boss').bossIntent.attackRate, 1.15);
+  assert.equal(result.attacks[0].bossAttackRate, 1.15);
+  const invalid = structuredClone(raw);
+  invalid.visitors.at(-1).bossPhase = 999;
+  invalid.visitors.at(-1).bossIntent.attackRate = 999;
+  const safe = read(invalid);
+  assert.equal(safe.visitors.at(-1).bossPhase, 1);
+  assert.equal(safe.visitors.at(-1).bossIntent.attackRate, undefined);
+  invalid.attacks[0].bossAttackRate = 999;
+  assert.throws(() => read(invalid));
+});
+
 function purchaseScene(room, actions) {
   const filename = path.join(__dirname, '../src/pages/musicquiz/MusicQuizScene.vue');
   const script = compileScript(parse(fs.readFileSync(filename, 'utf8')).descriptor, {
@@ -242,6 +277,42 @@ test('server KDA and measured central passage survive the real Vue contract; old
   delete raw.visitors[0].passage;
   assert.equal(read(raw).visitors[0].kda.kills, 0);
   assert.equal(read(raw).visitors[0].passage, null);
+});
+test('all boss abilities and settled hits survive the actual lobby contract without becoming player barrage', () => {
+  const { createLobby } = require('../../src/rooms/lobby'),
+    { bosses } = require('../../src/rooms/scene-bosses');
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  for (const spec of bosses) {
+    let clock = 1000;
+    const user = { id: 'boss-reader', display_name: 'Reader' },
+      lobby = createLobby(
+        () => clock,
+        () => '/test',
+        () => 0.5,
+      );
+    const id = lobby.bosses(user, { action: 'add', bossId: spec.id }).bosses[0].id;
+    const pending = lobby.view(user);
+    pending.serverNow = clock;
+    assert.equal(read(pending).bossArrivals[0].spawnAt, 6000);
+    clock = 6000;
+    lobby.view(user);
+    clock = 6700;
+    lobby.view(user);
+    clock = 7900;
+    for (const ability of spec.abilities) {
+      let raw = lobby.view(user);
+      raw.serverNow = clock;
+      const parsed = read(raw),
+        event = parsed.attacks.filter((a) => a.fromId === id).at(-1);
+      assert.equal(event.effect, ability.id);
+      assert.equal(event.slot, ability.slot);
+      clock += ability.windup + ability.duration;
+      raw = lobby.view(user);
+      raw.serverNow = clock;
+      assert.doesNotThrow(() => read(raw));
+      clock += ability.slot === 'r' ? 4200 : 2600;
+    }
+  }
 });
 test('new waiting rooms save through the real party action store with a null round token', async () => {
   const pinia = require('pinia'),
@@ -765,7 +836,7 @@ test('Rainbow Bear cast snapshots accept all four phases for the caster and targ
   }
 });
 
-test('lobby snapshot retains the reflected projectile variant and rejects non-projectile returns', () => {
+test('lobby snapshot accepts ordinary attack returns and rejects ultimate returns', () => {
   const { createLobby } = require('../../src/rooms/lobby');
   let now = 1000;
   const lobby = createLobby(() => now);
@@ -793,6 +864,10 @@ test('lobby snapshot retains the reflected projectile variant and rejects non-pr
     snapshot.attacks.find((event) => event.effect === 'crystal_reflection_alt').hits[0];
   assert.equal(hit(read(raw)).reflectedEffect, 'tidal_blades_alt');
   assert.equal(hit(read(raw)).reflectedPhase, 'hit1');
+  const beam = structuredClone(raw);
+  hit(beam).reflectedEffect = 'beam_alt';
+  hit(beam).reflectedPhase = 'impact';
+  assert.equal(hit(read(beam)).reflectedEffect, 'beam_alt');
   const corrupted = structuredClone(raw);
   hit(corrupted).reflectedEffect = 'starburst_stream';
   assert.throws(() => read(corrupted), /反彈招式資料格式不正確/);
@@ -812,4 +887,25 @@ test('lobby snapshot retains the reflected projectile variant and rejects non-pr
     Object.assign(returns(broken)[1], invalid);
     assert.throws(() => read(broken));
   }
+});
+
+test('boss immunity and rainbow companion metadata survive snapshots and reject invalid figures', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  const raw = {
+    ...createLobby(() => 1000).view({ id: 'human', display_name: 'Human' }),
+    serverNow: 1000,
+  };
+  raw.visitors[0].bossId = 'thanos';
+  raw.visitors[0].bossControlImmuneMs = 4500;
+  raw.visitors[0].bearCompanion = { index: 4, remainingMs: 2500, lastDrain: 10 };
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  const parsed = read(raw).visitors[0];
+  assert.equal(parsed.bossControlImmuneMs, 4500);
+  assert.equal(parsed.bearCompanion.index, 4);
+  assert.equal(parsed.bearCompanion.lastDrain, 10);
+  raw.visitors[0].bearCompanion.index = 5;
+  assert.throws(() => read(raw));
+  raw.visitors[0].bearCompanion.index = 0;
+  raw.visitors[0].bearCompanion.remainingMs = 3001;
+  assert.throws(() => read(raw));
 });

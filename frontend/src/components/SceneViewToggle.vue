@@ -1,13 +1,25 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue';
 import UiButton from './UiButton.vue';
+import UiPanel from './UiPanel.vue';
 import '../styles/scene-view.scss';
 const hidden = ref(false);
 const suppressed = new Map<HTMLElement, boolean>();
 let previous: HTMLElement | null = null;
+function positionLobbyStats() {
+  const stats = document.querySelector<HTMLElement>('.vue-lobby-stats');
+  if (!stats) return;
+  const box = stats.getBoundingClientRect();
+  document.body.style.setProperty('--scene-stats-top', Math.max(16, box.top) + 'px');
+  document.body.style.setProperty(
+    '--scene-stats-right',
+    Math.max(16, innerWidth - box.right) + 'px',
+  );
+}
 function set(value: boolean) {
   if (value === hidden.value) return;
   if (value) {
+    positionLobbyStats();
     previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     document
       .querySelectorAll<HTMLElement>(
@@ -42,7 +54,9 @@ function key(event: KeyboardEvent) {
   }
 }
 document.addEventListener('keydown', key);
+window.addEventListener('resize', positionLobbyStats);
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', positionLobbyStats);
   document.removeEventListener('keydown', key);
   set(false);
 });
@@ -57,6 +71,11 @@ onBeforeUnmount(() => {
   />
   <Teleport to="body"
     ><div v-if="hidden" class="scene-view-restore"
-      ><UiButton label="恢復介面（Esc）" icon="close" @click="set(false)" /></div
+      ><UiPanel density="hud" tone="translucent"
+        ><UiButton
+          label="恢復介面（Esc）"
+          caption="Esc"
+          variant="ghost"
+          @click="set(false)" /></UiPanel></div
   ></Teleport>
 </template>

@@ -1,9 +1,10 @@
-const { attackKind } = require('./attack-kind');
+const { attackKind, isReflectableAttack } = require('./attack-kind');
 const { rules: pickupRules } = require('./lobby-pickups');
 const timing = require('../../public/shared/attack-timing.json');
 const rules = require('../../public/shared/scene-rules.json');
 const { inAttackArea, selectBijuuDirections } = require('./attack-targets');
 const { sceneDistance } = require('./scene-combat');
+const { drainBossCharge } = require('./boss-interactions');
 const {
   prepareSpecial,
   advanceSpecial,
@@ -19,7 +20,6 @@ const {
   settleMs: reflectionSettleMs,
   maximumReturns,
 } = rules.crystalReflection;
-const reflectable = new Set(rules.crystalReflection.projectiles);
 
 // No per-projectile timers. Polls/commands advance this bounded scene clock.
 // Actor references remain private, never in serialized snapshots.
@@ -36,6 +36,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       energyBudget: {
         ordinaryEnergyRemaining: actor.ordinaryHitEnergy ?? rules.energy.ordinaryHit,
       },
+      bossBarBudget: {},
     };
     runtime.set(event, state);
     reflections.set(actor, { event, state });
@@ -45,8 +46,9 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
     const effect = attackKind(originalEffect);
     const guard = reflections.get(actor);
     if (
-      !reflectable.has(effect) ||
+      !isReflectableAttack(originalEffect) ||
       !guard ||
+      !combat.canHit(source, actor, job.at, effect) ||
       guard.state.lifeId !== actor.lifeId ||
       job.at < guard.event.at ||
       job.at >= guard.event.at + reflectionWindow
@@ -81,9 +83,16 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       source: {
         id: actor.id,
         health: 1,
+        combatEpoch: actor.combatEpoch || 0,
+        matchId: actor.matchId || null,
+        slot: 'q',
+        originX: actor.x,
+        originY: actor.y,
+        archetype: actor.archetype,
         energyActor: actor,
         energyLifeId: actor.lifeId,
         reflectionBudget: guard.state.energyBudget,
+        bossBarBudget: guard.state.bossBarBudget,
         authorBonus: actor.authorBonus,
         guanyinUntil: actor.guanyinUntil,
         kda: actor.kda,
@@ -106,6 +115,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
   }
   function prepare(event, self, targets, actors = targets) {
     const effect = attackKind(event.effect);
+    if (effect === 'rainbow_bear') event.bearIndex = combat.rollInteger(0, 4);
     if (effect === 'bijuu_beam')
       event.rays = selectBijuuDirections(self, actors, event.aspectRatio);
     const source = {
@@ -116,6 +126,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       combatEpoch: self.combatEpoch || 0,
       matchId: self.matchId || null,
       castId: event.id,
+      bossBarBudget: {},
       slot: event.slot,
       originX: event.fromX,
       originY: event.fromY,
@@ -313,7 +324,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
         if (map.get(actor.id) !== actor || actor.health <= 0 || actor.lifeId !== job.lifeId) {
           hit.missed = true;
         } else {
-          // A reflected projectile settles here and never re-enters intercept().
+          // A reflected hit settles here and never re-enters intercept().
           Object.assign(
             hit,
             combat.hit(job.source, actor, at, job.effect, job.weight, 'reflection'),
@@ -424,9 +435,11 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
           hit.toX = actor.x;
           hit.toY = actor.y;
           if (actor.kind !== 'fragment') {
-            combat.freeze(actor, job.at, duration);
-            actor.stasisUntil = job.at + duration;
-            actor.sealedUntil = Math.max(actor.sealedUntil || 0, job.at + duration);
+            const effective = combat.freeze(actor, job.at, duration);
+            if (effective) {
+              actor.stasisUntil = job.at + effective;
+              actor.sealedUntil = Math.max(actor.sealedUntil || 0, job.at + effective);
+            }
           }
           continue;
         }
@@ -449,7 +462,8 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
         if (actor.health > 0 && actor.kind !== 'fragment') {
           if (effect === 'starburst_stream' && !attached && hit.damage > 0) {
             state.lockedTarget = actor;
-            actor.energy = Math.floor(energyBefore / 2);
+            if (actor.bossId) drainBossCharge(actor, (actor.bossCharge || 0) / 2);
+            else actor.energy = Math.floor(energyBefore / 2);
           }
           if (effect === 'rainbow_bear' && job.phase === 'hug' && hit.damage > 0) {
             state.lockedTarget = actor;
@@ -457,8 +471,12 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
               actor.kissedUntil || 0,
               job.at + rules.rainbowBear.durationMs,
             );
+            if (!state.bearRolled) {
+              state.bearRolled = true;
+              combat.attachBear(state.source, actor, job.at, event.bearIndex);
+            }
           }
-          if (effect === 'zero_equation') combat.trapEquation(actor, event.id);
+          if (effect === 'zero_equation') combat.trapEquation(actor, event.id, job.at);
         }
         if (
           effect === 'black_coffin' &&
@@ -472,7 +490,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
           movement.applied = true;
           movement.updateUntil =
             job.at + (movement.frost ? rules.frost.durationMs : rules.bladeHaste.durationMs);
-          if (movement.frost) {
+          if (movement.frost && combat.canControl(actor, job.at)) {
             if (actor.health > 0 && (actor.slowUntil || 0) <= job.at)
               actor.slowUntil = job.at + rules.frost.durationMs;
           } else {
@@ -551,6 +569,13 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
       return movement && movement.updateUntil + statusSettleMs >= time;
     });
   }
-  return { prepare, armReflection, advance, needsFastUpdates };
+  // Boss ordinary patterns return as a bounded energy imprint through the same guard budget.
+  function interceptBoss(source, target, at, weight, actors) {
+    const result = intercept('barrage', source, target, { at, weight, phase: 'hit1' }, actors);
+    if (result?.job && source.bossAbilityId)
+      result.job.hit.reflectedBossEffect = source.bossAbilityId;
+    return result;
+  }
+  return { prepare, armReflection, advance, needsFastUpdates, interceptBoss };
 }
 module.exports = { createAttackTimeline };

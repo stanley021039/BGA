@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "mode": "built-in image_gen",
+  "bosses": [
+    {
+      "id": "mutalith",
+      "name": "漩渦獸",
+      "file": "boss-mutalith.webp",
+      "bytes": 86456,
+      "sha256": "a1a53ba960d6bac33554eba4dd6d51f37a37a3ba2c452907b649686c1781abdc",
+      "sourceFile": "exec-36499ba3-859c-4d45-b50a-cc58857db63a.png",
+      "sourceSha256": "4652f03f0126e9b320a770d70622e0ce6c68e6a36d0f9f2111fbe989791f1e01",
+      "prompt": "Edit TARGET image1, palette change ONLY, use image2 solely as COLOR REFERENCE. Preserve image1's monster silhouette, pose, tentacles, anatomy, claws, vortex placement, exact composition and details. Recolor the creature body from blue/purple flesh to charcoal grey and black iron with silver-grey highlights, desaturated dark skin, subdued pale grey-lilac tentacles. The energy vortex must match reference2's multicolor arrangement: pink/magenta/violet outer organic ring and thorns, cyan turquoise inner rim and blue magical tendrils, brilliant yellow-orange-white core at center. Remove the target's dominant bronze/gold metal rim: make that rim dark grey with pink-violet tips instead. Body remains mostly charcoal and silver, don't tint the entire body bright purple. Strong color separation between dark body and multicolor vortex. Maintain genuine transparent alpha, NO new backdrop/glow cloud, floor, base, vignette or shadow. All appendages inside the frame, same sprite quality."
+    },
+    {
+      "id": "cthulhu",
+      "name": "克蘇魯",
+      "file": "boss-cthulhu.webp",
+      "bytes": 92172,
+      "sha256": "2a2214ce8b34dc0ec8077883171e44378388faa9a6815c6dd3851f130763e444",
+      "sourceFile": "exec-df47275f-5ac0-4e3c-87a3-debf815dc051.png",
+      "sourceSha256": "9a5b7092e8eadc24a0a486f71aae9c25764e29d7f9a8f3ba614a9e7de1e24ae6",
+      "prompt": "A single formidable CTHULHU eldritch boss game sprite, NOT a humanoid standing octopus man. An amorphous shape-unstable ancient god: asymmetrical mass of dark jade and deep teal organic flesh, partially dissolving gelatinous torso, uneven limb-like tentacles of many thicknesses curling from unpredictable places, small embedded dim golden eyes at several depths, half-formed octopoid head emerging from the central mass, torn folded bat-wing membranes that merge into tentacles. No regular two arms/two legs symmetry, no muscular human torso, no cute big head. The creature's outline should look fluid and changeable with dangling tendrils and overlapping semi-translucent folds, yet the full silhouette remains readable at small game sizes. Premium detailed painted fantasy monster illustration with sharp edges and cold sea-green highlights, ominous, no blood or gore. Complete body mass floating slightly, all tendrils within canvas with safe margin. ONE sprite, genuine transparent alpha outside silhouette. Absolutely no background, floor, shadow, vignette, environment, text, frame, UI or surrounding fog. Any haze bound strictly inside the silhouette."
+    },
+    {
+      "id": "gatanozoa",
+      "name": "加坦杰厄",
+      "file": "boss-gatanozoa.webp",
+      "bytes": 73078,
+      "sha256": "7cdb17784e48f7d407a098d17fd083f9fe663d3cb3e99baef14db7bdb5f97c13",
+      "sourceFile": "exec-0785064d-d90f-4d86-a76d-819d9c52157c.png",
+      "sourceSha256": "068eb35c19c464d9a11540077c1aae6e6fd2e2d474b69d7f8b3f8a4f0cbd1b1a",
+      "prompt": "One imposing full-body boss monster sprite for a fantasy action game, detailed premium painted game illustration with dramatic highlights and clean readable edges. Ultraman Tiga final boss Gatanothor / Gatanozoa. A massive dark bronze-black nautilus spiral armored shell on squat crawling body, inverted alien head hanging at front with glowing red eyes, multiple thick purple tentacles and two huge crustacean pincers. Clearly nautilus eldritch kaiju, not humanoid. Use the creature's CANONICAL threatening adult monster proportions, NOT chibi, NOT cute, NOT toy, NOT mascot, not big baby head. Full body in neutral combat stance viewed three-quarter front, facing slightly right. ONE figure, all claws, wings, tentacles, horns and tail inside canvas with safe 8% margin. True transparent alpha background, NO ground shadow, floor, background smoke, vignette, scenery, base, labels, UI, text or frame. No additional character. All decorative energy bound close to the silhouette. Designed to stand large alongside smaller chibi players."
+    },
+    {
+      "id": "arkveld",
+      "name": "鎖刃龍",
+      "file": "boss-arkveld.webp",
+      "bytes": 57830,
+      "sha256": "4532c5d3b529304f6761cc08c1e8d98d8e59556e6ac2957a427be98e0d7fb218",
+      "sourceFile": "exec-6d448cd8-52f9-408d-9b7b-61bf97cc3b39.png",
+      "sourceSha256": "071bd91c23e90e29a1a934426fd9c43f927ccd55809e8f69f35411f4141e41f1",
+      "prompt": "One full-body ARKVELD (鎖刃龍) from Monster Hunter Wilds as an imposing adult monster game sprite, faithfully recognizable canonical anatomy. A powerful pale ivory-white furred flying wyvern with dark charcoal segmented armor and ridges, low horned angular reptilian head and pale fur mane, strong heavy hind legs, wing-arm structures with very long articulated CHAIN-BLADE appendages made of successive dark steel-grey interlocking rectangular segments extending sideways and curling like whips, taloned limbs and long armored tail. Emphasize the unmistakable pair of segmented chain-blade wings, not golden dragon wings, not three heads, not a robot. Natural adult beast proportions, broad strong torso, crouching combat stance viewed three-quarter front. Premium detailed painted game illustration with clean sharp edges, readable dark grey and ivory palette and faint purple energy accents inside chain-blade joints. Entire body, tail and chain blades safely within canvas with generous margin. ONE monster only, genuine transparent alpha background, no scenery, floor, ground shadow, vignette, frame, UI, fog or text.\nFraming correction: Repair this exact Arkveld sprite framing only. Keep the same creature anatomy, ivory fur, grey plates, paired articulated chain blades, pose and painted detail. Reconstruct any chain-blade tips clipped at the TOP/LEFT/RIGHT frame edges, and scale the WHOLE figure down slightly to leave at least 8% truly transparent empty margin on EVERY side. Both complete looping chain-blade appendages, all claws and the tail must fit entirely. No text, background, extra creature or new effects. Genuinely transparent alpha background, no colored fringe, no shadow or haze."
+    },
+    {
+      "id": "greeza",
+      "name": "格利札",
+      "file": "boss-greeza.webp",
+      "bytes": 95982,
+      "sha256": "0ae00c195772161356d2e5bf71587da734ad7ee046ecfdc5c780318d9bfd0f0d",
+      "sourceFile": "exec-a5f2a167-cdbd-4190-a276-9a83d44b1b74.png",
+      "sourceSha256": "c190bb21bcf7ef18ed868129d1e8ef090da063087c023093dc362dac8f7cc832",
+      "prompt": "One imposing full-body boss monster sprite for a fantasy action game, detailed premium painted game illustration with dramatic highlights and clean readable edges. Ultraman X Greeza second form: tall bizarre faceless alien kaiju humanoid, black ribbed body, gold and purple organic chest armor, bulbous orange-yellow glowing featureless head with black vertical marks, thin crooked arms and feet. Eerie asymmetry, not a generic robot. Use the creature's CANONICAL threatening adult monster proportions, NOT chibi, NOT cute, NOT toy, NOT mascot, not big baby head. Full body in neutral combat stance viewed three-quarter front, facing slightly right. ONE figure, all claws, wings, tentacles, horns and tail inside canvas with safe 8% margin. True transparent alpha background, NO ground shadow, floor, background smoke, vignette, scenery, base, labels, UI, text or frame. No additional character. All decorative energy bound close to the silhouette. Designed to stand large alongside smaller chibi players."
+    },
+    {
+      "id": "hyper-zetton",
+      "name": "海帕杰頓",
+      "file": "boss-hyper-zetton.webp",
+      "bytes": 98742,
+      "sha256": "6cff2d0e10206a05ad69e1d3788960a032ef8986bf951b5531d1d47b1b894cd1",
+      "sourceFile": "exec-f2b8e338-1dfe-4ad5-b7d5-db30044a8efd.png",
+      "sourceSha256": "053d186c43cfc9b4ee5a739693dfd42fd97fea6cd384a6c3e7f81babc9eb3803",
+      "prompt": "One imposing full-body boss monster sprite for a fantasy action game, detailed premium painted game illustration with dramatic highlights and clean readable edges. Ultraman Saga Hyper Zetton Imago. Black insectoid humanoid kaiju, long upward gold horns, narrow vertical orange glowing face slit, two bright amber chest organs, pointed segmented black armor with gold accents, large scythe-like forearms and powerful digitigrade feet. Use the creature's CANONICAL threatening adult monster proportions, NOT chibi, NOT cute, NOT toy, NOT mascot, not big baby head. Full body in neutral combat stance viewed three-quarter front, facing slightly right. ONE figure, all claws, wings, tentacles, horns and tail inside canvas with safe 8% margin. True transparent alpha background, NO ground shadow, floor, background smoke, vignette, scenery, base, labels, UI, text or frame. No additional character. All decorative energy bound close to the silhouette. Designed to stand large alongside smaller chibi players."
+    },
+    {
+      "id": "colossal",
+      "name": "超巨型巨人",
+      "file": "boss-colossal.webp",
+      "bytes": 52424,
+      "sha256": "e39d04b28e0417560e609b92e1e5f0cdc58162e2c9604b038c40e525d7f4076e",
+      "sourceFile": "exec-947093db-c3a2-48b3-8d1c-71841a1a0cf9.png",
+      "sourceSha256": "aa81019221ad0d9c26d6a6c23ef87dba74296a929c3807845b0e5478e56fe279",
+      "prompt": "One imposing full-body boss monster sprite for a fantasy action game, detailed premium painted game illustration with dramatic highlights and clean readable edges. Attack on Titan Colossal Titan. Extremely tall broad muscular humanoid with exposed red anatomical muscle fibers and white tendons, skull-like skinless face, visible white teeth, small deep-set eyes, no hair, massive neck and thighs, faint steam drawn only immediately around shoulders. Tasteful stylized anatomical monster, no gore, no blood, no genitals. Full body. Use the creature's CANONICAL threatening adult monster proportions, NOT chibi, NOT cute, NOT toy, NOT mascot, not big baby head. Full body in neutral combat stance viewed three-quarter front, facing slightly right. ONE figure, all claws, wings, tentacles, horns and tail inside canvas with safe 8% margin. True transparent alpha background, NO ground shadow, floor, background smoke, vignette, scenery, base, labels, UI, text or frame. No additional character. All decorative energy bound close to the silhouette. Designed to stand large alongside smaller chibi players."
+    },
+    {
+      "id": "steel-behemoth",
+      "name": "無人機航空母艦機器・SAGIUS",
+      "file": "boss-steel-behemoth.webp",
+      "bytes": 77756,
+      "sha256": "9d7c79064b7d49b313db1f2187b75a9760c0dba4a392fb57190243f87d5ab84b",
+      "sourceFile": "exec-901ee981-9384-4bfd-a2b4-c8d2245c16bc.png",
+      "sourceSha256": "03132dbf164e3346fe9f73307d9a38f69a07766d4c2b7d046443ac983ba6eeb9",
+      "prompt": "Create a premium isolated full-body monster game sprite derived from this appearance reference, using detailed painted rendering and crisp readable silhouette, dramatic adult kaiju proportions. Use image1 as creature appearance reference. Preserve its silver and graphite angular mechanical armored reptilian silhouette, blade-like narrow head crest and neck plating, huge thick legs, forward clawed arms, shoulder spikes and long segmented heavy tail. It is a highly detailed formidable adult mechanical kaiju, not chibi. Entire creature and ALL appendages inside canvas with generous 8% safety margin. Single figure, front three-quarter ready stance, no other creature, no UI or text. Genuine fully transparent background, alpha zero around silhouette, no scene, no ground, no floor, no shadow backdrop, no vignette or smoke backdrop. Reconstruct obscured body parts coherently. Match high quality fantasy boss illustration style."
+    },
+    {
+      "id": "prismatic-void",
+      "name": "次元生命體・XENORPH",
+      "file": "boss-prismatic-void.webp",
+      "bytes": 67840,
+      "sha256": "b40a447ead8d18e15b262436f1833b64b672bac15bd5492ab1774b9e609c97b4",
+      "sourceFile": "exec-7ae6372c-dca9-48d8-a6c1-aabf1d67b8f4.png",
+      "sourceSha256": "d1da4903fc229b1b7838243c7a6d4e4097e9e06af316dcd9fdf608ebb5cfa1ab",
+      "prompt": "Create a premium isolated full-body monster game sprite derived from this appearance reference, using detailed painted rendering and crisp readable silhouette, dramatic adult kaiju proportions. Use the reference's exact unusual monster silhouette: tiny dark central horned head and black body, huge flared asymmetrical fan of organic bladelike wing-tendrils, glossy rainbow membrane gradients cyan magenta violet fiery orange, several conspicuous yellow eyes embedded around the central chest membrane. Clawed short legs and hooked dark wing tips. Preserve colorful veins and black tapered edges, not a conventional dragon, not chibi. Entire creature and ALL appendages inside canvas with generous 8% safety margin. Single figure, front three-quarter ready stance, no other creature, no UI or text. Genuine fully transparent background, alpha zero around silhouette, no scene, no ground, no floor, no shadow backdrop, no vignette or smoke backdrop. Reconstruct obscured body parts coherently. Match high quality fantasy boss illustration style."
+    },
+    {
+      "id": "gyo",
+      "name": "魚",
+      "file": "boss-gyo.webp",
+      "bytes": 72520,
+      "sha256": "5e694205169ce75c993a18d8b8c63f9542b8663672690b5bb6f3e8d33ecd7b8b",
+      "sourceFile": "exec-bc922e0b-6bc9-4fc5-ae0b-a3443bc65fb9.png",
+      "sourceSha256": "3d9a2a7d30fa3c5d1207599fc54a80c6188f24cf29387900d383ecc66c9e3f52",
+      "prompt": "Create ONE isolated horror boss game sprite based ONLY on the MONSTER pictured on the RIGHT book cover in this photograph. Ignore the left book, human couple, typography, background and all book edges. Monster features: swollen yellow-ochre head and upper body with mottled round brown spots, long straight black hair draped to both sides, eerie blank cream-white eyes, wide open mouth from which TWO huge long corrugated fleshy grey-purple breathing tubes protrude and curl downward, plus a few dark ribbed support tentacles beneath the mass. Reconstruct into a complete coherent grotesque creature silhouette that can float/crawl at ground level, no missing canvas cuts. This is a fictional supernatural monster, non-graphic: no blood, open wounds, viscera, realistic injury or gore. Premium detailed painted game-creature rendering matching dark kaiju sprites, adult threatening proportions, not cute or chibi. Preserve the distinctive yellow black purple color scheme and unsettling shape. Full appendages inside canvas with generous margins. ONE monster only on fully transparent alpha background, no floor/shadow/backdrop/vignette, no text, logos, frame or book cover composition."
+    },
+    {
+      "id": "thanos",
+      "name": "薩諾龜",
+      "file": "boss-thanos.webp",
+      "bytes": 53230,
+      "sha256": "a863f4e600c3f3dd8ec7124a407aa3c1c6d9fa5fb4d7bf10f567eadf4dfd8d8e",
+      "sourceFile": "exec-ca282a61-a77d-42f3-b74e-d5518dae583f.png",
+      "sourceSha256": "8b73966f8b777fc1fdadfcdea447183444898dabf60f6f3e43000e801145cee2",
+      "prompt": "請把參考照片中的人物畫成一張完整全身的遊戲角色插畫：保留照片的笑臉、短黑髮、銀色方框眼鏡，以及頭頂淡黃色毛絨蝴蝶結。人物穿著薩諾斯風格的完整金色與深藍色厚重盔甲，胸腹、肩膀、手臂、雙腿和腳都由盔甲覆蓋，身形敦實。左手戴著金色無限手套，手套上清楚鑲嵌六顆藍、紅、紫、綠、黃、橙色寶石，左手平舉展示手套，右手自然垂放。臉部和盔甲都統一為精緻的手繪遊戲美術風格，表情友善開朗，站立不做攻擊動作。只畫這一個角色，不要照片的衣服、座椅或背景。完整保留頭頂蝴蝶結、雙手和雙腳，畫面四周留10%空間。真正透明背景，沒有地板、投影、場景、文字、標誌、邊框或介面。\nRevision:\nEdit this exact armored game avatar ONLY to give him an EXTREMELY OVERSIZED humorous bobblehead. Enlarge the entire human head including hair, glasses, face and yellow fluffy bow to about 2.5 TIMES its current width. Head plus bow should occupy roughly 45% of the figure's total height, as wide as or wider than both armored shoulders. Ignore natural body proportions. Preserve the same recognizable smiling face, teeth, glasses and expression precisely. Keep the existing gold-and-navy fully covered armored BODY, raised golden Infinity Gauntlet, all SIX distinct colored stones, pose, hands, legs and boots unchanged in design. Recompose/extend the canvas as needed so the giant head/bow, full gauntlet fingers and both feet are completely visible with 8–10% margin. Head must join at the neck, not float; don't cover the gauntlet's gemstones. Maintain same detailed painted game illustration. One figure only, genuine transparent alpha background, no floor, shadow backdrop, vignette, fog, text, logo or UI.\nRevision:\nRemove only the background from this existing game character image. Preserve the entire foreground character exactly, including the oversized smiling head, glasses, yellow bow, armor, glove and full body. Output a clean transparent PNG cutout with real alpha."
+    }
+  ]
+}

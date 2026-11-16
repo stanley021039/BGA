@@ -623,7 +623,7 @@ test('gacha HTTP authenticates, claims daily once, settles/replays ten pulls and
   assert.match(state.body.characterImage, /^\/characters\/[a-f0-9-]{36}\?v=[\w-]{16}&size=256$/);
   const appearance = await req('/api/profile/appearance', {
     version: 5,
-    characterId: 'builtin:woods',
+    characterId: 'builtin:community-photo-blanket',
     expression: 'neutral',
   });
   assert.equal(appearance.status, 200);

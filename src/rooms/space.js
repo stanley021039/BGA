@@ -5,6 +5,8 @@ const energy = require('./scene-energy');
 const { versionedAsset } = require('../http/asset-version');
 const { HttpError } = require('../http/errors');
 const { randomBytes } = require('node:crypto');
+const { createBotDriver } = require('./scene-bots');
+const { builtinCharacters } = require('../profiles/appearance');
 const { createSceneCombat, authorSpeed } = require('./scene-combat');
 const { createAttackTimeline } = require('./attack-timeline');
 const {
@@ -21,6 +23,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     combat = createSceneCombat(random, (_id, actor) => eligibility.get(actor) === true),
     attacks = new WeakMap();
   const spaces = new WeakMap();
+  const botDrivers = new WeakMap();
   const timeline = createAttackTimeline(combat);
   function advance(position, time, positions) {
     combat.advance(position, time);
@@ -98,6 +101,29 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     const time = now(),
       positions = reconcile(room, time),
       current = new Map();
+    let driver = botDrivers.get(room);
+    if (!driver) botDrivers.set(room, (driver = createBotDriver(random)));
+    driver.drive({
+      time,
+      positions,
+      events: attacks.get(room) || [],
+      bots: room.players
+        .filter((p) => p.bot && !p.kicked)
+        .map((p) => ({ id: p.id, mode: 'attack', q: 'barrage', e: 'beam', r: '' })),
+      cast: (bot, slot) =>
+        act(
+          room,
+          bot.id,
+          {
+            action: 'attack',
+            slot,
+            aspectRatio: 1.6,
+            requestId: 'bot-' + randomBytes(12).toString('hex'),
+          },
+          bot[slot],
+          'classic',
+        ),
+    });
     for (const event of expressions)
       if (event.at <= time && event.at + 5000 > time) current.set(event.playerId, event);
     return {
@@ -120,7 +146,11 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
             wrapId: position.wrapId || 0,
             id: player.id,
             name: player.name,
-            image: player.avatar || versionedAsset('/assets/playful/game-quacks.svg'),
+            image:
+              player.avatar ||
+              (player.bot
+                ? builtinCharacters[4].expressions.neutral
+                : versionedAsset('/assets/playful/game-quacks.svg')),
             x: position.x,
             y: position.y,
             targetX: position.targetX,
@@ -250,7 +280,13 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     energy.check(self, input.slot, effect);
     const targets = selectAttackTargets(
       self,
-      combat.targets(positions.values()),
+      combat
+        .targets(positions.values())
+        .filter(
+          (actor) =>
+            !room.players.find((p) => p.id === playerId)?.bot ||
+            !room.players.find((p) => p.id === (actor.ownerId || actor.id))?.bot,
+        ),
       effect,
       input.aspectRatio,
     );
@@ -310,7 +346,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
   }
   function rebind(previous, next) {
     if (previous.code !== next.code) throw Error('Cannot rebind another room');
-    for (const registry of [spaces, attacks]) {
+    for (const registry of [spaces, attacks, botDrivers]) {
       if (registry.has(previous)) registry.set(next, registry.get(previous));
       registry.delete(previous);
     }

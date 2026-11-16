@@ -9,7 +9,7 @@ const { MediaThumbnails, thumbnailSize, contentHash } = require('../src/media/th
 const { appFixture } = require('./helpers/app-fixture.cjs'),
   { createAuth } = require('../src/auth');
 
-const asset = (name) => fs.readFileSync(path.join(__dirname, '../public/assets/characters', name));
+const asset = (name) => fs.readFileSync(path.join(__dirname, 'fixtures/retired-characters', name));
 function directory(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-media-thumbnails-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -105,7 +105,12 @@ test('image routes serve thumbnails with the cache policy of the original URL', 
   async function ready(route) {
     for (let i = 0; i < 100; i++) {
       const response = await get(route);
-      if (response.headers.get('content-type') === 'image/webp') return response;
+      if (
+        response.headers.get('content-type') === 'image/webp' &&
+        (await sharp(Buffer.from(await response.clone().arrayBuffer())).metadata()).width <=
+          Number(new URL(route, 'http://localhost').searchParams.get('size'))
+      )
+        return response;
       // Until the thumbnail exists the original is sent, and never cached as the size.
       assert.equal(response.headers.get('cache-control'), 'private, no-cache');
       await response.arrayBuffer();
@@ -118,7 +123,7 @@ test('image routes serve thumbnails with the cache policy of the original URL', 
   assert.equal(builtin.headers.get('cache-control'), 'private, no-cache');
   assert.equal((await sharp(Buffer.from(await builtin.arrayBuffer())).metadata()).width, 128);
   const ignored = await get('/assets/characters/traveler-neutral.png?size=999');
-  assert.equal(ignored.headers.get('content-type'), 'image/png');
+  assert.equal(ignored.headers.get('content-type'), 'image/webp');
 
   const created = await fetch(base + '/api/profile/characters', {
     method: 'POST',

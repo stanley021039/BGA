@@ -32,6 +32,8 @@ import UiChoiceCard from '../../components/UiChoiceCard.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
 import LobbyAttackLayer from './LobbyAttackLayer.vue';
+import BossArrivalNotice from '../../components/BossArrivalNotice.vue';
+import BossHealthHud from '../../components/BossHealthHud.vue';
 import LobbyBackgroundArt from '../../components/LobbyBackgroundArt.vue';
 import LobbyBarrage from './LobbyBarrage.vue';
 import type { BarrageController, BarrageEvent } from '../../contracts/social';
@@ -41,7 +43,11 @@ import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // the site header, painted surfaces (background, border, shadow) and text.
 const INTERACTIVE =
   'a, button, input, select, textarea, label, summary, dialog, [role="button"], [contenteditable], .game-tile, [data-site-header]';
-const props = defineProps<{ arenaPage?: boolean; arenaWarmup?: boolean }>();
+const props = defineProps<{
+  arenaPage?: boolean;
+  arenaWarmup?: boolean;
+  trainingLoadout?: { q: string; e: string; r: string };
+}>();
 const expressionNoticeKey = ref(0);
 const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
@@ -89,7 +95,9 @@ const sceneSnapshot = computed(() => {
     match?.phase === 'running' ? match.players.filter((p) => !p.forfeited).map((p) => p.id) : [],
   );
   const visible = (id: string) =>
-    id === snapshot.selfId || contestants.has(id) === !!props.arenaPage;
+    id === snapshot.selfId ||
+    snapshot.visitors.some((v) => v.id === id && v.bossId) ||
+    contestants.has(id) === !!props.arenaPage;
   return {
     ...snapshot,
     visitors: snapshot.visitors.filter((v) => visible(v.id)),
@@ -397,15 +405,17 @@ async function openChat() {
 defineExpose({ openChat });
 </script>
 <template>
+  <BossHealthHud :visitors="sceneSnapshot?.visitors || []" :connected="sceneEnabled" />
   <MobileSceneControls
     :controls="controls"
     :enabled="sceneEnabled"
     :battle="battlePlaying"
     :locked-loadout="
-      battlePlaying
+      props.trainingLoadout ||
+      (battlePlaying
         ? lobby.snapshot?.arena?.match?.players.find((p) => p.id === lobby.snapshot?.selfId)
             ?.loadout
-        : undefined
+        : undefined)
     "
     :message="
       (lobby.attackStatus === '已向最近玩家發射特效' ? '' : lobby.attackStatus) ||
@@ -422,12 +432,16 @@ defineExpose({ openChat });
       :aria-label="
         battlePlaying
           ? '戰鬥競技場：點地面或用方向鍵移動，C 瞬移'
-          : `好友大廳：點擊空白處或用 WASD、方向鍵移動，點自己的角色發表情；C 瞬移（${sceneRules.energy.lobbyTeleportCost} 能量），Q、E 普通招式，能量滿後按 R 施放大招`
+          : `好友大廳：點擊空白處或用 WASD、方向鍵移動，點自己的角色發表情；C 瞬移（${lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId)?.teleportCost ?? sceneRules.energy.lobbyTeleportCost} 能量），Q、E 普通招式，能量滿後按 R 施放大招`
       "
       aria-keyshortcuts="Q E R C"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
       ><div ref="world" class="arena-camera-world" :class="{ 'is-expanded': expanded }">
+        <BossArrivalNotice
+          :arrivals="sceneSnapshot?.bossArrivals || []"
+          :now="sceneSnapshot?.serverNow || 0"
+          :connected="lobby.connected" />
         <LobbyAttackLayer
           :snapshot="sceneSnapshot"
           :arena="props.arenaPage"
@@ -509,6 +523,7 @@ defineExpose({ openChat });
             :follow-camera="expanded && visitor.id === lobby.snapshot?.selfId"
             @position="moveCamera"
             :reset="lobby.positionReset"
+            :server-now="sceneSnapshot?.serverNow"
             :open="opened"
             :connected="lobby.connected"
             :arrive="arrivals.has(visitor.id)"

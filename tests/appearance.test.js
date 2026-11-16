@@ -10,9 +10,15 @@ const {
 } = require('../src/profiles/appearance');
 const { imageOf } = require('../src/profiles/uploads');
 
-test('ten bundled image characters have neutral art and optional expressions', () => {
-  assert.equal(builtinCharacters.length, 10);
-  assert.equal(new Set(builtinCharacters.map((character) => character.id)).size, 10);
+test('all bundled image characters have neutral art and optional expressions', () => {
+  assert.equal(
+    builtinCharacters.length,
+    require('../public/shared/character-additions.json').characters.length,
+  );
+  assert.equal(
+    new Set(builtinCharacters.map((character) => character.id)).size,
+    builtinCharacters.length,
+  );
   for (const character of builtinCharacters) {
     assert.deepEqual(validateAppearance(character.appearance), character.appearance);
     assert.ok(character.expressions.neutral);
@@ -21,10 +27,7 @@ test('ten bundled image characters have neutral art and optional expressions', (
       assert.ok(fs.existsSync(path.join(__dirname, '..', 'public', url.split('?')[0])));
     }
   }
-  assert.ok(
-    Object.keys(builtinCharacters[0].expressions).length >
-      Object.keys(builtinCharacters[9].expressions).length,
-  );
+  assert.ok(builtinCharacters.every((c) => Object.keys(c.expressions).length === 6));
   assert.throws(() => validateAppearance({ ...defaults, expression: 'unknown' }), {
     code: 'INVALID_APPEARANCE',
   });
@@ -50,13 +53,18 @@ test('old appearance versions migrate to image characters', () => {
     bottomColor: '#506773',
     shoeColor: '#60432c',
   };
-  for (const old of [v1, v2, { ...v2, version: 3 }, { version: 4, skinId: 'builtin:traveler' }]) {
+  for (const old of [
+    v1,
+    v2,
+    { ...v2, version: 3 },
+    { version: 4, skinId: 'builtin:community-asian' },
+  ]) {
     const migrated = normalizeAppearance(old);
     assert.equal(migrated.version, 5);
     assert.equal(migrated.expression, 'neutral');
     assert.ok(builtinCharacters.some((character) => character.id === migrated.characterId));
   }
-  assert.equal(normalizeAppearance(v2).characterId, 'builtin:traveler');
+  assert.equal(normalizeAppearance(v2).characterId, 'builtin:community-asian');
   assert.throws(() => normalizeAppearance({ ...v1, outfitColor: '<script>' }), {
     code: 'INVALID_APPEARANCE',
   });
@@ -64,7 +72,7 @@ test('old appearance versions migrate to image characters', () => {
 
 test('uploads inspect image bytes and MIME without a pixel-size limit', () => {
   for (const filename of ['traveler-neutral.png', 'traveler-happy.gif']) {
-    const bytes = fs.readFileSync(path.join(__dirname, '..', 'public/assets/characters', filename));
+    const bytes = fs.readFileSync(path.join(__dirname, 'fixtures/retired-characters', filename));
     const image = imageOf({ base64: bytes.toString('base64') });
     assert.equal(image.width, 256);
     assert.equal(image.height, 256);

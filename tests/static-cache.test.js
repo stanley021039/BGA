@@ -10,7 +10,7 @@ const { appFixture } = require('./helpers/app-fixture.cjs'),
 const IMMUTABLE = 'public, max-age=31536000, immutable',
   PRIVATE_IMMUTABLE = 'private, max-age=31536000, immutable';
 const image = (name) =>
-  fs.readFileSync(path.join(__dirname, '../public/assets/characters', name)).toString('base64');
+  fs.readFileSync(path.join(__dirname, 'fixtures/retired-characters', name)).toString('base64');
 
 test('hashed build assets are immutable, public files revalidate by ETag and documents stay uncached', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-static-cache-'));
@@ -108,7 +108,7 @@ test('portrait URLs name their bytes and follow appearance and image changes', a
 
   await post('profile/appearance', {
     version: 5,
-    characterId: 'builtin:woods',
+    characterId: 'builtin:community-photo-blanket',
     expression: 'neutral',
   });
   const woods = await lobbyImage();

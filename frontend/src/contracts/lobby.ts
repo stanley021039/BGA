@@ -7,9 +7,10 @@ import {
   type LobbyArena,
 } from './lobby-arena';
 import sceneRules from '../../../public/shared/scene-rules.json';
+import bossAbilities from '../../../public/shared/boss-abilities.json';
 import attackEffects from '../../../public/shared/attack-effects.json';
 
-import { attackArtworkKind } from '../services/attack-variants.js';
+import { attackArtworkKind, isReflectableAttack } from '../services/attack-variants.js';
 import attackTiming from '../../../public/shared/attack-timing.json';
 import combatRules from '../../../public/shared/scene-rules.json';
 import { validPassage, type Passage } from '../engines/scene-path.js';
@@ -68,6 +69,15 @@ export interface SceneEquationPuzzle {
   rejectedOptions: number[];
 }
 export interface LobbyVisitor {
+  bossArrivalAt?: number;
+  bossBlessingMs?: number;
+  teleportCost?: number;
+  bossId?: string;
+  bossPhase?: number;
+  bossPhaseLockMs?: number;
+  bossControlImmuneMs?: number;
+  bearCompanion?: { index: number; remainingMs: number; lastDrain: number };
+  bossIntent?: { effect: string; until: number; attackRate?: number } | null;
   concealed?: boolean;
   heroFlightUntil?: number;
   sealedUntil?: number;
@@ -141,6 +151,7 @@ export interface LobbyAttackHit {
   coverImpact?: { x: number; y: number };
   reflectionIndex?: number;
   reflectedEffect?: string;
+  reflectedBossEffect?: string;
   reflectedPhase?: string;
   aimX?: number;
   aimY?: number;
@@ -155,6 +166,8 @@ export interface LobbyAttackHit {
   critical: boolean;
 }
 export interface LobbyAttack {
+  bearIndex?: number;
+  bossAttackRate?: number;
   cancelled?: boolean;
   head?: AttackHead;
   rays?: { x: number; y: number }[];
@@ -191,6 +204,7 @@ export interface AttackHead {
   exploded?: boolean;
 }
 export interface LobbySnapshot {
+  bossArrivals?: { id: string; name: string; at: number; spawnAt: number; x: number; y: number }[];
   arena?: LobbyArena | null;
   arenaRoom?: { currentId: string | null; rooms: { id: string; name: string; count: number }[] };
   attacks: LobbyAttack[];
@@ -430,6 +444,13 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         : 0,
       energyMaximum: readEnergyMaximum(item.energyMaximum),
       health: finite(item.health) ? item.health : undefined,
+      bossArrivalAt: finite(item.bossArrivalAt) ? item.bossArrivalAt : 0,
+      teleportCost: finite(item.teleportCost)
+        ? Math.max(0, Math.min(combatRules.energy.lobbyTeleportCost, item.teleportCost))
+        : combatRules.energy.lobbyTeleportCost,
+      bossBlessingMs: finite(item.bossBlessingMs)
+        ? Math.max(0, Math.min(15000, item.bossBlessingMs))
+        : 0,
       heroFlightUntil: finite(item.heroFlightUntil) ? item.heroFlightUntil : 0,
       sealedUntil: finite(item.sealedUntil) ? item.sealedUntil : 0,
       ...(finite(item.blackoutUntil) ? { blackoutUntil: item.blackoutUntil } : {}),
@@ -481,6 +502,52 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       id: text(item.id),
       name: text(item.name),
       image: text(item.image),
+      ...(typeof item.bossId === 'string' ? { bossId: item.bossId } : {}),
+      ...(typeof item.bossId === 'string'
+        ? {
+            bossPhase: [1, 2, 3].includes(Number(item.bossPhase)) ? Number(item.bossPhase) : 1,
+            bossPhaseLockMs: finite(item.bossPhaseLockMs)
+              ? Math.max(0, Math.min(2000, item.bossPhaseLockMs))
+              : 0,
+            ...(finite(item.bossControlImmuneMs) && item.bossControlImmuneMs > 0
+              ? { bossControlImmuneMs: Math.min(5000, item.bossControlImmuneMs) }
+              : {}),
+          }
+        : {}),
+      ...(item.bearCompanion !== undefined
+        ? {
+            bearCompanion: (() => {
+              const b = record(item.bearCompanion);
+              if (
+                !Number.isSafeInteger(b.index) ||
+                Number(b.index) < 0 ||
+                Number(b.index) > 4 ||
+                !finite(b.remainingMs) ||
+                b.remainingMs <= 0 ||
+                b.remainingMs > 3000 ||
+                !finite(b.lastDrain) ||
+                b.lastDrain < 0 ||
+                b.lastDrain > 10
+              )
+                throw Error('彩虹熊附身資料格式不正確。');
+              return { index: Number(b.index), remainingMs: b.remainingMs, lastDrain: b.lastDrain };
+            })(),
+          }
+        : {}),
+      bossIntent:
+        item.bossIntent &&
+        typeof item.bossIntent === 'object' &&
+        finite((item.bossIntent as Record<string, unknown>).until)
+          ? {
+              effect: text((item.bossIntent as Record<string, unknown>).effect),
+              until: Number((item.bossIntent as Record<string, unknown>).until),
+              ...([1.15, 1.3].includes(
+                Number((item.bossIntent as Record<string, unknown>).attackRate),
+              )
+                ? { attackRate: Number((item.bossIntent as Record<string, unknown>).attackRate) }
+                : {}),
+            }
+          : null,
       x: Number(item.x),
       y: Number(item.y),
       targetX: Number(item.targetX),
@@ -506,6 +573,22 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
     throw Error('大廳角色身分不一致。');
   return {
     arena: readLobbyArena(row.arena),
+    bossArrivals: array(row.bossArrivals || [])
+      .slice(0, 5)
+      .map((value) => {
+        const a = record(value);
+        if (
+          !text(a.id) ||
+          !text(a.name) ||
+          !finite(a.at) ||
+          !finite(a.spawnAt) ||
+          a.spawnAt - a.at !== 5000 ||
+          !coordinate(a.x) ||
+          !coordinate(a.y)
+        )
+          throw Error('Boss登場資料格式不正確。');
+        return { id: text(a.id), name: text(a.name), at: a.at, spawnAt: a.spawnAt, x: a.x, y: a.y };
+      }),
     ...(row.arenaRoom ? { arenaRoom: readArenaRooms(row.arenaRoom) } : {}),
     // Older lobby servers sent plain messages without the room event discriminator.
     barrages: readBarrages(
@@ -524,12 +607,21 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           ![a.fromX, a.fromY, a.toX, a.toY].every(coordinate) ||
           !finite(a.at) ||
           !finite(a.until) ||
-          !(a.head && ['shaohua_devour', 'shaohua_devour_alt'].includes(String(a.effect))
-            ? Number.isSafeInteger(a.until - a.at) && a.until > a.at
-            : kind === 'susanoo'
-              ? a.until - a.at === 5000
-              : [1800, 4400].includes(a.until - a.at) ||
-                (kind === 'crystal_reflection' && a.until - a.at === reflectionLifetime))
+          (a.bearIndex !== undefined &&
+            (kind !== 'rainbow_bear' ||
+              !Number.isSafeInteger(a.bearIndex) ||
+              Number(a.bearIndex) < 0 ||
+              Number(a.bearIndex) > 4)) ||
+          !(bossAbilities.some((s) => s.id === a.effect)
+            ? (a.bossAttackRate === undefined ||
+                [1, 1.15, 1.3].includes(Number(a.bossAttackRate))) &&
+              a.until - a.at === Math.ceil(4400 / (Number(a.bossAttackRate) || 1))
+            : a.head && ['shaohua_devour', 'shaohua_devour_alt'].includes(String(a.effect))
+              ? Number.isSafeInteger(a.until - a.at) && a.until > a.at
+              : kind === 'susanoo'
+                ? a.until - a.at === 5000
+                : [1800, 4400].includes(a.until - a.at) ||
+                  (kind === 'crystal_reflection' && a.until - a.at === reflectionLifetime))
         )
           throw Error('大廳攻擊資料格式不正確。');
         return {
@@ -588,6 +680,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                 const hits = a.hits.map((value) => {
                   const hit = record(value);
                   const reflectedEffect = text(hit.reflectedEffect);
+                  const reflectedBossEffect = text(hit.reflectedBossEffect);
                   const reflectedPhase = text(hit.reflectedPhase);
                   const reflectedKind = attackArtworkKind(reflectedEffect);
                   if (
@@ -606,13 +699,20 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                     (kind !== 'crystal_reflection' ||
                       hit.phase !== 'reflection' ||
                       !attackEffects.some((effect) => effect.id === reflectedEffect) ||
-                      !combatRules.crystalReflection.projectiles.includes(reflectedKind) ||
+                      !isReflectableAttack(reflectedEffect) ||
                       !attackTiming[reflectedKind as keyof typeof attackTiming]?.some(
                         (stage) => stage[2] === reflectedPhase,
                       ))
                   )
                     throw Error('反彈招式資料格式不正確。');
                   const reflectionIndex = hit.reflectionIndex;
+                  if (
+                    hit.reflectedBossEffect !== undefined &&
+                    (kind !== 'crystal_reflection' ||
+                      hit.phase !== 'reflection' ||
+                      !bossAbilities.some((s) => s.id === reflectedBossEffect && s.slot !== 'r'))
+                  )
+                    throw Error('Boss反彈招式格式不正確。');
                   if (
                     reflectionIndex !== undefined &&
                     (kind !== 'crystal_reflection' ||
@@ -627,6 +727,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                       ? { reflectionIndex: Number(reflectionIndex) }
                       : {}),
                     ...(reflectedEffect ? { reflectedEffect, reflectedPhase } : {}),
+                    ...(reflectedBossEffect ? { reflectedBossEffect } : {}),
                     ...(hit.aimX !== undefined && coordinate(hit.aimX) && coordinate(hit.aimY)
                       ? { aimX: hit.aimX, aimY: hit.aimY }
                       : {}),
@@ -690,8 +791,14 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             : {}),
           damage: finite(a.damage) ? Math.max(0, a.damage) : undefined,
           critical: a.critical === true,
+          ...(a.bearIndex !== undefined ? { bearIndex: Number(a.bearIndex) } : {}),
+          ...([1.15, 1.3].includes(Number(a.bossAttackRate))
+            ? { bossAttackRate: Number(a.bossAttackRate) }
+            : {}),
           ...(a.weakened === true && { weakened: true }),
-          effect: attackEffects.some((e) => e.id === a.effect) ? String(a.effect) : 'barrage',
+          effect: [...attackEffects, ...bossAbilities].some((e) => e.id === a.effect)
+            ? String(a.effect)
+            : 'barrage',
           slot: a.slot === 'r' ? 'r' : a.slot === 'e' ? 'e' : 'q',
           id: text(a.id),
           fromId: text(a.fromId),

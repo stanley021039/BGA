@@ -74,7 +74,8 @@ test('thin living HP bars track health without visible numbers; death and respaw
     Object.assign(visitor, { health: 0, respawnAt: 3000, respawnRemainingMs: 3000 });
     await vue.nextTick();
     assert.equal(host.querySelector('[role=progressbar]'), null);
-    assert.match(host.textContent, /測試玩家/);
+    assert.equal(host.querySelector('.scene-tombstone-caption strong').textContent, '測試玩家死了');
+    assert.equal(host.querySelector('.scene-tombstone-caption strong span'), null);
     assert.match(host.textContent, /3 秒後重生/);
     assert.equal(host.textContent.match(/測試玩家/g).length, 1);
     assert.equal(host.textContent.match(/3 秒後重生/g).length, 1);

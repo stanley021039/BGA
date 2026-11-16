@@ -224,7 +224,7 @@ onBeforeUnmount(() => {
           v-else-if="moving && entrance"
           :effect="entrance"
           frameless
-          :image="image || '/assets/characters/traveler-neutral.png'"
+          :image="image || '/assets/characters/community-asian-neutral.webp'"
           :name="name"
           :size="128"
         />

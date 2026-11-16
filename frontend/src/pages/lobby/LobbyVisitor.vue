@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import MotionPolicy from '../../engines/motion-policy.js';
+import BossPuppet from '../../components/BossPuppet.vue';
+import BearCompanion from '../../components/BearCompanion.vue';
 import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
@@ -22,6 +24,7 @@ const props = defineProps<{
     reset: number;
     open: boolean;
     connected: boolean;
+    serverNow?: number;
     arrive?: boolean;
     followCamera?: boolean;
     showSummon?: boolean;
@@ -53,6 +56,7 @@ watch(
   { immediate: true, flush: 'post' },
 );
 const shortName = computed(() => {
+  if (props.visitor.bossId) return props.visitor.name;
   const chars = [...props.visitor.name];
   return chars.length > NAME_LIMIT ? chars.slice(0, NAME_LIMIT).join('') + '…' : props.visitor.name;
 });
@@ -139,6 +143,10 @@ watch(
 watch(
   [() => props.arrive, () => props.visitor.teleportId],
   async ([value, id], previous) => {
+    if (props.visitor.bossId) {
+      emit('arrived');
+      return;
+    }
     if (!value && !(previous && id > 0 && id !== previous[1])) return;
     await nextTick();
     const layer = node.value?.closest<HTMLElement>('.lobby-backdrop');
@@ -240,7 +248,11 @@ watch(
       moveFrame = 0;
       if (disposed || epoch !== revision || document.hidden || !props.connected) return;
       const position =
-        (visitor.archetype || visitor.pickupEffects?.speedUntil) && !visitor.passage
+        (visitor.archetype ||
+          visitor.pickupEffects?.speedUntil ||
+          visitor.bossId ||
+          visitor.bossBlessingMs) &&
+        !visitor.passage
           ? interpolateSceneVisitor(visitor, time - started)
           : sceneWalkWithSpeed(
               visitor,
@@ -325,6 +337,7 @@ window.addEventListener('resize', positionBubble);
     }"
     :data-ping-player="visitor.id"
     :data-arena-team="team"
+    :data-scene-boss="visitor.bossId || undefined"
     :data-arena-concealed="visitor.concealed || undefined"
     :aria-label="self ? visitor.name + '（你），點一下發表情，C 鍵瞬移、R 鍵施放大招' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
@@ -371,15 +384,29 @@ window.addEventListener('resize', positionBubble);
       }}</div
     >
     <div v-show="visitor.health !== 0" class="scene-avatar-portrait">
+      <BearCompanion
+        v-if="connected && visitor.bearCompanion"
+        :index="visitor.bearCompanion.index"
+        :last-drain="visitor.bearCompanion.lastDrain"
+      />
       <SummonArtwork
         v-if="showSummon && connected && !still && visitor.summon"
         :key="visitor.summon.until"
         :effect="visitor.summon.effect"
         :remaining-ms="visitor.summon.remainingMs"
       />
-      <img
+      <BossPuppet
+        v-if="visitor.bossId"
         class="scene-avatar-image"
-        :src="sizedImage(visitor.emote?.image || visitor.image, 128)"
+        :visitor="visitor"
+        :src="sizedImage(visitor.image, 256)"
+        :active="connected && !still"
+        :server-now="serverNow || Date.now()"
+      />
+      <img
+        v-else
+        class="scene-avatar-image"
+        :src="sizedImage(visitor.emote?.image || visitor.image, visitor.bossId ? 256 : 128)"
         :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
         alt=""
         draggable="false"
@@ -433,7 +460,7 @@ window.addEventListener('resize', positionBubble);
       </svg>
     </div>
     <SceneHealth
-      v-if="visitor.maxHealth"
+      v-if="visitor.maxHealth && (!visitor.bossId || visitor.health === 0)"
       :visitor="visitor"
       :self="self"
       :connected="connected"
@@ -444,6 +471,16 @@ window.addEventListener('resize', positionBubble);
   </component>
 </template>
 <style scoped>
+.lobby-avatar[data-scene-boss] .scene-avatar-image {
+  width: min(210px, 44vh, 32vw);
+  height: min(218px, 46vh, 33.2vw);
+  object-fit: contain;
+}
+.lobby-avatar[data-scene-boss] > span:last-child {
+  max-width: min(190px, 30vw);
+  white-space: normal;
+  text-align: center;
+}
 .scene-avatar-portrait {
   position: relative;
   line-height: 0;

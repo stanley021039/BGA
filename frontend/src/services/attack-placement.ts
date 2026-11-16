@@ -9,6 +9,7 @@ export function visibleSummons(snapshot: LobbySnapshot | null) {
 
 export type AttackPoint = { x: number; y: number };
 export type AttackPlacement = {
+  bearIndex?: number;
   effect: string;
   ageMs?: number;
   preview?: boolean;
@@ -152,6 +153,7 @@ export function attackOptions(
     preview: attack.preview === true,
     rays: attack.rays?.map((ray) => point(ray.x, ray.y)),
     effect: attack.effect,
+    bearIndex: attack.bearIndex,
     damage: attack.damage,
     critical: attack.critical,
     aspectRatio: attack.aspectRatio,

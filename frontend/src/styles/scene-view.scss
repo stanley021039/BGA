@@ -17,8 +17,45 @@ body.scene-ui-hidden {
 .scene-view-restore {
   position: fixed;
   inset-block-start: var(--stitch-space-16);
-  inset-inline-end: var(--stitch-space-16);
+  inset-inline-start: var(--stitch-space-16);
   z-index: 3000;
+}
+.lobby-scene-stats,
+.lobby-scene-npc {
+  display: none;
+  position: fixed;
+  z-index: 30;
+}
+.lobby-scene-stats {
+  inset-block-start: var(--scene-stats-top, 76px);
+  inset-inline-end: var(--scene-stats-right, var(--stitch-space-16));
+  max-inline-size: min(400px, calc(100vw - var(--stitch-space-32)));
+}
+.lobby-scene-npc {
+  inset-block-end: max(var(--stitch-space-16), env(safe-area-inset-bottom));
+  inset-inline-end: max(var(--stitch-space-16), env(safe-area-inset-right));
+}
+.lobby-scene-npc-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--stitch-space-8);
+}
+body.scene-ui-hidden .lobby-scene-stats,
+body.scene-ui-hidden .lobby-scene-npc {
+  display: block;
+}
+@media (max-width: 1100px) {
+  .lobby-scene-stats {
+    max-block-size: 150px;
+    overflow: auto;
+  }
+  body.scene-ui-hidden:has(.lobby-scene-stats) .boss-health-hud {
+    inset-block-start: calc(var(--scene-stats-top, 130px) + 150px + var(--stitch-space-8));
+  }
+  body.scene-ui-hidden:has(.lobby-scene-npc) .mobile-scene-controls {
+    inset-inline-start: var(--stitch-space-16);
+    inset-inline-end: auto;
+  }
 }
 :root
   body[data-visual-theme]:has(.lobby-backdrop, .vue-site-shell)

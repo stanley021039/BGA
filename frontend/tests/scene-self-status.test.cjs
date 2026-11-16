@@ -102,6 +102,15 @@ test('own HUD reacts to health, regeneration and buff changes, without moving st
     state.self.combatStatus.guardEnergy = 0;
     await vue.nextTick();
     assert.equal(host.querySelector('[data-status="haste"]'), null);
+    state.self.bossBlessingMs = 15000;
+    await vue.nextTick();
+    const blessingLabels = [...host.querySelectorAll('[data-status]')]
+      .map((n) => n.getAttribute('aria-label'))
+      .join(' ');
+    assert.match(blessingLabels, /獵王祝福.*傷害 \+10%.*移速 \+8%/);
+    assert.match(blessingLabels, /瞬移耗能 −50%.*15秒/);
+    state.self.bossBlessingMs = 0;
+    await vue.nextTick();
     assert.match(
       host.querySelector('[data-status="timer"]').getAttribute('aria-label'),
       /等待回復 1.0 秒/,

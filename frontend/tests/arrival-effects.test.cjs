@@ -117,6 +117,25 @@ test('all nine arrivals use the actual actor, track the front layer, and restore
       assert.equal(img.getAttribute('style'), before);
       assert.equal(host.querySelectorAll('.arrival-vector-layer').length, 0);
       stop();
+      // The final part of the authored scene must still run before the shorter owner ends.
+      now = 0;
+      stop = playArrival(scene, effect.id, effect.duration);
+      step(effect.duration * 0.9);
+      const expectedOpacity = Number(img.style.opacity);
+      stop();
+      now = 0;
+      stop = playArrival(scene, effect.id, 1500, effect.duration);
+      step(1350);
+      assert.ok(Math.abs(Number(img.style.opacity) - expectedOpacity) < 1e-6, effect.id);
+      assert.ok(
+        Number(img.style.opacity) > 0,
+        effect.id + ' materializes before the 1.5s deadline',
+      );
+      step(1501);
+      assert.equal(jobs.size, 0);
+      assert.equal(img.getAttribute('style'), before);
+      assert.equal(host.querySelectorAll('.arrival-vector-layer').length, 0);
+      stop();
     }
   } finally {
     Object.assign(global, original);

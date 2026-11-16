@@ -1,0 +1,1355 @@
+{
+  "version": 1,
+  "characters": [
+    {
+      "id": "builtin:community-blond",
+      "name": "川寶",
+      "source": "ImageGen",
+      "sourceSha256": "932db19728e78152d3221f2bf2e33eabc780669fb56372f88e5eca7eb6a1d585",
+      "sourceFile": "exec-1a3ebf85-7a0b-45fb-92a2-002a4ed6eb1a.png",
+      "bounds": {
+        "left": 113,
+        "top": 14,
+        "width": 287,
+        "height": 485
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-blond-neutral.webp",
+          "bytes": 13320,
+          "sha256": "dd5e7cc1ad651b8c6e81cb559d0a5386809e4cb7f53ea7e4a2c6ae37c092be3b"
+        },
+        "happy": {
+          "file": "community-blond-happy.webp",
+          "bytes": 13456,
+          "sha256": "53a52108010f0318ec08bc36c43c114356efaf7ee873a2305917908a902a7859"
+        },
+        "sad": {
+          "file": "community-blond-sad.webp",
+          "bytes": 13480,
+          "sha256": "31cd48530eee20629c687a54de5e7650cc7ca3e580b4387ad36c9f65b256ca07"
+        },
+        "surprised": {
+          "file": "community-blond-surprised.webp",
+          "bytes": 13470,
+          "sha256": "dfd36aa44a0d554e93504d0d21f60916f06862613b597572a1fb9d6f6546b481"
+        },
+        "thinking": {
+          "file": "community-blond-thinking.webp",
+          "bytes": 13360,
+          "sha256": "50dc77bd7d24d4e7399c572c1f51a0e1784b2fb331e9e482cb017372d024920e"
+        },
+        "angry": {
+          "file": "community-blond-angry.webp",
+          "bytes": 13256,
+          "sha256": "8b57851cf4e91599e8582668414041f84b1bdb46a421c090d795b7fe549a4a38"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-asian",
+      "name": "賴祥德",
+      "source": "ImageGen",
+      "sourceSha256": "b3206df0619b641ce18c6e2d83bd6ab087d91059a2e7af6ec6e653a367ea376f",
+      "sourceFile": "exec-2254db4f-11c3-4b8d-ac39-debdabff8e87.png",
+      "bounds": {
+        "left": 102,
+        "top": 21,
+        "width": 308,
+        "height": 468
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-asian-neutral.webp",
+          "bytes": 12134,
+          "sha256": "0df4704fa69fa04e94631076947224f9480b2685e379b59ff214c79320746dd9"
+        },
+        "happy": {
+          "file": "community-asian-happy.webp",
+          "bytes": 12372,
+          "sha256": "455af53315965fb4c61425ecac65b9776cfa0e202ce7c626b994a272509c41f8"
+        },
+        "sad": {
+          "file": "community-asian-sad.webp",
+          "bytes": 12124,
+          "sha256": "0ea2d7599c92bd360208ab7e114756cedb28fc07cea6404fdaa0d99da178c01e"
+        },
+        "surprised": {
+          "file": "community-asian-surprised.webp",
+          "bytes": 12394,
+          "sha256": "b002aaaadc402f5f665b0f69a9cddeeb24c4df3f7481da8937c154f97b73483d"
+        },
+        "thinking": {
+          "file": "community-asian-thinking.webp",
+          "bytes": 12430,
+          "sha256": "1db50b58f3e46e43f6379a9da4c020752b43457e47ffdd84ca19a6df1811b059"
+        },
+        "angry": {
+          "file": "community-asian-angry.webp",
+          "bytes": 12404,
+          "sha256": "28310a623f0714d5d0156c370a09b86cb97c80fc4ff1162af1b6b2d6056e3da0"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-otaku",
+      "name": "動漫宅男",
+      "source": "ImageGen",
+      "sourceSha256": "3a1bc22c0669bb86dc31585e1c6415b54f89584e041718d023a7cf72adf98812",
+      "sourceFile": "exec-4c5a9d15-4e7d-41f5-a04b-3f1d63937589.png",
+      "bounds": {
+        "left": 90,
+        "top": 11,
+        "width": 333,
+        "height": 493
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-otaku-neutral.webp",
+          "bytes": 17106,
+          "sha256": "143d52b8e27e20d262e0adf7314e35a76d988bed9fed9094f414669394e2f44f"
+        },
+        "happy": {
+          "file": "community-otaku-happy.webp",
+          "bytes": 17252,
+          "sha256": "c72f81b0a62690019c263c07d00f690b9038e26ed06873af1b0555ef82b56f5a"
+        },
+        "sad": {
+          "file": "community-otaku-sad.webp",
+          "bytes": 17164,
+          "sha256": "d979663b942fa3aff55e98b9040c090a9b38497a2bc197518670b146197e496b"
+        },
+        "surprised": {
+          "file": "community-otaku-surprised.webp",
+          "bytes": 17194,
+          "sha256": "8dc950d4cf958e2aa1f6b0b1474f64bfed614fb41379d6a6414dbe8872caf0a8"
+        },
+        "thinking": {
+          "file": "community-otaku-thinking.webp",
+          "bytes": 17124,
+          "sha256": "34a70b739863d441784a899aa992a1cacd0d844215372ec9a81c8be23b91f29e"
+        },
+        "angry": {
+          "file": "community-otaku-angry.webp",
+          "bytes": 17356,
+          "sha256": "91d2bf57c65ad12ab7a11fa93a19194aa36be4082671fb0ea99ff2801c96e96b"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-necron",
+      "name": "太空死靈戰士",
+      "source": "ImageGen",
+      "sourceSha256": "389af9c03e7a6aed9b7dc3db86ba8a236248872457d71c75c04e8a3788c95485",
+      "sourceFile": "exec-1b41e352-7f2a-4970-9621-a196f4614238.png",
+      "bounds": {
+        "left": 48,
+        "top": 20,
+        "width": 403,
+        "height": 473
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-necron-neutral.webp",
+          "bytes": 19392,
+          "sha256": "5f06bf04d30dc85b1ca163742f43f82da6f75152a66457b1d257d42b0f76bdba"
+        },
+        "happy": {
+          "file": "community-necron-happy.webp",
+          "bytes": 19298,
+          "sha256": "fbaebc09aaa522099117e31670cc0125eb7b26d5b46b7466c339f7fb653e8f06"
+        },
+        "sad": {
+          "file": "community-necron-sad.webp",
+          "bytes": 19186,
+          "sha256": "6aa968d841e615b75c0b13ba279c981f907d736db86869c82e559bb5bf0eb4fc"
+        },
+        "surprised": {
+          "file": "community-necron-surprised.webp",
+          "bytes": 19592,
+          "sha256": "1e871b0c0a95c0306e3b088ef32211c58bbda2917e2f149c6ac9a935105f5943"
+        },
+        "thinking": {
+          "file": "community-necron-thinking.webp",
+          "bytes": 19446,
+          "sha256": "c50d24a367c3016f6d8c2fa3db6f3af90090bc37424e5ca669896cd477ec58b1"
+        },
+        "angry": {
+          "file": "community-necron-angry.webp",
+          "bytes": 19500,
+          "sha256": "511e19b2bba20f9f926d9150e94ef885e1370b746bac4637302e70ebf723efca"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-scarab",
+      "name": "聖甲蟲終結者",
+      "source": "ImageGen",
+      "sourceSha256": "7a5f6363a0db287ca70296a76b19419ea8debbad68bca3ebc1d3acf9fac24422",
+      "sourceFile": "exec-a77a19dd-78ef-48b2-9e24-38070bab14a7.png",
+      "bounds": {
+        "left": 77,
+        "top": 4,
+        "width": 367,
+        "height": 500
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-scarab-neutral.webp",
+          "bytes": 20752,
+          "sha256": "ca3b8ca6327ec34f6fa215a14f4dd3b9fe1d7cdcb2f9ddefc772e6652b537047"
+        },
+        "happy": {
+          "file": "community-scarab-happy.webp",
+          "bytes": 20516,
+          "sha256": "78b530a1fac410a9336a187f55f3527cdd48272de3b59d8235d63a2374b3f8f3"
+        },
+        "sad": {
+          "file": "community-scarab-sad.webp",
+          "bytes": 20334,
+          "sha256": "f5e563f8f819784513dc739c6278bf5de004ab1084592712d78a2c2537b6f0a5"
+        },
+        "surprised": {
+          "file": "community-scarab-surprised.webp",
+          "bytes": 20474,
+          "sha256": "de7dfdb4d62040fe1b3ad615d871b245d5bb1645133fece9877ad73390b7ffa5"
+        },
+        "thinking": {
+          "file": "community-scarab-thinking.webp",
+          "bytes": 20526,
+          "sha256": "514f73bbfd5e28240ea7ec3ff8a87234cd3f19bf9bdd77f2bfb6bbb6b7ee10af"
+        },
+        "angry": {
+          "file": "community-scarab-angry.webp",
+          "bytes": 20434,
+          "sha256": "fcc7c3a708c97f4962d97c5b43779c878da510e8146ccf415241b048957bc3fc"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-orkboss",
+      "name": "歐克頭目",
+      "source": "ImageGen",
+      "sourceSha256": "bcbe638143c5ad981fffea3c1c0fa7f75087d80fa51daa5ab8c8ed2a00db6fba",
+      "sourceFile": "exec-8489acfa-a0da-48ca-957f-33f91fb6c9cd.png",
+      "bounds": {
+        "left": 10,
+        "top": 11,
+        "width": 483,
+        "height": 481
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-orkboss-neutral.webp",
+          "bytes": 26354,
+          "sha256": "088140e844004ce7f5387400236da8b011fc20224ae40313bc2dcf4a8155953d"
+        },
+        "happy": {
+          "file": "community-orkboss-happy.webp",
+          "bytes": 26694,
+          "sha256": "94ee8ff190924726a53feb7ffb4704ebe4ec10b11eb245f4a8ff6987918e7e25"
+        },
+        "sad": {
+          "file": "community-orkboss-sad.webp",
+          "bytes": 26456,
+          "sha256": "435749ac54dfc0b08c94a03438a2b594bdcbdcc3f4d4bd0517f57b00331a8b73"
+        },
+        "surprised": {
+          "file": "community-orkboss-surprised.webp",
+          "bytes": 28556,
+          "sha256": "65554e01bb814bbf749787f1fcdf22c7074ded3b7b1e9ba18dccee71693c3aa5"
+        },
+        "thinking": {
+          "file": "community-orkboss-thinking.webp",
+          "bytes": 26140,
+          "sha256": "b4272a154caea370e9f8d25727bf6a10fcd234988be09f734fd734b279844d25"
+        },
+        "angry": {
+          "file": "community-orkboss-angry.webp",
+          "bytes": 26758,
+          "sha256": "8683b728ab971a8fcf534ad2e678af18ff034d34193a6416f49b6a5112ac57f2"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-worldeater",
+      "name": "吞世者",
+      "source": "ImageGen",
+      "sourceSha256": "2c2218a7de9fb585bda09f1e5896a6fe5473d0737016e60441e52ad20bc63ae4",
+      "sourceFile": "exec-bb43ce1e-33c5-4e49-98ee-ef1fb24e7361.png",
+      "bounds": {
+        "left": 9,
+        "top": 5,
+        "width": 444,
+        "height": 498
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-worldeater-neutral.webp",
+          "bytes": 39112,
+          "sha256": "55176552572ab8c27dba057fd693b7054e5e5ea6779d865a42855e2f1b7393a4"
+        },
+        "happy": {
+          "file": "community-worldeater-happy.webp",
+          "bytes": 39786,
+          "sha256": "0a7fd1306946014d7b8ef7281982201a1202631fc391dfd7447fc79e5672dfe4"
+        },
+        "sad": {
+          "file": "community-worldeater-sad.webp",
+          "bytes": 39712,
+          "sha256": "34ca6ad6daa1e11648165195840bbafd9f08bfede773d5d7eecb3128424ab2cd"
+        },
+        "surprised": {
+          "file": "community-worldeater-surprised.webp",
+          "bytes": 38974,
+          "sha256": "8ab3543c8442c0718d21ada9bd87f272f3127cbbcb52f20104313e971663b8d9"
+        },
+        "thinking": {
+          "file": "community-worldeater-thinking.webp",
+          "bytes": 39662,
+          "sha256": "2d8bb225d29687590fd64dfde2f7d542b5d26f3f4c47305a458ba5d29474630c"
+        },
+        "angry": {
+          "file": "community-worldeater-angry.webp",
+          "bytes": 39926,
+          "sha256": "b1fc2b6c57bcbf2158f797d9cb3ffe6b716c967bc2c40f6d5895e818af12c8c2"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-ultramarine",
+      "name": "極限戰士",
+      "source": "ImageGen",
+      "sourceSha256": "7c640991dc22353a077ee99d34e81e8abf33a0b42543afa4d0272d9eca9794ae",
+      "sourceFile": "exec-82ee4462-9914-49fd-bcb4-e0f8ac0d3e45.png",
+      "bounds": {
+        "left": 81,
+        "top": 22,
+        "width": 350,
+        "height": 473
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-ultramarine-neutral.webp",
+          "bytes": 18596,
+          "sha256": "d583dc16f5b78d6261f0355c48e479999fe73932d88ea8c35f881693528a233d"
+        },
+        "happy": {
+          "file": "community-ultramarine-happy.webp",
+          "bytes": 18456,
+          "sha256": "9acc01ccd7cdc37dd071eed8671f1dcd986f3646ce99ac5df6fc54f02cc11bcd"
+        },
+        "sad": {
+          "file": "community-ultramarine-sad.webp",
+          "bytes": 18446,
+          "sha256": "070fea95c97a2eb0a37395dd678afcfeea5d4c47fe65c7afd353e1d58628158e"
+        },
+        "surprised": {
+          "file": "community-ultramarine-surprised.webp",
+          "bytes": 18398,
+          "sha256": "5049a9b7b56e6076b38d6897a072f1368ea017b88721ae8350b5e1335f8e8b8a"
+        },
+        "thinking": {
+          "file": "community-ultramarine-thinking.webp",
+          "bytes": 18612,
+          "sha256": "4b2489fa955d9298ef4e08491e1181383d25d1eee63a37f0a2880e13fb334f13"
+        },
+        "angry": {
+          "file": "community-ultramarine-angry.webp",
+          "bytes": 18374,
+          "sha256": "b6b2dc73384edfa0df18945309cbdef7768074ea688196f0fafff695f76ef22c"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-xi",
+      "name": "習大大",
+      "source": "ImageGen",
+      "sourceSha256": "acfa32ecb6f1bf16ad27732917ea32863e266eef1556cab1fe72c8b8866603ee",
+      "sourceFile": "exec-bcec98f6-5343-4ed2-a45f-02097f58aa23.png",
+      "bounds": {
+        "left": 109,
+        "top": 23,
+        "width": 294,
+        "height": 470
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-xi-neutral.webp",
+          "bytes": 13178,
+          "sha256": "9ef08e6a63be9dc6c0eced26944b731d233b84a205331ab00cb557d007691fe8"
+        },
+        "happy": {
+          "file": "community-xi-happy.webp",
+          "bytes": 13354,
+          "sha256": "cde5bd109676bf8b413b3166d042bd0ce5e4aad99e05f907036baed30a54243f"
+        },
+        "sad": {
+          "file": "community-xi-sad.webp",
+          "bytes": 13250,
+          "sha256": "9379b28553ae30dacbca4b48fee28db0ef4931c834065086eabcdcd0b4d978d3"
+        },
+        "surprised": {
+          "file": "community-xi-surprised.webp",
+          "bytes": 13400,
+          "sha256": "2024872eee557fae6bd797ba67b2f9d248a7af5900bf59c4171cc157d0279318"
+        },
+        "thinking": {
+          "file": "community-xi-thinking.webp",
+          "bytes": 13598,
+          "sha256": "0fb8645862dacb7ce8c320c36894c1114f1d3b3658c04dedccf1a89539d06587"
+        },
+        "angry": {
+          "file": "community-xi-angry.webp",
+          "bytes": 13348,
+          "sha256": "345c43710037a2481c3beac92c38d66ad034819c02e88884853194243431e7d7"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-mechanicus",
+      "name": "機械修會技術神甫",
+      "source": "ImageGen",
+      "sourceSha256": "0060d4c93e60fd2468545971aa1b3edc87c50b48f44df583be8317a4ddd3e8c6",
+      "sourceFile": "exec-657ea879-ad14-4712-b090-0cb30bde599f.png",
+      "bounds": {
+        "left": 47,
+        "top": 5,
+        "width": 424,
+        "height": 495
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-mechanicus-neutral.webp",
+          "bytes": 22780,
+          "sha256": "fb8d0d316f8d81d41612899ccbd48190ab1715b634a70bef031d09db6b22e080"
+        },
+        "happy": {
+          "file": "community-mechanicus-happy.webp",
+          "bytes": 22754,
+          "sha256": "1282f9e65ee4e0d3f514da564a8ce565e7b16691b28095c5892a532ae8091b4c"
+        },
+        "sad": {
+          "file": "community-mechanicus-sad.webp",
+          "bytes": 22526,
+          "sha256": "bce8da30c43ac103354667c9e495e1d6afa71a84249b959a82c9552bccb11ade"
+        },
+        "surprised": {
+          "file": "community-mechanicus-surprised.webp",
+          "bytes": 22780,
+          "sha256": "9d0fdacba6cd94cf63a7351bb66acc9f9d3f3d248cc76c52aad48cdcdf0fdce8"
+        },
+        "thinking": {
+          "file": "community-mechanicus-thinking.webp",
+          "bytes": 22502,
+          "sha256": "a9c382f41e6bef49175d3a850afa25de47f25f093f1695d3036eb156ee7cf502"
+        },
+        "angry": {
+          "file": "community-mechanicus-angry.webp",
+          "bytes": 22436,
+          "sha256": "586d7d306e032958b4cc4e7f3df5834aa96463c438cac8fcd1c3dccfe0e452fa"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-photo-striped",
+      "name": "莊敬太監",
+      "source": "ImageGen",
+      "sourceSha256": "b1acd5ef89db375286483383a28a9ab4ac02dde5fa002044659c5956f691f7d8",
+      "sourceFile": "exec-c77813e1-c64c-4dd0-8508-53177da77abb.png",
+      "bounds": {
+        "left": 70,
+        "top": 9,
+        "width": 362,
+        "height": 493
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-photo-striped-neutral.webp",
+          "bytes": 13636,
+          "sha256": "8560b0774bfbe6d5e7a83167961607b735048a36887e03e40d5c5c65292c1b83"
+        },
+        "happy": {
+          "file": "community-photo-striped-happy.webp",
+          "bytes": 13628,
+          "sha256": "94e7a29b03f0a3eb91359921983e5771df68e8fdea9e0ae49c0cd65f79810808"
+        },
+        "sad": {
+          "file": "community-photo-striped-sad.webp",
+          "bytes": 13216,
+          "sha256": "8218861fbb04ad353ee39d92a887dce022bfd1f87deba690a2dabbc4253880b5"
+        },
+        "surprised": {
+          "file": "community-photo-striped-surprised.webp",
+          "bytes": 13750,
+          "sha256": "bfc417832895110f2b3ec0b3fb93183ee1e0fcde366fcee935b2e3cfb62c6d85"
+        },
+        "thinking": {
+          "file": "community-photo-striped-thinking.webp",
+          "bytes": 13764,
+          "sha256": "150d139494bee23360a61914de9b2cb52b775ead5819a0b44e9f73e3432f86bb"
+        },
+        "angry": {
+          "file": "community-photo-striped-angry.webp",
+          "bytes": 13254,
+          "sha256": "a912c403a1c4087d9b6422884cf2886c3be60f09b048359f523322faef707c3f"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-photo-denim",
+      "name": "北投高金生",
+      "source": "ImageGen",
+      "sourceSha256": "c23f0523b65063a16ec2d7d6399671542020490ff843d77e7bb675b8fbd52d34",
+      "sourceFile": "exec-0c9015f3-3735-4765-bafb-2e1b7b402d1a.png",
+      "bounds": {
+        "left": 96,
+        "top": 5,
+        "width": 313,
+        "height": 496
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-photo-denim-neutral.webp",
+          "bytes": 13652,
+          "sha256": "db110744ce0181e11e596e868c9d5adf94950ce4371bf9c1c175f6a22e309489"
+        },
+        "happy": {
+          "file": "community-photo-denim-happy.webp",
+          "bytes": 13906,
+          "sha256": "93d08e058389f512a5c2c2bd6fbc18c6d8f98359e3e53a400c2cea82ae7f2523"
+        },
+        "sad": {
+          "file": "community-photo-denim-sad.webp",
+          "bytes": 13784,
+          "sha256": "a223f612a45458d86d3b7585e4f3b8700c6e777f0a2ac7a888c83a78c1643364"
+        },
+        "surprised": {
+          "file": "community-photo-denim-surprised.webp",
+          "bytes": 13854,
+          "sha256": "f98d27a16f0de3df8e3f84c5eff208a1683d3885901e1b737a316457031950af"
+        },
+        "thinking": {
+          "file": "community-photo-denim-thinking.webp",
+          "bytes": 14142,
+          "sha256": "71c5b91c89db9e960382fb5293bec7f7dbab026503844000bec4dc920dcbb6d3"
+        },
+        "angry": {
+          "file": "community-photo-denim-angry.webp",
+          "bytes": 14042,
+          "sha256": "8ba60decd0198266f6c9d83c27a3f925b1c4a14a33b7af748e48d96cbe5df440"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-photo-bangs",
+      "name": "熊妹妹",
+      "source": "ImageGen",
+      "sourceSha256": "769793570035ab37ff0ab8d635c3bf089d176c5525fb37d6e2a28c6bb666550d",
+      "sourceFile": "exec-c32618ee-c217-4a94-9f6b-bb3bf39a9bf6.png",
+      "bounds": {
+        "left": 107,
+        "top": 19,
+        "width": 296,
+        "height": 473
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-photo-bangs-neutral.webp",
+          "bytes": 12882,
+          "sha256": "5cb77cf99284eaed7f195669534801ccd7d15a2f9a8185a76bacee5425895869"
+        },
+        "happy": {
+          "file": "community-photo-bangs-happy.webp",
+          "bytes": 12606,
+          "sha256": "7bcbb209e754184e0aa8e6467d5dc2d671071b6eb0f59956297e04b05067e857"
+        },
+        "sad": {
+          "file": "community-photo-bangs-sad.webp",
+          "bytes": 12792,
+          "sha256": "bc4dc93bea62ce35ada24be439326670b8a54633d8cc6d3a3640231f39276324"
+        },
+        "surprised": {
+          "file": "community-photo-bangs-surprised.webp",
+          "bytes": 13728,
+          "sha256": "272d8f9cb7616ba5daf5f150df6d2fc55de30230678166c44e48439b420fdd3d"
+        },
+        "thinking": {
+          "file": "community-photo-bangs-thinking.webp",
+          "bytes": 12782,
+          "sha256": "72f47f7f217166b7d4c00cc9f8a1a0e062e90d112dcb17b1b1e295c612964fb5"
+        },
+        "angry": {
+          "file": "community-photo-bangs-angry.webp",
+          "bytes": 12742,
+          "sha256": "288e406f183e16e5763b8db5687efb61b689bf3c0588975e9b2459447ad2640e"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-photo-blanket",
+      "name": "薛神",
+      "source": "ImageGen",
+      "sourceSha256": "bd58024be47afb081691c8e926aa7e43e222ae29b7865a015de1c57eeb0da163",
+      "sourceFile": "exec-e02b6fe2-d4c9-46a2-8301-f78403ecd516.png",
+      "bounds": {
+        "left": 82,
+        "top": 5,
+        "width": 333,
+        "height": 499
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-photo-blanket-neutral.webp",
+          "bytes": 12154,
+          "sha256": "cf523b4cfa55f1782140e512c8d468fc53b741c06b9b142cd5b7dbeda901deb1"
+        },
+        "happy": {
+          "file": "community-photo-blanket-happy.webp",
+          "bytes": 12094,
+          "sha256": "af1b13ead438907222af28ad3d3f02fa3f7c6faa0cce72e1640f0f53d7eed596"
+        },
+        "sad": {
+          "file": "community-photo-blanket-sad.webp",
+          "bytes": 12016,
+          "sha256": "a7b85a92f1d39f2b512fd5443c143b249ed141a26438cc4a07fc2f0a6036bf4a"
+        },
+        "surprised": {
+          "file": "community-photo-blanket-surprised.webp",
+          "bytes": 13828,
+          "sha256": "48232fee8efbd0c36c6eb97ec84eae6784a77984a77ae53272401ff41f694010"
+        },
+        "thinking": {
+          "file": "community-photo-blanket-thinking.webp",
+          "bytes": 12280,
+          "sha256": "ad22dc1dbdf1a70e1aa7024f0333fa094d6f72b24aaf9a48791d2fa529f3dedf"
+        },
+        "angry": {
+          "file": "community-photo-blanket-angry.webp",
+          "bytes": 12154,
+          "sha256": "8f4055a8c1a9c9ebe120a25103c11ff2f65de79c68ffd1bbc3758130faa30463"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-itachi",
+      "name": "鼬",
+      "source": "ImageGen",
+      "sourceSha256": "13628491599ce2ad82d09ef0a35a39b81f4679054fb958db05a24a1eee41e233",
+      "sourceFile": "exec-bf3bba05-6b11-4e47-a263-8bd1386b4e59.png",
+      "bounds": {
+        "left": 133,
+        "top": 8,
+        "width": 256,
+        "height": 496
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-itachi-neutral.webp",
+          "bytes": 13174,
+          "sha256": "b82de9e4c69c2123a0071ee70cdc50d3c4e29a6a37002f0f69db907b8b908291"
+        },
+        "happy": {
+          "file": "community-itachi-happy.webp",
+          "bytes": 12982,
+          "sha256": "df05406e667447bd61cd5070e88c059a9a2c504e39f7306162e8855fcd5554f0"
+        },
+        "sad": {
+          "file": "community-itachi-sad.webp",
+          "bytes": 13014,
+          "sha256": "67ef1cba771eec885d00620d2544e22d20e3440bd60091dc44c23063f5cbd005"
+        },
+        "surprised": {
+          "file": "community-itachi-surprised.webp",
+          "bytes": 13224,
+          "sha256": "4ef8a0c7bc330374d07ca097a240bd1d20fd7f84c361676e858adb0dc48bc4ad"
+        },
+        "thinking": {
+          "file": "community-itachi-thinking.webp",
+          "bytes": 12954,
+          "sha256": "a16faa721e2d7168c79442ef43b9cc6f6c6f62778d9a2cd011e14f48e038b8f0"
+        },
+        "angry": {
+          "file": "community-itachi-angry.webp",
+          "bytes": 13372,
+          "sha256": "4dadf4c222aa59b9b57afa19cb601a87c1f4f6ed1244f19464190ce3b45cc3a1"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-megumin",
+      "name": "惠惠",
+      "source": "ImageGen",
+      "sourceSha256": "0089b76161c17ed79928d00ecc9176690b88fdd5ffacf4f8c0732e2462e48bd0",
+      "sourceFile": "exec-ca9a3485-d76d-48ae-88da-acb83a74813c.png",
+      "bounds": {
+        "left": 70,
+        "top": 6,
+        "width": 347,
+        "height": 499
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-megumin-neutral.webp",
+          "bytes": 21560,
+          "sha256": "f30f2b8e16ee105b402a759249de245553556c653d2a65fcae22fff96930fa2f"
+        },
+        "happy": {
+          "file": "community-megumin-happy.webp",
+          "bytes": 21908,
+          "sha256": "04e8f18a7d73a79738939878e7b8ebf7cfab3df556f461157639f67dec8918df"
+        },
+        "sad": {
+          "file": "community-megumin-sad.webp",
+          "bytes": 21806,
+          "sha256": "e3be69c5a8534e21b1aa0cde1c47d132c99113542af8ad9c0e5c35e301cbf6ec"
+        },
+        "surprised": {
+          "file": "community-megumin-surprised.webp",
+          "bytes": 22556,
+          "sha256": "5563701d466b4c1fee400dfbdffef94a19b83a62535502a1bec5a48c6f6dc906"
+        },
+        "thinking": {
+          "file": "community-megumin-thinking.webp",
+          "bytes": 21658,
+          "sha256": "784cce625cd91084e6096780d3628015acc4a34eedc6ef09f64a3a048c2807f7"
+        },
+        "angry": {
+          "file": "community-megumin-angry.webp",
+          "bytes": 21784,
+          "sha256": "1a39eefe0e4b06dcdcbc84fc9bc0ab3223a28e127e67fca9ab0aac14115ee7fa"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-roxy",
+      "name": "洛琪希",
+      "source": "ImageGen",
+      "sourceSha256": "32a43d92038711ffc0f42cd7384c9984f0afe21cab61506cf1c253e45c3f0b47",
+      "sourceFile": "exec-84f330f3-ddef-4add-93fc-9bbb32795a85.png",
+      "bounds": {
+        "left": 101,
+        "top": 5,
+        "width": 314,
+        "height": 497
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-roxy-neutral.webp",
+          "bytes": 23062,
+          "sha256": "01c4f8e09f97cabaea534d8f1fc80a8a72830f192d8efb12498153a85fa81b2c"
+        },
+        "happy": {
+          "file": "community-roxy-happy.webp",
+          "bytes": 22642,
+          "sha256": "5e639aa2748e9390a354ff46555bb4c4ab9a7bac439d3549eb298574bb0f1a59"
+        },
+        "sad": {
+          "file": "community-roxy-sad.webp",
+          "bytes": 22484,
+          "sha256": "0efc64167b370dfc6512407cf71bb00674ef360905457d0f14f87824fc3cbb20"
+        },
+        "surprised": {
+          "file": "community-roxy-surprised.webp",
+          "bytes": 22840,
+          "sha256": "9d05c4c9fe2d89174eb0da98746fdff8ca410e2c99b212e3bf954aa9f4727532"
+        },
+        "thinking": {
+          "file": "community-roxy-thinking.webp",
+          "bytes": 22746,
+          "sha256": "939ce7633d988e60a35a206d013b20366c47705d6bb7084c2dc5499cc874b16d"
+        },
+        "angry": {
+          "file": "community-roxy-angry.webp",
+          "bytes": 22298,
+          "sha256": "91c5e6d3540448b8d20792c6090450fb07e8dbc4201ce796353a484039485284"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-bondrewd",
+      "name": "黎明卿",
+      "source": "ImageGen",
+      "sourceSha256": "906fd02b7e9a43f659d1855622cfc2dd50978a6816b7fe2a2698095faf66b717",
+      "sourceFile": "exec-b4d4d958-86bc-487b-a35e-bf2d18de96bd.png",
+      "bounds": {
+        "left": 130,
+        "top": 12,
+        "width": 287,
+        "height": 478
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-bondrewd-neutral.webp",
+          "bytes": 14992,
+          "sha256": "d19c325a6c4da1babf538a1b2e700f381224702b84847ba5c4b3ac037291fdae"
+        },
+        "happy": {
+          "file": "community-bondrewd-happy.webp",
+          "bytes": 14332,
+          "sha256": "7ce42895f62c16e00dc9ee75f31c762aa8fab797c01103cd78c347795d8d2f7f"
+        },
+        "sad": {
+          "file": "community-bondrewd-sad.webp",
+          "bytes": 15352,
+          "sha256": "2de0f23c1c4e25292b5e7e145b6606c1daf4cc3590fb3bdbb5b1de5516e34eca"
+        },
+        "surprised": {
+          "file": "community-bondrewd-surprised.webp",
+          "bytes": 15784,
+          "sha256": "1534aa11f8f23e43944694c64339aa49d64c8a56c247a2577b151e4f4b2d1447"
+        },
+        "thinking": {
+          "file": "community-bondrewd-thinking.webp",
+          "bytes": 15898,
+          "sha256": "bceec0ee38b16fc23c74decb4bf07598844c9943c83f7f4f2f8f11ef09c3acdb"
+        },
+        "angry": {
+          "file": "community-bondrewd-angry.webp",
+          "bytes": 15544,
+          "sha256": "7d376f936fcd9a8a9a3136a48d49173b0809fe5e6098bddda967998fe29b0dac"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-aizen",
+      "name": "藍染",
+      "source": "ImageGen",
+      "sourceSha256": "2f5c21341d6e25369ad4a94dc538f867f6b3838ef736459bb7885405ff63147c",
+      "sourceFile": "exec-22299934-97e6-44eb-87f4-fa8588e68d15.png",
+      "bounds": {
+        "left": 107,
+        "top": 9,
+        "width": 294,
+        "height": 486
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-aizen-neutral.webp",
+          "bytes": 15702,
+          "sha256": "b523210da793c72c880cacc90e87edd130a84c79bf4f68af359cabc3f3ca2b9a"
+        },
+        "happy": {
+          "file": "community-aizen-happy.webp",
+          "bytes": 15778,
+          "sha256": "4deee4640342bf841377f388d88ca873bf10eb9916f3697cdbe5f4db1683edc7"
+        },
+        "sad": {
+          "file": "community-aizen-sad.webp",
+          "bytes": 15490,
+          "sha256": "7401e6f3e493b8ab00f86b768f640ad3391a0dc6ef825d1d9d4635fda9802fea"
+        },
+        "surprised": {
+          "file": "community-aizen-surprised.webp",
+          "bytes": 15794,
+          "sha256": "89250ebc80d25488e67796d86a05ee250929baa075c5f9da24612a21df7391aa"
+        },
+        "thinking": {
+          "file": "community-aizen-thinking.webp",
+          "bytes": 15684,
+          "sha256": "ab48b6ca40a3d9e260516e135388004a4168fe86dbda5eab02459b86aaf8469f"
+        },
+        "angry": {
+          "file": "community-aizen-angry.webp",
+          "bytes": 15816,
+          "sha256": "a6c5739962d5c1ad0b5e9e877d8998580bd4736abb44ee107f74bcc42a7f5113"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-warlord-titan",
+      "name": "帝國戰將級泰坦",
+      "source": "ImageGen",
+      "sourceSha256": "8274f8a78652ffcc780333daf28d34553c0dc9b8f07398ae72d9659a8ebd45c3",
+      "sourceFile": "exec-e4f84cac-7565-4208-8b5e-dbb3d4b91d01.png",
+      "bounds": {
+        "left": 0,
+        "top": 9,
+        "width": 512,
+        "height": 460
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-warlord-titan-neutral.webp",
+          "bytes": 33718,
+          "sha256": "167eba424763eadd58020177bec6665bae6b35021033b00de9b5fa0ed141972a"
+        },
+        "happy": {
+          "file": "community-warlord-titan-happy.webp",
+          "bytes": 34376,
+          "sha256": "d817c77d454e695b322c1f66d907371e00974a51da70a9fa0d17ffc152c526a8"
+        },
+        "sad": {
+          "file": "community-warlord-titan-sad.webp",
+          "bytes": 34110,
+          "sha256": "654eab058ba2e45d5b38c2817a7b0c55da48b21852ca8422c1ca229463a3bf23"
+        },
+        "surprised": {
+          "file": "community-warlord-titan-surprised.webp",
+          "bytes": 33470,
+          "sha256": "d572df9584c05a8c15c8476b1a3d7febcdd0b8bcec183774118e971f168285fc"
+        },
+        "thinking": {
+          "file": "community-warlord-titan-thinking.webp",
+          "bytes": 35254,
+          "sha256": "9069c463cfdae5f7497a028068396701ed0fa3a995fca1eb04f016977d2667e3"
+        },
+        "angry": {
+          "file": "community-warlord-titan-angry.webp",
+          "bytes": 33610,
+          "sha256": "a8a8ca97c6e4e921bb8a5f39a34f5e649eb1d9c88add1f7fea883a8ab6a4d2d4"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-faker",
+      "name": "Faker",
+      "source": "ImageGen",
+      "sourceSha256": "45740fec0625112d4036f00c2aff0b34bf3f543f87ca733fa52fbad38425e409",
+      "sourceFile": "exec-252f01aa-a98e-494c-8e91-d295ebf9d119.png",
+      "bounds": {
+        "left": 98,
+        "top": 11,
+        "width": 286,
+        "height": 493
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-faker-neutral.webp",
+          "bytes": 11428,
+          "sha256": "57c7f649d9f5968423f1d12f2680adb64bd3c65f039e243f3c84ecf54f5ae0f4"
+        },
+        "happy": {
+          "file": "community-faker-happy.webp",
+          "bytes": 11372,
+          "sha256": "981ac5382f247bdbc727b267d48587727527e18421035c0cf1be0b6d68f8bdbe"
+        },
+        "sad": {
+          "file": "community-faker-sad.webp",
+          "bytes": 11336,
+          "sha256": "8517d45bed4bfbf5bb81cfac00dc7086868df19b4d20bbb82895026612d9e19e"
+        },
+        "surprised": {
+          "file": "community-faker-surprised.webp",
+          "bytes": 11512,
+          "sha256": "fc16f57ea0facf25b3b89a1b1d51170f74efa7d92a554f6fa0d7d17d5b982bc8"
+        },
+        "thinking": {
+          "file": "community-faker-thinking.webp",
+          "bytes": 11520,
+          "sha256": "df02b92fca58cb46df7380af62712545670ee47c9d951237cb4be0ea9371b410"
+        },
+        "angry": {
+          "file": "community-faker-angry.webp",
+          "bytes": 11480,
+          "sha256": "036cc8b399e51c62eb3bf8299c2002b37b8b235d32b140a5211966a37ea183a0"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-gumayusi",
+      "name": "Gumayusi",
+      "source": "ImageGen",
+      "sourceSha256": "097c496050cbc7e37304435be1451ce234f02259c1d34596a8e0444fbfbc6895",
+      "sourceFile": "exec-b9e7b17e-df8c-43e7-970c-8476bbe12d91.png",
+      "bounds": {
+        "left": 0,
+        "top": 5,
+        "width": 512,
+        "height": 503
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-gumayusi-neutral.webp",
+          "bytes": 11240,
+          "sha256": "180911c86fc9957606117b69b48fafd40af9fbd28c601cdf3305254b63bebcb0"
+        },
+        "happy": {
+          "file": "community-gumayusi-happy.webp",
+          "bytes": 11398,
+          "sha256": "7dc2f39ec69787f45c1f92f668ff5c8221097622750d87b42c84c642d7bb5c1f"
+        },
+        "sad": {
+          "file": "community-gumayusi-sad.webp",
+          "bytes": 11172,
+          "sha256": "9552f90698bd27b5d57d1db72299bc98a47d008940fe955148e35ec6165cff79"
+        },
+        "surprised": {
+          "file": "community-gumayusi-surprised.webp",
+          "bytes": 11356,
+          "sha256": "3add64b7bf248319298ea282d6b5e81c56789e049e0781a98eefed0fe7a81de9"
+        },
+        "thinking": {
+          "file": "community-gumayusi-thinking.webp",
+          "bytes": 11434,
+          "sha256": "53eb9e7cd0e16e90d5082f555d359a0ec3c6de09a728759fbddeb98e36e28248"
+        },
+        "angry": {
+          "file": "community-gumayusi-angry.webp",
+          "bytes": 11138,
+          "sha256": "45accd6d78ae18f02c4a4ebf01ee2113bcda09f5495a11782a86c46472ec5237"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-junpei",
+      "name": "淳平",
+      "source": "ImageGen",
+      "sourceSha256": "1e543371c74f97d722341ce4d74303ee1541da6ebc84379e9a3ef8f9aa33fde7",
+      "sourceFile": "exec-9877f988-a9f5-4ed1-bec0-fd36a40626fa.png",
+      "bounds": {
+        "left": 133,
+        "top": 2,
+        "width": 248,
+        "height": 502
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-junpei-neutral.webp",
+          "bytes": 12464,
+          "sha256": "8b1997a5ce1e03463c8a1a821fd00729aa3943b5bfbd9ab494bbfe83f1b727a8"
+        },
+        "happy": {
+          "file": "community-junpei-happy.webp",
+          "bytes": 12558,
+          "sha256": "e40d37e8c1093e8aa227e78997710dba291a448294de00909bea061b0d137263"
+        },
+        "sad": {
+          "file": "community-junpei-sad.webp",
+          "bytes": 12416,
+          "sha256": "931153b55b6c52ad0ef700334f6a73f7f4cb7806654bae182d31d70a08ce17d6"
+        },
+        "surprised": {
+          "file": "community-junpei-surprised.webp",
+          "bytes": 12472,
+          "sha256": "ed1864632b4cb1e9e5116f4b16303b0b5e651a0c4c1ff3913e1fae120d8798ac"
+        },
+        "thinking": {
+          "file": "community-junpei-thinking.webp",
+          "bytes": 12306,
+          "sha256": "34597c6e0b631a4c880086b6194e78d8e5dc265582438a72bbf273eaff97d442"
+        },
+        "angry": {
+          "file": "community-junpei-angry.webp",
+          "bytes": 12562,
+          "sha256": "73b3f7aac3e92d4fc8fdf5857daca19790d73e02f43e0d5ea039bdb957a3585f"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-azhi",
+      "name": "阿志8+9",
+      "source": "ImageGen",
+      "sourceSha256": "28f71693bcf953622ac898effe479532e73a318897425fedb49a422b344b3bf9",
+      "sourceFile": "exec-64016d9f-29a3-4e47-b4cd-e521d9b92d19.png",
+      "bounds": {
+        "left": 140,
+        "top": 15,
+        "width": 230,
+        "height": 483
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-azhi-neutral.webp",
+          "bytes": 12106,
+          "sha256": "b597f69c11dda9665f7aa2f357d37a1b37737577b3732ecf13f5db0b12880a71"
+        },
+        "happy": {
+          "file": "community-azhi-happy.webp",
+          "bytes": 11990,
+          "sha256": "d750074c4c70c33b3d021980f885f52834444e85b846bd555a0a4520ec388138"
+        },
+        "sad": {
+          "file": "community-azhi-sad.webp",
+          "bytes": 11848,
+          "sha256": "7d68cf9b13b10edfb3f98c081084d8057f1a71394e19a7e8d5bce1343f254b07"
+        },
+        "surprised": {
+          "file": "community-azhi-surprised.webp",
+          "bytes": 12314,
+          "sha256": "73eec73fd2eebbd8b339ede37ba10b321d3dbdddd22d012d656c2a5eee5fe9a6"
+        },
+        "thinking": {
+          "file": "community-azhi-thinking.webp",
+          "bytes": 12116,
+          "sha256": "0a6281edaee366aa99415e7af59c70c02983748ab060e2e1c7ee9f45bc9b48d4"
+        },
+        "angry": {
+          "file": "community-azhi-angry.webp",
+          "bytes": 12262,
+          "sha256": "15c33aaf1eee1a7a0ed05ebc717277b88cceb0b5ff918454ffccfc6ec88877d9"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-ko",
+      "name": "柯p",
+      "source": "ImageGen",
+      "sourceSha256": "41ff409855b807d42445aa295290043793af6ae54281608b8c525f751fa4a92f",
+      "sourceFile": "exec-8cfe4a63-d95e-4c6c-827d-6279933f6496.png",
+      "bounds": {
+        "left": 94,
+        "top": 7,
+        "width": 325,
+        "height": 495
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-ko-neutral.webp",
+          "bytes": 14406,
+          "sha256": "c8cd5e7aad93c2e00c35c7c7ca9f343990ab07a1d5c799e9f07170ed9760131d"
+        },
+        "happy": {
+          "file": "community-ko-happy.webp",
+          "bytes": 14462,
+          "sha256": "f68d04df6050b333a5631761b3bccbc43ae1cbcda9b85345a48f81b42efd8836"
+        },
+        "sad": {
+          "file": "community-ko-sad.webp",
+          "bytes": 14396,
+          "sha256": "2b9e730e1f7d37edfd0297a73f223ec04de4c3a8091d4d406208275a9eeacc56"
+        },
+        "surprised": {
+          "file": "community-ko-surprised.webp",
+          "bytes": 14330,
+          "sha256": "c51690c267662f7ef11b330089e6bc71e08bd317cc7e534633056093e093a5f4"
+        },
+        "thinking": {
+          "file": "community-ko-thinking.webp",
+          "bytes": 14300,
+          "sha256": "d6f377a58d045f23627304dc309cc9261c63a26248bd63b865d3a921e5c0e41a"
+        },
+        "angry": {
+          "file": "community-ko-angry.webp",
+          "bytes": 14384,
+          "sha256": "fe6051c766da5929427ec00e28e2efcb0431f52518c0129d61fdc73599b127c3"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-shen",
+      "name": "沈黑熊",
+      "source": "ImageGen",
+      "sourceSha256": "317034f861ff0cdf19f9fca4eb4dc5a9d67e85efcd68493fbfd8b829bfdc684b",
+      "sourceFile": "exec-6316f04f-3b99-46c8-898a-5f3c72cbc2b9.png",
+      "bounds": {
+        "left": 111,
+        "top": 7,
+        "width": 290,
+        "height": 495
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-shen-neutral.webp",
+          "bytes": 13716,
+          "sha256": "d57bc8614fee31261e1ce7c46c18e7c66e9ee999bb5883806d24b49895ca9128"
+        },
+        "happy": {
+          "file": "community-shen-happy.webp",
+          "bytes": 13780,
+          "sha256": "05dbb17e25972a35b6ee9e99f586dd04cb354810b7791c4f17c03c2c9b187a0c"
+        },
+        "sad": {
+          "file": "community-shen-sad.webp",
+          "bytes": 13670,
+          "sha256": "0103ac6d2253d10417b1a443d815794dbd83897afb12387cdecd17849ff4bcf2"
+        },
+        "surprised": {
+          "file": "community-shen-surprised.webp",
+          "bytes": 13882,
+          "sha256": "a1687c364e347cffeb88af09e702956be2fa41a7e69a21943bb3ac0fd0162b47"
+        },
+        "thinking": {
+          "file": "community-shen-thinking.webp",
+          "bytes": 13422,
+          "sha256": "94dd73030845e9309612c20eaf746d7375fe8d32d0c549bd23bfce5172ea583f"
+        },
+        "angry": {
+          "file": "community-shen-angry.webp",
+          "bytes": 13678,
+          "sha256": "9f17f173e35d554a1742e51d8ac43440f6b932b65674afcfe08b08a885e5a5ca"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-bald",
+      "name": "光頭黑人",
+      "source": "ImageGen",
+      "sourceSha256": "1afcc124006fda16cb3e6971d4b14c7292c5d2a257f2d0c0572f0d7c60242a71",
+      "sourceFile": "exec-7b56e328-1c93-4ece-b668-8ffcb1f7330d.png",
+      "bounds": {
+        "left": 114,
+        "top": 13,
+        "width": 285,
+        "height": 490
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-bald-neutral.webp",
+          "bytes": 13514,
+          "sha256": "62dcf7214dfdf1d871158aa102db0e7a188aafae3f58e87f34b3b493e21e317b"
+        },
+        "happy": {
+          "file": "community-bald-happy.webp",
+          "bytes": 13640,
+          "sha256": "7204c5458c601974216e4d2cc85a90b424b3762a977a562f98f7fb0d12c654ba"
+        },
+        "sad": {
+          "file": "community-bald-sad.webp",
+          "bytes": 13444,
+          "sha256": "1d80476fc3bf1798e3d26acd817d04c5f0d35f223069b919504f2e54395e7ad6"
+        },
+        "surprised": {
+          "file": "community-bald-surprised.webp",
+          "bytes": 13698,
+          "sha256": "203f7352341102a1358bf600e1a5f8d0f2fa82dbbfc5c7144877f3a70ddad7af"
+        },
+        "thinking": {
+          "file": "community-bald-thinking.webp",
+          "bytes": 13502,
+          "sha256": "653d7a0c1520b827d308ba7e1396bed5e89b59d0586ed51ad9ae8c136e7781a7"
+        },
+        "angry": {
+          "file": "community-bald-angry.webp",
+          "bytes": 13322,
+          "sha256": "20f306b3a2ea5df29e0a6841236cac6b4860c0dd63781f7810cf20f8c1eb1d17"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-muscle",
+      "name": "3槍阿館",
+      "source": "ImageGen",
+      "sourceSha256": "5e55e522eaf64ea94809f00307bec3e16bfb083b9894a536d68cf982f7acec62",
+      "sourceFile": "exec-5352debc-96ce-44c7-ba78-05c3eb12a22a.png",
+      "bounds": {
+        "left": 62,
+        "top": 4,
+        "width": 388,
+        "height": 503
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-muscle-neutral.webp",
+          "bytes": 18992,
+          "sha256": "46205e7759d740af2c27a4fa4dda6ef8dc60ff55fae937aabde4214b78db3f09"
+        },
+        "happy": {
+          "file": "community-muscle-happy.webp",
+          "bytes": 18916,
+          "sha256": "69f24dda2ac8b1a121ab5fca5e77a6ee5296c820babe27a054d86d429a1f996e"
+        },
+        "sad": {
+          "file": "community-muscle-sad.webp",
+          "bytes": 19180,
+          "sha256": "3b8d83f95e8bb07b628d96106cc97da08c0162fac8cb75b671ba48fd80f39274"
+        },
+        "surprised": {
+          "file": "community-muscle-surprised.webp",
+          "bytes": 19034,
+          "sha256": "55d3c3529e30c5a11d9c01c1622fe10e5ee7048a5ddce5e8646380cff2a5c194"
+        },
+        "thinking": {
+          "file": "community-muscle-thinking.webp",
+          "bytes": 18692,
+          "sha256": "4f29e3ae7c3a6776fe9e9a1b178c8938c236185f513ae6147b630c0f90ad714f"
+        },
+        "angry": {
+          "file": "community-muscle-angry.webp",
+          "bytes": 19142,
+          "sha256": "7ef83f4ef6106298023a4e8a122142bd2716cacf63b26a17e12a51868c5e771e"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-saber",
+      "name": "Saber",
+      "source": "ImageGen",
+      "sourceSha256": "cc194001cb831c4851109f1af9a23ac973496417ebbb7ddc7f3f10f3f408947f",
+      "sourceFile": "exec-c04058e6-14f8-46fb-b3e7-67d95ab993bd.png",
+      "bounds": {
+        "left": 70,
+        "top": 8,
+        "width": 329,
+        "height": 495
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-saber-neutral.webp",
+          "bytes": 21634,
+          "sha256": "f194cc96e858309d34761497badf6cc4614af63bc06ea49c8afa456aa3064418"
+        },
+        "happy": {
+          "file": "community-saber-happy.webp",
+          "bytes": 21696,
+          "sha256": "bef687a05a58c61dd94aa295a8c9b26b8c4d8ee64f025afabd8608daf5b6dabe"
+        },
+        "sad": {
+          "file": "community-saber-sad.webp",
+          "bytes": 21570,
+          "sha256": "7e9d28ab68c051a548c829821d4e676a2d9760790f073fd7f5f3462421640fa2"
+        },
+        "surprised": {
+          "file": "community-saber-surprised.webp",
+          "bytes": 21576,
+          "sha256": "b9f8778f1fac447a90318ebc6abcd372bfd6659128ff5edf71d90f21e4828bdd"
+        },
+        "thinking": {
+          "file": "community-saber-thinking.webp",
+          "bytes": 21058,
+          "sha256": "160a24affa393b2329012c3c9890c0eb0cab48e470d48c94bf516691c6c6ef07"
+        },
+        "angry": {
+          "file": "community-saber-angry.webp",
+          "bytes": 21594,
+          "sha256": "b2b8a29feab97878b910b066cbfa933dbc32342805be5316dc80289dbffd7292"
+        }
+      }
+    },
+    {
+      "id": "builtin:community-gilgamesh",
+      "name": "金閃閃",
+      "source": "ImageGen",
+      "sourceSha256": "74cb44d8a7c0c8c700c41122ee6ae837d6cad9fc7005943632b0a86c21deb265",
+      "sourceFile": "exec-924b584f-7d6b-4be5-8328-a3a9a254859c.png",
+      "bounds": {
+        "left": 137,
+        "top": 6,
+        "width": 232,
+        "height": 493
+      },
+      "expressions": {
+        "neutral": {
+          "file": "community-gilgamesh-neutral.webp",
+          "bytes": 19154,
+          "sha256": "92bbd46ce247d630376d972a36e810e984d028062207ee1902753ca041a263f2"
+        },
+        "happy": {
+          "file": "community-gilgamesh-happy.webp",
+          "bytes": 18978,
+          "sha256": "9187a45d780dcb318020ea927697c413b211d86d7db909d8d53532f759be40a5"
+        },
+        "sad": {
+          "file": "community-gilgamesh-sad.webp",
+          "bytes": 18894,
+          "sha256": "3c229e118fef679694e2bd18a9c90ae1cca8706939fe27006d5783f1a4133186"
+        },
+        "surprised": {
+          "file": "community-gilgamesh-surprised.webp",
+          "bytes": 18996,
+          "sha256": "9ebf83b6640f40e7ff84e59fe2e824338b30b6e30313a7d28963f930312b93c4"
+        },
+        "thinking": {
+          "file": "community-gilgamesh-thinking.webp",
+          "bytes": 18770,
+          "sha256": "303e5a305334383bb64fd8893c5124b362b7da3a9d24795df5fba3f0bb9b84ee"
+        },
+        "angry": {
+          "file": "community-gilgamesh-angry.webp",
+          "bytes": 17892,
+          "sha256": "7d002290e0bfb8ed5724e180f7b0b4c56556daeba6ae3a770111bcef9186cc7b"
+        }
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import '../styles/entrance-preview.scss';
+import UiLink from './UiLink.vue';
 import MotionPolicy from '../engines/motion-policy.js';
 
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -60,6 +61,7 @@ watch(
 );
 </script>
 <template>
+  <UiLink href="/arena?training=1" label="進入訓練場" target="_blank" rel="noopener" />
   <div class="entrance-grid" role="group" aria-label="可用進場特效">
     <EffectVariantGroup
       v-for="group in entranceEffectGroups"
@@ -86,7 +88,7 @@ watch(
           aria-hidden="true"
           ><span class="entrance-preview-actor"
             ><img
-              :src="sizedImage(image || '/assets/characters/traveler-neutral.png', 128)"
+              :src="sizedImage(image || '/assets/characters/community-asian-neutral.webp', 128)"
               alt=""
               draggable="false"
             /><span>{{ name || '玩家' }}</span></span

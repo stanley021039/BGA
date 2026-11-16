@@ -1,4 +1,5 @@
 import effects from '../../../public/shared/entrance-stitch.json';
+import { entrancePlaybackDuration } from './entrance-timing';
 import '../assets/entrance-stitch.css';
 import '../assets/entrance-stitch-repairs.css';
 import '../assets/entrance-purple-v2.css';
@@ -176,5 +177,9 @@ export function playStitchEntrance(
     node.append(fall);
   }
   layer.append(node);
+  const rate = effect.duration / entrancePlaybackDuration(id, effect.duration);
+  if (rate !== 1)
+    for (const animation of node.getAnimations?.({ subtree: true }) || [])
+      animation.playbackRate = rate;
   return () => node.remove();
 }

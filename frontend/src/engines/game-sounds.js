@@ -33,6 +33,7 @@ let GameSounds;
     'quacks-ruby',
     'quacks-witch',
     'countdown-warning',
+    'boss-warning',
     'arena-countdown',
     'arena-countdown-bell',
   ]);

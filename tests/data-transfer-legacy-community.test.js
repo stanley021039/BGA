@@ -11,7 +11,7 @@ const { validateData } = require('../src/data/validation');
 const { run, canonical } = require('../src/data/transfer');
 
 const png = fs.readFileSync(
-  path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+  path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
 );
 const at = '2026-10-01T11:11:03.489Z';
 const errorCode = (code) => (error) => error.code === code;

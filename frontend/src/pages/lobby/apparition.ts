@@ -5,6 +5,7 @@ import {
   type EntranceEffectId,
 } from '../../services/entrance-effects';
 import { isArrival, playArrival } from '../../services/arrival-effects';
+import { entrancePlaybackDuration } from '../../services/entrance-timing';
 import { playEntranceBackdrop, playEntranceBody } from '../../services/entrance-body';
 import {
   acquireEffectContext,
@@ -502,7 +503,7 @@ export function apparate(
   anchor.dataset.entrance = base;
   anchor.classList.add('is-apparating');
   const cancel = isArrival(base)
-    ? playArrival(scene, base, duration)
+    ? playArrival(scene, base, duration, DURATION[base] || duration)
     : (effects[base] || classic)(scene);
   const cancelBody = isArrival(base) ? () => {} : playEntranceBody(anchor, img, base, duration);
   const cancelBackdrop = base.startsWith('stitch-') ? playEntranceBackdrop(follow, duration) : null;
@@ -527,5 +528,7 @@ export function apparate(
   }
   return finish;
 }
-export const entranceDuration = (kind: EntranceEffectId) =>
-  DURATION[entranceVariant(kind)?.variantOf ?? kind] || DURATION.classic;
+export const entranceDuration = (kind: EntranceEffectId) => {
+  const base = entranceVariant(kind)?.variantOf ?? kind;
+  return entrancePlaybackDuration(base, DURATION[base] || DURATION.classic);
+};

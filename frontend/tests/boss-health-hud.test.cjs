@@ -1,0 +1,114 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const Module = require('node:module');
+const { parse, compileScript } = require('vue/compiler-sfc');
+const { createSSRApp, h } = require('vue');
+const { renderToString } = require('vue/server-renderer');
+const ts = require('typescript');
+const { parseHTML } = require('linkedom');
+const file = path.resolve(__dirname, '../src/components/BossHealthHud.vue');
+const script = compileScript(parse(fs.readFileSync(file, 'utf8'), { filename: file }).descriptor, {
+  id: 'boss-health',
+  inlineTemplate: true,
+  genDefaultAs: '__component',
+});
+const mod = new Module(file, module);
+mod.filename = file;
+mod.paths = module.paths;
+mod.require = (name) =>
+  name.endsWith('scene-rules.json')
+    ? { default: require('../../public/shared/scene-rules.json') }
+    : name === './UiPanel.vue'
+      ? {
+          default: {
+            setup:
+              (_, { slots }) =>
+              () =>
+                h('section', {}, slots.default?.()),
+          },
+        }
+      : require(name);
+mod._compile(
+  ts.transpileModule(script.content, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText + '\nexports.default=__component;',
+  file,
+);
+async function render(visitors, connected = true) {
+  const context = {};
+  await renderToString(
+    createSSRApp({ render: () => h(mod.exports.default, { visitors, connected }) }),
+    context,
+  );
+  return parseHTML('<html><body>' + (context.teleports?.body || '') + '</body></html>').document;
+}
+const boss = (id, health = 750) => ({
+  id,
+  name: 'Boss ' + id,
+  bossId: 'thanos',
+  health,
+  maxHealth: 1000,
+});
+test('boss HUD exposes separate named authoritative health bars, clamps values and caps the lobby at five', async () => {
+  const doc = await render([
+    { id: 'player', health: 90, maxHealth: 100 },
+    boss('a', 1200),
+    boss('b', -20),
+    boss('c'),
+    boss('d'),
+    boss('e'),
+    boss('f'),
+  ]);
+  const meters = [...doc.querySelectorAll('progress')];
+  assert.equal(meters.length, 5);
+  assert.equal(meters[0].getAttribute('value'), '1000');
+  assert.equal(meters[0].getAttribute('max'), '1000');
+  assert.equal(meters[0].getAttribute('aria-label'), 'Boss a的總生命值（三階段）');
+  assert.equal(meters[1].getAttribute('value'), '0');
+  assert.equal(doc.querySelectorAll('.boss-health-divider').length, 10);
+  assert.match(doc.body.textContent, /已擊倒/);
+  assert.doesNotMatch(doc.body.textContent, /Boss f/);
+});
+test('boss HUD clears on disconnect/removal and follows fresh health or respawn snapshots', async () => {
+  for (const [visitors, connected] of [
+    [[], true],
+    [[boss('a')], false],
+    [[boss('bad', NaN)], true],
+  ]) {
+    assert.equal((await render(visitors, connected)).querySelectorAll('progress').length, 0);
+  }
+  assert.equal(
+    (await render([boss('a', 250)])).querySelector('progress').getAttribute('value'),
+    '250',
+  );
+  assert.equal(
+    (await render([boss('a', 1000)])).querySelector('progress').getAttribute('value'),
+    '1000',
+  );
+  const doc = await render([{ ...boss('a', 600), bossPhase: 2, bossPhaseLockMs: 1500 }]);
+  assert.match(doc.body.textContent, /狂暴/);
+  assert.match(doc.body.textContent, /鎖血/);
+  assert.doesNotMatch(doc.body.textContent, /秒/);
+  assert.deepEqual(
+    [...doc.querySelectorAll('progress')].map((p) => Number(p.getAttribute('value'))),
+    [600],
+  );
+  assert.match((await render([{ ...boss('a', 100), bossPhase: 3 }])).body.textContent, /最終階段/);
+});
+
+test('boss HP uses the same unscaled numeric units as damage popups', async () => {
+  const doc = await render([{ ...boss('a', 8790000), maxHealth: 8960000 }]);
+  assert.match(doc.body.textContent, /總生命 8,790,000 \/ 8,960,000 HP/);
+});
+
+test('control immunity label has no countdown and five bars remain scrollable', async () => {
+  const doc = await render(
+    Array.from({ length: 5 }, (_, i) => ({ ...boss(String(i)), bossControlImmuneMs: 4500 })),
+  );
+  assert.equal(doc.querySelectorAll('progress').length, 5);
+  assert.match(doc.body.textContent, /免控/);
+  assert.doesNotMatch(doc.body.textContent, /4.5|秒/);
+  assert.ok(doc.querySelector('[tabindex="0"]'));
+});

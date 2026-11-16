@@ -52,7 +52,7 @@ test('friends can choose shared characters, while private art and editing stay w
       invite: invite.body.code,
     });
     const png = fs.readFileSync(
-      path.join(__dirname, '..', 'public/assets/characters/traveler-neutral.png'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
     );
     const created = await post('profile/characters', artist.cookie, {
       name: '好友的畫作',
@@ -131,7 +131,7 @@ test('friends can choose shared characters, while private art and editing stay w
     assert.equal((await get(image, friend.cookie)).status, 404);
     assert.equal((await get('/characters/' + friend.body.id, friend.cookie)).status, 200);
     const me = await (await get('/api/auth/me', friend.cookie)).json();
-    assert.equal(me.appearance.characterId, 'builtin:traveler');
+    assert.equal(me.appearance.characterId, 'builtin:community-asian');
     await app.close();
     app = createApp(config);
     await app.listen();

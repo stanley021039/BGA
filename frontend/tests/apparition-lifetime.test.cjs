@@ -12,6 +12,7 @@ const code = ts.transpileModule(
   fs.readFileSync(path.join(__dirname, '../src/pages/lobby/apparition.ts'), 'utf8'),
   { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
 ).outputText;
+const timing = require('./helpers/entrance-timing.cjs');
 for (const renderer of ['imported', 'arrival'])
   test(`${renderer} entrances share mid-flight cancellation, finite concurrency and quota cleanup`, () => {
     let allowed = true,
@@ -51,42 +52,44 @@ for (const renderer of ['imported', 'arrival'])
       sandbox,
     );
     sandbox.require = (name) =>
-      name.includes('arrival-effects')
-        ? {
-            isArrival: (id) => id.startsWith('arrival-'),
-            playArrival() {
-              started++;
-              return () => stopped++;
-            },
-          }
-        : name.includes('motion-lifetime')
+      name.includes('entrance-timing')
+        ? timing
+        : name.includes('arrival-effects')
           ? {
-              motionAllowed: sandbox.motionAllowed,
-              watchMotionCancellation: sandbox.watchMotionCancellation,
-              acquireEffectContext: sandbox.acquireEffectContext,
+              isArrival: (id) => id.startsWith('arrival-'),
+              playArrival() {
+                started++;
+                return () => stopped++;
+              },
             }
-          : name.includes('stitch-entrances')
+          : name.includes('motion-lifetime')
             ? {
-                stitchEntrances: [{ id: 'stitch-imported', duration: 2000 }],
-                playStitchEntrance() {
-                  started++;
-                  return () => stopped++;
-                },
+                motionAllowed: sandbox.motionAllowed,
+                watchMotionCancellation: sandbox.watchMotionCancellation,
+                acquireEffectContext: sandbox.acquireEffectContext,
               }
-            : name.includes('entrance-body')
+            : name.includes('stitch-entrances')
               ? {
-                  playEntranceBody: sandbox.playEntranceBody,
-                  playEntranceBackdrop: sandbox.playEntranceBackdrop,
+                  stitchEntrances: [{ id: 'stitch-imported', duration: 2000 }],
+                  playStitchEntrance() {
+                    started++;
+                    return () => stopped++;
+                  },
                 }
-              : name.endsWith('/entrance-effects')
+              : name.includes('entrance-body')
                 ? {
-                    arrivalEffects: [{ id: 'arrival-test', duration: 2500 }],
-                    entranceVariant: (id) =>
-                      id === 'stitch-imported-alt'
-                        ? { variantOf: 'stitch-imported', paletteHue: 170 }
-                        : undefined,
+                    playEntranceBody: sandbox.playEntranceBody,
+                    playEntranceBackdrop: sandbox.playEntranceBackdrop,
                   }
-                : {};
+                : name.endsWith('/entrance-effects')
+                  ? {
+                      arrivalEffects: [{ id: 'arrival-test', duration: 2500 }],
+                      entranceVariant: (id) =>
+                        id === 'stitch-imported-alt'
+                          ? { variantOf: 'stitch-imported', paletteHue: 170 }
+                          : undefined,
+                    }
+                  : {};
     vm.runInContext(
       fs
         .readFileSync(path.join(__dirname, '../src/services/entrance-body.js'), 'utf8')

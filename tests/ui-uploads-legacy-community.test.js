@@ -67,7 +67,7 @@ async function bundleFixture(t) {
     db.close();
   }
   const png = fs.readFileSync(
-      path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
     ),
     avatarId = crypto.randomUUID(),
     at = '2026-10-01T11:11:03.489Z';

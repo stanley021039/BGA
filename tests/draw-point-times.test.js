@@ -384,7 +384,7 @@ test('HTTP ACK, live SSE, snapshots and revealed results preserve timing while t
     ['quadratic', 'quadratic'],
   );
   const png = fs.readFileSync(
-      path.join(__dirname, '../public/assets/characters/traveler-neutral.png'),
+      path.join(__dirname, 'fixtures/retired-characters/traveler-neutral.png'),
     ),
     saved = await request('draw/result/save', 'guest', {
       code,
