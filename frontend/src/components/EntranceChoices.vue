@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import '../styles/entrance-preview.scss';
 import UiLink from './UiLink.vue';
+import UiButton from './UiButton.vue';
+import StatusSlot from './StatusSlot.vue';
+import { randomEntrance } from '../services/random-effects';
 import MotionPolicy from '../engines/motion-policy.js';
 
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { entranceEffectGroups } from '../services/effect-variants';
 import { requestJson } from '../services/http';
 import { sizedImage } from '../services/image-size';
@@ -16,33 +19,52 @@ import {
   type EntranceEffectId,
 } from '../services/entrance-effects';
 import { usePreferencesStore } from '../stores/preferences';
+import { useSessionStore } from '../stores/session';
 import EffectVariantGroup from './EffectVariantGroup.vue';
 import UiChoiceCard from './UiChoiceCard.vue';
 const props = defineProps<{ image?: string; name?: string }>();
 const prefs = usePreferencesStore();
 const unlocked = ref<string[]>([]);
+const ownershipPending = ref(true),
+  ownershipError = ref(false),
+  session = useSessionStore();
+let ownershipRequest: AbortController | undefined;
 const allowed = (id: string) => isFreeEntrance(id) || unlocked.value.includes(id);
 const condition = (id: string) =>
   isGachaOnlyEntrance(id) ? '抽卡或碎片兌換解鎖' : '抽卡、碎片兌換或兌換碼解鎖';
-onMounted(async () => {
-  try {
-    const data = (await requestJson('/api/achievements')) as {
-      bonusRewards: { entrances: string[] };
-      achievements: { id: string; description: string }[];
-    };
-    unlocked.value = data.bonusRewards.entrances;
-    if (!allowed(entranceEffect.value)) setEntranceEffect('classic');
-  } catch {
-    /* Server also verifies reward ownership. */
-  }
-});
+watch(
+  () => session.user?.id,
+  async () => {
+    ownershipRequest?.abort();
+    const request = (ownershipRequest = new AbortController());
+    unlocked.value = [];
+    ownershipPending.value = true;
+    ownershipError.value = false;
+    try {
+      const data = (await requestJson('/api/achievements', { signal: request.signal })) as {
+        bonusRewards: { entrances: string[] };
+        achievements: { id: string; description: string }[];
+      };
+      if (request.signal.aborted) return;
+      unlocked.value = data.bonusRewards.entrances;
+      if (!allowed(entranceEffect.value)) setEntranceEffect('classic');
+    } catch {
+      if (!request.signal.aborted) ownershipError.value = true;
+    } finally {
+      if (!request.signal.aborted) ownershipPending.value = false;
+    }
+  },
+  { immediate: true },
+);
 const stages = new Map<string, HTMLElement>();
 let stop: (() => void) | undefined;
+let disposed = false;
 const still = () =>
   prefs.motion?.enabled === false ||
   prefs.motion?.reduced === true ||
   !MotionPolicy?.allowsMotion();
 function play(groupId: string, id: EntranceEffectId) {
+  if (disposed) return;
   const stage = stages.get(groupId),
     actor = stage?.querySelector<HTMLElement>('.entrance-preview-actor');
   stop?.();
@@ -50,11 +72,29 @@ function play(groupId: string, id: EntranceEffectId) {
   if (!stage || !actor || still()) return;
   stop = apparate(actor, stage, id);
 }
-function choose(groupId: string, id: EntranceEffectId) {
+async function choose(groupId: string, id: EntranceEffectId) {
   if (allowed(id) && entranceEffect.value !== id) setEntranceEffect(id);
+  await nextTick();
   play(groupId, id);
 }
-onBeforeUnmount(() => stop?.());
+async function randomize() {
+  if (ownershipPending.value || ownershipError.value) return;
+  const id = randomEntrance(entranceEffect.value, allowed);
+  if (id) {
+    setEntranceEffect(id);
+    await nextTick();
+    const group = entranceEffectGroups.find((group) =>
+      group.versions.some((effect) => effect.id === id),
+    );
+    if (group) play(group.original.id, id);
+  }
+}
+onBeforeUnmount(() => {
+  disposed = true;
+  ownershipRequest?.abort();
+  stop?.();
+  stages.clear();
+});
 watch(
   () => props.image,
   () => stop?.(),
@@ -62,10 +102,29 @@ watch(
 </script>
 <template>
   <UiLink href="/arena?training=1" label="進入訓練場" target="_blank" rel="noopener" />
+  <UiButton
+    label="隨機進場特效"
+    :disabled="ownershipPending || ownershipError"
+    @click="randomize"
+  />
+  <StatusSlot
+    :message="
+      ownershipPending
+        ? '正在讀取進場解鎖狀態…'
+        : ownershipError
+          ? '無法讀取進場解鎖狀態，請重新開啟設定'
+          : ''
+    "
+    :error="ownershipError"
+    :persistent="ownershipPending || ownershipError"
+  />
   <div class="entrance-grid" role="group" aria-label="可用進場特效">
     <EffectVariantGroup
       v-for="group in entranceEffectGroups"
-      :key="group.original.id"
+      :key="
+        group.original.id +
+        (group.versions.some((effect) => effect.id === entranceEffect) ? ':' + entranceEffect : '')
+      "
       :original="group.original"
       :versions="group.versions"
       :preferred="[entranceEffect]"

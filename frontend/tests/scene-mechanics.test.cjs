@@ -28,6 +28,20 @@ function loadAttackLayer(vue, runtime = {}) {
       require(id) {
         if (id === 'vue') return vue;
         if (id.endsWith('/preferences')) return { usePreferencesStore: () => ({}) };
+        if (id.endsWith('/scene-hit-feedback'))
+          return {
+            createSceneHitFeedback: () => ({
+              update: (...args) => runtime.feedbackCalls?.push(args),
+              stopVisuals() {},
+              destroy() {},
+            }),
+          };
+        if (id.endsWith('/game-assets'))
+          return {
+            warmCombatHitAudio() {
+              runtime.warmed?.push(true);
+            },
+          };
         if (id.endsWith('/SceneEquation.vue'))
           return {
             default: {
@@ -211,4 +225,37 @@ test('a dropped lower body renders only the owner image bottom half and its inde
     app.unmount();
     host.remove();
   }
+});
+
+test('a visible scene prepares hit audio with an opponent, while inactive feedback remains disconnected', async () => {
+  const vue = require('vue'),
+    calls = [],
+    warmed = [];
+  const AttackLayer = loadAttackLayer(vue, { feedbackCalls: calls, warmed });
+  const active = vue.ref(false),
+    scene = vue.ref({
+      selfId: 'self',
+      serverNow: 1000,
+      attacks: [],
+      visitors: [{ id: 'self' }, { id: 'peer' }],
+    });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = vue.createApp({
+    render: () =>
+      vue.h(AttackLayer, { snapshot: scene.value, connected: true, feedbackActive: active.value }),
+  });
+  app.mount(host);
+  await vue.nextTick();
+  assert.equal(calls.at(-1)[1].connected, false);
+  assert.equal(warmed.length, 0);
+  active.value = true;
+  await vue.nextTick();
+  assert.equal(calls.at(-1)[1].connected, true);
+  assert.equal(warmed.length, 1);
+  active.value = false;
+  await vue.nextTick();
+  assert.equal(calls.at(-1)[1].connected, false);
+  app.unmount();
+  host.remove();
 });

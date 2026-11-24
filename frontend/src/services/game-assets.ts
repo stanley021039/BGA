@@ -12,6 +12,18 @@ import { malicePortrait } from './attack-ultimate-extra.js';
 // Art and sounds a game uses only once play starts, warmed while seats fill up.
 // Sound files follow the registry in public/shared/audio-settings.js.
 const sound = (name: string) => '/assets/game-sounds/' + name;
+export function warmCombatHitAudio(): void {
+  const effects = AudioSettings?.get()?.effects;
+  if (!effects?.enabled || !effects.volume || document.hidden) return;
+  warm(
+    [
+      '/assets/game-sounds/slam.wav',
+      '/assets/game-sounds/quacks-explosion.wav',
+      '/assets/game-sounds/gacha-glint.mp3',
+    ],
+    { idle: false },
+  );
+}
 export function warmGachaAudio(): void {
   if (!preloadAllowed()) return;
   whenIdle(() => {

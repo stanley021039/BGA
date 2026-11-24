@@ -74,6 +74,7 @@ function createLobbyArena(
     }
     actor.archetype = null;
     actor.lockedAttackLoadout = null;
+    actor.lockedEntrance = null;
     actor.wallRoute = [];
   }
   const teams = new Map();
@@ -86,6 +87,9 @@ function createLobbyArena(
   function active(id) {
     return match?.phase === 'running' && !member(id)?.forfeited && !!member(id);
   }
+  function warmingUp(time) {
+    return match?.phase === 'running' && time < match.startedAt;
+  }
   function areAllies(a, b) {
     return match?.mode === 'team' && active(a) && active(b) && member(a).team === member(b).team;
   }
@@ -94,7 +98,7 @@ function createLobbyArena(
       b = active(toId);
     if (!a && !b) return true;
     if (!a || !b) return false;
-    return match.mode === 'pk' || member(fromId).team !== member(toId).team;
+    return match.mode !== 'team' || member(fromId).team !== member(toId).team;
   }
   function canContinueCast(source, actor, time) {
     if ((source.combatEpoch || 0) !== (actor.combatEpoch || 0)) return false;
@@ -279,13 +283,17 @@ function createLobbyArena(
       // Expected prior match makes concurrent starts and a retried start safe.
       if ((input.matchId ?? null) !== (match?.id ?? null))
         fail('ARENA_CHANGED', '對戰已更新，請重新確認');
-      if (!['pk', 'team'].includes(input.mode))
-        throw new HttpError(400, 'INVALID_MODE', '請選擇個人 PK 或團隊戰');
+      if (!['pk', 'team', 'brawl'].includes(input.mode))
+        throw new HttpError(400, 'INVALID_MODE', '請選擇個人 PK、團隊戰或亂鬥');
       const duration = input.durationSeconds ?? 60;
       if (![60, 120, 180].includes(duration))
         throw new HttpError(400, 'INVALID_ARENA_DURATION', '請選擇 60、120 或 180 秒');
       const maps = getMaps();
-      const map = maps.find((item) => item.id === (input.mapId ?? 1));
+      const pool = maps.filter((item) => duration !== 60 || !item.wide);
+      const map =
+        input.mode === 'brawl' && pool.length
+          ? pool[randomInt(pool.length)]
+          : maps.find((item) => item.id === (input.mapId ?? 1));
       if (maps.length && (!map || (duration === 60 && map.wide)))
         throw new HttpError(400, 'INVALID_ARENA_MAP', '60 秒對戰請選小地圖，其他場次可選任一地圖');
       if (!teams.has(user.id)) fail('ARENA_JOIN_REQUIRED', '請先選隊報名');
@@ -298,7 +306,10 @@ function createLobbyArena(
           id,
           team,
           name: visitors.get(id).name,
-          archetype: profiles.get(id) || 'attack',
+          archetype:
+            input.mode === 'brawl'
+              ? Object.keys(types)[randomInt(Object.keys(types).length)]
+              : profiles.get(id) || 'attack',
           score: 0,
           damageDealt: 0,
           damageTaken: 0,
@@ -307,17 +318,20 @@ function createLobbyArena(
         }));
       if (input.mode === 'pk' && players.length !== 2)
         fail('ARENA_PLAYERS', '個人 PK 需要剛好兩位報名者');
+      if (input.mode === 'brawl' && players.length < 2)
+        fail('ARENA_PLAYERS', '亂鬥需要至少兩位報名者');
       if (
         input.mode === 'team' &&
         !['red', 'blue'].every((team) => players.some((p) => p.team === team))
       )
         fail('ARENA_PLAYERS', '團隊戰需要兩隊各至少一人');
-      onStart(visitors, players, map);
+      onStart(visitors, players, map, input.mode);
       ready.clear();
       match = {
         id: randomUUID(),
         phase: 'running',
         mode: input.mode,
+        ...(input.mode === 'brawl' && map ? { mapId: map.id, mapName: map.name } : {}),
         startedAt: time + startDelayMs,
         endsAt: time + startDelayMs + duration * 1000,
         players,
@@ -378,6 +392,7 @@ function createLobbyArena(
             id: match.id,
             phase: match.phase,
             mode: match.mode,
+            ...(match.mapId ? { mapId: match.mapId, mapName: match.mapName } : {}),
             startedAt: match.startedAt,
             endsAt: match.endsAt,
             remainingMs: Math.max(0, match.endsAt - now()),
@@ -393,7 +408,8 @@ function createLobbyArena(
     damageThroughCover,
     coverImpact,
     active,
-    preparing: (id, time) => active(id) && time < match.startedAt,
+    warmingUp,
+    preparing: (id, time) => active(id) && warmingUp(time),
     assertStarted(id, time) {
       if (active(id) && time < match.startedAt) fail('ARENA_COUNTDOWN', '倒數結束後即可行動');
     },

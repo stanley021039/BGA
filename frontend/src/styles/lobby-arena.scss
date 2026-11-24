@@ -186,13 +186,13 @@
 :root body[data-visual-theme].vue-lobby-battle .lobby-avatar {
   scale: 1;
 }
-:root body[data-visual-theme].vue-lobby-battle .lobby-avatar img {
+:root body[data-visual-theme].vue-lobby-battle .lobby-avatar img.scene-avatar-image {
   width: 48px;
   height: 48px;
   object-fit: contain;
 }
 @media (max-width: 500px) {
-  :root body[data-visual-theme].vue-lobby-battle .lobby-avatar img {
+  :root body[data-visual-theme].vue-lobby-battle .lobby-avatar img.scene-avatar-image {
     width: 35px;
     height: 35px;
   }

@@ -543,3 +543,159 @@ test('arena countdown retains a reserved slot when other effects fill playback',
   assert.ok(ui.api.playEffect('arena-countdown'));
   assert.equal(ui.api.playEffect('arena-countdown'), undefined);
 });
+
+test('combat cues reuse existing short assets, honour effect caps and discard late starts after 180ms', () => {
+  for (const [cue, file] of [
+    ['combat-hit', 'slam.wav'],
+    ['combat-critical', 'slam.wav'],
+    ['combat-heavy', 'quacks-explosion.wav'],
+    ['combat-block', 'gacha-glint.mp3'],
+  ]) {
+    const ui = harness(),
+      clip = ui.api.playEffect(cue);
+    assert.ok(clip);
+    assert.equal(clip.src, '/assets/game-sounds/' + file);
+    ui.advance(179);
+    assert.ok(clip.src);
+    ui.advance(1);
+    assert.equal(clip.src, undefined);
+    const started = ui.api.playEffect(cue);
+    started.onplaying();
+    ui.advance(200);
+    assert.ok(started.src);
+    assert.ok(ui.api.playEffect('combat-hit'));
+    assert.equal(ui.api.playEffect('combat-hit'), undefined);
+    ui.api.set('effects', { enabled: false });
+    assert.ok(started.paused);
+    const before = ui.clips.length;
+    assert.equal(ui.api.playEffect(cue), undefined);
+    assert.equal(ui.clips.length, before);
+  }
+});
+
+function installTeleportContext(ui, pending = false) {
+  const contexts = [],
+    nodes = [],
+    gains = [],
+    sources = [];
+  let resume;
+  const parameter = () => ({
+    value: 0,
+    events: [],
+    setValueAtTime(value, at) {
+      this.events.push({ value, at });
+    },
+    exponentialRampToValueAtTime(value, at) {
+      this.events.push({ value, at });
+    },
+  });
+  const node = (kind) => {
+    const n = {
+      kind,
+      disconnected: false,
+      started: [],
+      stopped: [],
+      gain: parameter(),
+      frequency: parameter(),
+      Q: parameter(),
+      connect() {},
+      disconnect() {
+        this.disconnected = true;
+      },
+      start(at) {
+        this.started.push(at);
+      },
+      stop(at) {
+        this.stopped.push(at);
+      },
+    };
+    nodes.push(n);
+    if (kind === 'gain') gains.push(n);
+    if (['noise', 'chirp'].includes(kind)) sources.push(n);
+    return n;
+  };
+  ui.window.AudioContext = class {
+    constructor() {
+      this.sampleRate = 48000;
+      this.currentTime = 0;
+      this.destination = {};
+      this.closed = false;
+      this.buffers = 0;
+      contexts.push(this);
+    }
+    createBuffer(_channels, length, rate) {
+      this.buffers++;
+      assert.ok(length <= 10560);
+      return { getChannelData: () => new Float32Array(length) };
+    }
+    createBufferSource() {
+      return node('noise');
+    }
+    createBiquadFilter() {
+      return node('filter');
+    }
+    createOscillator() {
+      return node('chirp');
+    }
+    createGain() {
+      return node('gain');
+    }
+    resume() {
+      return pending ? new Promise((done) => (resume = done)) : Promise.resolve();
+    }
+    suspend() {
+      return Promise.resolve();
+    }
+    close() {
+      this.closed = true;
+      return Promise.resolve();
+    }
+  };
+  return { contexts, nodes, gains, sources, resume: () => resume?.() };
+}
+test('teleport synthesis is soft, bounded, shares game caps and follows live volume/mute', async () => {
+  const ui = harness(),
+    synth = installTeleportContext(ui);
+  const clip = ui.api.playEffect('teleport');
+  assert.ok(clip);
+  await tick();
+  assert.equal(ui.clips.length, 0, 'no media request');
+  assert.equal(synth.contexts.length, 1);
+  assert.equal(synth.gains.at(-1).gain.value, 0.25 * 0.28);
+  assert.equal(synth.sources[0].stopped[0], 0.22);
+  assert.equal(synth.sources[1].stopped[0], 0.16);
+  assert.equal(ui.api.playEffect('teleport'), undefined, 'one synth voice');
+  assert.ok(ui.api.playEffect('shot'));
+  assert.equal(ui.api.playEffect('shot'), undefined, 'existing two-game cap');
+  ui.api.set('effects', { volume: 0.5 });
+  assert.equal(synth.gains.at(-1).gain.value, 0.5 * 0.28);
+  ui.api.set('effects', { enabled: false });
+  assert.ok(synth.contexts[0].closed);
+  assert.ok(synth.nodes.every((n) => n.disconnected));
+  assert.equal(ui.api.playEffect('teleport'), undefined);
+  assert.equal(synth.contexts.length, 1);
+});
+test('teleport reuses a single buffer, cancels late startup and cleans up on hidden/pagehide', async () => {
+  const ui = harness(),
+    synth = installTeleportContext(ui);
+  ui.api.playEffect('teleport');
+  await tick();
+  synth.sources[0].onended();
+  ui.api.playEffect('teleport');
+  await tick();
+  assert.equal(synth.contexts.length, 1);
+  assert.equal(synth.contexts[0].buffers, 1);
+  ui.document.hidden = true;
+  ui.fire('document:visibilitychange');
+  assert.ok(synth.contexts[0].closed);
+  assert.ok(synth.nodes.every((n) => n.disconnected));
+  const late = harness(),
+    slow = installTeleportContext(late, true);
+  late.api.playEffect('teleport');
+  late.advance(180);
+  slow.resume();
+  await tick();
+  assert.ok(slow.sources.every((n) => !n.started.length));
+  late.fire('window:pagehide');
+  assert.ok(slow.contexts[0].closed);
+});

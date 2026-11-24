@@ -36,6 +36,10 @@ let GameSounds;
     'boss-warning',
     'arena-countdown',
     'arena-countdown-bell',
+    'combat-hit',
+    'combat-critical',
+    'combat-heavy',
+    'combat-block',
   ]);
   const quietCues = new Set(['shot', 'slam', 'nitro', 'skid']);
   function create({ now = () => Date.now(), maxSeen = 256, maxGapMs = 5000 } = {}) {

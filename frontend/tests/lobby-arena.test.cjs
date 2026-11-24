@@ -6,7 +6,7 @@ const vm = require('node:vm'),
   path = require('node:path');
 const ts = require('typescript');
 function load(file) {
-  if (file.endsWith('.json')) return JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (file.endsWith('.json')) return { default: JSON.parse(fs.readFileSync(file, 'utf8')) };
   const module = { exports: {} };
   vm.runInNewContext(
     ts.transpileModule(fs.readFileSync(file, 'utf8'), {
@@ -43,6 +43,31 @@ test('new arena contract preserves authoritative roster, cover geometry and cloc
 test('older lobby snapshots remain compatible without arena data', () => {
   assert.equal(readLobbyArena(undefined), null);
   assert.equal(readLobbyArena(null), null);
+});
+
+test('brawl contract preserves random slots, entrance, archetype and shared map', () => {
+  const lobby = createLobby(
+    () => 1000,
+    undefined,
+    () => 0.5,
+    () => false,
+    { expandedMap: true, requireReady: true },
+  );
+  const users = ['random-a', 'random-b', 'random-c'].map((id) => ({ id, display_name: id }));
+  for (const u of users) {
+    lobby.view(u);
+    lobby.arena(u, { action: 'team', team: 'red' });
+    lobby.arena(u, { action: 'ready', ready: true });
+  }
+  const source = lobby.arena(users[0], { action: 'start', mode: 'brawl', matchId: null }).arena;
+  const parsed = readLobbyArena(source);
+  assert.equal(parsed.match.mode, 'brawl');
+  assert.ok(parsed.match.mapId <= 2);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(parsed.match)),
+    JSON.parse(JSON.stringify(source.match)),
+  );
+  assert.ok(parsed.match.players.every((p) => p.entrance && p.loadout.r && p.archetype));
 });
 test('malformed team, score, time, geometry and match phase cannot enter the client store', () => {
   for (const mutate of [

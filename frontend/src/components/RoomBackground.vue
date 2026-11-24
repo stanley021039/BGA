@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import SceneFragments from './SceneFragments.vue';
+import { playActionFeedback } from '../services/action-sounds';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import LobbyAttackLayer from '../pages/lobby/LobbyAttackLayer.vue';
 import { entranceEffect } from '../services/entrance-effects';
@@ -248,6 +249,7 @@ function key(event: KeyboardEvent) {
 }
 async function sceneAction(input: Record<string, unknown>): Promise<boolean> {
   if (disposed || !props.connected || props.focused || !snapshot.value) return false;
+  const startedAt = Date.now();
   const scope = room.scope,
     code = room.code,
     actionController = new AbortController();
@@ -266,6 +268,8 @@ async function sceneAction(input: Record<string, unknown>): Promise<boolean> {
     if (!disposed && scope === room.scope && code === room.code) {
       room.accept(result);
       error.value = '';
+      if (input.action === 'teleport' && !document.hidden && Date.now() - startedAt <= 750)
+        playActionFeedback('teleport');
       return true;
     }
   } catch (cause) {
@@ -316,6 +320,7 @@ onBeforeUnmount(() => {
       :connected="connected"
       :room-code="room.code"
       :puzzle-enabled="!focused && !inert"
+      :feedback-active="!focused && !inert"
     />
     <UiMoveMarker v-if="destination" :key="markerKey" :point="destination" />
     <div class="lobby-visitors">

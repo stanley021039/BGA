@@ -11,16 +11,20 @@ import SceneEquation from '../../components/SceneEquation.vue';
 import BossTelegraphs from '../../components/BossTelegraphs.vue';
 import BossLandingImpacts from '../../components/BossLandingImpacts.vue';
 import { homingScale } from '../../services/attack-homing.js';
+import { createSceneHitFeedback } from '../../services/scene-hit-feedback';
+import '../../styles/scene-hit-feedback.scss';
+import { warmCombatHitAudio } from '../../services/game-assets';
 const props = withDefaults(
   defineProps<{
     snapshot: LobbySnapshot | null;
     connected: boolean;
     roomCode?: string;
     puzzleEnabled?: boolean;
+    feedbackActive?: boolean;
     arena?: boolean;
     readCamera?: () => { x: number; y: number };
   }>(),
-  { puzzleEnabled: true },
+  { puzzleEnabled: true, feedbackActive: true },
 );
 // Every live attack draws on this one canvas (#322); up to three play at once.
 const layer = ref<HTMLElement | null>(null),
@@ -28,6 +32,9 @@ const layer = ref<HTMLElement | null>(null),
   active = ref<LobbyAttack[]>([]);
 const prefs = usePreferencesStore(),
   still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
+const feedback = createSceneHitFeedback({
+  root: () => layer.value?.closest<HTMLElement>('.lobby-backdrop') || null,
+});
 const coverImpacts = computed(() => {
   const snapshot = props.snapshot;
   return (snapshot?.attacks || [])
@@ -201,8 +208,29 @@ function visibility() {
   }
 }
 watch(
-  [() => props.snapshot, () => props.connected],
+  [
+    () => props.snapshot,
+    () => props.connected,
+    () => props.roomCode,
+    () => props.arena,
+    () => props.feedbackActive,
+  ],
   ([snapshot, connected]) => {
+    if (
+      connected &&
+      props.feedbackActive &&
+      snapshot &&
+      (snapshot.visitors.length > 1 ||
+        snapshot.attacks.some(
+          (event) => event.fromId === snapshot.selfId || event.toId === snapshot.selfId,
+        ))
+    )
+      warmCombatHitAudio();
+    feedback.update(snapshot, {
+      connected: connected && props.feedbackActive,
+      motion: !still.value,
+      scope: (props.roomCode || 'lobby') + ':' + !!props.arena,
+    });
     if (!snapshot || !connected || document.hidden) {
       clear();
       initialized = false;
@@ -267,6 +295,7 @@ watch(
 );
 watch(still, (value) => {
   if (value) {
+    feedback.stopVisuals();
     stage?.clear();
     for (const stop of flights.values()) stop();
     flights.clear();
@@ -274,6 +303,7 @@ watch(still, (value) => {
 });
 onMounted(() => document.addEventListener('visibilitychange', visibility));
 onBeforeUnmount(() => {
+  feedback.destroy();
   clear();
   document.removeEventListener('visibilitychange', visibility);
 });
