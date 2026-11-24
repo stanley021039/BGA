@@ -142,7 +142,7 @@
     "durationMs": 2000
   },
   "shaohua": {
-    "lifetimeMs": 2000,
+    "lifetimeMs": 3000,
     "burstMs": 850,
     "biteMs": 400,
     "speedMultiplier": 0.75,

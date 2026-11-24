@@ -29,6 +29,7 @@ type View = Room & {
 };
 const rooms = ref<Room[]>([]);
 const view = ref<View>();
+const activeCardPreview = ref(0);
 const dialog = ref<InstanceType<typeof UiDialog> | null>(null);
 const notice = ref('');
 let listing: EventSource | undefined;
@@ -101,7 +102,10 @@ onBeforeUnmount(() => {
     full-viewport
     @closing="closeViewer"
   >
-    <div class="gacha-watch-content">
+    <div
+      class="gacha-watch-content"
+      :class="{ 'gacha-watch-cinematic': view?.phase === 'market' || view?.phase === 'settled' }"
+    >
       <p v-if="notice" role="status">{{ notice }}</p>
       <template v-else-if="view">
         <GachaCinematic
@@ -126,7 +130,13 @@ onBeforeUnmount(() => {
           spectator
         />
         <div v-else-if="view.phase === 'card' && view.item" class="gacha-watch-single">
-          <GachaRewardCard :number="view.index + 1" :item="view.item" prominent spectator />
+          <GachaRewardCard
+            :number="view.index + 1"
+            :item="view.item"
+            :name="view.name"
+            prominent
+            spectator
+          />
         </div>
         <div v-else-if="view.phase === 'summary' && view.items" class="gacha-watch-summary">
           <GachaRewardCard
@@ -134,6 +144,9 @@ onBeforeUnmount(() => {
             :key="index"
             :number="index + 1"
             :item="item"
+            :preview-active="activeCardPreview === index"
+            :name="view.name"
+            @preview="activeCardPreview = index"
             compact
             spectator
           />
@@ -153,6 +166,10 @@ onBeforeUnmount(() => {
   min-block-size: 0;
   block-size: 100%;
   overflow: auto;
+}
+.gacha-watch-cinematic {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
 }
 .gacha-watch-single {
   inline-size: min(100%, 28rem);

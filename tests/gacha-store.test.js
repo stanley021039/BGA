@@ -324,7 +324,7 @@ for (const saved of [
       code: 'ATTACK_REWARD_LOCKED',
     });
     const achievements = new (require('../src/achievements/store').AchievementStore)(db);
-    achievements.redeem(user, '我愛作者');
+    assert.throws(() => achievements.redeem(user, '我愛作者'), { code: 'INVALID_REWARD_CODE' });
     assert.deepEqual(achievements.list(user).bonusRewards.attacks, ['barrage', 'beam']);
     fund(store, db, user);
     const drawn = store.draw(user, { pool: 'attacks', count: 1, requestId: randomUUID() })
@@ -334,7 +334,7 @@ for (const saved of [
     store.exchange(user, { key: 'attacks:bijuu_beam', requestId: randomUUID() });
     const loadout = { q: drawn.id, e: 'beam', r: 'bijuu_beam' };
     assert.deepEqual(setAttackSettings(db, user, loadout), loadout);
-    achievements.redeem(user, '我愛作者');
+    assert.throws(() => achievements.redeem(user, '我愛作者'), { code: 'INVALID_REWARD_CODE' });
     assert.deepEqual(getAttackSettings(db, user), loadout);
     assert.equal(new GachaStore(db).owned(user).attacks.size, 2);
     assert.ok(require('../src/achievements/redemption').redeemedAt(db, user, 'other'));

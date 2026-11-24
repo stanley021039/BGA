@@ -83,6 +83,14 @@ const rewardChants: Partial<Record<string, readonly [string, string]>> = {
   'entrances:stitch-stand-time': ['連一粒塵埃也停在半空。', '在時間追上來以前，我已到了。'],
   'entrances:stitch-chibaku-tensei': ['碎石浮起，地平線開始彎折。', '萬物歸向一點，天星自此成形。'],
   'backgrounds:aurora': ['風雪停歇，群峰沒入深夜。', '天邊升起流光，整片雪地跟著亮了。'],
+  'backgrounds:mars': [
+    '越過最後一片星海，赤色大地已在眼前。',
+    '把足跡留在此刻，讓群星見證我們登陸。',
+  ],
+  'backgrounds:battlefield': [
+    '硝煙遮住了天光，遠方仍有戰鼓迴盪。',
+    '踏過焦土，讓這片戰場記住你的名字。',
+  ],
 };
 const summonStyles = computed(() =>
   props.preview && props.item.kind === 'attacks'
@@ -228,7 +236,7 @@ onBeforeUnmount(() => {
           :name="name"
           :size="128"
         />
-        <LobbyBackgroundArt v-else-if="moving && item.kind === 'backgrounds'" :id="item.id" />
+        <LobbyBackgroundArt v-else-if="item.kind === 'backgrounds'" :id="item.id" fit="contain" />
         <FramePreview
           v-else-if="item.kind === 'frames' || item.kind === 'media'"
           :class="{ 'game-barrage-static': !moving }"

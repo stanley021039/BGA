@@ -31,6 +31,7 @@ export type AttackArtworkOptions = {
     pathY?: number;
   }[];
   preview?: boolean;
+  onComplete?: () => void;
   previewUnit?: number;
   renderScale?: number;
   damage?: number;

@@ -217,7 +217,7 @@
     "id": "shaohua_devour",
     "label": "大嘴少華・宅宅吞",
     "color": "#ffb858",
-    "description": "咬中扣至目標當前生命10%；對Boss最多扣當前生命50%。2秒內咬不到，自身當前生命減半。",
+    "description": "咬中扣至目標當前生命10%；對Boss最多扣當前生命50%。3秒內咬不到，自身當前生命減半。",
     "gachaOnly": true,
     "ultimate": true
   },
@@ -225,7 +225,7 @@
     "id": "shaohua_devour_alt",
     "label": "大嘴少華・宅宅吞（蝕月金環異色）",
     "color": "#a895ef",
-    "description": "咬中扣至目標當前生命10%；對Boss最多扣當前生命50%。2秒內咬不到，自身當前生命減半。",
+    "description": "咬中扣至目標當前生命10%；對Boss最多扣當前生命50%。3秒內咬不到，自身當前生命減半。",
     "gachaOnly": true,
     "variantOf": "shaohua_devour",
     "ultimate": true

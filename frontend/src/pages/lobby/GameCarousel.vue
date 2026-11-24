@@ -10,7 +10,7 @@ const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
   width = ref(1000),
-  cardWidth = ref(300),
+  cardWidth = ref(270),
   drag = ref(0),
   dragging = ref(false),
   prefs = usePreferencesStore();
@@ -138,7 +138,7 @@ onMounted(() => {
     if (root.value) {
       width.value = root.value.clientWidth;
       const tile = root.value.querySelector<HTMLElement>('.game-tile');
-      cardWidth.value = tile?.offsetWidth || 300;
+      cardWidth.value = tile?.offsetWidth || 270;
     }
   });
   if (root.value) observer.observe(root.value);
@@ -196,7 +196,7 @@ onBeforeUnmount(() => {
               v-if="visible(i)"
               :src="lobbyCovers[card.id].src"
               :srcset="lobbyCovers[card.id].srcset"
-              sizes="(min-width: 1181px) and (min-height: 640px) and (pointer: fine) 300px, (max-width: 371px) calc(100vw - 32px), 340px"
+              sizes="(min-width: 960px) and (min-height: 560px) and (pointer: fine) 270px, (max-width: 337px) calc(100vw - 32px), 306px"
               :loading="i === index ? 'eager' : 'lazy'"
               decoding="async"
               alt=""

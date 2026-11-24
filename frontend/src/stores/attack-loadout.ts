@@ -53,13 +53,8 @@ export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
     })();
     return job;
   }
-  async function choose(slot: AttackSlot, effect: string) {
-    if (
-      !ready.value ||
-      pending.value ||
-      !((slot === 'r' && effect === '') || fitsAttackSlot(slot, effect))
-    )
-      return;
+  async function chooseAll(next: { q: string; e: string; r: string }) {
+    if (!ready.value || pending.value || !valid(next)) return;
     pending.value = true;
     message.value = '';
     const epoch = generation;
@@ -67,7 +62,7 @@ export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
     try {
       const result = await requestJson('/api/profile/attacks', {
         method: 'POST',
-        body: { ...loadout.value, [slot]: effect },
+        body: { ...next },
         signal: controller.signal,
       });
       if (epoch !== generation) return;
@@ -78,6 +73,9 @@ export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
     } finally {
       if (epoch === generation) pending.value = false;
     }
+  }
+  async function choose(slot: AttackSlot, effect: string) {
+    await chooseAll({ ...loadout.value, [slot]: effect });
   }
   watch(
     identity,
@@ -97,5 +95,5 @@ export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
     generation++;
     controller?.abort();
   });
-  return { loadout, ready, pending, message, load, choose };
+  return { loadout, ready, pending, message, load, choose, chooseAll };
 });

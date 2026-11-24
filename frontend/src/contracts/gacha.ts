@@ -54,6 +54,7 @@ export interface GachaCheckin {
   step: number;
   claimed: boolean;
   epicTen?: { days: number; status: (typeof checkinMilestoneStatuses)[number] };
+  ultimate?: { days: number; status: (typeof checkinMilestoneStatuses)[number] };
   milestone: { days: number; status: (typeof checkinMilestoneStatuses)[number] };
   wallet?: GachaWallet;
 }
@@ -62,6 +63,7 @@ export interface GachaState {
   wallet: GachaWallet;
   voucherAvailable: boolean;
   epicTenAvailable: boolean;
+  ultimateVoucherAvailable?: boolean;
   pools: {
     id: string;
     label: string;
@@ -113,6 +115,7 @@ export type GachaReceipt =
       drawCount?: number;
       voucher?: true;
       thirdLogin?: true;
+      ultimateVoucher?: true;
       useTickets?: true;
       ticketCost?: number;
       rewardTickets?: number;
@@ -162,6 +165,14 @@ export function readGachaCheckin(value: unknown): GachaCheckin {
   )
     throw Error('登入獎勵格式不正確');
   const epicTen = r.epicTen === undefined ? undefined : record(r.epicTen);
+  const ultimate = r.ultimate === undefined ? undefined : record(r.ultimate);
+  if (
+    ultimate &&
+    (ultimate.days !== 1 ||
+      !checkinMilestoneStatuses.includes(ultimate.status as GachaCheckin['milestone']['status']) ||
+      (ultimate.status === 'locked') !== visits < 1)
+  )
+    throw Error('大招券狀態不正確');
   if (
     epicTen &&
     (epicTen.days !== 3 ||
@@ -176,6 +187,9 @@ export function readGachaCheckin(value: unknown): GachaCheckin {
     visits,
     claimed: r.claimed,
     milestone: { days, status },
+    ...(ultimate
+      ? { ultimate: { days: 1, status: ultimate.status as GachaCheckin['milestone']['status'] } }
+      : {}),
     ...(r.epicTen
       ? {
           epicTen: {
@@ -242,6 +256,7 @@ export function readGachaState(value: unknown): GachaState {
     wallet: readWallet(r.wallet),
     voucherAvailable: r.voucherAvailable === true,
     epicTenAvailable: r.epicTenAvailable === true,
+    ultimateVoucherAvailable: r.ultimateVoucherAvailable === true,
     rewardTickets: integer(r.rewardTickets ?? 0),
     items,
     pools,
@@ -278,9 +293,18 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
   });
   const voucher = r.voucher === true;
   const thirdLogin = r.thirdLogin === true;
+  const ultimateVoucher = r.ultimateVoucher === true;
   const useTickets = r.useTickets === true;
   if (
     (r.voucher !== undefined && !voucher) ||
+    (r.ultimateVoucher !== undefined && !ultimateVoucher) ||
+    (ultimateVoucher &&
+      (voucher ||
+        thirdLogin ||
+        useTickets ||
+        results.length !== 1 ||
+        r.pool !== 'attacks' ||
+        results[0]?.kind !== 'attacks')) ||
     (r.thirdLogin !== undefined && !thirdLogin) ||
     (voucher && thirdLogin) ||
     (r.useTickets !== undefined && !useTickets) ||
@@ -288,7 +312,8 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
     (useTickets && (voucher || thirdLogin || r.ticketCost !== results.length)) ||
     (thirdLogin && (results.length !== 10 || results[9]?.rarity !== 'epic' || r.pool !== 'all')) ||
     ![1, 10].includes(results.length) ||
-    common.cost !== (voucher || thirdLogin || useTickets ? 0 : results.length * 100) ||
+    common.cost !==
+      (voucher || thirdLogin || useTickets || ultimateVoucher ? 0 : results.length * 100) ||
     (voucher && (results.length !== 1 || results[0].rarity !== 'legendary'))
   )
     throw Error('抽卡結果數量不正確');
@@ -309,6 +334,7 @@ export function readGachaReceipt(value: unknown, operation: 'draw' | 'exchange')
     fragmentsGained,
     ...(voucher ? { voucher: true } : {}),
     ...(thirdLogin ? { thirdLogin: true } : {}),
+    ...(ultimateVoucher ? { ultimateVoucher: true } : {}),
     ...(useTickets
       ? {
           useTickets: true,

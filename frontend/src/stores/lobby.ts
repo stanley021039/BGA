@@ -179,12 +179,15 @@ export const useLobbyStore = defineStore('lobby', () => {
     queued = null;
     destination.value = null;
     if (presenceTimer) clearTimeout(presenceTimer);
+    const startedAt = Date.now();
     const epoch = generation,
       account = identity.value;
     try {
       await presenceJob;
       if (!current(epoch, account)) return false;
       consume(await request('/api/lobby/teleport', { entrance: entranceEffect.value }));
+      if (current(epoch, account) && !document.hidden && Date.now() - startedAt <= 750)
+        playActionFeedback('teleport');
       return current(epoch, account);
     } catch (error) {
       if (

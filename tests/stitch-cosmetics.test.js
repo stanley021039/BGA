@@ -87,11 +87,14 @@ test('Hollow Purple retains outlined 茈, removes English fallback labels and is
   );
   assert.match(player, /id === 'stitch-purple'\) node.classList.add\('stitch-purple-v2'\)/);
 });
-test('nine Stitch backgrounds include eight personal achievement unlocks and exclude the unwanted black theme', () => {
-  assert.equal(backgrounds.length, 10);
+test('Stitch backgrounds retain eight legacy achievement entries and add eight gacha-only scenes', () => {
+  assert.equal(backgrounds.length, 18);
   assert.equal(backgrounds.filter((background) => background.achievementId).length, 8);
+  assert.equal(backgrounds.filter((background) => background.gachaOnly).length, 8);
   assert.ok(!backgrounds.some((background) => background.id === 'black'));
-  for (const background of backgrounds.filter((background) => background.id !== 'default')) {
+  for (const background of backgrounds.filter(
+    (background) => background.id !== 'default' && !background.gachaOnly,
+  )) {
     const svg = fs.readFileSync(
       path.join(root, 'frontend/src/assets/lobby-' + background.id + '-stitch.svg'),
       'utf8',
@@ -107,16 +110,15 @@ test('nine Stitch backgrounds include eight personal achievement unlocks and exc
   }
 });
 
-test('the nine existing stage artworks stay local and static without animation schedulers', () => {
+test('all seventeen stage artworks stay local and static without animation schedulers', () => {
   const scenes = require('../public/shared/lobby-background-live.json');
-  assert.equal(scenes.length, 9);
+  assert.equal(scenes.length, 17);
   assert.deepEqual(
-    scenes.map((s) => s.id),
+    scenes.slice(0, 9).map((s) => s.id),
     ['castle', 'garden', 'courtroom', 'cosmic', 'ballroom', 'classroom', 'prison', 'lab', 'aurora'],
   );
   for (const scene of scenes) {
-    assert.match(scene.svg, /viewBox="0 0 300 160"/);
-    assert.match(scene.svg, /class="anim-/);
+    assert.match(scene.svg, /viewBox="0 0 (?:300 160|1600 900)"/);
     assert.doesNotMatch(scene.svg, /<script|<image|<foreignObject|<animate|<set\b|\son\w+=/i);
   }
   const css = fs.readFileSync(

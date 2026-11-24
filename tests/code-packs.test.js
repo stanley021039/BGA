@@ -23,9 +23,94 @@ function fixture(t) {
     gacha: new GachaStore(db, { choose: () => 0 }),
   };
 }
+
+test('the new author code grants its own one-time rewards and rejects the retired code', (t) => {
+  const { db, user, store, gacha } = fixture(t);
+  assert.throws(() => store.redeem(user, ' 我愛作者 '), { code: 'INVALID_REWARD_CODE' });
+  assert.equal(Packs.availableTickets(db, user), 0);
+  const first = store.redeem(user, ' 我愛作者我愛作者 ').redemption;
+  assert.equal(first.group, 'authorRenewal');
+  assert.equal(first.label, '我愛作者我愛作者');
+  assert.equal(first.draws, 300);
+  assert.equal(first.alreadyRedeemed, false);
+  assert.deepEqual(
+    first.rewards.map((reward) => reward.key),
+    ['sounds', 'frames', 'media', 'entrances', 'attacks'],
+  );
+  assert.ok(fitsSlot('r', first.rewards[4].items[0].id));
+  assert.equal(
+    require('../src/achievements/redemption').redeemedAt(db, user, 'other'),
+    first.redeemedAt,
+  );
+  const ownership = gacha.owned(user);
+  const retry = store.redeem(user, '我愛作者我愛作者').redemption;
+  assert.equal(retry.alreadyRedeemed, true);
+  assert.deepEqual(retry.rewards, first.rewards);
+  assert.equal(retry.redeemedAt, first.redeemedAt);
+  assert.equal(Packs.availableTickets(db, user), 300);
+  assert.deepEqual(gacha.owned(user), ownership);
+  assert.equal(
+    db
+      .prepare(
+        "SELECT count(*) n FROM gacha_ledger WHERE event_id LIKE 'reward-code-v2:authorRenewal:%'",
+      )
+      .get().n,
+    1,
+  );
+  assert.throws(() => store.redeem(user, '我愛作者'), { code: 'INVALID_REWARD_CODE' });
+  assert.equal(Packs.availableTickets(db, user), 300);
+  assert.deepEqual(gacha.owned(user), ownership);
+});
+
+for (const legacy of ['grouped', 'original', 'pack']) {
+  test(
+    legacy + ' author holders can claim the new pack once while keeping previous rewards',
+    (t) => {
+      const { db, user, store, gacha } = fixture(t);
+      const at = '2026-10-01T00:00:00.000Z';
+      if (legacy === 'pack') Packs.redeem(store, user, 'author');
+      else
+        db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+          JSON.stringify(
+            legacy === 'grouped'
+              ? { achievementRewardCodes: { other: at } }
+              : { achievementRewardCodeAt: at },
+          ),
+          user,
+        );
+      const previous = Packs.receipts(db, user);
+      const owned = gacha.owned(user);
+      const backgrounds = require('../src/gacha/ownership').ownedIds(db, user, 'backgrounds');
+      const bonusAt = require('../src/achievements/redemption').redeemedAt(db, user, 'other');
+      if (legacy === 'pack') {
+        gacha.draw(user, { requestId: randomUUID(), pool: 'all', count: 10, useTickets: true });
+        assert.equal(Packs.availableTickets(db, user), 290);
+      }
+      const balance = Packs.availableTickets(db, user);
+      const claimed = store.redeem(user, '我愛作者我愛作者').redemption;
+      assert.equal(claimed.alreadyRedeemed, false);
+      assert.equal(claimed.draws, 300);
+      assert.equal(Packs.availableTickets(db, user), balance + 300);
+      assert.deepEqual(Packs.receipts(db, user).author, previous.author);
+      assert.equal(
+        require('../src/achievements/redemption').redeemedAt(db, user, 'other'),
+        bonusAt,
+      );
+      assert.deepEqual(
+        require('../src/gacha/ownership').ownedIds(db, user, 'backgrounds'),
+        backgrounds,
+      );
+      for (const [kind, ids] of Object.entries(owned))
+        for (const id of ids) assert.ok(gacha.owned(user)[kind].has(id));
+      assert.equal(store.redeem(user, '我愛作者我愛作者').redemption.alreadyRedeemed, true);
+      assert.equal(Packs.availableTickets(db, user), balance + 300);
+      assert.doesNotThrow(() => Packs.validate(db));
+    },
+  );
+}
 test('both codes grant exact ticket amounts and five separate categories, without changing achievements or full backgrounds', (t) => {
   const { db, user, other, store } = fixture(t);
-  const author = store.redeem(user, ' 我愛作者 ').redemption;
+  const author = store.redeem(user, ' 我愛作者我愛作者 ').redemption;
   assert.equal(author.draws, 300);
   assert.equal(author.rewards.length, 5);
   assert.deepEqual(
@@ -39,8 +124,8 @@ test('both codes grant exact ticket amounts and five separate categories, withou
   assert.ok(fitsSlot('q', start.rewards[4].items[0].id));
   assert.equal(Packs.availableTickets(db, user), 400);
   assert.equal(Packs.availableTickets(db, other), 0);
-  assert.deepEqual(store.redeem(user, '我愛作者').redemption.rewards, author.rewards);
-  assert.equal(store.redeem(user, '我愛作者').redemption.alreadyRedeemed, true);
+  assert.deepEqual(store.redeem(user, '我愛作者我愛作者').redemption.rewards, author.rewards);
+  assert.equal(store.redeem(user, '我愛作者我愛作者').redemption.alreadyRedeemed, true);
   assert.equal(Packs.availableTickets(db, user), 400);
   assert.equal(db.prepare('SELECT count(*) n FROM user_achievements').get().n, 0);
   assert.ok(require('../src/achievements/redemption').grants(db, user).other);
@@ -93,13 +178,13 @@ test('ticket draws debit only tickets, retain normal fiftieth bonuses, and retry
 });
 test('profile edits preserve authentic packs and ignore client-supplied reward metadata', (t) => {
   const { db, user, other, store } = fixture(t);
-  store.redeem(user, '我愛作者');
+  store.redeem(user, '我愛作者我愛作者');
   const S = require('../src/profiles/settings');
   const before = Packs.receipts(db, user);
   const profile = S.getProfileSettings(db, user);
   S.setProfileSettings(db, user, {
     ...profile,
-    appearance: { ...profile.appearance, rewardCodePacks: { author: { draws: 999999 } } },
+    appearance: { ...profile.appearance, rewardCodePacks: { authorRenewal: { draws: 999999 } } },
   });
   assert.deepEqual(Packs.receipts(db, user), before);
   const clean = S.getProfileSettings(db, other);
@@ -108,7 +193,10 @@ test('profile edits preserve authentic packs and ignore client-supplied reward m
     appearance: { ...clean.appearance, rewardCodePacks: before },
   });
   assert.equal(Packs.availableTickets(db, other), 0);
-  assert.equal(S.preserveAvatar(db, user, profile.appearance).rewardCodePacks.author.draws, 300);
+  assert.equal(
+    S.preserveAvatar(db, user, profile.appearance).rewardCodePacks.authorRenewal.draws,
+    300,
+  );
 });
 test('a failed random selection rolls the whole code claim back; disabled accounts cannot claim', (t) => {
   const { db, user, store } = fixture(t);
@@ -124,7 +212,7 @@ test('a failed random selection rolls the whole code claim back; disabled accoun
     0,
   );
   db.prepare('UPDATE users SET disabled=1 WHERE id=?').run(user);
-  assert.throws(() => store.redeem(user, '我愛作者'), { code: 'REWARD_CODE_UNAVAILABLE' });
+  assert.throws(() => store.redeem(user, '我愛作者我愛作者'), { code: 'REWARD_CODE_UNAVAILABLE' });
 });
 test('legacy claims remain once-only; tampered pack receipts and orphan grants are rejected on restore', (t) => {
   const { db, user, other, store } = fixture(t);
@@ -133,8 +221,10 @@ test('legacy claims remain once-only; tampered pack receipts and orphan grants a
     JSON.stringify({ achievementRewardCodes: { other: at } }),
     user,
   );
-  assert.equal(store.redeem(user, '我愛作者').redemption.alreadyRedeemed, true);
+  assert.throws(() => store.redeem(user, '我愛作者'), { code: 'INVALID_REWARD_CODE' });
   assert.equal(Packs.availableTickets(db, user), 0);
+  assert.equal(store.redeem(user, '我愛作者我愛作者').redemption.alreadyRedeemed, false);
+  assert.equal(Packs.availableTickets(db, user), 300);
   store.redeem(other, '新手大禮包');
   const saved = JSON.parse(
     db.prepare('SELECT appearance FROM users WHERE id=?').get(other).appearance,

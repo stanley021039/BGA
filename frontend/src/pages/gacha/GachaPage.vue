@@ -41,6 +41,7 @@ import UiDialog from '../../components/UiDialog.vue';
 import UiList from '../../components/UiList.vue';
 import UiListRow from '../../components/UiListRow.vue';
 import GachaFeatured from '../../components/GachaFeatured.vue';
+import GachaNextBonusNotice from '../../components/GachaNextBonusNotice.vue';
 const store = useGachaStore(),
   session = useSessionStore(),
   prefs = usePreferencesStore();
@@ -124,6 +125,7 @@ const result = ref<GachaReceipt | null>(null),
   cardBoard = ref<HTMLElement | null>(null),
   resultSummary = ref<HTMLElement | null>(null),
   resultDialog = ref<InstanceType<typeof UiDialog> | null>(null);
+const activeCardPreview = ref(0);
 const confirmation = ref<InstanceType<typeof UiDialog> | null>(null),
   exchangeItem = ref<GachaItem | null>(null),
   exchangePreviewDialog = ref<InstanceType<typeof UiDialog> | null>(null),
@@ -243,6 +245,7 @@ const drawBonus = computed(() => {
     receipt?.operation !== 'draw' ||
     receipt.drawCount === undefined ||
     receipt.voucher ||
+    receipt.ultimateVoucher ||
     receipt.thirdLogin
   )
     return;
@@ -387,6 +390,7 @@ async function show(receipt: GachaReceipt, { animate = false, announce = false }
   if (disposed) return;
   reveal();
   result.value = receipt;
+  activeCardPreview.value = 0;
   repeatPool.value = announce && receipt.operation === 'draw' ? receipt.pool : null;
   if (repeatPool.value) revealIndex.value = 0;
   announcementId =
@@ -452,11 +456,19 @@ async function draw(
   voucher = false,
   thirdLogin = false,
   useTickets = false,
+  ultimateVoucher = false,
 ) {
   const userId = session.user?.id;
   const share = openSpectate.value;
   captureTrader();
-  const receipt = await store.draw(selectedPool, count, voucher, thirdLogin, useTickets);
+  const receipt = await store.draw(
+    selectedPool,
+    count,
+    voucher,
+    thirdLogin,
+    useTickets,
+    ultimateVoucher,
+  );
   if (receipt && userId && session.user?.id === userId) {
     rememberUnrevealedDraw(userId, receipt.requestId);
     publishSpectate('close');
@@ -774,7 +786,16 @@ const newCount = computed(() =>
                 >
               </div>
               <p>距下次加成 {{ untilBonus }} 抽</p>
+              <GachaNextBonusNotice :pool="poolInfo" />
               <div class="gacha-buttons">
+                <UiButton
+                  v-if="store.state.ultimateVoucherAvailable"
+                  label="使用大招券 · 免費抽大招"
+                  icon="gift"
+                  :disabled="locked"
+                  :pending="store.pending"
+                  @click="draw(1, 'attacks', false, false, false, true)"
+                />
                 <UiButton
                   label="單次抽取 · 100 聖潔石"
                   :disabled="locked || store.state.wallet.coins < 100"
@@ -1111,6 +1132,7 @@ const newCount = computed(() =>
         />
         <div v-show="!spotlight" class="gacha-card-reveal">
           <p v-if="result.thirdLogin" class="gacha-note">史詩十連券 · 第 10 張固定史詩</p>
+          <p v-if="result.ultimateVoucher" class="gacha-note">大招券 · 免費單抽大招</p>
           <p
             v-if="revealIndex !== null"
             ref="revealRegion"
@@ -1146,6 +1168,8 @@ const newCount = computed(() =>
                 :key="revealIndex"
                 :number="revealIndex + 1"
                 :item="faceUp ? revealItem : undefined"
+                :image="drawImage"
+                :name="drawName"
                 :rarity-hint="
                   revealItem.rarity === 'epic' || revealItem.rarity === 'legendary'
                     ? revealItem.rarity
@@ -1170,6 +1194,10 @@ const newCount = computed(() =>
                 :number="index + 1"
                 :item="item"
                 :compact="result.results.length > 1"
+                :preview-active="activeCardPreview === index"
+                :image="drawImage"
+                :name="drawName"
+                @preview="activeCardPreview = index"
                 @play-voice="playRewardVoice"
               />
             </div>
@@ -1187,6 +1215,10 @@ const newCount = computed(() =>
             <UiButton v-else label="略過翻牌" @click="skipReveal" />
           </div>
           <div v-else class="gacha-result-footer">
+            <GachaNextBonusNotice
+              v-if="repeatPool"
+              :pool="store.state?.pools.find((item) => item.id === repeatPool)"
+            />
             <p
               >本次結算餘額：{{ number(result.wallet.coins) }} 聖潔石／{{
                 number(result.wallet.fragments)

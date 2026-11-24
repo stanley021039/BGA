@@ -121,3 +121,29 @@ test('save failures keep the accepted choices and expose the server message', as
     f.close();
   }
 });
+
+test('a random full loadout saves atomically and failures preserve the accepted set', async () => {
+  const writes = [];
+  let fail = false;
+  const f = fixture(async (_route, options) => {
+    if (!options?.body) return { q: 'barrage', e: 'beam', r: '' };
+    writes.push(options.body);
+    if (fail) throw Error('整套儲存失敗');
+    return options.body;
+  });
+  try {
+    await f.store.load();
+    await f.store.chooseAll({ q: 'beam', e: 'barrage', r: 'explosion' });
+    assert.equal(writes.length, 1);
+    assert.equal(f.store.loadout.r, 'explosion');
+    await f.store.chooseAll({ q: 'explosion', e: 'beam', r: 'barrage' });
+    assert.equal(writes.length, 1);
+    fail = true;
+    await f.store.chooseAll({ q: 'shield', e: 'sphere', r: '' });
+    assert.equal(f.store.loadout.q, 'beam');
+    assert.equal(f.store.loadout.r, 'explosion');
+    assert.equal(f.store.message, '整套儲存失敗');
+  } finally {
+    f.close();
+  }
+});

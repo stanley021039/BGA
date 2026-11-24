@@ -4,6 +4,7 @@ import sceneRules from '../../../public/shared/scene-rules.json';
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { attackEffectGroups } from '../services/effect-variants';
 import { requestJson } from '../services/http';
+import { randomAttacks } from '../services/random-effects';
 import { useSessionStore } from '../stores/session';
 import {
   attackEffects,
@@ -66,6 +67,7 @@ watch(
   (loadout) => (selection.value = { ...loadout }),
 );
 const owned = ref<string[]>(['barrage', 'beam']),
+  ownershipPending = ref(false),
   conditions = ref<Record<string, string>>({}),
   ownershipError = ref(''),
   session = useSessionStore();
@@ -76,6 +78,7 @@ async function loadOwnership() {
   conditions.value = {};
   ownershipError.value = '';
   noticeKey.value++;
+  ownershipPending.value = !!session.user?.id;
   if (!session.user?.id) return;
   const request = (ownershipRequest = new AbortController());
   try {
@@ -89,7 +92,10 @@ async function loadOwnership() {
   } catch {
     if (!request.signal.aborted) ownershipError.value = '無法讀取解鎖狀態，請重新開啟選單';
   } finally {
-    if (ownershipRequest === request && !request.signal.aborted) noticeKey.value++;
+    if (ownershipRequest === request && !request.signal.aborted) {
+      ownershipPending.value = false;
+      noticeKey.value++;
+    }
   }
 }
 watch(() => session.user?.id, loadOwnership, { immediate: true });
@@ -113,6 +119,11 @@ async function change(slot: AttackSlot, value: string | number | null | undefine
 function play(id: string) {
   previewBySlot.value[previewSlot.value] = id;
   revision.value++;
+}
+async function randomize() {
+  noticeKey.value++;
+  await store.chooseAll(randomAttacks(store.loadout, allowed));
+  noticeKey.value++;
 }
 </script>
 <template>
@@ -167,7 +178,12 @@ function play(id: string) {
           }}。第二、三段回能減半，第四段起不回能。大招命中不回能。</span
         ></p
       > </div
-    ><div class="attack-loadout" :class="{ 'has-confirm': $slots.confirm }"
+    ><UiButton
+      label="隨機配招"
+      :disabled="!store.ready || store.pending || ownershipPending || !!ownershipError"
+      @click="randomize"
+    />
+    <div class="attack-loadout" :class="{ 'has-confirm': $slots.confirm }"
       ><UiField
         v-for="slot in ['q', 'e', 'r'] as const"
         :key="slot"
@@ -286,6 +302,10 @@ function play(id: string) {
 .attack-choices p {
   margin: 0;
 }
+.attack-preview-section {
+  grid-template-rows: auto minmax(0, 1fr);
+  block-size: max(24rem, calc(100dvh - var(--stitch-space-48) * 2));
+}
 .attack-current-previews {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
@@ -360,7 +380,7 @@ function play(id: string) {
   align-content: start;
   gap: var(--stitch-gap-controls);
   padding: var(--stitch-space-8);
-  max-block-size: min(42dvh, 440px);
+  min-block-size: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
@@ -373,7 +393,6 @@ function play(id: string) {
 @media (min-width: 601px) {
   .attack-choices-expanded .attack-effect-grid {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-    max-block-size: min(62dvh, 680px);
   }
 }
 .attack-effect-detail {

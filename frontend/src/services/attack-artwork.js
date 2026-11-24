@@ -1397,13 +1397,14 @@ export function playAttackArtwork(surface, options) {
     frame = 0,
     last = -Infinity,
     releaseMotion = () => {};
-  function stop() {
+  function stop(completed = false) {
     if (stopped) return;
     stopped = true;
     releaseMotion();
     cancelAnimationFrame(frame);
     scene.dispose();
     ctx.clearRect(0, 0, width, height);
+    if (completed) options.onComplete?.();
   }
   function tick(now) {
     if (stopped) return;
@@ -1411,7 +1412,7 @@ export function playAttackArtwork(surface, options) {
     if (now - last >= 1000 / 60 - 1) {
       last = now;
       ctx.clearRect(0, 0, width, height);
-      if (!scene.draw(now)) return stop();
+      if (!scene.draw(now)) return stop(true);
     }
     frame = requestAnimationFrame(tick);
   }

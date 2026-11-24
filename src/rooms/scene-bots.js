@@ -58,6 +58,7 @@ function createBotDriver(random = Math.random) {
     cast,
     castBoss = () => {},
     canTarget = () => true,
+    canAct = () => true,
     isHuman,
     touchBoss = () => {},
   }) {
@@ -76,7 +77,7 @@ function createBotDriver(random = Math.random) {
     try {
       for (const bot of bots) {
         const actor = positions.get(bot.id);
-        if (!actor?.health || time < (actor.bossArrivalAt || 0) + 700) continue;
+        if (!actor?.health || time < (actor.bossArrivalAt || 0) + 700 || !canAct(actor)) continue;
         if (actor.botArrivalAt && time < actor.botArrivalAt + 1500) continue;
         let state = states.get(bot.id);
         if (!state) states.set(bot.id, (state = { moveAt: time + 400, attackAt: time + 1200 }));

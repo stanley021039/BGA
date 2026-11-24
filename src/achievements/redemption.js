@@ -1,7 +1,7 @@
 'use strict';
 const { HttpError } = require('../http/errors');
 const codes = Object.freeze([
-  { code: '我愛作者', group: 'other', label: '其他獎勵（大廳背景與戰鬥加成）' },
+  { code: '我愛作者我愛作者', group: 'other', label: '其他獎勵（戰鬥加成）' },
 ]);
 const validAt = (at) =>
   typeof at === 'string' && Number.isFinite(Date.parse(at)) && new Date(at).toISOString() === at;
@@ -17,6 +17,11 @@ function grants(db, userId) {
       // Preserve rewards already redeemed before the four-code split; the old code is no longer accepted.
       else if (validAt(saved.achievementRewardCodeAt))
         result[group] = saved.achievementRewardCodeAt;
+      else if (
+        saved.rewardCodePacks?.authorRenewal?.version === 2 &&
+        validAt(saved.rewardCodePacks.authorRenewal.redeemedAt)
+      )
+        result[group] = saved.rewardCodePacks.authorRenewal.redeemedAt;
     }
     return result;
   } catch {
@@ -30,12 +35,12 @@ function redeem(store, userId, code) {
   if (
     typeof code === 'string' &&
     code.length <= 80 &&
-    ['我愛作者', '新手大禮包'].includes(code.trim())
+    ['我愛作者我愛作者', '新手大禮包'].includes(code.trim())
   )
     return require('./code-packs').redeem(
       store,
       userId,
-      code.trim() === '我愛作者' ? 'author' : 'starter',
+      code.trim() === '新手大禮包' ? 'starter' : 'authorRenewal',
     );
   throw new HttpError(400, 'INVALID_REWARD_CODE', '兌換碼不正確，請重新確認');
 }

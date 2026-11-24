@@ -289,3 +289,39 @@ test('third-login receipts and milestone reject malformed rewards and remain rea
     contract.readGachaCheckin({ ...checkin, epicTen: { days: 3, status: 'unknown' } }),
   );
 });
+
+test('ultimate voucher contracts accept one free attack and reject mixed payments or malformed eligibility', () => {
+  const checkin = {
+    day: '2026-11-23',
+    visits: 1,
+    cycle: [1000, 1000, 1500, 1000, 2000],
+    step: 0,
+    claimed: false,
+    milestone: { days: 7, status: 'locked' },
+    ultimate: { days: 1, status: 'claimable' },
+  };
+  assert.equal(contract.readGachaCheckin(checkin).ultimate.status, 'claimable');
+  for (const ultimate of [
+    { days: 2, status: 'claimable' },
+    { days: 1, status: 'locked' },
+    { days: 1, status: 'bad' },
+  ])
+    assert.throws(() => contract.readGachaCheckin({ ...checkin, ultimate }));
+  const draw = receipt();
+  draw.ultimateVoucher = true;
+  draw.cost = 0;
+  assert.equal(contract.readGachaReceipt(draw, 'draw').ultimateVoucher, true);
+  for (const change of [
+    (r) => (r.pool = 'all'),
+    (r) => (r.cost = 100),
+    (r) => (r.voucher = true),
+    (r) => (r.thirdLogin = true),
+    (r) => (r.useTickets = true),
+    (r) => (r.ultimateVoucher = false),
+    (r) => r.results.push({ ...r.results[0] }),
+  ]) {
+    const malformed = structuredClone(draw);
+    change(malformed);
+    assert.throws(() => contract.readGachaReceipt(malformed, 'draw'));
+  }
+});

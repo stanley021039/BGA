@@ -168,3 +168,56 @@ test('arena bots join a selected team ready, and cannot be changed during the ma
     code: 'ARENA_LOCKED',
   });
 });
+
+for (const mode of ['pk', 'team', 'brawl'])
+  test(`${mode} countdown keeps bot position, movement goal and interpolation stationary until start`, () => {
+    const { lobby, advance } = fixture({
+      requireReady: true,
+      expandedMap: true,
+      startDelayMs: 5000,
+    });
+    lobby.arena(alice, { action: 'team', team: 'red' });
+    const bot = lobby.bots(alice, { action: 'add', team: 'blue' }).bots[0];
+    advance(2000);
+    lobby.view(alice);
+    lobby.arena(alice, { action: 'ready', ready: true });
+    const started = lobby.arena(alice, {
+      action: 'start',
+      mode,
+      matchId: null,
+      durationSeconds: 60,
+      mapId: 1,
+    });
+    const read = (scene) => {
+      const b = scene.visitors.find((v) => v.id === bot.id);
+      return {
+        x: b.x,
+        y: b.y,
+        targetX: b.targetX,
+        targetY: b.targetY,
+        moveId: b.moveId,
+        remainingMs: b.remainingMs,
+      };
+    };
+    const initial = read(started);
+    assert.equal(initial.x, initial.targetX);
+    assert.equal(initial.y, initial.targetY);
+    assert.equal(initial.remainingMs, 0);
+    for (let i = 0; i < 19; i++) {
+      advance(250);
+      const state = lobby.view(alice);
+      assert.deepEqual(read(state), initial);
+      assert.ok(!state.attacks.some((e) => e.fromId === bot.id && e.at >= started.serverNow));
+    }
+    advance(249);
+    assert.deepEqual(read(lobby.view(alice)), initial);
+    let resumed = false;
+    for (let i = 0; i < 10; i++) {
+      advance(400);
+      const state = lobby.view(alice);
+      resumed ||=
+        read(state).moveId !== initial.moveId ||
+        state.attacks.some((e) => e.fromId === bot.id && e.at >= started.arena.match.startedAt);
+    }
+    assert.ok(resumed, 'AI resumes after the full countdown');
+  });

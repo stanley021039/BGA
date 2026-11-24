@@ -1,6 +1,7 @@
 const { attackKind } = require('./attack-kind');
 const { selectAttackTargets } = require('./attack-targets');
 const { profile } = require('./archetypes');
+const { randomArenaLoadout } = require('./arena-random-loadout');
 const { createWalls, layoutCount } = require('./walls');
 const { createHazards } = require('./hazards');
 const { createBushes, bushAt } = require('./lobby-bushes');
@@ -208,7 +209,7 @@ function createLobby(
   const arena = createLobbyArena(
     now,
     geometry,
-    (visitors, players, map) => {
+    (visitors, players, map, mode) => {
       const choices = Array.from({ length: layoutCount - 1 }, (_, i) => i + 1).filter(
         (i) => i !== layoutId,
       );
@@ -273,11 +274,19 @@ function createLobby(
         actor.bushEnteredAt = 0;
         actor.moveId++;
         actor.updatedAt = now();
-        const loadout = sceneBots.get(p.id) || arenaOptions.attackLoadout?.(p.id);
+        const loadout =
+          mode === 'brawl'
+            ? randomArenaLoadout()
+            : sceneBots.get(p.id) || arenaOptions.attackLoadout?.(p.id);
         actor.lockedAttackLoadout = loadout
           ? Object.freeze({ q: loadout.q, e: loadout.e, r: loadout.r || '' })
           : null;
         p.loadout = actor.lockedAttackLoadout ? { ...actor.lockedAttackLoadout } : null;
+        if (mode === 'brawl') {
+          actor.lockedEntrance = loadout.entrance;
+          p.entrance = loadout.entrance;
+          actor.teleportId++;
+        }
       }
     },
     (teams, user) => {
@@ -434,6 +443,15 @@ function createLobby(
     );
   }
   function advance(visitor, time) {
+    if (arena.warmingUp(time) && sceneBots.has(visitor.id)) {
+      if (visitor.targetX !== visitor.x || visitor.targetY !== visitor.y) {
+        visitor.targetX = visitor.x;
+        visitor.targetY = visitor.y;
+        visitor.moveId++;
+      }
+      visitor.updatedAt = Math.max(visitor.updatedAt, time);
+      return;
+    }
     if (!arena.active(visitor.id) || !walls) return advanceOrdinary(visitor, time);
     if (arena.preparing(visitor.id, time)) {
       visitor.updatedAt = Math.max(visitor.updatedAt, time);
@@ -653,6 +671,7 @@ function createLobby(
       bots: [...sceneBots.values()],
       positions: visitors,
       events: attacks,
+      canAct: () => !arena.warmingUp(time),
       isHuman: (actor) =>
         !sceneBots.has(actor.id) && !arenaOptions.practiceBots?.some((b) => b.id === actor.id),
       touchBoss: (bot, target, at) => {
@@ -785,7 +804,7 @@ function createLobby(
               botCharacters.find((c) => c.id === sceneBots.get(visitor.id).characterId)?.image
             : portrait(visitor.id),
           emote: visitor.emote && visitor.emote.until > time ? visitor.emote : null,
-          entrance: visitor.entrance || 'classic',
+          entrance: visitor.lockedEntrance || visitor.entrance || 'classic',
         })),
     };
   }

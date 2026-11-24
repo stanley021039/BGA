@@ -18,7 +18,7 @@ const error = ref('');
 let controller: AbortController | undefined;
 let shownDay = '';
 
-async function refresh(kind?: 'daily' | 'legendary' | 'epic-ten') {
+async function refresh(kind?: 'daily' | 'legendary' | 'epic-ten' | 'ultimate') {
   if (busy.value) return;
   const request = new AbortController();
   controller = request;
@@ -50,7 +50,10 @@ async function showToday() {
   if (
     !next ||
     shownDay === next.day ||
-    (next.claimed && next.milestone.status !== 'claimable' && next.epicTen?.status !== 'claimable')
+    (next.claimed &&
+      next.milestone.status !== 'claimable' &&
+      next.epicTen?.status !== 'claimable' &&
+      next.ultimate?.status !== 'claimable')
   )
     return;
   shownDay = next.day;
@@ -127,6 +130,30 @@ const number = new Intl.NumberFormat('zh-TW');
               :disabled="busy"
               @click="refresh('daily')"
             />
+          </div>
+        </UiPanel>
+        <UiPanel
+          v-if="rewards.ultimate"
+          title="大招券"
+          description="首次累積登入一天可領一次；已符合資格的玩家也可補領。到抽卡機免費單抽一個大招，稀有度依大招獎池機率。"
+          density="compact"
+        >
+          <div class="login-reward-actions">
+            <span>累積登入 {{ Math.min(rewards.visits, 1) }}／1 天</span>
+            <UiButton
+              v-if="rewards.ultimate.status === 'claimable'"
+              label="領取大招券"
+              variant="primary"
+              :disabled="busy"
+              @click="refresh('ultimate')"
+            />
+            <UiLink
+              v-else-if="rewards.ultimate.status === 'available'"
+              href="/gacha"
+              label="已領取 · 前往抽卡"
+            />
+            <UiBadge v-else-if="rewards.ultimate.status === 'used'" tone="success">已使用</UiBadge>
+            <UiBadge v-else tone="disabled">待解鎖</UiBadge>
           </div>
         </UiPanel>
         <UiPanel
