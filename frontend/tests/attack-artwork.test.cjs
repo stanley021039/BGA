@@ -257,6 +257,15 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
   assert.equal(timers.size, 0);
   return { colors, arcs, lines, transforms, scales, texts, positions, rotations };
 }
+test('preview completion fires once at the natural end and never on early cancellation', () => {
+  let completed = 0;
+  run('beam', '#40cfff', 320, Math.random, { onComplete: () => completed++ });
+  assert.equal(completed, 1);
+  completed = 0;
+  run('beam', '#40cfff', 1, Math.random, { onComplete: () => completed++ });
+  assert.equal(completed, 0);
+});
+
 test('crystal closes after 800 ms and renders every ordinary attack return and variant', () => {
   const { crystalReflection } = require('../../public/shared/scene-rules.json');
   const timing = require('../../public/shared/attack-timing.json');

@@ -53,7 +53,7 @@ function owned(store, userId) {
       backgrounds: [
         ...new Set(
           require('../../public/shared/lobby-backgrounds.json')
-            .filter((b) => !b.achievementId)
+            .filter((b) => !b.achievementId && !b.gachaOnly)
             .map((b) => b.id)
             .concat(ids('backgrounds')),
         ),
@@ -76,10 +76,11 @@ function owned(store, userId) {
     backgrounds: require('../../public/shared/lobby-backgrounds.json')
       .filter(
         (background) =>
-          grants.other ||
-          !background.achievementId ||
-          ids.has(background.achievementId) ||
-          starter.backgrounds?.includes(background.id),
+          !background.gachaOnly &&
+          (grants.other ||
+            !background.achievementId ||
+            ids.has(background.achievementId) ||
+            starter.backgrounds?.includes(background.id)),
       )
       .map((background) => background.id),
     openings: ['home-family', ...(ids.has('all-three-games') ? ['soul-world'] : [])],

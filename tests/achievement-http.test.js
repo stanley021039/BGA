@@ -415,7 +415,7 @@ test('retired codes reject new claims and revoke only code and achievement acces
     (await f.raw(0, 'admin/achievements/reset', { confirmation: 'RESET ALL ACHIEVEMENTS' })).status,
     404,
   );
-  const other = await f.api(2, 'achievements/redeem', { code: '我愛作者' });
+  const other = await f.api(2, 'achievements/redeem', { code: '我愛作者我愛作者' });
   assert.deepEqual(other.bonusRewards.backgrounds, ['default', 'castle']);
   assert.equal(other.redemption.draws, 300);
   assert.deepEqual(unlocked(other), []);

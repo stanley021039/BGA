@@ -84,7 +84,7 @@ for (const [kind, variants] of [
     add(kind, e.id, e.label, parentRarities.get(e.variantOf) || 'common', [], false, true);
 }
 for (const e of require('../../public/shared/lobby-backgrounds.json').filter(
-  (e) => e.achievementId || e.id === 'castle',
+  (e) => e.achievementId || e.gachaOnly || e.id === 'castle',
 ))
   add(
     'backgrounds',

@@ -5,7 +5,9 @@ const { HttpError } = require('../http/errors');
 const Ownership = require('../gacha/ownership');
 const { defaults } = require('../profiles/appearance');
 const definitions = Object.freeze({
+  // Retain the old key to validate existing receipts and unspent tickets.
   author: { label: '我愛作者', draws: 300, attackSlot: 'r' },
+  authorRenewal: { label: '我愛作者我愛作者', draws: 300, attackSlot: 'r' },
   starter: { label: '新手大禮包', draws: 100, attackSlot: 'q' },
 });
 const digest = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -54,11 +56,13 @@ function redeem(store, userId, key, { choose = randomInt } = {}) {
     const saved = Ownership.appearance(store.db, userId),
       previous = receipts(store.db, userId)[key];
     if (previous) return { group: key, label: def.label, ...previous, alreadyRedeemed: true };
-    // Existing receipts remain one-time claims; do not revoke or reissue old gifts.
+    // The renewal has its own one-time receipt; legacy gifts and balances stay intact.
     const oldAt =
       key === 'author'
         ? require('./redemption').redeemedAt(store.db, userId, 'other')
-        : require('./starter-rewards').receipt(store.db, userId)?.redeemedAt;
+        : key === 'starter'
+          ? require('./starter-rewards').receipt(store.db, userId)?.redeemedAt
+          : null;
     if (oldAt)
       return {
         group: key,

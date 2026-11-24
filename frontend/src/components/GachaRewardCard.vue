@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import type { GachaResult } from '../contracts/gacha';
 import BarrageFrames from '../engines/barrage-frames.js';
 import AudioSettings from '../engines/audio-settings.js';
@@ -7,6 +7,7 @@ import MotionPolicy from '../engines/motion-policy.js';
 import { watchMotionCancellation } from '../services/motion-lifetime.js';
 import FramePreview from './FramePreview.vue';
 import GachaRewardThumbnail from './GachaRewardThumbnail.vue';
+import GachaEffectPreview from './GachaEffectPreview.vue';
 import UiBadge from './UiBadge.vue';
 import UiButton from './UiButton.vue';
 import UiChoiceCard from './UiChoiceCard.vue';
@@ -23,8 +24,20 @@ const props = defineProps<{
   active?: boolean;
   motionEnabled?: boolean;
   spectator?: boolean;
+  previewActive?: boolean;
+  image?: string;
+  name?: string;
 }>();
-const emit = defineEmits<{ playVoice: [item: GachaResult]; reveal: [] }>();
+const emit = defineEmits<{ playVoice: [item: GachaResult]; reveal: []; preview: [] }>();
+const replay = ref(0);
+const effectCard = computed(
+  () => props.item?.kind === 'attacks' || props.item?.kind === 'entrances',
+);
+const previewing = computed(() => !props.compact || props.previewActive);
+function replayEffect() {
+  replay.value++;
+  emit('preview');
+}
 const glint = ref<HTMLElement | null>(null);
 let pulse: Animation | null = null;
 let glintTimer: ReturnType<typeof setTimeout> | undefined;
@@ -124,6 +137,13 @@ const rarityTone = { legendary: 'primary', epic: 'epic', rare: 'info', common: '
   >
     <div v-if="item" class="gacha-card-content">
       <span class="gacha-card-number">第 {{ number }} 張</span>
+      <UiHeading
+        v-if="effectCard"
+        :level="3"
+        kind="card"
+        :card-size="compact ? undefined : 'section'"
+        >{{ item.label }}</UiHeading
+      >
       <div
         class="gacha-reward-art"
         :data-kind="item.kind"
@@ -147,10 +167,19 @@ const rarityTone = { legendary: 'primary', epic: 'epic', rare: 'info', common: '
           :kind="item.kind === 'media' ? 'media' : 'barrage'"
           :lines="[item.label]"
         />
+        <GachaEffectPreview
+          v-else-if="item.kind === 'attacks' || item.kind === 'entrances'"
+          :kind="item.kind"
+          :effect="item.id"
+          :active="previewing"
+          :play-key="item.key + ':' + replay"
+          :image="image"
+          :name="name"
+        />
         <GachaRewardThumbnail v-else :kind="item.kind" :effect="item.id" :compact="compact" />
       </div>
       <UiHeading
-        v-if="item.kind !== 'sounds'"
+        v-if="item.kind !== 'sounds' && !effectCard"
         :level="3"
         kind="card"
         :card-size="compact ? undefined : 'section'"
@@ -165,7 +194,14 @@ const rarityTone = { legendary: 'primary', epic: 'epic', rare: 'info', common: '
       </div>
       <span v-if="item.kind !== 'sounds'" class="gacha-card-kind">{{ kinds[item.kind] }}</span>
       <UiButton
-        v-else-if="!spectator"
+        v-if="effectCard"
+        icon="replay"
+        :label="(previewing ? '重播特效 ' : '播放特效 ') + item.label"
+        :caption="previewing ? '重播特效' : '播放特效'"
+        @click.stop="replayEffect"
+      />
+      <UiButton
+        v-if="item.kind === 'sounds' && !spectator"
         icon="sound"
         :label="'播放語音 ' + item.label"
         caption="播放語音"
@@ -393,6 +429,7 @@ const rarityTone = { legendary: 'primary', epic: 'epic', rare: 'info', common: '
   font-size: var(--stitch-text-body);
 }
 .gacha-reward-art {
+  position: relative;
   display: grid;
   place-items: center;
   inline-size: min(100%, 192px);
@@ -403,6 +440,7 @@ const rarityTone = { legendary: 'primary', epic: 'epic', rare: 'info', common: '
   box-shadow: 0 0 var(--gacha-card-glow-size) color-mix(in srgb, currentColor 38%, transparent);
 }
 .gacha-reward-art[data-kind='entrances'] {
+  min-block-size: 160px;
   border-radius: 0;
   background: transparent;
   box-shadow: none;

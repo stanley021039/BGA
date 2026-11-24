@@ -41,6 +41,7 @@ function validateGachaDatabase(db) {
             ...(response.voucher === true ? { voucher: true } : {}),
             ...(response.thirdLogin === true ? { thirdLogin: true } : {}),
             ...(response.useTickets === true ? { useTickets: true } : {}),
+            ...(response.ultimateVoucher === true ? { ultimateVoucher: true } : {}),
           }
         : { operation: 'exchange', key: response.item?.key };
     if (digest(payload) !== row.fingerprint) throw Error('Invalid gacha receipt fingerprint');
@@ -67,6 +68,7 @@ function validateGachaDatabase(db) {
       if (
         response.thirdLogin !== true ||
         response.voucher !== undefined ||
+        response.ultimateVoucher !== undefined ||
         row.operation !== 'draw' ||
         response.pool !== 'all' ||
         response.cost !== 0 ||
@@ -89,6 +91,7 @@ function validateGachaDatabase(db) {
         row.operation !== 'draw' ||
         response.voucher ||
         response.thirdLogin ||
+        response.ultimateVoucher ||
         response.cost !== 0 ||
         ![1, 10].includes(response.results?.length) ||
         response.ticketCost !== response.results.length ||
@@ -113,6 +116,7 @@ function validateGachaDatabase(db) {
         );
       if (
         response.voucher !== true ||
+        response.ultimateVoucher !== undefined ||
         row.operation !== 'draw' ||
         response.cost !== 0 ||
         response.results?.length !== 1 ||
@@ -125,6 +129,33 @@ function validateGachaDatabase(db) {
         )
       )
         throw Error('Invalid gacha check-in voucher receipt');
+    }
+    if (response.ultimateVoucher !== undefined) {
+      const claim = 'checkin-ultimate-claim:' + row.user_id;
+      const use = 'checkin-ultimate-use:' + row.user_id;
+      const events = db
+        .prepare(
+          "SELECT event_id,fingerprint FROM gacha_ledger WHERE user_id=? AND reason='login' AND event_id IN (?,?)",
+        )
+        .all(row.user_id, claim, use);
+      if (
+        response.ultimateVoucher !== true ||
+        response.voucher !== undefined ||
+        response.thirdLogin !== undefined ||
+        response.useTickets !== undefined ||
+        row.operation !== 'draw' ||
+        response.pool !== 'attacks' ||
+        response.cost !== 0 ||
+        response.results?.length !== 1 ||
+        response.results[0]?.kind !== 'attacks' ||
+        !require('../rooms/scene-energy').fitsSlot('r', response.results[0]?.id) ||
+        events.length !== 2 ||
+        !events.some((e) => e.event_id === claim && e.fingerprint === digest({ event: claim })) ||
+        !events.some(
+          (e) => e.event_id === use && e.fingerprint === digest({ requestId: row.request_id }),
+        )
+      )
+        throw Error('Invalid ultimate voucher receipt');
     }
   }
   require('../achievements/code-packs').validate(db);

@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-24",
+  "source": "../sources.json",
+  "status": "local-implementation-awaiting-user-acceptance",
+  "scenes": [
+    {
+      "id": "cinema",
+      "label": "電影院",
+      "rarity": "common",
+      "source": "cinema.svg",
+      "production": "production/cinema.svg",
+      "bytes": 3943,
+      "sha256": "d818a1561216563aa2ef158a103992474d692f3a65f9aa3e118c4cfcd475f99f",
+      "refined": false
+    },
+    {
+      "id": "bathroom",
+      "label": "浴室＋浴缸",
+      "rarity": "common",
+      "source": "bathroom.svg",
+      "production": "production/bathroom.svg",
+      "bytes": 4749,
+      "sha256": "7912a503e050d7f3161f6174b92ee2ca8d070081b8cf326a7e8240949908a1d4",
+      "refined": false
+    },
+    {
+      "id": "sakura",
+      "label": "櫻花樹",
+      "rarity": "rare",
+      "source": "sakura.svg",
+      "production": "production/sakura.svg",
+      "bytes": 6355,
+      "sha256": "ea02501adba8030c23c4c0a2f737365f1b47fd0ac42ae2bde35ea60c920c2092",
+      "refined": false
+    },
+    {
+      "id": "onsen",
+      "label": "溫泉",
+      "rarity": "rare",
+      "source": "onsen.svg",
+      "production": "production/onsen.svg",
+      "bytes": 5350,
+      "sha256": "8c70b52ca6f5fb4475f6eeba0ad231aaace5453d5c2e4d04c6973a78976e08eb",
+      "refined": false
+    },
+    {
+      "id": "moonlit_lake",
+      "label": "夜色湖面",
+      "rarity": "epic",
+      "source": "moonlit_lake.svg",
+      "production": "production/moonlit_lake.svg",
+      "bytes": 4802,
+      "sha256": "a6e7d26c756552511dab1f66ab87727bbfaf15094f81368dc333d01f18fc3666",
+      "refined": false
+    },
+    {
+      "id": "presidential",
+      "label": "總統府",
+      "rarity": "epic",
+      "source": "presidential.svg",
+      "production": "production/presidential.svg",
+      "bytes": 4986,
+      "sha256": "306f50c1829c9971bee0125a231bbfc977f2129ef87c30bd3acae8af1d8470e5",
+      "refined": false
+    },
+    {
+      "id": "mars",
+      "label": "火星表面",
+      "rarity": "legendary",
+      "source": "mars.svg",
+      "production": "production/mars.svg",
+      "bytes": 13560,
+      "sha256": "3ef6a73ca48a12c124a698f5349d37d487d2649813189863a298c621d0856f76",
+      "refined": true
+    },
+    {
+      "id": "battlefield",
+      "label": "戰場",
+      "rarity": "legendary",
+      "source": "battlefield.svg",
+      "production": "production/battlefield.svg",
+      "bytes": 11186,
+      "sha256": "c093ebde043a278c4523bc0096ada37a39e906c754b2c5be3355f751a8d3b29a",
+      "refined": true
+    }
+  ]
+}

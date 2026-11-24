@@ -20,9 +20,16 @@ test('simultaneous code claims and ticket retries issue rewards and spend ticket
     return value;
   };
   await call('auth/login', { username: 'pack_http', password: 'test-password-123' });
+  const retired = await fetch(base + '/api/achievements/redeem', {
+    method: 'POST',
+    headers: { Cookie: cookie, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: '我愛作者' }),
+  });
+  assert.equal(retired.status, 400);
+  assert.equal((await call('gacha')).rewardTickets, 0);
   const results = await Promise.all([
-    call('achievements/redeem', { code: '我愛作者' }),
-    call('achievements/redeem', { code: '我愛作者' }),
+    call('achievements/redeem', { code: '我愛作者我愛作者' }),
+    call('achievements/redeem', { code: '我愛作者我愛作者' }),
   ]);
   assert.deepEqual(results.map((r) => r.redemption.alreadyRedeemed).sort(), [false, true]);
   assert.deepEqual(results[0].redemption.rewards, results[1].redemption.rewards);

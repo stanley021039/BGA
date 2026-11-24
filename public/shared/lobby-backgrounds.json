@@ -68,5 +68,69 @@
     "game": "minimal",
     "target": 3,
     "achievementId": "background-aurora"
+  },
+  {
+    "id": "cinema",
+    "label": "電影院",
+    "game": null,
+    "target": 0,
+    "achievementId": null,
+    "gachaOnly": true
+  },
+  {
+    "id": "bathroom",
+    "label": "浴室＋浴缸",
+    "game": null,
+    "target": 0,
+    "achievementId": null,
+    "gachaOnly": true
+  },
+  {
+    "id": "sakura",
+    "label": "櫻花樹",
+    "game": null,
+    "target": 0,
+    "achievementId": null,
+    "gachaOnly": true
+  },
+  {
+    "id": "onsen",
+    "label": "溫泉",
+    "game": null,
+    "target": 0,
+    "achievementId": null,
+    "gachaOnly": true
+  },
+  {
+    "id": "moonlit_lake",
+    "label": "夜色湖面",
+    "game": null,
+    "target": 0,
+    "achievementId": null,
+    "gachaOnly": true
+  },
+  {
+    "id": "presidential",
+    "label": "總統府",
+    "game": null,
+    "target": 0,
+    "achievementId": null,
+    "gachaOnly": true
+  },
+  {
+    "id": "mars",
+    "label": "火星表面",
+    "game": null,
+    "target": 0,
+    "achievementId": null,
+    "gachaOnly": true
+  },
+  {
+    "id": "battlefield",
+    "label": "戰場",
+    "game": null,
+    "target": 0,
+    "achievementId": null,
+    "gachaOnly": true
   }
 ]

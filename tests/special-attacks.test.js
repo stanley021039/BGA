@@ -145,40 +145,45 @@ test('hero cancels on death, new life or caster removal; homing retargets withou
   }
 });
 
-test('homing expires at two seconds, costs half current HP once, and never resumes', () => {
-  const f = fixture('shaohua_devour');
-  const [caster, target, other] = f.actors;
-  target.x = 99;
-  other.x = 97;
-  f.advance(1100);
-  assert.ok(f.event.head.x > 28.9 && f.event.head.x < 29.1);
-  f.actors.splice(1);
-  caster.health = 800000;
-  caster.lastHitAt = 1100;
-  f.advance(2099);
-  assert.equal(f.event.head.cancelled, false);
-  assert.equal(caster.health, 800000);
-  f.advance(2100);
-  assert.equal(f.event.until, 2950);
-  assert.equal(f.event.head.cancelled, true);
-  assert.equal(f.event.head.exploded, true);
-  assert.equal(f.event.head.at, 2000);
-  assert.equal(caster.health, 400000);
-  f.advance(2200);
-  assert.equal(caster.health, 400000);
-  assert.equal(f.event.hits.length, 0);
-});
+for (const suffix of ['', '_alt']) {
+  test(
+    'homing' + suffix + ' expires at three seconds, costs half current HP once, and never resumes',
+    () => {
+      const f = fixture('shaohua_devour' + suffix);
+      const [caster, target, other] = f.actors;
+      target.x = 99;
+      other.x = 97;
+      f.advance(1100);
+      assert.ok(f.event.head.x > 28.9 && f.event.head.x < 29.1);
+      f.actors.splice(1);
+      caster.health = 800000;
+      caster.lastHitAt = 1100;
+      f.advance(3099);
+      assert.equal(f.event.head.cancelled, false);
+      assert.equal(caster.health, 800000);
+      f.advance(3100);
+      assert.equal(f.event.until, 3950);
+      assert.equal(f.event.head.cancelled, true);
+      assert.equal(f.event.head.exploded, true);
+      assert.equal(f.event.head.at, 3000);
+      assert.equal(caster.health, 400000);
+      f.advance(3200);
+      assert.equal(caster.health, 400000);
+      assert.equal(f.event.hits.length, 0);
+    },
+  );
 
-test('a bite finishing exactly at two seconds counts as success', () => {
-  const f = fixture('shaohua_devour', { to: { x: 37.25, y: 50 } });
-  const [caster, target] = f.actors;
-  f.advance(2100);
-  assert.equal(f.event.head.finished, true);
-  assert.equal(f.event.head.exploded, undefined);
-  assert.equal(f.event.hits[0].delayMs, 2000);
-  assert.equal(target.health, 120000);
-  assert.equal(caster.health, 1200000);
-});
+  test('a bite' + suffix + ' finishing exactly at three seconds counts as success', () => {
+    const f = fixture('shaohua_devour' + suffix, { to: { x: 46.25, y: 50 } });
+    const [caster, target] = f.actors;
+    f.advance(3100);
+    assert.equal(f.event.head.finished, true);
+    assert.equal(f.event.head.exploded, undefined);
+    assert.equal(f.event.hits[0].delayMs, 3000);
+    assert.equal(target.health, 120000);
+    assert.equal(caster.health, 1200000);
+  });
+}
 
 test('a recast replaces the previous homing entity and caster departure cancels it', () => {
   const f = fixture('shaohua_devour');
@@ -217,7 +222,7 @@ test('normal walking outruns the head in every direction and aspect until it exp
       const f = fixture('shaohua_devour', { from, to, aspectRatio }),
         victim = f.actors[1];
       const initialGap = sceneDistance(from, to, aspectRatio);
-      for (let time = 150; time < 2100; time += 50) {
+      for (let time = 150; time < 3100; time += 50) {
         const step = sceneWalk(victim, goal, 50);
         victim.x = step.x;
         victim.y = step.y;
@@ -234,7 +239,7 @@ test('normal walking outruns the head in every direction and aspect until it exp
         Math.abs(headTravel / playerTravel - 0.75) < 0.001,
         'head walks at 75% of the same character path',
       );
-      f.advance(2100);
+      f.advance(3100);
       assert.equal(f.event.head.cancelled, true);
       assert.equal(victim.health, 1200000);
       assert.equal(victim.respawnAt, 0);
@@ -346,7 +351,8 @@ test('arena devour follows wall corners and bites only after a clear approach', 
     previous = { x: head.x, y: head.y };
   }
   assert.ok(roundedCorner);
-  assert.equal(f.event.head.cancelled, true);
-  assert.equal(f.event.hits.length, 0);
-  assert.equal(f.actors[1].health, 1200000);
+  assert.equal(f.event.head.finished, true);
+  assert.equal(f.event.head.cancelled, false);
+  assert.equal(f.event.hits.length, 1);
+  assert.equal(f.actors[1].health, 120000);
 });

@@ -78,9 +78,15 @@ test('unopened legendary and epic cards play a cue on pulse peaks and stop on po
         },
       },
       ...Object.fromEntries(
-        ['FramePreview', 'GachaRewardThumbnail', 'UiBadge', 'UiButton', 'UiHeading', 'UiIcon'].map(
-          (name) => ['./' + name + '.vue', stub('span')],
-        ),
+        [
+          'FramePreview',
+          'GachaRewardThumbnail',
+          'GachaEffectPreview',
+          'UiBadge',
+          'UiButton',
+          'UiHeading',
+          'UiIcon',
+        ].map((name) => ['./' + name + '.vue', stub('span')]),
       ),
       './UiPanel.vue': stub('section'),
       './UiChoiceCard.vue': stub('button'),
@@ -267,7 +273,7 @@ test('the same opening and closing prices can play different mid-market moves', 
   assert.equal(paths.size, 20);
   assert.ok(lateSizes.size > 5);
 });
-function fixture(allowed = true, image, ending = 'rise') {
+function fixture(allowed = true, image, ending = 'rise', extraProps = {}) {
   let now = 0,
     id = 0,
     blocked,
@@ -312,12 +318,11 @@ function fixture(allowed = true, image, ending = 'rise') {
   ).default;
   const host = document.createElement('div');
   document.body.append(host);
+  const props = vue.reactive({ name: '測試玩家<img src=x>', image, ending, ...extraProps });
   const app = vue.createApp({
     render: () =>
       vue.h(component, {
-        name: '測試玩家<img src=x>',
-        image,
-        ending,
+        ...props,
         onSound: (cue) => sounds.push([now, cue]),
         onComplete: (cancelled) => {
           completed++;
@@ -331,6 +336,10 @@ function fixture(allowed = true, image, ending = 'rise') {
     jobs,
     sounds,
     chart,
+    async setEnding(value) {
+      props.ending = value;
+      await vue.nextTick();
+    },
     get completed() {
       return completed;
     },
@@ -488,4 +497,292 @@ test('cinematic reveals one receipt once and releases finite timers on complete,
   assert.equal(reduced.interrupted, true);
   assert.equal(reduced.jobs.size, 0);
   reduced.close();
+});
+
+test('spectators resume the current market and settle only on the owner update without advancing cards', async () => {
+  const elapsedMs = helper.gachaTimeline.trading + 400;
+  const movie = fixture(true, undefined, 'fall', { spectator: true, elapsedMs, ending: undefined });
+  await movie.advance(0);
+  assert.equal(movie.host.querySelector('[data-phase]').getAttribute('data-phase'), 'trading');
+  const series = movie.host.querySelector('.stock-series');
+  assert.ok(series);
+  assert.ok(movie.host.querySelector('.stock-candle').getAttribute('style').includes('-400ms'));
+  assert.equal(movie.host.querySelector('.stock-index-ending'), null);
+  await movie.advance(helper.gachaTimeline.complete);
+  assert.equal(movie.completed, 0);
+  assert.equal(movie.host.querySelector('[data-phase]').getAttribute('data-phase'), 'trading');
+  await movie.setEnding('fall');
+  assert.equal(movie.host.querySelector('[data-phase]').getAttribute('data-phase'), 'settled');
+  assert.equal(movie.host.querySelector('.stock-series'), series);
+  assert.ok(movie.host.querySelector('.stock-final-candle'));
+  assert.deepEqual(movie.sounds, []);
+  movie.close();
+  assert.equal(movie.jobs.size, 0);
+  const settled = fixture(true, undefined, 'rise', {
+    spectator: true,
+    elapsedMs: helper.gachaTimeline.settlement + 100,
+  });
+  await settled.advance(0);
+  assert.equal(settled.host.querySelector('[data-ending]').getAttribute('data-ending'), 'rise');
+  assert.equal(settled.jobs.size, 0);
+  assert.equal(settled.completed, 0);
+  settled.close();
+});
+
+test('ten result cards keep one live preview and cancel on selection, motion preference, hidden and unmount', async () => {
+  const raw = compileScript(
+    parse(fs.readFileSync(path.join(__dirname, '../src/components/GachaEffectPreview.vue'), 'utf8'))
+      .descriptor,
+    { id: 'live-gacha-effect', inlineTemplate: true },
+  ).content;
+  const prefs = vue.reactive({ motion: { enabled: true, reduced: false } });
+  let allowed = true,
+    alive = 0,
+    peak = 0;
+  const cancellations = new Set();
+  const artwork = vue.defineComponent({
+    setup(_, ctx) {
+      vue.onMounted(() => {
+        alive++;
+        peak = Math.max(peak, alive);
+      });
+      vue.onBeforeUnmount(() => alive--);
+      return () => vue.h('canvas', { 'data-live-art': true, onClick: () => ctx.emit('complete') });
+    },
+  });
+  const preview = evaluate(raw, {
+    vue,
+    '../stores/preferences': { usePreferencesStore: () => prefs },
+    '../services/entrance-effects': { isEntranceEffect: () => true },
+    '../services/motion-lifetime.js': {
+      motionAllowed: () => allowed,
+      watchMotionCancellation: (cancel) => {
+        cancellations.add(cancel);
+        return () => cancellations.delete(cancel);
+      },
+    },
+    './AttackArtwork.vue': { default: artwork },
+    './EntrancePreview.vue': { default: artwork },
+    './UiIcon.vue': { default: vue.defineComponent({ setup: () => () => vue.h('span') }) },
+  }).default;
+  const selected = vue.ref(0),
+    replay = vue.ref(0);
+  const app = vue.createApp({
+    setup: () => () =>
+      Array.from({ length: 10 }, (_, i) =>
+        vue.h(preview, {
+          key: i,
+          kind: 'attacks',
+          effect: 'beam',
+          active: selected.value === i,
+          playKey: replay.value,
+        }),
+      ),
+  });
+  const host = document.createElement('div');
+  document.body.appendChild(host);
+  app.mount(host);
+  const flush = async () => {
+    await vue.nextTick();
+    await vue.nextTick();
+  };
+  await flush();
+  assert.equal(alive, 1);
+  assert.equal(cancellations.size, 1);
+  selected.value = 7;
+  await flush();
+  assert.equal(alive, 1);
+  assert.equal(peak, 1);
+  prefs.motion.enabled = false;
+  await flush();
+  assert.equal(alive, 0);
+  assert.equal(cancellations.size, 0);
+  prefs.motion.enabled = true;
+  await flush();
+  assert.equal(alive, 0);
+  replay.value++;
+  await flush();
+  assert.equal(alive, 1);
+  allowed = false;
+  for (const cancel of [...cancellations]) cancel();
+  await flush();
+  assert.equal(alive, 0);
+  allowed = true;
+  await flush();
+  assert.equal(alive, 0);
+  replay.value++;
+  await flush();
+  assert.equal(alive, 1);
+  host.querySelector('canvas').click();
+  await flush();
+  assert.equal(alive, 0);
+  assert.equal(cancellations.size, 0);
+  replay.value++;
+  await flush();
+  assert.equal(alive, 1);
+  app.unmount();
+  host.remove();
+  assert.equal(alive, 0);
+  assert.equal(cancellations.size, 0);
+});
+
+test('single effect cards autoplay while compact cards play only when selected', async () => {
+  const raw = compileScript(
+    parse(fs.readFileSync(path.join(__dirname, '../src/components/GachaRewardCard.vue'), 'utf8'))
+      .descriptor,
+    { id: 'card-preview-defaults', inlineTemplate: true },
+  ).content;
+  const states = [];
+  const stub = (tag) => ({
+    default: vue.defineComponent({ setup: (_, ctx) => () => vue.h(tag, ctx.slots.default?.()) }),
+  });
+  const component = evaluate(
+    raw,
+    {
+      vue,
+      '../engines/barrage-frames.js': { default: { options: [] } },
+      '../engines/audio-settings.js': { default: { stopEffect() {} } },
+      '../engines/motion-policy.js': { default: {} },
+      '../services/motion-lifetime.js': { watchMotionCancellation: () => () => {} },
+      ...Object.fromEntries(
+        [
+          'FramePreview',
+          'GachaRewardThumbnail',
+          'UiBadge',
+          'UiButton',
+          'UiHeading',
+          'UiIcon',
+          'UiChoiceCard',
+        ].map((name) => ['./' + name + '.vue', stub('span')]),
+      ),
+      './UiPanel.vue': stub('section'),
+      './GachaEffectPreview.vue': {
+        default: vue.defineComponent({
+          props: { active: Boolean },
+          setup: (props) => {
+            states.push(props.active);
+            return () => vue.h('canvas');
+          },
+        }),
+      },
+    },
+    { setTimeout, clearTimeout },
+  ).default;
+  const item = {
+    key: 'attacks:shield',
+    id: 'shield',
+    kind: 'attacks',
+    label: '六角能量護盾',
+    rarity: 'common',
+    rarityLabel: '普通',
+    duplicate: false,
+    fragments: 0,
+  };
+  const host = document.createElement('div');
+  document.body.appendChild(host);
+  const app = vue.createApp({
+    render: () => [
+      vue.h(component, { item, number: 1, prominent: true }),
+      vue.h(component, { item, number: 2, compact: true }),
+      vue.h(component, { item, number: 3, compact: true, previewActive: true }),
+    ],
+  });
+  app.mount(host);
+  await vue.nextTick();
+  assert.deepEqual(states, [true, false, true]);
+  app.unmount();
+  host.remove();
+});
+
+test('background previews contain the full scene while lobby artwork keeps cover and isolates every gradient', async () => {
+  const scenes = require('../../public/shared/lobby-background-live.json');
+  const original = scenes.find((s) => s.id === 'mars').svg;
+  const raw = compileScript(
+    parse(fs.readFileSync(path.join(__dirname, '../src/components/LobbyBackgroundArt.vue'), 'utf8'))
+      .descriptor,
+    { id: 'static-background-fit', inlineTemplate: true },
+  ).content;
+  const component = evaluate(raw, {
+    vue,
+    '../../../public/shared/lobby-background-live.json': { default: scenes },
+    '../assets/lobby-background-live.css': {},
+  }).default;
+  const host = document.createElement('div');
+  document.body.appendChild(host);
+  const app = vue.createApp({
+    render: () => [
+      vue.h(component, { id: 'mars' }),
+      vue.h(component, { id: 'mars', fit: 'contain' }),
+    ],
+  });
+  app.mount(host);
+  await vue.nextTick();
+  const svgs = host.querySelectorAll('svg');
+  assert.equal(svgs.length, 2);
+  assert.equal(svgs[0].getAttribute('preserveAspectRatio'), 'xMidYMid slice');
+  assert.equal(svgs[1].getAttribute('preserveAspectRatio'), 'xMidYMid meet');
+  const ids = [...host.querySelectorAll('svg [id]')].map((n) => n.id);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(scenes.find((s) => s.id === 'mars').svg, original);
+  app.unmount();
+  host.remove();
+});
+
+test('next bonus notice follows independent pool counters, live odds and the 50-draw boundary', async () => {
+  const raw = compileScript(
+    parse(
+      fs.readFileSync(path.join(__dirname, '../src/components/GachaNextBonusNotice.vue'), 'utf8'),
+    ).descriptor,
+    { id: 'next-bonus-notice', inlineTemplate: true },
+  ).content;
+  const notice = evaluate(raw, {
+    vue,
+    '../../../public/shared/gacha-economy.json': { default: { bonusInterval: 50 } },
+    './UiNotice.vue': {
+      default: vue.defineComponent({
+        props: { message: String, persistent: Boolean },
+        setup: (props) => () => vue.h('p', { 'data-persistent': props.persistent }, props.message),
+      }),
+    },
+  }).default;
+  const pool = vue.ref({
+    id: 'combat',
+    label: '攻擊招式與大廳背景',
+    drawCount: 39,
+    bonusWeights: { common: 0, rare: 0, epic: 65, legendary: 35 },
+  });
+  const host = document.createElement('div');
+  document.body.appendChild(host);
+  const app = vue.createApp({ render: () => vue.h(notice, { pool: pool.value }) });
+  app.mount(host);
+  assert.equal(host.textContent, '');
+  pool.value.drawCount = 40;
+  await vue.nextTick();
+  assert.match(host.textContent, /再十連第 10 張觸發 50 抽加成/);
+  pool.value.drawCount = 48;
+  await vue.nextTick();
+  assert.match(host.textContent, /再十連第 2 張觸發 50 抽加成/);
+  pool.value.drawCount = 49;
+  await vue.nextTick();
+  assert.match(host.textContent, /下一抽觸發 50 抽加成/);
+  assert.match(host.textContent, /史詩 65%／傳說 35%/);
+  assert.equal(host.querySelector('p').getAttribute('data-persistent'), 'true');
+  pool.value = {
+    id: 'arrival',
+    label: '進場特效',
+    drawCount: 50,
+    bonusWeights: { common: 0, rare: 0, epic: 65, legendary: 35 },
+  };
+  await vue.nextTick();
+  assert.equal(host.textContent, '');
+  pool.value.drawCount = 99;
+  pool.value.bonusWeights = { common: 1, rare: 4, epic: 55, legendary: 40 };
+  await vue.nextTick();
+  assert.match(host.textContent, /^進場特效：/);
+  assert.match(host.textContent, /普通 1%／稀有 4%／史詩 55%／傳說 40%/);
+  pool.value.drawCount = 100;
+  await vue.nextTick();
+  assert.equal(host.textContent, '');
+  app.unmount();
+  host.remove();
 });

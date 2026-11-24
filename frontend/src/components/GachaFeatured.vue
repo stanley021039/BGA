@@ -153,7 +153,7 @@ onBeforeUnmount(() => {
         :effect="item.id"
         :play-key="replay"
       />
-      <LobbyBackgroundArt v-else-if="playable && item.kind === 'backgrounds'" :id="item.id" />
+      <LobbyBackgroundArt v-else-if="item.kind === 'backgrounds'" :id="item.id" fit="contain" />
       <UiHeading v-else-if="item.kind === 'sounds'" :level="3" kind="card" card-size="page">
         {{ item.label }}
       </UiHeading>
