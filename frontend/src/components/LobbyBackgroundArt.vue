@@ -2,10 +2,14 @@
 import { computed, useId } from 'vue';
 import scenes from '../../../public/shared/lobby-background-live.json';
 import '../assets/lobby-background-live.css';
-const props = defineProps<{ id: string }>(),
+const props = defineProps<{ id: string; fit?: 'cover' | 'contain' }>(),
   suffix = '-bg-' + useId().replace(/[^a-z0-9-]/gi, '');
 const svg = computed(() => {
   let html = scenes.find((scene) => scene.id === props.id)?.svg || '';
+  if (props.fit === 'contain')
+    html = html
+      .replace(/\spreserveAspectRatio="[^"]*"/, '')
+      .replace('<svg ', '<svg preserveAspectRatio="xMidYMid meet" ');
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
   for (const id of ids)
     html = html

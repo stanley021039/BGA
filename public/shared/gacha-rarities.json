@@ -164,5 +164,13 @@
   "entrances:arrival-glass-break": "rare",
   "entrances:arrival-star-courier": "common",
   "entrances:arrival-brush-creation": "rare",
-  "entrances:arrival-delivery-scooter": "legendary"
+  "entrances:arrival-delivery-scooter": "legendary",
+  "backgrounds:cinema": "common",
+  "backgrounds:bathroom": "common",
+  "backgrounds:sakura": "rare",
+  "backgrounds:onsen": "rare",
+  "backgrounds:moonlit_lake": "epic",
+  "backgrounds:presidential": "epic",
+  "backgrounds:mars": "legendary",
+  "backgrounds:battlefield": "legendary"
 }

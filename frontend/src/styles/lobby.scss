@@ -153,20 +153,20 @@
   }
 }
 body[data-visual-theme='playful'] .vue-lobby .game-library[data-card-carousel] {
-  height: 550px;
+  height: 500px;
   .game-tile {
-    width: min(340px, calc(100% - 32px));
-    height: 488px;
+    width: min(306px, calc(100% - var(--stitch-space-32)));
+    height: 440px;
   }
   .tile-image {
-    height: 220px;
+    height: 198px;
   }
   .tile-body {
     padding: tokens.space(4);
     display: grid;
     grid-template-rows: minmax(3em, auto) auto minmax(4.5em, auto) auto;
     gap: tokens.space(2);
-    height: 262px;
+    height: 236px;
     overflow: auto;
     scrollbar-gutter: stable;
   }
@@ -487,10 +487,10 @@ body.lobby-self-hover {
       justify-content: center;
     }
     .vue-lobby .game-library[data-card-carousel] {
-      flex: 0 1 466px;
+      flex: 0 1 424px;
       min-height: 0;
-      height: 466px;
-      max-height: 466px;
+      height: 424px;
+      max-height: 424px;
       width: 100%;
       max-width: 720px;
       width: calc(100% - 440px);
@@ -501,14 +501,14 @@ body.lobby-self-hover {
       container-type: size;
       .game-tile {
         top: 50%;
-        width: clamp(200px, 38cqw, 300px);
-        height: clamp(124px, calc(100cqh - 48px), 418px);
+        width: clamp(180px, 34.2cqw, 270px);
+        height: clamp(124px, calc(100cqh - var(--stitch-space-48)), 376px);
         display: flex;
         flex-direction: column;
       }
       .tile-image {
         flex: none;
-        height: clamp(48px, calc(100cqh - 260px), 190px);
+        height: clamp(var(--stitch-space-48), calc(100cqh - 234px), 171px);
       }
       .tile-body {
         flex: 1;
@@ -581,10 +581,10 @@ body.lobby-self-hover {
       display: none;
     }
     .game-library[data-card-carousel] .game-tile {
-      height: clamp(124px, calc(100cqh - var(--stitch-space-8)), 418px);
+      height: clamp(124px, calc(100cqh - var(--stitch-space-8)), 376px);
     }
     .game-library[data-card-carousel] .tile-image {
-      height: clamp(var(--stitch-space-48), calc(100cqh - 300px), 190px);
+      height: clamp(var(--stitch-space-48), calc(100cqh - 270px), 171px);
     }
     .game-library[data-card-carousel] .tile-body {
       gap: tokens.space(1);

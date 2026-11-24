@@ -11,6 +11,7 @@ const props = defineProps<{
   effect: string;
   playKey: string | number;
 }>();
+const emit = defineEmits<{ complete: [] }>();
 const prefs = usePreferencesStore(),
   surface = ref<HTMLCanvasElement | null>(null),
   stage = ref<HTMLElement | null>(null);
@@ -40,7 +41,12 @@ async function play() {
   const options = previewAttackOptions(props.effect, width, height);
   warmNewSkillAssets(props.effect, options.width, options.height);
   if (summonAssets(props.effect)) previewSummon.value = epoch;
-  cleanup = playAttackArtwork(surface.value, options);
+  cleanup = playAttackArtwork(surface.value, {
+    ...options,
+    onComplete: () => {
+      if (mounted && epoch === revision) emit('complete');
+    },
+  });
 }
 onMounted(() => {
   mounted = true;

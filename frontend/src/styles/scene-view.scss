@@ -108,7 +108,13 @@ body.scene-ui-hidden .lobby-scene-npc {
       [data-background='classroom'],
       [data-background='prison'],
       [data-background='lab'],
-      [data-background='aurora']
+      [data-background='aurora'],
+      [data-background='cinema'],
+      [data-background='bathroom'],
+      [data-background='onsen'],
+      [data-background='moonlit_lake'],
+      [data-background='mars'],
+      [data-background='battlefield']
     )
   )
   #site-header-app[data-site-header] {
@@ -118,6 +124,15 @@ body.scene-ui-hidden .lobby-scene-npc {
 }
 :root
   body[data-visual-theme]:has(.lobby-backdrop[data-background='courtroom'])
+  #site-header-app[data-site-header] {
+  --stitch-header-ink: var(--stitch-scene-light-ink);
+  --stitch-header-hover: var(--stitch-scene-light-hover);
+  --stitch-header-focus-shadow: var(--stitch-scene-light-focus-shadow);
+}
+:root
+  body[data-visual-theme]:has(
+    .lobby-backdrop:is([data-background='sakura'], [data-background='presidential'])
+  )
   #site-header-app[data-site-header] {
   --stitch-header-ink: var(--stitch-scene-light-ink);
   --stitch-header-hover: var(--stitch-scene-light-hover);

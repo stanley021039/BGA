@@ -1,5 +1,7 @@
 # 八款靜態大廳背景候選稿
 
+2026-11-24更新：使用者已接受分級並要求實裝。原稿保留為來源，production子目錄包含實裝SVG與大小／SHA256清單；火星、戰場沿原稿精修。接入範圍、吟唱與最終驗證見[實裝紀錄](../../../specs/STATIC-BACKGROUNDS-407-IMPLEMENTATION.md)。下方「尚未入池」為2026-11-13原候選階段，已被本輪取代；Figma仍依原指示延後。
+
 Stitch 專案：[Party Game Stage Picker](https://stitch.google.com/projects/16226792553515652128)。八款原生 SVG 是設計稿，尚未加入正式背景獎池；Figma 依使用者先前指示延後匯入。
 
 開啟 `index.html` 可比較八景，點圖查看完整 SVG。原始匯出 HTML 留於本機 `work/stitch-407`；`sources.json` 記錄畫布 ID、原稿與各 SVG 的 SHA256。

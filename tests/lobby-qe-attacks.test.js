@@ -121,7 +121,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.equal((await post('/api/profile/attacks', { q: 'shield', e: 'beam' })).status, 403);
   const initial = await get('/api/achievements');
   assert.deepEqual(initial.body.bonusRewards.attacks, ['barrage', 'beam']);
-  const redeemed = await post('/api/achievements/redeem', { code: '我愛作者' });
+  const redeemed = await post('/api/achievements/redeem', { code: '我愛作者我愛作者' });
   assert.equal(redeemed.status, 200);
   const gifted = redeemed.body.redemption.rewards.find((row) => row.key === 'attacks').items[0].id;
   assert.ok(redeemed.body.bonusRewards.attacks.includes(gifted));

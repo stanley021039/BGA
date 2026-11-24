@@ -296,8 +296,8 @@ $typography: (
   --stitch-panel-padding: var(--stitch-space-24);
   --stitch-panel-padding-compact: var(--stitch-space-16);
   --stitch-panel-translucent-bg: color-mix(in srgb, var(--stitch-surface) 75%, transparent);
-  --stitch-carousel-card-bg: color-mix(in srgb, var(--stitch-surface) 82%, transparent);
-  --stitch-carousel-cover-opacity: 0.5;
+  --stitch-carousel-card-bg: var(--stitch-surface);
+  --stitch-carousel-cover-opacity: 1;
   // Controls share a minimum height; buttons/labels are 14, input text is 16.
   --stitch-control-padding-block: var(--stitch-space-8);
   --stitch-control-padding-inline: var(--stitch-space-12);

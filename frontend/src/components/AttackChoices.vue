@@ -286,6 +286,10 @@ function play(id: string) {
 .attack-choices p {
   margin: 0;
 }
+.attack-preview-section {
+  grid-template-rows: auto minmax(0, 1fr);
+  block-size: max(24rem, calc(100dvh - var(--stitch-space-48) * 2));
+}
 .attack-current-previews {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
@@ -360,7 +364,7 @@ function play(id: string) {
   align-content: start;
   gap: var(--stitch-gap-controls);
   padding: var(--stitch-space-8);
-  max-block-size: min(42dvh, 440px);
+  min-block-size: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
@@ -373,7 +377,6 @@ function play(id: string) {
 @media (min-width: 601px) {
   .attack-choices-expanded .attack-effect-grid {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-    max-block-size: min(62dvh, 680px);
   }
 }
 .attack-effect-detail {

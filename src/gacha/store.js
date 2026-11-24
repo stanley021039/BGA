@@ -21,6 +21,7 @@ const epicEvent = (userId) => 'third-login-epic-ten:' + userId;
 const checkinEvent = (day, userId) => 'checkin:' + day + ':' + userId;
 const dailyClaimEvent = (day, userId) => 'login:' + day + ':' + userId;
 const voucherEvent = (action, userId) => 'checkin-legendary-' + action + ':' + userId;
+const ultimateEvent = (action, userId) => 'checkin-ultimate-' + action + ':' + userId;
 const matchEvent = (facts, userId) => 'match:' + facts.game + ':' + facts.id + ':' + userId;
 class GachaStore {
   constructor(db, { clock = Date.now, choose = randomInt } = {}) {
@@ -114,6 +115,16 @@ class GachaStore {
       cycle,
       step,
       claimed: !!claimed,
+      ultimate: {
+        days: 1,
+        status: this.hasEvent(ultimateEvent('use', userId))
+          ? 'used'
+          : this.hasEvent(ultimateEvent('claim', userId))
+            ? 'available'
+            : visits >= 1
+              ? 'claimable'
+              : 'locked',
+      },
       epicTen: {
         days: 3,
         status: this.hasEvent(epicEvent(userId))
@@ -137,13 +148,22 @@ class GachaStore {
     };
   }
   claimCheckin(userId, kind) {
+    if (!['daily', 'legendary', 'epic-ten', 'ultimate'].includes(kind))
+      throw new HttpError(400, 'INVALID_GACHA_CHECKIN', '請選擇有效的登入獎勵');
     const now = this.clock();
     this.daily(userId, now);
     return transaction(this.db, () => {
       const at = new Date(now).toISOString();
       const day = taipeiDay(now);
       const state = this.checkin(userId, day);
-      if (kind === 'epic-ten') {
+      if (kind === 'ultimate') {
+        if (state.ultimate.status === 'locked')
+          throw new HttpError(409, 'GACHA_CHECKIN_NOT_READY', '累積登入一天後可領取');
+        if (state.ultimate.status === 'claimable') {
+          const event = ultimateEvent('claim', userId);
+          this.ledger(event, userId, 'login', 0, 0, hash({ event }), at);
+        }
+      } else if (kind === 'epic-ten') {
         if (state.epicTen.status === 'locked')
           throw new HttpError(409, 'GACHA_CHECKIN_NOT_READY', '累積登入三天後可領取');
         if (state.epicTen.status === 'claimable') {
@@ -178,7 +198,8 @@ class GachaStore {
         `SELECT json_extract(response_json, '$.pool') AS pool,
                 SUM(json_array_length(response_json, '$.results')) AS total
          FROM gacha_requests WHERE user_id=? AND operation='draw'
-           AND json_extract(response_json, '$.voucher') IS NOT 1 AND json_extract(response_json, '$.thirdLogin') IS NOT 1 GROUP BY pool`,
+           AND json_extract(response_json, '$.voucher') IS NOT 1 AND json_extract(response_json, '$.thirdLogin') IS NOT 1
+           AND json_extract(response_json, '$.ultimateVoucher') IS NOT 1 GROUP BY pool`,
       )
       .all(userId);
     return new Map(rows.map(({ pool, total }) => [pool, total]));
@@ -210,6 +231,9 @@ class GachaStore {
       wallet: this.wallet(userId),
       rewardTickets: require('../achievements/code-packs').availableTickets(this.db, userId),
       epicTenAvailable: this.hasEvent(epicClaimEvent(userId)) && !this.hasEvent(epicEvent(userId)),
+      ultimateVoucherAvailable:
+        this.hasEvent(ultimateEvent('claim', userId)) &&
+        !this.hasEvent(ultimateEvent('use', userId)),
       voucherAvailable:
         this.hasEvent(voucherEvent('claim', userId)) && !this.hasEvent(voucherEvent('use', userId)),
       pools,
@@ -280,11 +304,21 @@ class GachaStore {
             'voucher',
             'thirdLogin',
             'useTickets',
+            'ultimateVoucher',
           ].includes(k),
       )
     )
       throw new HttpError(400, 'INVALID_GACHA_DRAW', '抽卡操作內容不正確');
-    const { requestId, pool, count, oddsRevision, voucher, thirdLogin, useTickets } = input;
+    const {
+      requestId,
+      pool,
+      count,
+      oddsRevision,
+      voucher,
+      thirdLogin,
+      useTickets,
+      ultimateVoucher,
+    } = input;
     if (
       oddsRevision !== undefined &&
       (typeof oddsRevision !== 'string' || !/^[a-f0-9]{64}$/.test(oddsRevision))
@@ -294,13 +328,27 @@ class GachaStore {
     if (
       !entries?.length ||
       ![1, 10].includes(count) ||
+      (ultimateVoucher !== undefined &&
+        (ultimateVoucher !== true ||
+          count !== 1 ||
+          pool !== 'attacks' ||
+          voucher ||
+          thirdLogin ||
+          useTickets)) ||
       (useTickets !== undefined && (useTickets !== true || voucher || thirdLogin)) ||
       (voucher !== undefined && (voucher !== true || count !== 1)) ||
       (thirdLogin !== undefined &&
         (thirdLogin !== true || count !== 10 || voucher || pool !== 'all'))
     )
       throw new HttpError(400, 'INVALID_GACHA_DRAW', '請選擇有效卡池及單抽或十連');
-    const eligible = voucher ? entries.filter((item) => item.rarity === 'legendary') : entries;
+    const eligible = ultimateVoucher
+      ? entries.filter(
+          (item) =>
+            item.kind === 'attacks' && require('../rooms/scene-energy').fitsSlot('r', item.id),
+        )
+      : voucher
+        ? entries.filter((item) => item.rarity === 'legendary')
+        : entries;
     if (!eligible.length) throw new HttpError(400, 'INVALID_GACHA_DRAW', '這個卡池沒有傳說獎品');
     return this.request(
       userId,
@@ -312,6 +360,7 @@ class GachaStore {
         ...(voucher ? { voucher: true } : {}),
         ...(thirdLogin ? { thirdLogin: true } : {}),
         ...(useTickets ? { useTickets: true } : {}),
+        ...(ultimateVoucher ? { ultimateVoucher: true } : {}),
       },
       (at, fingerprint) => {
         // A receipt replay precedes this check: a changed configuration must never reroll an old purchase.
@@ -329,9 +378,15 @@ class GachaStore {
             throw new HttpError(409, 'GACHA_VOUCHER_REQUIRED', '沒有可用的傳說單抽券');
           this.ledger(event, userId, 'login', 0, 0, hash({ requestId }), at);
         }
+        if (ultimateVoucher) {
+          const event = ultimateEvent('use', userId);
+          if (!this.hasEvent(ultimateEvent('claim', userId)) || this.hasEvent(event))
+            throw new HttpError(409, 'GACHA_ULTIMATE_VOUCHER_REQUIRED', '沒有可用的大招券');
+          this.ledger(event, userId, 'login', 0, 0, hash({ requestId }), at);
+        }
         const distribution = Odds.distribution(eligible, odds.weights);
         const wallet = this.wallet(userId),
-          cost = voucher || thirdLogin || useTickets ? 0 : count * 100;
+          cost = voucher || thirdLogin || useTickets || ultimateVoucher ? 0 : count * 100;
         const rewardTickets = require('../achievements/code-packs').availableTickets(
           this.db,
           userId,
@@ -345,7 +400,10 @@ class GachaStore {
         let fragments = 0;
         for (let n = 0; n < count; n++) {
           const boosted =
-            !voucher && !thirdLogin && (previousDraws + n + 1) % economy.bonusInterval === 0;
+            !voucher &&
+            !thirdLogin &&
+            !ultimateVoucher &&
+            (previousDraws + n + 1) % economy.bonusInterval === 0;
           const item = Odds.select(
             thirdLogin && n === 9
               ? Odds.distribution(
@@ -389,9 +447,10 @@ class GachaStore {
           pool,
           cost,
           results,
-          drawCount: previousDraws + (voucher || thirdLogin ? 0 : count),
+          drawCount: previousDraws + (voucher || thirdLogin || ultimateVoucher ? 0 : count),
           ...(voucher ? { voucher: true } : {}),
           ...(thirdLogin ? { thirdLogin: true } : {}),
+          ...(ultimateVoucher ? { ultimateVoucher: true } : {}),
           ...(useTickets
             ? { useTickets: true, ticketCost: count, rewardTickets: rewardTickets - count }
             : {}),
