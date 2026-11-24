@@ -56,7 +56,7 @@ onBeforeUnmount(() => stop?.());
   position: absolute;
   left: 50%;
   bottom: -15%;
-  width: 212px;
+  width: 276px;
   transform: translateX(-50%);
   pointer-events: none;
   animation: summon-form linear both;
@@ -89,7 +89,7 @@ onBeforeUnmount(() => stop?.());
 }
 @media (max-width: 640px) {
   .scene-summon {
-    width: 142px;
+    width: 192px;
   }
 }
 /* Windup, hit and recovery follow the three shared combat sweeps at 1s, 2.45s and 3.9s. */

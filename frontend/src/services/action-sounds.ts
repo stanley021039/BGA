@@ -3,8 +3,10 @@ import type { RoomSeat } from '../contracts/room';
 
 const entryKey = 'bga-action-feedback-room-entry';
 
-export function playActionFeedback(kind: 'confirm' | 'ready' = 'confirm') {
-  return AudioSettings?.playEffect?.(kind === 'ready' ? 'turn' : 'quacks-buy');
+export function playActionFeedback(kind: 'confirm' | 'ready' | 'teleport' = 'confirm') {
+  return AudioSettings?.playEffect?.(
+    kind === 'teleport' ? 'teleport' : kind === 'ready' ? 'turn' : 'quacks-buy',
+  );
 }
 
 export function rememberRoomEntryFeedback(seat: RoomSeat) {

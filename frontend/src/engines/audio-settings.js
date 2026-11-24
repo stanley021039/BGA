@@ -7,6 +7,7 @@ let AudioSettings;
     effects = new Map(),
     gameEffects = new Set(),
     priorityEffects = new Set();
+  let teleportContext, teleportBuffer, teleportVoice;
   const chantDeadlineMs = 12150;
   const gachaCues = {
     'gacha-chant-you-say-run': ['/assets/game-sounds/gacha-chant-you-say-run.mp3', chantDeadlineMs],
@@ -87,6 +88,9 @@ let AudioSettings;
   }
   function stopEffects() {
     for (const clip of [...effects.keys()]) stopEffect(clip);
+    const context = teleportContext;
+    teleportContext = teleportBuffer = undefined;
+    if (context) Promise.resolve(context.close()).catch(() => {});
   }
   function notify(gesture = false) {
     const settings = get();
@@ -251,7 +255,124 @@ let AudioSettings;
       onError?.();
     }
   }
+  function playTeleport(options) {
+    const settings = preferences.effects;
+    const Context = window.AudioContext || window.webkitAudioContext;
+    if (
+      !Context ||
+      teleportVoice ||
+      !settings.enabled ||
+      !settings.volume ||
+      document.hidden ||
+      effects.size - priorityEffects.size >= 4 ||
+      gameEffects.size >= 2
+    )
+      return;
+    let clip, deadline;
+    const nodes = [];
+    try {
+      const context = (teleportContext ||= new Context());
+      if (!teleportBuffer) {
+        const rate = Math.min(48000, context.sampleRate);
+        teleportBuffer = context.createBuffer(1, Math.ceil(rate * 0.22), rate);
+        const data = teleportBuffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.45;
+      }
+      const noise = context.createBufferSource(),
+        filter = context.createBiquadFilter(),
+        chirp = context.createOscillator(),
+        chirpGain = context.createGain(),
+        envelope = context.createGain(),
+        output = context.createGain();
+      nodes.push(noise, filter, chirp, chirpGain, envelope, output);
+      noise.buffer = teleportBuffer;
+      filter.type = 'bandpass';
+      filter.Q.value = 0.8;
+      chirp.type = 'sine';
+      chirpGain.gain.value = 0.08;
+      noise.connect(filter);
+      filter.connect(envelope);
+      chirp.connect(chirpGain);
+      chirpGain.connect(envelope);
+      envelope.connect(output);
+      output.connect(context.destination);
+      let stopped = false,
+        volume = settings.volume;
+      clip = {
+        get volume() {
+          return volume;
+        },
+        set volume(value) {
+          volume = value;
+          output.gain.value = value * 0.28;
+        },
+      };
+      clip.volume = settings.volume;
+      teleportVoice = clip;
+      const finish = () => stopEffect(clip);
+      effects.set(clip, () => {
+        stopped = true;
+        clearTimeout(deadline);
+        noise.onended = null;
+        for (const node of nodes) {
+          try {
+            node.stop?.();
+          } catch {}
+          try {
+            node.disconnect();
+          } catch {}
+        }
+        if (teleportVoice === clip) teleportVoice = undefined;
+        if (context === teleportContext) Promise.resolve(context.suspend()).catch(() => {});
+        try {
+          options.onStop?.(clip);
+        } catch {}
+      });
+      gameEffects.add(clip);
+      deadline = setTimeout(finish, 180);
+      Promise.resolve(context.resume())
+        .then(() => {
+          if (stopped || document.hidden || context !== teleportContext) return finish();
+          clearTimeout(deadline);
+          const at = context.currentTime;
+          filter.frequency.setValueAtTime(1400, at);
+          filter.frequency.exponentialRampToValueAtTime(6200, at + 0.035);
+          filter.frequency.exponentialRampToValueAtTime(1000, at + 0.2);
+          chirp.frequency.setValueAtTime(2500, at);
+          chirp.frequency.exponentialRampToValueAtTime(4300, at + 0.025);
+          chirp.frequency.exponentialRampToValueAtTime(850, at + 0.15);
+          envelope.gain.setValueAtTime(0.001, at);
+          envelope.gain.exponentialRampToValueAtTime(1, at + 0.008);
+          envelope.gain.exponentialRampToValueAtTime(0.001, at + 0.215);
+          noise.onended = finish;
+          noise.start(at);
+          noise.stop(at + 0.22);
+          chirp.start(at);
+          chirp.stop(at + 0.16);
+          deadline = setTimeout(finish, 350);
+        })
+        .catch(() => {
+          finish();
+          options.onError?.();
+        });
+      return clip;
+    } catch {
+      if (clip) stopEffect(clip);
+      else {
+        for (const node of nodes) {
+          try {
+            node.disconnect();
+          } catch {}
+        }
+        const context = teleportContext;
+        teleportContext = teleportBuffer = undefined;
+        if (context) Promise.resolve(context.close()).catch(() => {});
+      }
+      options.onError?.();
+    }
+  }
   function playEffect(kind, options = {}) {
+    if (kind === 'teleport') return playTeleport(options);
     // The 580ms draw recording uses onended; a 1s safety margin tolerates delayed media clocks.
     // Reuse the existing short double tone; warning is a distinct once-per-round cue.
     if (kind === 'countdown-warning') kind = 'turn';
@@ -330,6 +451,10 @@ let AudioSettings;
       'dice-roll': ['/assets/game-sounds/dice-roll.wav', 650],
       shot: ['/assets/game-sounds/shot.wav', 1450],
       slam: ['/assets/game-sounds/slam.wav', 680],
+      'combat-hit': ['/assets/game-sounds/slam.wav', 680],
+      'combat-critical': ['/assets/game-sounds/slam.wav', 680],
+      'combat-heavy': ['/assets/game-sounds/quacks-explosion.wav', 1600],
+      'combat-block': ['/assets/game-sounds/gacha-glint.mp3', 270],
       explosion: ['/assets/game-sounds/quacks-explosion.wav', 1600],
       nitro: ['/assets/game-sounds/nitro.wav', 1400],
       skid: ['/assets/game-sounds/skid.wav', 740],
@@ -358,7 +483,7 @@ let AudioSettings;
         },
         game: kind !== 'invitation',
         maxStartDelayMs:
-          kind === 'gacha-glint'
+          kind === 'gacha-glint' || kind.startsWith('combat-')
             ? 180
             : kind === 'confirm' || kind === 'reveal'
               ? 10000

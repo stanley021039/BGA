@@ -1,0 +1,34 @@
+.scene-hit-burst {
+  position: absolute;
+  inline-size: 54px;
+  block-size: 54px;
+  translate: -50% -50%;
+  pointer-events: none;
+  color: var(--stitch-artwork-preview-ink);
+  z-index: 3;
+}
+.scene-hit-burst[data-tier='1'],
+.scene-hit-burst[data-tier='2'] {
+  color: var(--stitch-primary);
+  inline-size: 66px;
+  block-size: 66px;
+}
+.scene-hit-burst[data-tier='2'] {
+  inline-size: 78px;
+  block-size: 78px;
+}
+.scene-hit-burst[data-tier='guard'] {
+  color: var(--stitch-info-ink);
+}
+.scene-hit-burst svg {
+  inline-size: 100%;
+  block-size: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.scene-hit-burst path:first-of-type {
+  fill: currentColor;
+  fill-opacity: 0.55;
+  stroke-width: 1;
+}

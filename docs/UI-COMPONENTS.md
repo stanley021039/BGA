@@ -1,5 +1,9 @@
 # 共用 UI 元件與 token
 
+一鍵隨機配裝（#421）沿AttackChoices／EntranceChoices，玩家只抽已解鎖項目並保存，載入或錯誤時停用；SceneBotPanel與訓練設定先填好整套，再沿原確認／儲存流程。競技場亂鬥（#422）沿原開戰與戰況元件，權威抽選本局限定的招式、進場、戰鬥型態及共用地圖；戰況列出實際配置。展開戰況時收起HUD，戰況保留時間／HP與頂端關閉鈕，避免手機重疊。詳[隨機配裝規格](specs/RANDOM-LOADOUT-BRAWL-421-422.md)。
+
+共用戰鬥命中反饋（#420）由LobbyAttackLayer沿權威已結算hit觸發，普通／暴擊／大招分級的局部回彈、命中圈與有上限輕震。只移動角色／攻擊視覺層，保留固定背景、HUD與操作；聲音沿GameSounds／AudioSettings獨立偏好。首次、過期、未命中與重送不補播，多段限流，動態關閉／reduce／hidden／離頁清理；細節見[反饋契約](specs/COMBAT-HIT-FEEDBACK-420.md)。
+
 大廳陪練管理以「機器人與 Boss」單一UiDialog入口，內用UiTabs切換並保留各類上限與權限提示。SceneBotPanel共用於大廳、訓練場及競技場，不巢狀打開設定彈窗；重播進場時關閉外層彈窗。Boss攻擊狀態以地面預警及角色動作呈現，不再在頭上疊攻擊宣告文字。
 
 競技場同一入口保留Boss管理（最多一隻），機器人行為固定主動攻擊；戰鬥中機器人設定鎖定。Boss登場用獨立WARNING圖與共用UiNotice做五秒預告，關閉動畫也保留必要警告；落地特效依權威時點清除。獵王祝福沿SceneKda既有狀態圖示列，瞬移耗能與按鍵／觸控鎖以伺服器teleportCost同步，不各自寫固定能量門檻。

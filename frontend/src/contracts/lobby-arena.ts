@@ -67,6 +67,7 @@ export interface ArenaPlayer {
   damageTaken?: number;
   trapDamageTaken?: number;
   loadout?: { q: string; e: string; r?: string } | null;
+  entrance?: string;
 }
 export interface ArenaMapPreview {
   walls: ArenaCover[];
@@ -90,7 +91,9 @@ export interface LobbyArena {
   teams: { id: string; team: ArenaTeam; ready?: boolean; archetype?: ArenaArchetype | null }[];
   match: {
     id: string;
-    mode: 'pk' | 'team';
+    mode: 'pk' | 'team' | 'brawl';
+    mapId?: number;
+    mapName?: string;
     phase: 'running' | 'finished';
     startedAt: number;
     endsAt: number;
@@ -139,11 +142,15 @@ export function readLobbyArena(value: unknown): LobbyArena | null {
   let match: LobbyArena['match'] = null;
   if (row.match) {
     const r = record(row.match);
-    if (!['pk', 'team'].includes(text(r.mode)) || !['running', 'finished'].includes(text(r.phase)))
+    if (
+      !['pk', 'team', 'brawl'].includes(text(r.mode)) ||
+      !['running', 'finished'].includes(text(r.phase))
+    )
       throw Error('對戰狀態不正確。');
     match = {
       id: text(r.id),
-      mode: r.mode as 'pk' | 'team',
+      mode: r.mode as 'pk' | 'team' | 'brawl',
+      ...(r.mapId !== undefined ? { mapId: num(r.mapId), mapName: text(r.mapName) } : {}),
       phase: r.phase as 'running' | 'finished',
       startedAt: num(r.startedAt),
       endsAt: num(r.endsAt),
@@ -161,6 +168,7 @@ export function readLobbyArena(value: unknown): LobbyArena | null {
             team: team(p.team),
             score,
             forfeited: p.forfeited,
+            ...(p.entrance !== undefined ? { entrance: text(p.entrance) } : {}),
             ...(p.archetype !== undefined ? { archetype: readArchetype(p.archetype) } : {}),
             ...(p.damageDealt !== undefined
               ? {

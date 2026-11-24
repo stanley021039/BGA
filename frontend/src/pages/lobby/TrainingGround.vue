@@ -3,6 +3,7 @@ import { ref, useId, onMounted, onBeforeUnmount } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { attackEffects, fitsAttackSlot } from '../../stores/attack-loadout';
 import { entranceEffectGroups } from '../../services/effect-variants';
+import { randomAttacks, randomEntrance } from '../../services/random-effects';
 import { requestJson } from '../../services/http';
 import { sceneApiPath } from '../../services/scene-scope';
 import LobbyBackdrop from './LobbyBackdrop.vue';
@@ -21,6 +22,7 @@ const settings = ref({ q: 'barrage', e: 'beam', r: 'guanyin_barrage', entrance: 
   pending = ref(false),
   error = ref('');
 const loading = new AbortController();
+const loadingSettings = ref(true);
 onMounted(async () => {
   try {
     const value = (await requestJson(sceneApiPath('/api/lobby/training'), {
@@ -35,6 +37,8 @@ onMounted(async () => {
       };
   } catch (e) {
     if (!loading.signal.aborted) error.value = e instanceof Error ? e.message : '無法載入訓練設定';
+  } finally {
+    if (!loading.signal.aborted) loadingSettings.value = false;
   }
 });
 onBeforeUnmount(() => loading.abort());
@@ -54,6 +58,13 @@ async function command(action: string) {
   } finally {
     pending.value = false;
   }
+}
+function randomize() {
+  if (pending.value || loadingSettings.value) return;
+  settings.value = {
+    ...randomAttacks(settings.value),
+    entrance: randomEntrance(settings.value.entrance),
+  };
 }
 </script>
 <template>
@@ -86,6 +97,11 @@ async function command(action: string) {
     <div class="training-settings">
       <p>Q／E 普通招式、R 大招、C 瞬移。機器人設為「主動攻擊」可測試受擊效果。</p>
       <div class="training-actions">
+        <UiButton
+          label="隨機配招與進場"
+          :disabled="pending || loadingSettings"
+          @click="randomize"
+        />
         <UiButton
           label="重播進場"
           :disabled="pending || !lobby.connected"

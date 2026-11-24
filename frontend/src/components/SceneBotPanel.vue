@@ -4,6 +4,7 @@ import { requestJson } from '../services/http';
 import { sceneApiPath } from '../services/scene-scope';
 import { attackEffects, fitsAttackSlot } from '../stores/attack-loadout';
 import { entranceEffectGroups } from '../services/effect-variants';
+import { randomAttacks, randomEntrance } from '../services/random-effects';
 import UiButton from './UiButton.vue';
 import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
@@ -61,6 +62,14 @@ function choose(id: string) {
       mode: bot.mode,
       team: bot.team,
     };
+}
+function randomize() {
+  if (pending.value || !editable.value) return;
+  form.value = {
+    ...form.value,
+    ...randomAttacks(form.value),
+    entrance: randomEntrance(form.value.entrance),
+  };
 }
 async function load() {
   pending.value = true;
@@ -180,6 +189,11 @@ onMounted(() => {
       >
     </div>
     <div class="scene-bot-actions">
+      <UiButton
+        label="隨機配招與進場"
+        :disabled="pending || !state || !editable"
+        @click="randomize"
+      />
       <UiButton
         :label="selected ? '儲存設定' : '加入機器人'"
         variant="primary"

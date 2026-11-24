@@ -18,7 +18,8 @@ import { warmArenaCountdown } from '../../services/game-assets';
 import type { GameSoundOwner } from '../../contracts/sounds';
 import { pickupIcons, pickupLabels, type PickupKind } from '../../contracts/lobby-pickups';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
-import { useAttackLoadoutStore } from '../../stores/attack-loadout';
+import { attackEffects, useAttackLoadoutStore } from '../../stores/attack-loadout';
+import { entranceEffects } from '../../services/entrance-effects';
 import { useLobbyStore } from '../../stores/lobby';
 import { useGameFocus } from '../../composables/game-focus';
 import UiButton from '../../components/UiButton.vue';
@@ -117,6 +118,11 @@ function previewOutline(zone: ArenaCover, kind: ArenaZoneShape) {
     .join(' ');
 }
 const match = computed(() => arena.value?.match);
+const modeTitle = computed(() =>
+  match.value?.mode === 'brawl' ? '亂鬥' : match.value?.mode === 'pk' ? '個人 PK' : '團隊戰',
+);
+const attackName = (id?: string) =>
+  attackEffects.find((effect) => effect.id === id)?.label || '未配裝';
 const self = computed(() => match.value?.players.find((p) => p.id === lobby.snapshot?.selfId));
 const ownTeam = computed(
   () => arena.value?.teams.find((p) => p.id === lobby.snapshot?.selfId)?.team,
@@ -629,17 +635,34 @@ function start(mode: string) {
             @click="start('team')"
           />
           <UiButton label="試玩教學" variant="ghost" @click="practice?.open()" />
+          <UiButton
+            label="開始亂鬥"
+            :disabled="
+              !lobby.connected ||
+              !ownTeam ||
+              !allReady ||
+              roster.length < 2 ||
+              match?.phase === 'running' ||
+              lobby.arenaPending
+            "
+            @click="start('brawl')"
+          />
         </div>
         <p class="arena-mode-note"
-          >全員準備後可開戰。個人 PK 限 2 人。團隊戰每隊最多 8 人，無友傷。</p
+          >全員準備後可開戰。個人 PK 限 2 人。團隊戰每隊最多 8 人，無友傷。亂鬥至少 2
+          人，所有人互為對手；開場隨機配招、進場特效、戰鬥型態與全場共用地圖，包含未解鎖項目，僅限本局。60
+          秒只抽小地圖，地圖選單僅套用於 PK／團隊戰。</p
         >
       </UiPanel>
       <UiPanel
         v-if="match && (playing || cleanView)"
         :title="match.phase === 'finished' ? '對戰結果' : '本局戰況'"
       >
+        <template v-if="playing" #actions>
+          <UiButton label="收起戰況" icon="close" icon-only @click="showBattleStats = false" />
+        </template>
         <div v-if="match.phase === 'finished'" class="arena-result-hero">
-          <UiBadge tone="primary">{{ match.mode === 'pk' ? '個人 PK' : '團隊戰' }}</UiBadge>
+          <UiBadge tone="primary">{{ modeTitle }}</UiBadge>
           <h3>{{ result }}</h3>
         </div>
         <div
@@ -677,14 +700,27 @@ function start(mode: string) {
           </div>
         </div>
         <p v-if="playing"
-          >{{ match.mode === 'pk' ? '個人 PK' : '團隊戰' }} ·
-          {{ match.phase === 'running' ? `剩餘 ${seconds} 秒` : result }}</p
+          >{{ modeTitle }} · {{ match.phase === 'running' ? `剩餘 ${seconds} 秒` : result }} · HP
+          {{ hp }}%</p
         >
+        <UiList v-if="match.mode === 'brawl' && self" aria-label="本局隨機配裝">
+          <UiListRow>型態：{{ self.archetype ? archetypeNames[self.archetype] : '' }}</UiListRow>
+          <UiListRow>Q：{{ attackName(self.loadout?.q) }}</UiListRow>
+          <UiListRow>E：{{ attackName(self.loadout?.e) }}</UiListRow>
+          <UiListRow>R：{{ attackName(self.loadout?.r) }}</UiListRow>
+          <UiListRow
+            >進場：{{
+              entranceEffects.find((effect) => effect.id === self?.entrance)?.label
+            }}</UiListRow
+          >
+          <UiListRow v-if="match.mapName">地圖：{{ match.mapName }}</UiListRow>
+        </UiList>
         <UiList v-if="playing"
           ><UiListRow v-for="p in match.players" :key="p.id"
-            >{{ teamName(p.team) }} · {{ p.name }}：{{ p.score }} 分{{
-              p.forfeited ? '（棄權）' : ''
-            }}</UiListRow
+            >{{ match.mode === 'team' ? teamName(p.team) + ' · ' : '' }}{{ p.name }}：{{
+              p.score
+            }}
+            分{{ p.forfeited ? '（棄權）' : '' }}</UiListRow
           ></UiList
         >
         <UiPanel v-if="match.phase === 'finished'" title="對戰明細" density="compact"
@@ -923,7 +959,12 @@ function start(mode: string) {
       aria-label="最後倒數"
       >{{ seconds }}</div
     >
-    <UiPanel v-if="playing" class="lobby-arena-hud" density="compact" aria-label="競技場即時戰況">
+    <UiPanel
+      v-if="playing && !showBattleStats"
+      class="lobby-arena-hud"
+      density="compact"
+      aria-label="競技場即時戰況"
+    >
       <UiButton label="切換房間" icon="users" icon-only @click="roomDialog?.open()" />
       <UiButton
         :label="musicEnabled ? '關閉背景音樂' : '開啟背景音樂'"
@@ -933,6 +974,8 @@ function start(mode: string) {
         @click="AudioSettings?.set('music', { enabled: !musicEnabled }, { gesture: true })"
       />
       <p
+        ><template v-if="match?.mode === 'brawl'"
+          >亂鬥 · {{ self?.archetype ? archetypeNames[self.archetype] : '' }} · </template
         >{{ openingSeconds ? '準備中' : seconds + ' 秒' }} · {{ self?.score || 0 }} 分 · HP
         {{ hp }}%</p
       >
