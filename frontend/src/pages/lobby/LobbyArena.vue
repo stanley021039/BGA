@@ -962,24 +962,19 @@ function start(mode: string) {
     <UiPanel
       v-if="playing && !showBattleStats"
       class="lobby-arena-hud"
-      density="compact"
+      density="hud"
+      tone="translucent"
       aria-label="競技場即時戰況"
     >
-      <UiButton label="切換房間" icon="users" icon-only @click="roomDialog?.open()" />
-      <UiButton
-        :label="musicEnabled ? '關閉背景音樂' : '開啟背景音樂'"
-        :icon="musicEnabled ? 'sound' : 'muted'"
-        icon-only
-        :aria-pressed="musicEnabled"
-        @click="AudioSettings?.set('music', { enabled: !musicEnabled }, { gesture: true })"
-      />
-      <p
-        ><template v-if="match?.mode === 'brawl'"
-          >亂鬥 · {{ self?.archetype ? archetypeNames[self.archetype] : '' }} · </template
-        >{{ openingSeconds ? '準備中' : seconds + ' 秒' }} · {{ self?.score || 0 }} 分 · HP
-        {{ hp }}%</p
-      >
-      <div class="lobby-arena-actions">
+      <div class="lobby-arena-actions" role="group" aria-label="競技場操作">
+        <UiButton label="切換房間" icon="users" icon-only @click="roomDialog?.open()" />
+        <UiButton
+          :label="musicEnabled ? '關閉背景音樂' : '開啟背景音樂'"
+          :icon="musicEnabled ? 'sound' : 'muted'"
+          icon-only
+          :aria-pressed="musicEnabled"
+          @click="AudioSettings?.set('music', { enabled: !musicEnabled }, { gesture: true })"
+        />
         <SceneNpcControls :bots-locked="true" />
         <UiButton
           icon="leave"
@@ -1003,6 +998,12 @@ function start(mode: string) {
           @click="toggle"
         />
       </div>
+      <p
+        ><template v-if="match?.mode === 'brawl'"
+          >亂鬥 · {{ self?.archetype ? archetypeNames[self.archetype] : '' }} · </template
+        >{{ openingSeconds ? '準備中' : seconds + ' 秒' }} · {{ self?.score || 0 }} 分 · HP
+        {{ hp }}%</p
+      >
     </UiPanel>
   </Teleport>
 </template>

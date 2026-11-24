@@ -2,6 +2,7 @@ export type AttackArtworkOptions = {
   bearIndex?: number;
   bossFrom?: { x: number; y: number };
   bossAttackRate?: number;
+  bossPhase?: number;
   bossAim?: { x: number; y: number };
   effect: string;
   ageMs?: number;
@@ -20,6 +21,8 @@ export type AttackArtworkOptions = {
     reflectionIndex?: number;
     reflectedEffect?: string;
     reflectedBossEffect?: string;
+    reflectedBossPhase?: number;
+    reflectedBossStrike?: number;
     reflectedPhase?: string;
     delayMs?: number;
     pending?: boolean;

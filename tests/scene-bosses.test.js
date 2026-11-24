@@ -10,6 +10,16 @@ const characters = require('../src/profiles/appearance').builtinCharacters.map((
 }));
 const alice = { id: 'boss-owner', display_name: 'Alice' },
   bob = { id: 'boss-guest', display_name: 'Bob' };
+
+test('retired Thanos cannot be listed, spawned or selected as a boss ability', () => {
+  const { lobby } = fixture();
+  assert.ok(!bosses.some((b) => b.id === 'thanos'));
+  assert.ok(!require('../public/shared/boss-abilities.json').some((a) => a.boss === 'thanos'));
+  assert.equal(require('../src/rooms/boss-combat').abilityFor('boss_thanos_q'), undefined);
+  assert.throws(() => lobby.bosses(alice, { action: 'add', bossId: 'thanos' }), {
+    code: 'INVALID_BOSS',
+  });
+});
 function fixture(options = {}) {
   let time = 1000;
   return {
@@ -45,20 +55,65 @@ test('boss capacity is global and independent of five bots; ownership, input and
   advance(5000);
   const actor = lobby.view(alice).visitors.find((v) => v.id === boss.id);
   assert.ok(actor.bossId);
+  assert.equal(
+    actor.maxHealth,
+    lobby.view(alice).visitors.find((v) => v.id === alice.id).maxHealth * 12,
+  );
   assert.ok(actor.maxHealth >= 8000000);
   assert.match(actor.image, /\?v=/);
   lobby.bosses(alice, { action: 'reset', id: boss.id });
   assert.equal(lobby.view(alice).visitors.find((v) => v.id === boss.id).maxHealth, actor.maxHealth);
   advance(16000);
   assert.equal(lobby.bosses(bob).bosses.length, 0);
-  assert.throws(() => fixture({ training: true }).lobby.bosses(alice), { code: 'LOBBY_BOSS_ONLY' });
+  assert.equal(fixture({ training: true }).lobby.bosses(alice).limit, 1);
   assert.equal(fixture({ expandedMap: true }).lobby.bosses(alice).limit, 1);
 });
-test('all eleven boss patterns wind up before casting, cycle their attacks and stay in bounds', () => {
+
+test('training boss uses the real combat engine, five-second arrival, one-boss limit and owner reset', () => {
+  const { lobby, advance } = fixture({ training: true });
+  const boss = lobby.bosses(alice, { action: 'add', bossId: 'ghidorah-turtle' }).bosses[0];
+  assert.throws(() => lobby.bosses(alice, { action: 'add', bossId: 'gyo' }), {
+    code: 'BOSSES_FULL',
+  });
+  assert.ok(!lobby.view(alice).visitors.some((v) => v.id === boss.id));
+  advance(5000);
+  let scene = lobby.view(alice);
+  const actor = scene.visitors.find((v) => v.id === boss.id);
+  assert.ok(actor.maxHealth >= 8000000);
+  advance(701);
+  lobby.attack(alice, {
+    requestId: 'training-boss-beam-01',
+    aspectRatio: 1.6,
+    slot: 'q',
+    effect: 'beam',
+  });
+  let playerHit = false,
+    bossHit = false;
+  for (let i = 0; i < 40; i++) {
+    advance(400);
+    scene = lobby.view(alice);
+    playerHit ||= scene.visitors.find((v) => v.id === boss.id).health < actor.health;
+    bossHit ||= scene.attacks.some(
+      (a) => a.fromId === boss.id && a.hits?.some((h) => h.toId === alice.id && h.damage > 0),
+    );
+    if (playerHit && bossHit) break;
+  }
+  assert.ok(playerHit, 'training loadout damages the boss');
+  assert.ok(bossHit, 'boss attacks the actual training player');
+  assert.throws(() => lobby.bosses(bob, { action: 'reset', id: boss.id }), {
+    code: 'BOSS_NOT_OWNED',
+  });
+  lobby.bosses(alice, { action: 'reset', id: boss.id });
+  scene = lobby.view(alice);
+  assert.equal(scene.visitors.find((v) => v.id === boss.id).health, actor.maxHealth);
+  lobby.bosses(alice, { action: 'remove', id: boss.id });
+  assert.ok(!lobby.view(alice).visitors.some((v) => v.id === boss.id));
+});
+test('all thirteen boss patterns wind up before casting, cycle their attacks and stay in bounds', () => {
   const definitions = require('../public/shared/boss-abilities.json');
   const valid = new Set(definitions.map((e) => e.id));
-  assert.equal(valid.size, 33);
-  assert.equal(new Set(bosses.map((b) => b.movement)).size, 11);
+  assert.equal(valid.size, 39);
+  assert.equal(new Set(bosses.map((b) => b.movement)).size, 13);
   for (const spec of bosses) {
     assert.ok(
       spec.sequence.every((e) => valid.has(e)),

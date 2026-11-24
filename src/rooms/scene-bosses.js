@@ -1,5 +1,6 @@
 const { versionedAsset } = require('../http/asset-version');
 const abilities = require('../../public/shared/boss-abilities.json');
+const { bossStageSpec } = require('../../frontend/src/engines/boss-geometry.js');
 const { phases } = require('../../public/shared/boss-rules.json');
 const { bossPhase, phaseStats } = require('./boss-phases');
 const bossInteractions = require('./boss-interactions');
@@ -14,7 +15,9 @@ const definitions = [
   ['steel-behemoth', '無人機航空母艦機器・SAGIUS', 'strafe', 0.7, '側向巡航，以浮游砲與飛彈壓制'],
   ['prismatic-void', '次元生命體・XENORPH', 'drift', 0.8, '飄移迴旋，折射與能量波輪替'],
   ['gyo', '魚', 'crawl', 0.45, '緩慢爬行，觸管與污濁能量侵襲'],
-  ['thanos', '薩諾龜', 'conquer', 0.65, '沉穩逼近，寶石蓄力'],
+  ['ghidorah-turtle', '基多龜', 'triad', 0.75, '側翼盤旋，三首引力壓制'],
+  ['gleam-eyes', '閃耀魔眼', 'duelist', 0.9, '持劍逼近，橫斬與蒼炎交替'],
+  ['dark-zagi', '黑暗超人札基', 'aerial', 1.05, '側步穿梭，暗翼切裂與終焉光線交替'],
 ];
 const bosses = definitions.map(([id, name, movement, speed, description]) => ({
   id,
@@ -104,6 +107,18 @@ function driveBoss(bot, actor, target, time, state) {
       x = target.x + Math.cos(phase) * 17;
       y = target.y + Math.sin(phase) * 12;
     }
+    if (spec.movement === 'triad') {
+      x = target.x + side * 16;
+      y = target.y - 10 + Math.sin(phase) * 5;
+    }
+    if (spec.movement === 'duelist') {
+      x = target.x + side * (state.step % 3 === 1 ? 18 : 7);
+      y = target.y + 6;
+    }
+    if (spec.movement === 'aerial') {
+      x = target.x + side * 20;
+      y = target.y - 8 + Math.sin(phase) * 5;
+    }
     if (spec.movement === 'pounce') {
       x = target.x - side * 4;
       y = target.y + side * 10;
@@ -115,10 +130,6 @@ function driveBoss(bot, actor, target, time, state) {
     if (spec.movement === 'march') {
       x = target.x;
       y = target.y + 9;
-    }
-    if (spec.movement === 'conquer') {
-      x = target.x - side * 13;
-      y = target.y + 6;
     }
     if (spec.movement === 'strafe') {
       x = target.x + side * 23;
@@ -168,7 +179,10 @@ function driveBoss(bot, actor, target, time, state) {
     if (time < (actor.sealedUntil || 0)) return null;
     const sequence = spec.phases[bossPhase(actor) - 1]?.sequence || spec.sequence;
     const effect = sequence[state.step % sequence.length];
-    const ability = abilities.find((a) => a.id === effect);
+    const ability = bossStageSpec(
+      abilities.find((a) => a.id === effect),
+      bossPhase(actor),
+    );
     if (ability.slot === 'r') {
       const extra = Math.max(0, (actor.bossRDelayMs || 0) - (state.appliedRDelayMs || 0));
       state.attackAt += extra;

@@ -11,9 +11,11 @@ export function createBossPuppet(
   update(
     state: {
       moving: boolean;
+      phase?: number;
+      paralysed?: boolean;
       arrivalAt?: number;
       facing?: 'left' | 'right';
-      intent?: { effect: string; until: number } | null;
+      intent?: { effect: string; until: number; attackRate?: number } | null;
       health?: number;
       connected: boolean;
     },

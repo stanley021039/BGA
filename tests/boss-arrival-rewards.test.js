@@ -25,7 +25,7 @@ function fixture(options = {}) {
 }
 test('boss reserves capacity, warns for five seconds, falls before attacking, and can be cancelled', () => {
   const { lobby, step } = fixture();
-  const b = lobby.bosses(user, { action: 'add', bossId: 'thanos' }).bosses[0];
+  const b = lobby.bosses(user, { action: 'add', bossId: 'colossal' }).bosses[0];
   let s = lobby.view(user);
   assert.equal(s.bossArrivals[0].spawnAt, 6000);
   assert.ok(!s.visitors.some((v) => v.id === b.id));
@@ -50,7 +50,7 @@ test('arena has one neutral boss, forces bot attack mode, and respects match mem
   lobby.arena(user, { action: 'team', team: 'red' });
   const bot = lobby.bots(user, { action: 'add', team: 'blue', mode: 'idle' }).bots[0];
   assert.equal(bot.mode, 'attack');
-  const boss = lobby.bosses(user, { action: 'add', bossId: 'thanos' }).bosses[0];
+  const boss = lobby.bosses(user, { action: 'add', bossId: 'colossal' }).bosses[0];
   assert.equal(lobby.bosses(user).limit, 1);
   assert.throws(() => lobby.bosses(user, { action: 'add', bossId: 'gyo' }), {
     code: 'BOSSES_FULL',
@@ -89,7 +89,7 @@ test('last damaging player receives one announcement and a capped heal; blessing
       [killer.id, killer],
       [boss.id, boss],
     ]),
-    bots = new Map([[boss.id, { bossId: 'thanos' }]]),
+    bots = new Map([[boss.id, { bossId: 'colossal' }]]),
     messages = [];
   const combat = createSceneCombat(
     () => 0.99,
@@ -137,7 +137,7 @@ test('blessing increases real damage by ten percent and is removed on death; NPC
       ['a', a],
       ['b', b],
     ]),
-    bots = new Map([['b', { bossId: 'thanos' }]]);
+    bots = new Map([['b', { bossId: 'colossal' }]]);
   const combat = createSceneCombat(
     () => 0.99,
     () => false,
@@ -184,14 +184,14 @@ test('arena boss HTTP uses the selected room and keeps the main lobby independen
     return { status: r.status, body: await r.json() };
   };
   assert.equal(
-    (await request('/api/lobby/bosses?arena=1', { action: 'add', bossId: 'thanos' })).status,
+    (await request('/api/lobby/bosses?arena=1', { action: 'add', bossId: 'colossal' })).status,
     409,
   );
   assert.equal(
     (await request('/api/lobby/arena-room', { action: 'create', roomName: 'Boss測試' })).status,
     200,
   );
-  const added = await request('/api/lobby/bosses?arena=1', { action: 'add', bossId: 'thanos' });
+  const added = await request('/api/lobby/bosses?arena=1', { action: 'add', bossId: 'colossal' });
   assert.equal(added.status, 200);
   assert.equal(added.body.limit, 1);
   assert.equal(added.body.bosses[0].arrived, false);
@@ -206,7 +206,7 @@ test('arena boss HTTP uses the selected room and keeps the main lobby independen
 });
 test('pending bosses reserve scene capacity without leaving an orphan bot after a rejected add', () => {
   const { lobby, step } = fixture();
-  lobby.bosses(user, { action: 'add', bossId: 'thanos' });
+  lobby.bosses(user, { action: 'add', bossId: 'colossal' });
   lobby.bosses(user, { action: 'add', bossId: 'gyo' });
   for (let i = 0; i < 76; i++) lobby.view({ id: 'peer-' + i, display_name: 'Peer' });
   lobby.bots(user, { action: 'add', mode: 'idle' });

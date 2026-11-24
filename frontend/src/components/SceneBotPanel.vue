@@ -8,8 +8,19 @@ import { randomAttacks, randomEntrance } from '../services/random-effects';
 import UiButton from './UiButton.vue';
 import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
+import UiChoiceCard from './UiChoiceCard.vue';
+import UiIcon from './UiIcon.vue';
+import PlayerAvatar from './PlayerAvatar.vue';
+import UiHeading from './UiHeading.vue';
+import UiBadge from './UiBadge.vue';
 import StatusSlot from './StatusSlot.vue';
 const props = defineProps<{ locked?: boolean }>();
+const attackLabels = new Map(attackEffects.map((effect) => [effect.id, effect.label]));
+const entranceLabels = new Map(
+  entranceEffectGroups.flatMap((group) =>
+    group.versions.map((effect) => [effect.id, effect.label] as const),
+  ),
+);
 type Bot = {
   id: string;
   name: string;
@@ -34,7 +45,7 @@ const state = ref<State | null>(null),
   error = ref('');
 const arena =
   location.pathname === '/arena' && !new URLSearchParams(location.search).has('training');
-const form = ref({
+const defaults = () => ({
   characterId: 'builtin:community-asian',
   entrance: 'classic',
   q: 'barrage',
@@ -43,6 +54,9 @@ const form = ref({
   mode: arena ? 'attack' : 'idle',
   team: 'blue',
 });
+const form = ref(defaults());
+const selectedBot = computed(() => state.value?.bots.find((b) => b.id === selected.value));
+const characterImage = (id: string) => state.value?.characters.find((c) => c.id === id)?.image;
 const editable = computed(
   () =>
     !props.locked &&
@@ -62,6 +76,7 @@ function choose(id: string) {
       mode: bot.mode,
       team: bot.team,
     };
+  else form.value = defaults();
 }
 function randomize() {
   if (pending.value || !editable.value) return;
@@ -76,8 +91,11 @@ async function load() {
   error.value = '';
   try {
     state.value = (await requestJson(sceneApiPath('/api/lobby/bots'))) as State;
-    if (selected.value && !state.value.bots.some((b) => b.id === selected.value))
-      selected.value = '';
+    choose(
+      state.value.bots.find((b) => b.ownerId === state.value?.selfId)?.id ||
+        state.value.bots[0]?.id ||
+        '',
+    );
   } catch (e) {
     error.value = e instanceof Error ? e.message : '無法載入機器人';
   } finally {
@@ -97,7 +115,12 @@ async function command(action: string) {
           ? { action, id: selected.value, ...form.value }
           : { action, id: selected.value },
     })) as State;
-    if (action === 'remove') selected.value = '';
+    if (action === 'remove')
+      choose(
+        state.value.bots.find((b) => b.ownerId === state.value?.selfId)?.id ||
+          state.value.bots[0]?.id ||
+          '',
+      );
     if (action === 'add') choose(state.value.bots.at(-1)?.id || '');
     if (action === 'replay') emit('preview');
   } catch (e) {
@@ -114,79 +137,116 @@ onMounted(() => {
 <template>
   <div class="scene-bot-controls">
     <p v-if="locked">對戰中不可調整機器人；可切換到 Boss 分頁新增 Boss。</p>
-    <p v-if="state">{{ state.bots.length }}／{{ state.limit }} 隻；只可調整自己加入的機器人。</p>
-    <UiField
-      label="選擇機器人"
-      control="select"
-      :model-value="selected"
-      :disabled="pending"
-      @update:model-value="choose(String($event))"
-    >
-      <option value="">新增機器人</option
-      ><option v-for="bot in state?.bots || []" :key="bot.id" :value="bot.id"
-        >{{ bot.name }}{{ bot.ownerId !== state?.selfId ? '（其他玩家加入）' : '' }}</option
+    <div class="scene-bot-summary">
+      <UiHeading :level="3" kind="card">選擇陪練</UiHeading>
+      <UiBadge v-if="state" counter>{{ state.bots.length }}／{{ state.limit }} 隻</UiBadge>
+    </div>
+    <div class="scene-bot-picker" role="group" aria-label="切換機器人設定">
+      <UiChoiceCard
+        v-for="bot in state?.bots || []"
+        :key="bot.id"
+        :label="bot.name + (bot.ownerId !== state?.selfId ? '（唯讀）' : '')"
+        :selected="selected === bot.id"
+        :disabled="pending"
+        @click="choose(bot.id)"
       >
-    </UiField>
-    <UiPanel title="角色與行為" density="compact">
-      <div class="scene-bot-fields">
-        <UiField
-          label="角色"
-          control="select"
-          v-model="form.characterId"
-          :disabled="pending || !editable"
-          ><option
-            v-for="character in state?.characters || []"
-            :key="character.id"
-            :value="character.id"
-            >{{ character.name }}</option
-          ></UiField
+        <PlayerAvatar :name="bot.name" :avatar="characterImage(bot.characterId)" bot />
+        <template #label
+          ><span class="ui-choice-label scene-bot-tile-name"
+            >{{ bot.name.replace(/^陪練機器人\s*/, '陪練 ')
+            }}{{ bot.ownerId !== state?.selfId ? '（唯讀）' : '' }}</span
+          ></template
         >
-        <UiField
-          label="行為"
-          control="select"
-          v-model="form.mode"
-          :disabled="arena || pending || !editable"
-          ><option value="idle">純走動</option><option value="attack">主動攻擊</option></UiField
-        >
-        <UiField
-          v-if="arena"
-          label="隊伍"
-          control="select"
-          v-model="form.team"
-          :disabled="pending || !editable"
-          ><option value="red">綠隊</option><option value="blue">藍隊</option></UiField
-        >
-        <UiField
-          label="進場特效"
-          control="select"
-          v-model="form.entrance"
-          :disabled="pending || !editable"
-          ><optgroup
-            v-for="group in entranceEffectGroups"
-            :key="group.original.id"
-            :label="group.original.label"
-            ><option v-for="effect in group.versions" :key="effect.id" :value="effect.id">{{
-              effect.label
-            }}</option></optgroup
-          ></UiField
-        >
-      </div>
-    </UiPanel>
-    <div class="scene-bot-fields">
-      <UiField
-        v-for="slot in ['q', 'e', 'r'] as const"
-        :key="slot"
-        :label="slot === 'r' ? 'R 大招' : slot.toUpperCase() + ' 普通招式'"
-        control="select"
-        v-model="form[slot]"
-        :disabled="pending || !editable"
-        ><option
-          v-for="effect in attackEffects.filter((e) => fitsAttackSlot(slot, e.id))"
-          :key="effect.id"
-          :value="effect.id"
-          >{{ effect.label }}</option
-        ></UiField
+        <template #selection><span hidden /></template>
+      </UiChoiceCard>
+      <UiChoiceCard
+        label="新增機器人"
+        :selected="!selected"
+        :disabled="pending || !state || !!locked || state.bots.length >= state.limit"
+        @click="choose('')"
       >
+        <UiIcon name="add" class="scene-bot-add-icon" />
+        <template #label><span class="ui-choice-label scene-bot-tile-name">新增</span></template>
+        <template #selection><span hidden /></template>
+      </UiChoiceCard>
+    </div>
+    <p v-if="selectedBot && selectedBot.ownerId !== state?.selfId">其他玩家加入，僅供查看。</p>
+    <div class="scene-bot-editor">
+      <UiPanel
+        :title="selectedBot ? selectedBot.name + ' · 角色與行為' : '角色與行為'"
+        density="compact"
+      >
+        <div class="scene-bot-fields">
+          <UiField
+            label="角色"
+            :selected-label="
+              state?.characters.find((c) => c.id === form.characterId)?.name || '選擇角色'
+            "
+            control="select"
+            v-model="form.characterId"
+            :disabled="pending || !editable"
+            ><option
+              v-for="character in state?.characters || []"
+              :key="character.id"
+              :value="character.id"
+              >{{ character.name }}</option
+            ></UiField
+          >
+          <UiField
+            label="行為"
+            :selected-label="form.mode === 'attack' ? '主動攻擊' : '純走動'"
+            control="select"
+            v-model="form.mode"
+            :disabled="arena || pending || !editable"
+            ><option value="idle">純走動</option><option value="attack">主動攻擊</option></UiField
+          >
+          <UiField
+            v-if="arena"
+            label="隊伍"
+            :selected-label="form.team === 'blue' ? '藍隊' : '綠隊'"
+            control="select"
+            v-model="form.team"
+            :disabled="pending || !editable"
+            ><option value="red">綠隊</option><option value="blue">藍隊</option></UiField
+          >
+          <UiField
+            label="進場特效"
+            :selected-label="entranceLabels.get(form.entrance) || '選擇進場特效'"
+            class="scene-bot-wide"
+            control="select"
+            v-model="form.entrance"
+            :disabled="pending || !editable"
+            ><optgroup
+              v-for="group in entranceEffectGroups"
+              :key="group.original.id"
+              :label="group.original.label"
+              ><option v-for="effect in group.versions" :key="effect.id" :value="effect.id">{{
+                effect.label
+              }}</option></optgroup
+            ></UiField
+          >
+        </div>
+      </UiPanel>
+      <UiPanel title="招式配置" density="compact">
+        <div class="scene-bot-fields">
+          <UiField
+            v-for="slot in ['q', 'e', 'r'] as const"
+            :key="slot"
+            :class="{ 'scene-bot-wide': slot === 'r' }"
+            :label="slot === 'r' ? 'R 大招' : slot.toUpperCase() + ' 普通招式'"
+            :selected-label="attackLabels.get(form[slot]) || '選擇招式'"
+            control="select"
+            v-model="form[slot]"
+            :disabled="pending || !editable"
+            ><option
+              v-for="effect in attackEffects.filter((e) => fitsAttackSlot(slot, e.id))"
+              :key="effect.id"
+              :value="effect.id"
+              >{{ effect.label }}</option
+            ></UiField
+          >
+        </div>
+      </UiPanel>
     </div>
     <div class="scene-bot-actions">
       <UiButton
@@ -227,17 +287,60 @@ onMounted(() => {
 </template>
 <style scoped>
 .scene-bot-controls,
-.scene-bot-fields {
+.scene-bot-fields,
+.scene-bot-editor {
   display: grid;
   gap: var(--stitch-space-20);
+}
+.scene-bot-controls {
+  container-type: inline-size;
+  container-name: scene-bot-settings;
+}
+.scene-bot-editor > :deep(.ui-panel) {
+  container-type: inline-size;
+  container-name: scene-bot-section;
 }
 .scene-bot-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--stitch-space-16);
 }
-@media (min-width: 640px) {
+.scene-bot-picker {
+  display: grid;
+  box-sizing: border-box;
+  padding: var(--stitch-space-8);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 100px), 1fr));
+  gap: var(--stitch-space-12);
+  align-items: stretch;
+}
+.scene-bot-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stitch-space-12);
+}
+.scene-bot-wide {
+  grid-column: 1 / -1;
+}
+.scene-bot-picker :deep(.vue-player-avatar) {
+  align-self: center;
+}
+.scene-bot-tile-name {
+  text-align: center;
+}
+.scene-bot-add-icon {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  min-block-size: 2.5rem;
+}
+@container scene-bot-section (min-width: 360px) {
   .scene-bot-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container scene-bot-settings (min-width: 640px) {
+  .scene-bot-editor {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -62,20 +62,45 @@ test('enraged boss phase and cast rate survive the real lobby parser with bounde
     ...raw.visitors[0],
     id: 'boss',
     name: 'Boss',
-    bossId: 'thanos',
+    bossId: 'colossal',
     bossPhase: 2,
     lifeId: 1,
   };
   const runtime = createBossCombat(createSceneCombat(() => 0.99));
-  const event = runtime.prepare({ bossId: 'thanos' }, boss, 'boss_thanos_q', raw.visitors[0], 1000);
+  const event = runtime.prepare(
+    { bossId: 'colossal' },
+    boss,
+    'boss_colossal_q',
+    raw.visitors[0],
+    1000,
+  );
   boss.bossIntent = { effect: event.effect, until: 1000 + 700 / 1.15, attackRate: 1.15 };
   raw.visitors.push(boss);
   raw.attacks = [event];
+  raw.visitors[0].bossAilments = [
+    { type: 'recovery', percent: 15, remainingMs: 1500 },
+    { type: 'dimension', percent: 1, remainingMs: 2000 },
+  ];
   const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
   const result = read(raw);
   assert.equal(result.visitors.find((v) => v.id === 'boss').bossPhase, 2);
   assert.equal(result.visitors.find((v) => v.id === 'boss').bossIntent.attackRate, 1.15);
   assert.equal(result.attacks[0].bossAttackRate, 1.15);
+  assert.equal(result.attacks[0].bossPhase, 2);
+  assert.equal(result.visitors[0].bossAilments[0].type, 'recovery');
+  assert.equal(result.visitors[0].bossAilments[1].remainingMs, 2000);
+  for (const bad of [
+    { type: 'unknown', percent: 15, remainingMs: 1000 },
+    { type: 'recovery', percent: 51, remainingMs: 1000 },
+    { type: 'recovery', percent: 15, remainingMs: 3001 },
+  ]) {
+    const broken = structuredClone(raw);
+    broken.visitors[0].bossAilments = [bad];
+    assert.throws(() => read(broken), /Boss狀態/);
+  }
+  const badPhase = structuredClone(raw);
+  badPhase.attacks[0].bossPhase = 4;
+  assert.throws(() => read(badPhase));
   const invalid = structuredClone(raw);
   invalid.visitors.at(-1).bossPhase = 999;
   invalid.visitors.at(-1).bossIntent.attackRate = 999;
@@ -84,6 +109,34 @@ test('enraged boss phase and cast rate survive the real lobby parser with bounde
   assert.equal(safe.visitors.at(-1).bossIntent.attackRate, undefined);
   invalid.attacks[0].bossAttackRate = 999;
   assert.throws(() => read(invalid));
+});
+
+test('pending bot arrival survives the real parser, stays out of visitors and rejects a forged countdown', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  const botCharacters = require('../../src/profiles/appearance').builtinCharacters.map((c) => ({
+    id: c.id,
+    name: c.name,
+    image: c.expressions.neutral,
+  }));
+  const lobby = createLobby(
+    () => 1000,
+    () => '/avatar',
+    () => 0.25,
+    () => false,
+    { botCharacters },
+  );
+  const user = { id: 'human', display_name: 'Human' };
+  const bot = lobby.bots(user, { action: 'add' }).bots[0];
+  const raw = { ...lobby.view(user), serverNow: 1000 };
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  const parsed = read(raw);
+  assert.equal(parsed.botArrivals[0].id, bot.id);
+  assert.equal(parsed.botArrivals[0].spawnAt, 4000);
+  assert.ok(!parsed.visitors.some((v) => v.id === bot.id));
+  assert.throws(
+    () => read({ ...raw, botArrivals: [{ ...raw.botArrivals[0], spawnAt: 5000 }] }),
+    /機器人登場/,
+  );
 });
 
 function purchaseScene(room, actions) {
@@ -895,7 +948,7 @@ test('boss immunity and rainbow companion metadata survive snapshots and reject 
     ...createLobby(() => 1000).view({ id: 'human', display_name: 'Human' }),
     serverNow: 1000,
   };
-  raw.visitors[0].bossId = 'thanos';
+  raw.visitors[0].bossId = 'colossal';
   raw.visitors[0].bossControlImmuneMs = 4500;
   raw.visitors[0].bearCompanion = { index: 4, remainingMs: 2500, lastDrain: 10 };
   const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;

@@ -14,9 +14,8 @@
   z-index: 30;
   left: var(--stitch-space-16);
   bottom: var(--stitch-space-16);
-  max-width: min(440px, calc(100vw - var(--stitch-space-16) * 2));
-  max-height: 30dvh;
-  overflow: auto;
+  max-width: min(480px, calc(100vw - var(--stitch-space-16) * 2));
+  overflow: visible;
 }
 :root body[data-visual-theme] .lobby-arena-hud p {
   margin: 0;
@@ -24,7 +23,7 @@
 }
 .lobby-arena-hud .lobby-arena-actions {
   gap: var(--stitch-space-8);
-  margin-block: var(--stitch-space-8) 0;
+  margin: 0;
 }
 :root body[data-visual-theme].vue-lobby-arena-focus {
   .game-carousel-section > .carousel-center,
@@ -169,15 +168,13 @@
     pointer-events: auto;
   }
   .lobby-arena-hud {
-    top: var(--stitch-space-8);
+    top: max(var(--stitch-space-8), env(safe-area-inset-top));
     bottom: auto;
-    left: var(--stitch-space-8);
-    max-height: 22dvh;
+    left: max(var(--stitch-space-8), env(safe-area-inset-left));
     z-index: 1001;
   }
 }
 :root body[data-visual-theme].vue-lobby-battle .lobby-arena-hud {
-  max-height: 30dvh;
   background: color-mix(in srgb, var(--stitch-surface) 58%, transparent);
 }
 .lobby-arena-hud.is-battle .lobby-arena-actions {

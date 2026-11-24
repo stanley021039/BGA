@@ -27,6 +27,31 @@ test('only the three published sizes are accepted', () => {
     null,
   ]);
 });
+test('a cold displayed thumbnail waits for one shared encoder job instead of returning the original', async (t) => {
+  const root = directory(t),
+    png = asset('traveler-neutral.png');
+  let finish,
+    calls = 0;
+  const small = await sharp(png).resize(128, 128).webp().toBuffer();
+  const thumbnails = new MediaThumbnails({
+    directory: root,
+    encode: async () => {
+      calls++;
+      await new Promise((resolve) => {
+        finish = resolve;
+      });
+      return small;
+    },
+  });
+  const first = thumbnails.variant(png, 128, { wait: true }),
+    second = thumbnails.variant(png, 128, { wait: true });
+  for (let i = 0; i < 50 && !finish; i++) await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.equal(calls, 1);
+  finish();
+  const results = await Promise.all([first, second]);
+  for (const result of results) assert.equal((await sharp(result.bytes).metadata()).width, 128);
+  assert.deepEqual((await thumbnails.variant(png, 128)).bytes, small);
+});
 
 test('thumbnails are WebP, never enlarged, keep animation and are shared by identical originals', async (t) => {
   const root = directory(t),

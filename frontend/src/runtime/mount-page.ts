@@ -7,6 +7,7 @@ import { createPinia, disposePinia, type Pinia } from 'pinia';
 import { usePreferencesStore } from '../stores/preferences';
 import SiteHeader from '../components/SiteHeader.vue';
 import GachaLegendaryBarrage from '../components/GachaLegendaryBarrage.vue';
+import MobileLandscape from '../components/MobileLandscape.vue';
 import { resetMediaConsentOnReload } from '../services/media-consent';
 import '../styles/foundations.scss';
 import '../styles/feedback.scss';
@@ -53,6 +54,11 @@ export function mountPage(
     if (stop) return;
     const route = /^\/([a-z-]+)\/([a-f\d]{6})\/?$/i.exec(location.pathname);
     const roomType = route?.[1] === 'race' ? 'thunder' : route?.[1];
+    const section = location.pathname.split('/')[1];
+    const landscape =
+      location.pathname === '/' ||
+      section === 'arena' ||
+      isGameType(section === 'race' ? 'thunder' : section);
     const watching =
       !!route && isGameType(roomType) && new URLSearchParams(location.search).get('watch') === '1';
     document.body.classList.toggle('vue-spectator-document', watching);
@@ -73,6 +79,7 @@ export function mountPage(
           header ? h(Teleport, { to: header }, h(SiteHeader, { roomObserver: watching })) : null,
           h(page, watching ? { code: route![2].toUpperCase() } : undefined),
           h(GachaLegendaryBarrage),
+          landscape ? h(MobileLandscape) : null,
         ]),
     });
     app.use(pinia);

@@ -13,6 +13,8 @@ export function passageTarget(from: Point, target: Point, box?: Passage | null):
 export interface SceneSpeed {
   slowMs?: number;
   hasteMs?: number;
+  bossSlowMs?: number;
+  bossSlowMultiplier?: number;
 }
 export function sceneWalk(
   from: Point,

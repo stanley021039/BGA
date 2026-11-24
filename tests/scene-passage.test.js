@@ -3,6 +3,25 @@ const assert = require('node:assert/strict');
 const { sceneWalk, passageTarget, validPassage } = require('../frontend/src/engines/scene-path.js');
 const { createRoomSpace } = require('../src/rooms/space');
 const box = { left: 30, right: 70, top: 25, bottom: 75 };
+test('a 15 percent boss slow only affects its 800ms interval and never replaces a stronger slow', () => {
+  const { sceneWalkWithSpeed } = require('../frontend/src/engines/scene-path.js');
+  const from = { x: 10, y: 50 },
+    to = { x: 90, y: 50 };
+  const slowed = sceneWalkWithSpeed(from, to, 1000, null, {
+    bossSlowMs: 800,
+    bossSlowMultiplier: 0.85,
+  });
+  const expected = sceneWalk(from, to, 800 * 0.85 + 200, null);
+  assert.ok(Math.abs(slowed.x - expected.x) < 1e-9);
+  const stronger = sceneWalkWithSpeed(from, to, 1000, null, {
+    bossSlowMs: 800,
+    bossSlowMultiplier: 0.85,
+    strongSlowMs: 500,
+  });
+  assert.ok(
+    Math.abs(stronger.x - sceneWalk(from, to, 500 * 0.5 + 300 * 0.85 + 200, null).x) < 1e-9,
+  );
+});
 
 test('central passage skips only the covered segment in all four directions, without slowing free-floor walking', () => {
   for (const [from, to, before, after, ms] of [

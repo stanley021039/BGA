@@ -28,7 +28,11 @@ const { bosses: bossCatalog, bossFor } = require('./scene-bosses');
 const { createBossCombat, abilityFor } = require('./boss-combat');
 const { createBossRewards } = require('./boss-rewards');
 const { bossPhase } = require('./boss-phases');
-const { contact: bossContact, lobbyLimits } = require('../../public/shared/boss-rules.json');
+const {
+  contact: bossContact,
+  lobbyLimits,
+  strength: bossStrength,
+} = require('../../public/shared/boss-rules.json');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
 // Percentages of the lobby page background, below the site header.
@@ -374,13 +378,20 @@ function createLobby(
         removeBot(id);
       } else if (visitors.has(id)) visitors.get(id).seenAt = time;
     for (const bot of sceneBots.values()) {
-      if (!bot.bossId || bot.arrived || time < bot.spawnAt) continue;
+      if (!bot.spawnAt || bot.arrived || time < bot.spawnAt) continue;
       bot.arrived = true;
+      if (!bot.bossId) {
+        const actor = enter(bot.user, bot.entrance);
+        actor.x = actor.targetX = bot.spawnX;
+        actor.y = actor.targetY = bot.spawnY;
+        actor.botArrivalAt = bot.spawnAt;
+        continue;
+      }
       const actor = enter(bot.user);
       actor.bossId = bot.bossId;
       const spec = bossFor(bot.bossId);
       actor.bossSpeed = spec.speed;
-      actor.bossHealthMultiplier = 8;
+      actor.bossHealthMultiplier = bossStrength.healthMultiplier;
       combat.reset(actor, time);
       actor.bossArrivalAt = bot.spawnAt;
       actor.x = actor.targetX = bot.spawnX;
@@ -418,9 +429,11 @@ function createLobby(
             ? 0.7
             : time < (visitor.slowUntil || 0)
               ? combatRules.frost.speedMultiplier
-              : time < (visitor.hasteUntil || 0)
-                ? combatRules.bladeHaste.speedMultiplier
-                : 1;
+              : time < (visitor.bossSlowUntil || 0)
+                ? 1 - (visitor.bossSlowPercent || 0) / 100
+                : time < (visitor.hasteUntil || 0)
+                  ? combatRules.bladeHaste.speedMultiplier
+                  : 1;
     return (
       hazards.speed(visitor) *
       profile(visitor).speed *
@@ -454,6 +467,7 @@ function createLobby(
             visitor.strongSlowUntil,
             visitor.orangeSlowUntil,
             visitor.bijuuSlowUntil,
+            visitor.bossSlowUntil,
             visitor.hasteUntil,
           ].filter((until) => until > visitor.updatedAt),
         ),
@@ -569,6 +583,8 @@ function createLobby(
         strongSlowMs: Math.max(0, (visitor.strongSlowUntil || 0) - walkFrom),
         orangeSlowMs: Math.max(0, (visitor.orangeSlowUntil || 0) - walkFrom),
         bijuuSlowMs: Math.max(0, (visitor.bijuuSlowUntil || 0) - walkFrom),
+        bossSlowMs: Math.max(0, (visitor.bossSlowUntil || 0) - walkFrom),
+        bossSlowMultiplier: 1 - (visitor.bossSlowPercent || 0) / 100,
         hasteMs: Math.max(0, (visitor.hasteUntil || 0) - walkFrom),
         speed: authorSpeed(visitor, walkFrom),
       },
@@ -596,7 +612,7 @@ function createLobby(
     let visitor = visitors.get(user.id);
     if (!visitor) {
       if (
-        visitors.size + [...sceneBots.values()].filter((b) => b.bossId && !b.arrived).length >=
+        visitors.size + [...sceneBots.values()].filter((b) => b.spawnAt && !b.arrived).length >=
         MAX_VISITORS
       )
         throw new HttpError(503, 'LOBBY_FULL', '大廳目前已滿');
@@ -737,6 +753,14 @@ function createLobby(
             : event,
         ),
       background: { ...background },
+      botArrivals: [...sceneBots.values()]
+        .filter((b) => !b.bossId && b.spawnAt && !b.arrived)
+        .map((b) => ({
+          id: b.id,
+          name: b.user.display_name,
+          at: b.spawnAt - 3000,
+          spawnAt: b.spawnAt,
+        })),
       ...(arrivals.length ? { bossArrivals: arrivals } : {}),
       barrages: barrages.filter((event) => time - event.at < 8000 && canView(event.playerId)),
       visitors: [...visitors.values()]
@@ -1128,7 +1152,7 @@ function createLobby(
         if (input.action === 'add') {
           if (
             [...sceneBots.values()].filter((b) => !b.bossId).length >= limit ||
-            visitors.size + [...sceneBots.values()].filter((b) => b.bossId && !b.arrived).length >=
+            visitors.size + [...sceneBots.values()].filter((b) => b.spawnAt && !b.arrived).length >=
               MAX_VISITORS
           )
             throw new HttpError(409, 'SCENE_BOTS_FULL', `最多 ${limit} 隻機器人`);
@@ -1140,22 +1164,33 @@ function createLobby(
             ...settings,
           };
           sceneBots.set(id, bot);
-          const actor = enter(bot.user, bot.entrance),
-            self = visitors.get(user.id),
+          const self = visitors.get(user.id),
             index = sceneBots.size - 1;
-          actor.x = actor.targetX = Math.max(
+          bot.spawnX = Math.max(
             8,
             Math.min(92, self.x + (self.x > 50 ? -1 : 1) * (12 + (index % 3) * 9)),
           );
-          actor.y = actor.targetY = Math.max(18, Math.min(92, self.y + (index % 2 ? -10 : 10)));
+          bot.spawnY = Math.max(18, Math.min(92, self.y + (index % 2 ? -10 : 10)));
+          if (!expanded && !arenaOptions.training) {
+            bot.spawnAt = now() + 3000;
+            bot.arrived = false;
+          } else {
+            bot.arrived = true;
+            const actor = enter(bot.user, bot.entrance);
+            actor.x = actor.targetX = bot.spawnX;
+            actor.y = actor.targetY = bot.spawnY;
+          }
           if (arenaOptions.training) {
+            const actor = visitors.get(bot.id);
             actor.x = actor.targetX = 88 - (index % 2) * 8;
             actor.y = actor.targetY = 78 - index * 16;
           }
         } else Object.assign(bot, settings);
         const actor = visitors.get(bot.id);
-        actor.entrance = bot.entrance;
-        actor.teleportId++;
+        if (actor) {
+          actor.entrance = bot.entrance;
+          actor.teleportId++;
+        }
         if (expanded) {
           arena.command(bot.user, { action: 'team', team: bot.team }, visitors, combat.reset);
           arena.command(bot.user, { action: 'ready', ready: true }, visitors, combat.reset);
@@ -1164,6 +1199,8 @@ function createLobby(
         if (expanded)
           arena.command(bot.user, { action: 'team', team: null }, visitors, combat.reset);
         removeBot(bot.id);
+      } else if (!visitors.has(bot.id)) {
+        throw new HttpError(409, 'BOT_ARRIVING', '機器人正在倒數進場');
       } else if (input.action === 'replay') visitors.get(bot.id).teleportId++;
       else {
         combat.reset(visitors.get(bot.id), now());
@@ -1183,7 +1220,6 @@ function createLobby(
     };
   }
   function bosses(user, input = { action: 'list' }) {
-    if (arenaOptions.training) throw new HttpError(403, 'LOBBY_BOSS_ONLY', 'Boss僅能加入主大廳');
     enter(user);
     if (
       !input ||
@@ -1197,15 +1233,20 @@ function createLobby(
     if (input.action === 'add') {
       const spec = bossFor(input.bossId);
       if (!spec) throw new HttpError(400, 'INVALID_BOSS', '請選擇有效Boss');
-      const limit = expanded ? 1 : lobbyLimits.bosses;
+      const limit = expanded || arenaOptions.training ? 1 : lobbyLimits.bosses;
       if (
         current().length >= limit ||
-        visitors.size + current().filter((b) => !b.arrived).length >= MAX_VISITORS
+        visitors.size + [...sceneBots.values()].filter((b) => b.spawnAt && !b.arrived).length >=
+          MAX_VISITORS
       )
         throw new HttpError(
           409,
           'BOSSES_FULL',
-          expanded ? '競技場最多一隻Boss' : '大廳最多五隻Boss',
+          arenaOptions.training
+            ? '訓練場最多一隻Boss'
+            : expanded
+              ? '競技場最多一隻Boss'
+              : '大廳最多五隻Boss',
         );
       const id = 'scene-boss:' + randomBytes(12).toString('hex');
       const bot = {
@@ -1231,7 +1272,7 @@ function createLobby(
     }
     return {
       selfId: user.id,
-      limit: expanded ? 1 : lobbyLimits.bosses,
+      limit: expanded || arenaOptions.training ? 1 : lobbyLimits.bosses,
       catalog: bossCatalog.map(({ sequence, speed, ...spec }) => spec),
       bosses: current().map(({ user, ...b }) => ({ ...b, name: user.display_name })),
     };

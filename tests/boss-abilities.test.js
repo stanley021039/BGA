@@ -24,10 +24,10 @@ function fixture() {
     system: createBossCombat(combat, timeline.interceptBoss),
   };
 }
-test('all thirty three abilities have distinct IDs, two normals and one longer charged ultimate per boss; player loadouts reject them', () => {
-  assert.equal(abilities.length, 33);
-  assert.equal(new Set(abilities.map((a) => a.id)).size, 33);
-  assert.equal(new Set(abilities.map((a) => a.name)).size, 33);
+test('all thirty nine abilities have distinct IDs, two normals and one longer charged ultimate per boss; player loadouts reject them', () => {
+  assert.equal(abilities.length, 39);
+  assert.equal(new Set(abilities.map((a) => a.id)).size, 39);
+  assert.equal(new Set(abilities.map((a) => a.name)).size, 39);
   const playerIds = new Set(require('../public/shared/attack-effects.json').map((a) => a.id));
   for (const id of new Set(abilities.map((a) => a.boss))) {
     const set = abilities.filter((a) => a.boss === id);

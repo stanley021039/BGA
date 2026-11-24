@@ -741,12 +741,12 @@ function initializeApp(config, dataLock, acquired) {
       .all()
       .map((row) => () => sound.get(row.character_id, row.expression)?.bytes);
   }
-  // Serves an image, or its WebP thumbnail when ?size= asks for one. While a
-  // thumbnail is being prepared the original is sent, never cached as the size.
+  // A requested thumbnail waits for the shared bounded encoder job, so a cold
+  // visit receives the requested size. Only failed cache work falls back.
   async function sendImage(req, res, url, { bytes, mime }, versioned) {
     const cacheControl = versioned ? PRIVATE_IMMUTABLE : PRIVATE_REVALIDATE,
       size = thumbnailSize(url.searchParams.get('size')),
-      sized = size ? await mediaThumbnails.variant(bytes, size) : null;
+      sized = size ? await mediaThumbnails.variant(bytes, size, { wait: true }) : null;
     res.setHeader('Content-Security-Policy', "default-src 'none'");
     if (sized?.bytes) {
       res.setHeader('Content-Type', 'image/webp');
@@ -758,7 +758,7 @@ function initializeApp(config, dataLock, acquired) {
     });
   }
   // Production pre-builds every thumbnail at start and after each upload, so
-  // only the first viewer of a brand-new image waits on the original.
+  // only the first viewer of a brand-new image waits for its requested size.
   function thumbnailSources() {
     const image = db.prepare(
         'SELECT bytes FROM character_images WHERE character_id=? AND expression=?',
@@ -767,6 +767,10 @@ function initializeApp(config, dataLock, acquired) {
     return [
       ...require('./rooms/scene-bosses').bosses.map(
         (b) => () => readStatic(path.join(__dirname, '..', 'public', assetPath(b.image))).bytes,
+      ),
+      ...require('../public/shared/boss-phase-art.json').sprites.map(
+        (sprite) => () =>
+          readStatic(path.join(__dirname, '..', 'public/assets/characters', sprite.file)).bytes,
       ),
       ...[
         ...new Set(builtinCharacters.flatMap((c) => Object.values(c.expressions).map(assetPath))),
@@ -3473,6 +3477,9 @@ function initializeApp(config, dataLock, acquired) {
             .find((value) => value === url.pathname) ||
           require('./rooms/scene-bosses')
             .bosses.map((b) => assetPath(b.image))
+            .find((p) => p === url.pathname) ||
+          require('../public/shared/boss-phase-art.json')
+            .sprites.map((sprite) => '/assets/characters/' + sprite.file)
             .find((p) => p === url.pathname) ||
           retiredCharacterAsset(url.pathname);
         if (!asset) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');

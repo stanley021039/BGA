@@ -85,15 +85,24 @@ export function sceneWalkWithSpeed(
   target,
   elapsedMs,
   box,
-  { slowMs = 0, hasteMs = 0, strongSlowMs = 0, orangeSlowMs = 0, bijuuSlowMs = 0, speed = 1 },
+  {
+    slowMs = 0,
+    hasteMs = 0,
+    strongSlowMs = 0,
+    orangeSlowMs = 0,
+    bijuuSlowMs = 0,
+    bossSlowMs = 0,
+    bossSlowMultiplier = 1,
+    speed = 1,
+  },
 ) {
   if (elapsedMs <= 0) return { ...sceneWalk(from, target, 0, box), walkedMs: 0 };
-  if (strongSlowMs > 0 || orangeSlowMs > 0 || bijuuSlowMs > 0) {
+  if (strongSlowMs > 0 || orangeSlowMs > 0 || bijuuSlowMs > 0 || bossSlowMs > 0) {
     const boundaries = [
       ...new Set([
         0,
         elapsedMs,
-        ...[strongSlowMs, orangeSlowMs, bijuuSlowMs, slowMs, hasteMs].filter(
+        ...[strongSlowMs, orangeSlowMs, bijuuSlowMs, bossSlowMs, slowMs, hasteMs].filter(
           (n) => n > 0 && n < elapsedMs,
         ),
       ]),
@@ -113,9 +122,11 @@ export function sceneWalkWithSpeed(
               ? 0.7
               : at < slowMs
                 ? rules.frost.speedMultiplier
-                : at < hasteMs
-                  ? rules.bladeHaste.speedMultiplier
-                  : 1;
+                : at < bossSlowMs
+                  ? bossSlowMultiplier
+                  : at < hasteMs
+                    ? rules.bladeHaste.speedMultiplier
+                    : 1;
       result = sceneWalk(current, target, duration * speed * factor, box);
       const need = sceneWalk(current, target, 0, box).remainingMs / (speed * factor);
       walkedMs += Math.min(duration, need);

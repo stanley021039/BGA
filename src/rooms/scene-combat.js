@@ -1,3 +1,4 @@
+const bossAilments = require('./boss-ailments');
 const { rules: pickupRules } = require('./lobby-pickups');
 const { profile } = require('./archetypes');
 const { HttpError } = require('../http/errors');
@@ -5,6 +6,7 @@ const { attackKind } = require('./attack-kind');
 const rules = require('../../public/shared/scene-rules.json');
 const energy = require('./scene-energy');
 const bossInteractions = require('./boss-interactions');
+const { strength: bossStrength } = require('../../public/shared/boss-rules.json');
 const { passageTarget } = require('../../frontend/src/engines/scene-path.js');
 const {
   phaseStats,
@@ -24,7 +26,7 @@ function authorSpeed(actor, time = actor.combatAt || 0) {
   return (
     (actor.authorBonus ? rules.authorBonus.speedMultiplier : 1) *
     (actor.bossSpeed || 1) *
-    (actor.bossId ? phaseStats(actor).speed : 1) *
+    (actor.bossId ? phaseStats(actor).speed * bossStrength.speedMultiplier : 1) *
     bossInteractions.burstSpeed(actor, time) *
     (time < (actor.bossBlessingUntil || 0) ? 1.08 : 1)
   );
@@ -77,6 +79,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       actor.regenDebuffUntil =
         0;
     actor.slowUntil = 0;
+    actor.bossSlowUntil = actor.bossSlowPercent = 0;
     actor.teleportBlockedUntil = 0;
     actor.hasteUntil = 0;
     actor.immobileUntil = actor.stasisUntil = 0;
@@ -94,6 +97,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     actor.drillDot = null;
     actor.ordinaryDot = null;
     actor.bearCompanion = null;
+    actor.bossAilments = {};
+    actor.bossControlProtectUntil = 0;
     actor.dotPulse = null;
     actor.knockback = null;
     actor.pickupSpeedAt =
@@ -177,12 +182,14 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         const modifiers = [
           [actor.guanyinUntil || 0, rules.guanyinBonus.multiplier],
           [actor.regenBuffUntil || 0, 1.1],
-          [actor.regenDebuffUntil || 0, 0.9],
         ];
         const boundaries = [
           ...new Set([
             1,
             ticks + 1,
+            ...[actor.regenDebuffUntil || 0, actor.bossAilments?.healing?.until || 0].map((until) =>
+              Math.max(1, Math.min(ticks + 1, Math.ceil((until - start) / 1000))),
+            ),
             ...modifiers.map(([until]) =>
               Math.max(1, Math.min(ticks + 1, Math.ceil((until - start) / 1000))),
             ),
@@ -195,7 +202,10 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
             (m, [until, factor]) => m * (tickAt < until ? factor : 1),
             1,
           );
-          healing += (boundaries[i] - boundaries[i - 1]) * multiplier;
+          healing +=
+            (boundaries[i] - boundaries[i - 1]) *
+            multiplier *
+            bossAilments.healingFactor(actor, tickAt);
         }
         actor.health = Math.min(
           bossHealingCeiling(actor),
@@ -650,7 +660,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
           ? Math.round((weapons * salvo) / 4) - Math.round((weapons * (salvo - 1)) / 4)
           : (base * weight) / 3;
     const incoming = Math.round(
-      (caster.bossId ? phaseStats(caster).damage : 1) *
+      (caster.bossId ? phaseStats(caster).damage * bossStrength.damageMultiplier : 1) *
         (babylon
           ? portion *
             (critical ? rules.damage.criticalMultiplier : 1) *
@@ -693,6 +703,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         : Math.round(
             incoming *
               (1 + bossInteractions.vulnerability(to, time)) *
+              (1 + (from.bossId ? bossAilments.percent(to, 'armor', time) / 100 : 0)) *
               cover *
               (profile(from).damage +
                 (from.pickupAttackBonus ??
@@ -755,7 +766,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         if (count < 3) {
           caster.health = Math.min(
             caster.maxHealth,
-            caster.health + Math.round(caster.maxHealth * 0.01),
+            caster.health +
+              Math.round(caster.maxHealth * 0.01 * bossAilments.healingFactor(caster, time)),
           );
           from.healCount = count + 1;
         }
@@ -764,7 +776,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
         from.directHealed = true;
         caster.health = Math.min(
           caster.maxHealth,
-          caster.health + Math.round(caster.maxHealth * 0.02),
+          caster.health +
+            Math.round(caster.maxHealth * 0.02 * bossAilments.healingFactor(caster, time)),
         );
       }
     }
@@ -801,6 +814,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
   }
   function clearDeath(actor, time) {
     actor.bearCompanion = null;
+    actor.bossAilments = {};
+    actor.bossControlProtectUntil = 0;
     if (actor.bossId) bossInteractions.resetBossInteractions(actor);
     actor.bossPhaseLockUntil = 0;
     actor.bossBlessingUntil = 0;
@@ -823,6 +838,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     actor.guardEnergyReady = false;
     actor.guardEnergy = null;
     actor.slowUntil = 0;
+    actor.bossSlowUntil = actor.bossSlowPercent = 0;
     actor.teleportBlockedUntil = 0;
     actor.hasteUntil = 0;
     actor.heroFlightUntil = 0;
@@ -922,10 +938,13 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
                   (actor.authorBonus ? rules.authorBonus.regenerationMultiplier : 1) *
                   (guanyin ? rules.guanyinBonus.multiplier : 1) *
                   (time < (actor.regenBuffUntil || 0) ? 1.1 : 1) *
-                  (time < (actor.regenDebuffUntil || 0) ? 0.9 : 1),
+                  bossAilments.healingFactor(actor, time),
               ),
             },
           }
+        : {}),
+      ...(bossAilments.view(actor, time).length
+        ? { bossAilments: bossAilments.view(actor, time) }
         : {}),
       energy: actor.energy || 0,
       teleportCost: teleportCost(actor, time),
@@ -939,13 +958,26 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       guardFullMs: living ? Math.max(0, guardFullUntil - time) : 0,
       guardMs: living ? Math.max(0, guardUntil - time) : 0,
       slowMultiplier:
-        time < (actor.strongSlowUntil || 0)
-          ? 0.5
-          : time < (actor.orangeSlowUntil || 0)
-            ? 0.6
-            : time < (actor.bijuuSlowUntil || 0)
-              ? 0.7
-              : rules.frost.speedMultiplier,
+        time < (actor.bossSlowUntil || 0)
+          ? Math.min(
+              1 - (actor.bossSlowPercent || 0) / 100,
+              time < (actor.strongSlowUntil || 0)
+                ? 0.5
+                : time < (actor.orangeSlowUntil || 0)
+                  ? 0.6
+                  : time < (actor.bijuuSlowUntil || 0)
+                    ? 0.7
+                    : time < (actor.slowUntil || 0)
+                      ? rules.frost.speedMultiplier
+                      : 1,
+            )
+          : time < (actor.strongSlowUntil || 0)
+            ? 0.5
+            : time < (actor.orangeSlowUntil || 0)
+              ? 0.6
+              : time < (actor.bijuuSlowUntil || 0)
+                ? 0.7
+                : rules.frost.speedMultiplier,
       slowMs:
         living && time >= (actor.immobileUntil || 0)
           ? Math.max(
@@ -955,6 +987,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
                 actor.strongSlowUntil || 0,
                 actor.orangeSlowUntil || 0,
                 actor.bijuuSlowUntil || 0,
+                actor.bossSlowUntil || 0,
               ) - time,
             )
           : 0,

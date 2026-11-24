@@ -3,6 +3,7 @@ import { preloadAllowed, warm, whenIdle } from '../services/preload';
 import { sizedImage } from '../services/image-size';
 import { computed, markRaw, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
+import { createSceneSnapshotClock } from '../services/scene-reconciliation.js';
 import { useSessionStore } from './session';
 import { ApiError, requestJson } from '../services/http';
 import {
@@ -40,6 +41,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     rooms = shallowRef<PublicRoom[]>([]),
     expressions = shallowRef<LobbyExpression[]>([]);
   const connected = ref(false),
+    snapshotAgeMs = ref(0),
     speeches = shallowRef<Record<string, BarrageEvent>>({}),
     presenceStatus = ref('正在進入大廳…'),
     roomsStatus = ref('正在載入房間…'),
@@ -70,6 +72,8 @@ export const useLobbyStore = defineStore('lobby', () => {
     streamLive = false,
     streamTried = 0;
   const controllers = new Set<AbortController>();
+  const snapshotClock = createSceneSnapshotClock();
+  const monotonic = () => (typeof performance === 'object' ? performance.now() : Date.now());
   const identity = computed(() => session.user?.id || '');
   function showSpeech(event: BarrageEvent): false | (() => void) {
     const id = event.playerId;
@@ -120,6 +124,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       10000,
     );
     try {
+      const started = monotonic();
       const scopedPath = sceneApiPath(path);
       const value = await requestJson(scopedPath, {
         method: body ? 'POST' : 'GET',
@@ -128,6 +133,8 @@ export const useLobbyStore = defineStore('lobby', () => {
       });
       controller.signal.throwIfAborted();
       if (!current(epoch, account)) throw new DOMException('大廳身分已變更。', 'AbortError');
+      if (value && typeof value === 'object' && 'serverNow' in value && 'visitors' in value)
+        snapshotClock.sample(Number(value.serverNow), started, monotonic());
       return value;
     } catch (cause) {
       if (current(epoch, account) && cause instanceof ApiError && cause.status === 401)
@@ -146,6 +153,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       return;
     }
     if (snapshot.value && next.serverNow < snapshot.value.serverNow) return;
+    snapshotAgeMs.value = snapshotClock.age(next.serverNow, monotonic());
     const first = !snapshot.value;
     snapshot.value = next;
     useLobbyBackgroundStore().receive(next.background);
@@ -579,6 +587,8 @@ export const useLobbyStore = defineStore('lobby', () => {
     roomsJob = null;
     expressionsJob = null;
     snapshot.value = null;
+    snapshotClock.reset();
+    snapshotAgeMs.value = 0;
     rooms.value = [];
     expressions.value = [];
     connected.value = false;
@@ -669,6 +679,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     arenaPending,
     arenaStatus,
     snapshot,
+    snapshotAgeMs,
     speeches,
     showSpeech,
     rooms,

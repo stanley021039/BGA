@@ -1,5 +1,6 @@
 {
   "lobbyLimits": { "bots": 5, "bosses": 5 },
+  "strength": { "healthMultiplier": 12, "damageMultiplier": 1.25, "speedMultiplier": 1.1 },
   "contact": { "radius": 5, "intervalMs": 800, "damageWeight": 0.3 },
   "phaseLockMs": 2000,
   "playerInteractions": {

@@ -1,5 +1,29 @@
 # 共用 UI 元件與 token
 
+手機介面與測試以橫向操作為主要基準，優先844×390／740×360等短橫向；直向保留基本相容與不溢出檢查。機器人管理依實際容器寬度：設定區至少640px時角色／配招並排，每張分區的內容至少360px時欄位並排；較窄則自然往下排。保留44px觸控目標與完整名稱。
+
+UiField原生下拉選單可傳selectedLabel顯示可換行的完整目前選項；原生select保留鍵盤、觸控、disabled及v-model，外層沿共用輸入框token與focus-visible。NPC設定已套用，長名稱隨內容增高。UiDialog的before-content插槽可放固定分頁，與捲動內容分開；機器人／Boss切換在捲動設定時仍可見。
+
+競技場即時操作HUD採UiPanel的hud密度與translucent外觀，六個操作在同一個可換行按鈕列，時間／分數／HP為下一列；面板依內容自然增高，在手機橫向一屏完整顯示。沿44px操作尺寸，無內部捲軸。
+
+只顯示背景模式的KDA固定在頂端16px或瀏海安全區，以較大者為準；不再沿主大廳原本較低的位置。與左側Esc保留寬度並允許狀態換行，窄螢幕不重疊；一般介面戰績位置不變。右側仍沿大廳對齊，旋轉時重算水平位置，Boss血條的窄螢幕避讓沿同一個頂端基準。
+
+機器人管理沿SceneBotPanel共用：UiChoiceCard與PlayerAvatar顯示緊湊角色格，auto-fill保留空欄，避免只有一兩隻時卡片撐滿寬度；格內短名、可及名稱保留全名，選取沿共用aria-pressed與外框。選擇區留8px內距，避免外框／焦點被彈窗捲動區裁切。數量用UiBadge，角色／行為與Q／E／R用UiPanel／UiField分區；大招、進場通欄，窄螢幕改縱排，使用共用UiDialog原有捲動，不固定裁切內容高度。其他玩家的機器人可檢視但不可改動。
+
+訓練場浮動工具列使用UiPanel的hud密度與translucent外觀，管理入口以等寬兩欄排列，「補滿能量」與SceneEnergy的panel尺寸能量條獨立成列；連線中且未滿才可補能，送出沿UiButton pending回饋，滿能顯示「能量已滿」。設定彈窗的重播／重置等寬，Q／E雙欄、R與進場通欄，窄螢幕自然換單欄，不縮小文字或裁切按鈕。
+
+可拖曳浮動工具視窗共用createPanelDrag：標題空白區或UiButton拖曳把手啟動，展開／最小化共用同一位置；其他按鈕與輸入不啟動拖曳。容器攔截click，避免pointer capture放開後的點擊穿透成場地移動。拖曳把手可用方向鍵、Shift方向鍵及Home還原；pointer capture在放開／取消／卸載清理。視窗大小改變、旋轉或visualViewport改變時限制在可視區，不寫入伺服器偏好，不新增每幀計時器。手機短橫向預設放在左右戰鬥按鍵之間，展開仍完整露出補能操作，可局部捲動較長的狀態訊息。
+
+2026-11-24：MobileLandscape由mount-page共用入口掛載，涵蓋主大廳、arena（含training）、所有isGameType路徑與觀戰，不影響設定／登入等管理頁。手機首次可信任觸控嘗試全螢幕與landscape方向鎖定，輸入框／彈窗／隱藏頁不自動觸發；不支援時保留共用UiButton轉橫提示，可手動重試，不用CSS旋轉整頁或裁切遊戲。離頁／BFCache卸載移除監聽並釋放自己取得的方向鎖與全螢幕，未取得的狀態不擅自退出。訓練場沿MobileSceneControls戰鬥搖桿與C／Q／E／R，觸控裝置預設收合半透明訓練工具列，保留搖桿區。
+
+BossPuppet依bossPhase切換boss-body-art的實際本體圖，十三款各有二階／最終兩張，不用舊身形上的紋路冒充換形。26張WebP走驗權、內容版本與128／256／512縮圖，ResizeObserver依實際顯示寬度取尺寸並卸載清理；只暖載場上Boss的後續階段，仍服從Save-Data／慢速網路偏好。基多龜嘴部遮罩與光束共用各階段座標。
+
+2026-11-24：純背景／角色檢視的KDA與加成直接共用SceneKda，不另加外框；機器人與Boss、最小化及Esc回復均沿用大廳預設UiButton，不另用ghost外觀。右下管理保留共用半透明UiPanel及收合。BossArrivalNotice同時顯示大廳普通機器人的三秒伺服器倒數；倒數中的機器人不呈現為已站立角色，到期才播放既有進場特效。Boss警告音效獨立於視覺與動畫偏好，沿用AudioSettings重要音效單一名額、個人音量及靜音設定。
+
+訓練場也使用SceneNpcControls的「機器人與Boss」共用入口；Boss分頁最多一隻，角色與配裝設定仍獨立。BossTelegraphs與Canvas的地面提示共用bossWarningOpacity：普通招式最後550ms、大招每波前850ms才顯示，透明度10–17%，出手後120ms淡出。範圍寬度、缺口與真正命中計畫不因淡化改變，關閉動態也保留同一短暫提示；不另加厚重長駐色帶。
+
+Boss後兩階段的局部外觀共用BossPhaseDetails及boss-phase-art資料，以原圖透明遮罩限制裂紋／核心／眼部／散熱口，不在名字牌外再加框或整圖濾色。bossStageSpec與bossAttackPlan為伺服器命中、靜態BossTelegraphs、攻擊特效及反彈的共同來源；新增Boss需補齊二／最終階段資料及局部外觀配置，不各自猜測危險區。關閉動態保留階段紋路與完整靜態預警，動態停止沿既有原生動畫生命週期。
+
 一鍵隨機配裝（#421）沿AttackChoices／EntranceChoices，玩家只抽已解鎖項目並保存，載入或錯誤時停用；SceneBotPanel與訓練設定先填好整套，再沿原確認／儲存流程。競技場亂鬥（#422）沿原開戰與戰況元件，權威抽選本局限定的招式、進場、戰鬥型態及共用地圖；戰況列出實際配置。展開戰況時收起HUD，戰況保留時間／HP與頂端關閉鈕，避免手機重疊。詳[隨機配裝規格](specs/RANDOM-LOADOUT-BRAWL-421-422.md)。
 
 共用戰鬥命中反饋（#420）由LobbyAttackLayer沿權威已結算hit觸發，普通／暴擊／大招分級的局部回彈、命中圈與有上限輕震。只移動角色／攻擊視覺層，保留固定背景、HUD與操作；聲音沿GameSounds／AudioSettings獨立偏好。首次、過期、未命中與重送不補播，多段限流，動態關閉／reduce／hidden／離頁清理；細節見[反饋契約](specs/COMBAT-HIT-FEEDBACK-420.md)。
@@ -10,7 +34,7 @@
 
 BossHealthHud共用於大廳與競技場，透過body層固定生命長條，獨立於角色與鏡頭。UiPanel density="hud"採半透明底、名稱與權威HP數字；每隻Boss用一條16px原生progress紅色填量，中間兩道刻線分成三段，顯示第一階段／二階段／最終階段；鎖血僅顯示「鎖血」，免控僅顯示「免控」，不顯示秒數。大廳最多五組，競技場一組；超過兩組時血條區可鍵盤聚焦捲動，不裁掉其餘Boss。總生命顯示完整千分位數字，與傷害跳字使用相同原始單位，不單獨除以unitScale。桌機血條區寬度最多720px、水平置中；手機戰鬥血條放在左上操作區之下。斷線、移除及離開場景清除；零血顯示已擊倒，重生沿新快照回填。不增加逐條計時器或生命推測動畫，不攔截背景點擊，移除Boss身旁重複小血條。
 
-只顯示背景與角色模式以body層的半透明UiPanel保留操作：左上只顯示Esc恢復鈕，SceneKda（含加成）沿一般大廳的位置，SceneNpcControls放右下並可最小化；不解除原大廳的inert。小螢幕把恢復介面、戰鬥資訊及Boss血條分區，管理彈窗仍走UiDialog的body傳送層。關閉動態不停止戰績／狀態資料同步，也不能隱藏必要管理入口。
+只顯示背景與角色模式以body層保留操作：左上Esc恢復鈕沿共用UiButton；SceneKda（含加成）沿一般大廳的位置與無額外面板樣式，SceneNpcControls放右下半透明UiPanel並可最小化；不解除原大廳的inert。小螢幕把恢復介面、戰鬥資訊及Boss血條分區，管理彈窗仍走UiDialog的body傳送層。關閉動態不停止戰績／狀態資料同步，也不能隱藏必要管理入口。
 
 所有角色進場一律由entrancePlaybackDuration套用1500ms上限，原本較短的保留；抽卡／收藏／大廳／房間共用，不另寫秒數，新進場也自動套用。Stitch使用同倍率縮放整個CSS動畫時間軸，九款原生進場以原始分鏡長度縮放繪製時鐘；角色與舞台同時結束，不能只提早刪除畫面。現行完整時間表見docs/specs/ENTRANCE-TIMINGS-410.md；異色與原版等長。
 

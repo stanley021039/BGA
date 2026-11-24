@@ -186,6 +186,7 @@ function play(event: LobbyAttack) {
     bossFrom: { x: event.fromX, y: event.fromY },
     bossAim: { x: event.toX, y: event.toY },
     bossAttackRate: event.bossAttackRate,
+    bossPhase: event.bossPhase,
     ...options,
     coverClips: wallClips(event, width, height),
     readCaster,

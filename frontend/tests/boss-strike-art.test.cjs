@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const abilities = require('../../public/shared/boss-abilities.json');
 const source = require('../../tests/helpers/boss-artwork-module.cjs')();
-test('all 33 boss casts draw finite source-anchored windup, travel and timed impact, then stop cleanly', () => {
+test('all 39 boss casts draw finite source-anchored windup, travel and timed impact, then stop cleanly', () => {
   const sandbox = { performance: { now: () => 0 }, Math };
   vm.runInNewContext(source + '\nthis.create=createBossArtwork;', sandbox);
   for (const spec of abilities) {
@@ -84,7 +84,7 @@ test('weapon muzzle mirrors with the actual boss facing without moving its fixed
       },
     );
     const art = sandbox.create(ctx, {
-      effect: 'boss_thanos_q',
+      effect: 'boss_gatanozoa_q',
       bossFrom: { x: 20, y: 70 },
       bossAim: { x: 55, y: 65 },
       width: 1280,
@@ -96,6 +96,54 @@ test('weapon muzzle mirrors with the actual boss facing without moving its fixed
     art.dispose();
     origins.push(arcs[0][0]);
   }
-  assert.ok(Math.abs(origins[0] - 14.0625) < 0.001);
-  assert.ok(Math.abs(origins[1] - 23.4375) < 0.001);
+  // Gatanozoa's right pincer sits at 74% of the portrait width.
+  assert.ok(Math.abs(origins[0] - 22.5) < 0.001);
+  assert.ok(Math.abs(origins[1] - 15) < 0.001);
+});
+
+test('all 78 staged attacks share their authoritative sequence, keep numeric drawing finite and release the shared clock', () => {
+  const sandbox = { performance: { now: () => 0 }, Math };
+  vm.runInNewContext(source + '\nthis.create=createBossArtwork;', sandbox);
+  for (const spec of abilities)
+    for (const bossPhase of [2, 3]) {
+      let commands = 0,
+        balance = 0;
+      const ctx = new Proxy(
+        {},
+        {
+          get:
+            (_, key) =>
+            (...args) => {
+              for (const v of args)
+                if (typeof v === 'number') assert.ok(Number.isFinite(v), spec.id + ':' + key);
+              if (key === 'save') balance++;
+              if (key === 'restore') balance--;
+              commands++;
+            },
+          set: () => true,
+        },
+      );
+      const rate = bossPhase === 2 ? 1.15 : 1.3;
+      const art = sandbox.create(ctx, {
+        effect: spec.id,
+        bossPhase,
+        bossAttackRate: rate,
+        bossFrom: { x: 20, y: 65 },
+        bossAim: { x: 55, y: 65 },
+        from: { x: 200, y: 400 },
+        to: { x: 550, y: 400 },
+        width: 1000,
+        height: 625,
+        readCaster: () => ({ x: 200, y: 400, width: 200, height: 218 }),
+      });
+      for (const at of [0, 400, 715, 1200, 2200, 2600, 3150, 3700, 4190]) {
+        const before = commands;
+        assert.equal(art.draw(at / rate), true);
+        assert.equal(balance, 0);
+        assert.ok(commands - before < 8000, spec.id);
+      }
+      assert.equal(art.draw(4201 / rate), false);
+      art.dispose();
+      assert.equal(art.draw(0), false);
+    }
 });

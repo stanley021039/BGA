@@ -22,6 +22,7 @@ function clearControl(actor) {
     'stasisUntil',
     'sealedUntil',
     'slowUntil',
+    'bossSlowUntil',
     'strongSlowUntil',
     'orangeSlowUntil',
     'bijuuSlowUntil',

@@ -14,6 +14,7 @@ function fixture() {
   const scope = {
     abilities,
     motionAllowed: () => true,
+    bossStageSpec: require('../src/engines/boss-geometry.js').bossStageSpec,
     watchMotionCancellation: (cb) => {
       callbacks.add(cb);
       return () => callbacks.delete(cb);
@@ -49,7 +50,7 @@ function fixture() {
 test('boss puppets cap native tracks, synchronise windup and impact, and release on death or policy cancellation', () => {
   const f = fixture(),
     first = f.scope.create(f.element(), 'cthulhu'),
-    second = f.scope.create(f.element(), 'thanos');
+    second = f.scope.create(f.element(), 'colossal');
   assert.ok(first && second);
   const extra = [
     f.scope.create(f.element(), 'gyo'),
@@ -59,7 +60,7 @@ test('boss puppets cap native tracks, synchronise windup and impact, and release
   assert.ok(extra.every(Boolean));
   assert.equal(f.scope.create(f.element(), 'gyo'), null);
   const spec = require('../../public/shared/boss-abilities.json').find(
-    (a) => a.boss === 'thanos' && a.slot === 'r',
+    (a) => a.boss === 'colossal' && a.slot === 'r',
   );
   const state = {
     moving: true,
@@ -89,7 +90,7 @@ test('boss puppets cap native tracks, synchronise windup and impact, and release
 });
 test('organic, flying, mechanical, stalking and heavy bosses have different gait profiles', () => {
   const f = fixture(),
-    profiles = ['cthulhu', 'greeza', 'steel-behemoth', 'arkveld', 'thanos'].map((id) =>
+    profiles = ['cthulhu', 'greeza', 'steel-behemoth', 'arkveld', 'colossal'].map((id) =>
       f.scope.profile(id),
     );
   assert.equal(new Set(profiles.map((p) => p.gait)).size, 5);
@@ -97,7 +98,7 @@ test('organic, flying, mechanical, stalking and heavy bosses have different gait
 });
 test('boss fall is finite, seeks the authoritative arrival time and is not replayed by late snapshots', () => {
   const f = fixture(),
-    puppet = f.scope.create(f.element(), 'thanos');
+    puppet = f.scope.create(f.element(), 'colossal');
   const state = { moving: false, connected: true, health: 100, arrivalAt: 1000 };
   puppet.update(state, 1200);
   const fall = f.created.find((a) => a.options.duration === 1100);
@@ -108,7 +109,7 @@ test('boss fall is finite, seeks the authoritative arrival time and is not repla
   assert.equal(f.created.filter((a) => a.options.duration === 1100).length, 1);
   puppet.dispose();
   assert.ok(f.created.every((a) => a.cancelled));
-  const late = f.scope.create(f.element(), 'thanos');
+  const late = f.scope.create(f.element(), 'colossal');
   late.update(state, 3000);
   assert.equal(f.created.filter((a) => a.options.duration === 1100).length, 1);
   late.dispose();

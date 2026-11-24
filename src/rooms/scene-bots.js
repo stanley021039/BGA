@@ -78,6 +78,7 @@ function createBotDriver(random = Math.random) {
       for (const bot of bots) {
         const actor = positions.get(bot.id);
         if (!actor?.health || time < (actor.bossArrivalAt || 0) + 700 || !canAct(actor)) continue;
+        if (actor.botArrivalAt && time < actor.botArrivalAt + 1500) continue;
         let state = states.get(bot.id);
         if (!state) states.set(bot.id, (state = { moveAt: time + 400, attackAt: time + 1200 }));
         const candidates = [...positions.values()].filter(

@@ -27,42 +27,13 @@ const expanded = ref(false),
 const trigger = ref<InstanceType<typeof UiButton> | null>(null);
 const panelId = useId();
 const media = window.matchMedia('(max-width: 1180px), (any-pointer: coarse)');
-const coarse = window.matchMedia('(any-pointer: coarse)');
-const portrait = window.matchMedia('(orientation: portrait)');
+
 const visible = computed(() => touch.value && props.enabled && !blocked.value);
 const battleHud = computed(() => props.battle && visible.value);
-const rotateHint = ref(false);
+
 const thumb = ref<SceneDirection>([0, 0]);
 let pointer: number | undefined;
 let movement: ReturnType<typeof setInterval> | undefined;
-let ownFullscreen = false;
-let landscapeRequested = false;
-const orientation = screen.orientation as
-  | (ScreenOrientation & {
-      lock?: (value: 'landscape') => Promise<void>;
-      unlock?: () => void;
-    })
-  | undefined;
-function updateRotation() {
-  rotateHint.value = coarse.matches && portrait.matches;
-}
-async function enterLandscape() {
-  landscapeRequested = true;
-  try {
-    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-      await document.documentElement.requestFullscreen();
-      if (!landscapeRequested) {
-        await document.exitFullscreen();
-        return;
-      }
-      ownFullscreen = true;
-    }
-    await orientation?.lock?.('landscape');
-    if (!landscapeRequested) orientation?.unlock?.();
-  } catch {
-    // Rotation locks are optional. The controls also work in portrait.
-  }
-}
 function stopMovement() {
   pointer = undefined;
   clearInterval(movement);
@@ -142,14 +113,13 @@ onMounted(() => {
   update();
   void loadout.load();
   media.addEventListener('change', update);
-  coarse.addEventListener('change', updateRotation);
-  portrait.addEventListener('change', updateRotation);
-  updateRotation();
+
   document.addEventListener('focusin', update);
   document.addEventListener('focusout', focusChanged);
   document.addEventListener('visibilitychange', update);
   document.addEventListener('toggle', update, true);
   document.addEventListener('keydown', key);
+
   observer = new MutationObserver(update);
   observer.observe(document.body, {
     subtree: true,
@@ -166,12 +136,7 @@ watch(
 );
 onBeforeUnmount(() => {
   stopMovement();
-  if (landscapeRequested) orientation?.unlock?.();
-  landscapeRequested = false;
-  if (ownFullscreen && document.fullscreenElement === document.documentElement)
-    void document.exitFullscreen().catch(() => {});
-  coarse.removeEventListener('change', updateRotation);
-  portrait.removeEventListener('change', updateRotation);
+
   observer?.disconnect();
   media.removeEventListener('change', update);
   document.removeEventListener('focusin', update);
@@ -200,7 +165,7 @@ onBeforeUnmount(() => {
       <div
         class="arena-touch-skills"
         role="group"
-        aria-label="競技場招式"
+        aria-label="戰鬥招式"
         @pointerdown.stop
         @click.stop
       >
@@ -217,14 +182,6 @@ onBeforeUnmount(() => {
           @click="controls.run(slot)"
         />
       </div>
-      <UiButton
-        v-if="rotateHint"
-        class="arena-touch-rotate"
-        label="橫向全螢幕"
-        variant="ghost"
-        @pointerdown.stop
-        @click.stop="enterLandscape"
-      />
     </template>
     <div
       v-else-if="visible"

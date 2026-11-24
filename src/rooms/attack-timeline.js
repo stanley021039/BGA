@@ -573,7 +573,15 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
   function interceptBoss(source, target, at, weight, actors) {
     const result = intercept('barrage', source, target, { at, weight, phase: 'hit1' }, actors);
     if (result?.job && source.bossAbilityId)
-      result.job.hit.reflectedBossEffect = source.bossAbilityId;
+      Object.assign(result.job.hit, {
+        reflectedBossEffect: source.bossAbilityId,
+        ...(source.bossPhase > 1
+          ? {
+              reflectedBossPhase: source.bossPhase,
+              reflectedBossStrike: source.bossStrikeIndex || 0,
+            }
+          : {}),
+      });
     return result;
   }
   return { prepare, armReflection, advance, needsFastUpdates, interceptBoss };
