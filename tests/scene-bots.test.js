@@ -23,7 +23,7 @@ function fixture(options = {}) {
 }
 
 test('lobby bots have a global limit, private ownership and validated character/loadout', () => {
-  const { lobby } = fixture();
+  const { lobby, advance } = fixture();
   for (let i = 0; i < 5; i++) lobby.bots(alice, { action: 'add' });
   assert.throws(() => lobby.bots(bob, { action: 'add' }), { code: 'SCENE_BOTS_FULL' });
   const bot = lobby.bots(alice).bots[0];
@@ -37,15 +37,19 @@ test('lobby bots have a global limit, private ownership and validated character/
   );
   lobby.bots(alice, { action: 'remove', id: bot.id });
   assert.equal(lobby.bots(bob, { action: 'add', characterId: characters[4].id }).bots.length, 5);
+  advance(3000);
   assert.equal(lobby.view(bob).visitors.filter((v) => v.image === characters[4].image).length, 1);
 });
 
 test('idle bots walk without attacking even after hits; attack mode actively fires', () => {
   const { lobby, advance } = fixture();
   const bot = lobby.bots(alice, { action: 'add', mode: 'idle' }).bots[0];
+  advance(3000);
   let snapshot = lobby.view(alice),
     start = snapshot.visitors.find((v) => v.id === bot.id);
   advance(4000);
+  snapshot = lobby.view(alice);
+  advance(400);
   snapshot = lobby.view(alice);
   advance(400);
   snapshot = lobby.view(alice);
@@ -81,6 +85,34 @@ test('idle bots walk without attacking even after hits; attack mode actively fir
   assert.ok(retaliation, 'bot must use the real attack engine to return fire');
 });
 
+test('lobby bot arrival is authoritative, cancellable and uses the latest selected entrance after three seconds', () => {
+  const { lobby, advance } = fixture();
+  const bot = lobby.bots(alice, { action: 'add', entrance: 'classic' }).bots[0];
+  let scene = lobby.view(alice);
+  assert.equal(scene.botArrivals[0].spawnAt - scene.botArrivals[0].at, 3000);
+  assert.ok(!scene.visitors.some((v) => v.id === bot.id));
+  assert.throws(() => lobby.bots(alice, { action: 'replay', id: bot.id }), {
+    code: 'BOT_ARRIVING',
+  });
+  lobby.bots(alice, { action: 'update', id: bot.id, entrance: 'classic', mode: 'attack' });
+  advance(2999);
+  assert.ok(!lobby.view(alice).visitors.some((v) => v.id === bot.id));
+  advance(1);
+  scene = lobby.view(alice);
+  assert.equal(scene.visitors.find((v) => v.id === bot.id).entrance, 'classic');
+  assert.equal(scene.botArrivals.length, 0);
+  assert.ok(
+    !scene.attacks.some((a) => a.fromId === bot.id),
+    'no attack before or during materialisation',
+  );
+  advance(1499);
+  assert.ok(!lobby.view(alice).attacks.some((a) => a.fromId === bot.id));
+  const cancelled = lobby.bots(alice, { action: 'add' }).bots.at(-1);
+  lobby.bots(alice, { action: 'remove', id: cancelled.id });
+  advance(3000);
+  assert.ok(!lobby.view(alice).visitors.some((v) => v.id === cancelled.id));
+});
+
 test('only walk and attack modes are accepted, with idle as the default', () => {
   const { lobby } = fixture();
   for (const mode of ['stationary', 'retaliate', 'unknown'])
@@ -94,7 +126,7 @@ test('active bots still damage bosses while bosses prioritise the human player',
   advance(10000);
   lobby.view(alice);
   const bot = lobby.bots(alice, { action: 'add', mode: 'attack', q: 'beam', e: 'beam' }).bots[0];
-  const boss = lobby.bosses(alice, { action: 'add', bossId: 'thanos' }).bosses[0];
+  const boss = lobby.bosses(alice, { action: 'add', bossId: 'arkveld' }).bosses[0];
   let botHit = false,
     bossHit = false;
   for (let i = 0; i < 100; i++) {
@@ -105,6 +137,7 @@ test('active bots still damage bosses while bosses prioritise the human player',
     );
     bossHit ||= scene.attacks.some((e) => e.fromId === boss.id && e.toId === alice.id);
     assert.ok(!scene.attacks.some((e) => e.fromId === boss.id && e.toId !== alice.id));
+    if (botHit && bossHit) break;
   }
   assert.ok(botHit, 'bot damages boss');
   assert.ok(bossHit, 'boss chooses the human rather than a nearby bot');

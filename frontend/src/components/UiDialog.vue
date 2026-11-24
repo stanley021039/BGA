@@ -67,6 +67,7 @@ defineExpose({ open, close });
           :disabled="!dismissible"
           @click="close" /></slot
     ></header>
+    <slot name="before-content" />
     <div v-if="visible" class="vue-dialog-content"><slot /></div>
   </dialog>
 </template>

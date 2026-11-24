@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "source": "native-imagegen phase-body revisions, 2026-11-24",
+  "sprites": [
+    {
+      "boss": "mutalith",
+      "phase": 2,
+      "file": "boss-mutalith-phase-2.webp",
+      "bytes": 92846,
+      "sourceSha256": "c646da47403a78a2374894623367c758e8809deba3d4c74e23fa0f386728f016",
+      "sha256": "9e88580d00f60a95b3d287d7a4e29f6d3f5e38bb3f31bace1d93c1ad30c7abf9"
+    },
+    {
+      "boss": "mutalith",
+      "phase": 3,
+      "file": "boss-mutalith-phase-3.webp",
+      "bytes": 99908,
+      "sourceSha256": "ed5bddad3b98afc63541ab7d0ce660d7e3b85312ac7798154a75342da8cbb3dc",
+      "sha256": "d3f5f7e569030e5457b79fdcf1f6bcb8f17fd4b00d299a2d2ea78a889e5d9505"
+    },
+    {
+      "boss": "cthulhu",
+      "phase": 2,
+      "file": "boss-cthulhu-phase-2.webp",
+      "bytes": 102154,
+      "sourceSha256": "52dcd48f96c17c3ac4dfc7db61a9ea8a5dcaff7cb772ad4b7033220664b7d46d",
+      "sha256": "f52ea1eb5618e4f800728f735245c3290367af9d5d425d2048629c4204d9c046"
+    },
+    {
+      "boss": "cthulhu",
+      "phase": 3,
+      "file": "boss-cthulhu-phase-3.webp",
+      "bytes": 96782,
+      "sourceSha256": "2f511b98416305f6ce124806f3cf86542551e0e1f69fd5d4df7de9572de72a14",
+      "sha256": "92210e54415b31dcee0cf921f5e4eb97419e7a50a08311ee424bc33d61790d02"
+    },
+    {
+      "boss": "gatanozoa",
+      "phase": 2,
+      "file": "boss-gatanozoa-phase-2.webp",
+      "bytes": 77298,
+      "sourceSha256": "80db661280c7c376d9134df3ea332ec183622ed7be622d06f1b67fb729b071e8",
+      "sha256": "f9d19ac991bca93bf0f410097b13a014c5fe798f7444e10d25160502d42e5b26"
+    },
+    {
+      "boss": "gatanozoa",
+      "phase": 3,
+      "file": "boss-gatanozoa-phase-3.webp",
+      "bytes": 86928,
+      "sourceSha256": "23dc43659f0d00c3ec17e9de987cb2e1ed535904c40facd21ce87d5967a0b74a",
+      "sha256": "494a23dddcc482633a612e78f68629f9a24d6b8f39eae7910f7bb7a3564d7272"
+    },
+    {
+      "boss": "arkveld",
+      "phase": 2,
+      "file": "boss-arkveld-phase-2.webp",
+      "bytes": 101900,
+      "sourceSha256": "ccb800fce3fe85d0b0c0fa9b3a49016346d3e576e4b7c0d0f1fdae7b0d9dc030",
+      "sha256": "51bb3a2ca07b75eb3bb3c254cb929f5e6949414175119794a3f404085c220755"
+    },
+    {
+      "boss": "arkveld",
+      "phase": 3,
+      "file": "boss-arkveld-phase-3.webp",
+      "bytes": 77726,
+      "sourceSha256": "229f37e95087323a9f087cbcc06276c6241298b10b1b70edc185e96390b5f72d",
+      "sha256": "c87b68159753843486bb1fcb0304192910dc508ecca1dfbaaf7c932d3fe9ed30"
+    },
+    {
+      "boss": "greeza",
+      "phase": 2,
+      "file": "boss-greeza-phase-2.webp",
+      "bytes": 87188,
+      "sourceSha256": "9b30e77f89b2b5af591796c2309f98edcef94eab5695efa174311055b5670a96",
+      "sha256": "4657d1babc087451f4225aa448c2d6aa207e6d305e74ffbec4d9b4bd8b3b9738"
+    },
+    {
+      "boss": "greeza",
+      "phase": 3,
+      "file": "boss-greeza-phase-3.webp",
+      "bytes": 100366,
+      "sourceSha256": "35d9109d19491342df368616c48fddcdc879e31a22441197992ce0528dcf463c",
+      "sha256": "23a2c9dca2796089e008713b14c864d88b3b7849e7c0d1d8734b3db033345913"
+    },
+    {
+      "boss": "hyper-zetton",
+      "phase": 2,
+      "file": "boss-hyper-zetton-phase-2.webp",
+      "bytes": 103640,
+      "sourceSha256": "d24c3c36b07c7087f4f190061a3027fdefae7396789664956064431a0f90bc64",
+      "sha256": "402bdbb42d7d46fba8b54b20c21e8d13167bd02613708ba5a5f10d00132dea01"
+    },
+    {
+      "boss": "hyper-zetton",
+      "phase": 3,
+      "file": "boss-hyper-zetton-phase-3.webp",
+      "bytes": 105056,
+      "sourceSha256": "0e398b4ed1d529e51626d52e7d0dc3e1c2a2c0b87de2fb6f8ed1442d33f7a058",
+      "sha256": "a6228983ecbb3d8cf7cfca6fcbc49109baf4115678d16b8d362aee7e2355165e"
+    },
+    {
+      "boss": "colossal",
+      "phase": 2,
+      "file": "boss-colossal-phase-2.webp",
+      "bytes": 72694,
+      "sourceSha256": "3ef1bc40cb4fdcd86d82d619d427aa26f6d39b26f61a21f05b67f407cc8cf164",
+      "sha256": "77b3232df560be899ed8bf75681b9653cba424f7105085697255cf6f7d9cf71d"
+    },
+    {
+      "boss": "colossal",
+      "phase": 3,
+      "file": "boss-colossal-phase-3.webp",
+      "bytes": 93804,
+      "sourceSha256": "cd4408164ce24fcdf927de5d9fe3b3960ee2f05554eb411ba17fc854588384cc",
+      "sha256": "f4ef4bb56662bbb7c229061159eb6c32bf05bf6b7487a6c68d9f5f389a2a6808"
+    },
+    {
+      "boss": "steel-behemoth",
+      "phase": 2,
+      "file": "boss-steel-behemoth-phase-2.webp",
+      "bytes": 84348,
+      "sourceSha256": "d3ba4f3074d2d0ae656d458bca28233034f3e9bbd3c8a49353a71d9f9e17172b",
+      "sha256": "376a7eb95c18aa67990b849e713e32b6950fa5c958d09f3d3c867406a49ab0c9"
+    },
+    {
+      "boss": "steel-behemoth",
+      "phase": 3,
+      "file": "boss-steel-behemoth-phase-3.webp",
+      "bytes": 99960,
+      "sourceSha256": "bf98d7df87f324a8cbf2b5bca4a3c71859a1e865671c3c0bfb33035c525e8c72",
+      "sha256": "41d9d3ef408db2940171aca184126cf5628f134c907399f6cc47cc0ba29e01a0"
+    },
+    {
+      "boss": "prismatic-void",
+      "phase": 2,
+      "file": "boss-prismatic-void-phase-2.webp",
+      "bytes": 84728,
+      "sourceSha256": "28621233e6c8bb8d578bfd2cf70820e5a15cd64803c8571cc615dae6162e85cc",
+      "sha256": "b54b2e40985c6cf1ac5e3cbc4814420e25e268e681cbe69ccdaa2e4dbacb74b3"
+    },
+    {
+      "boss": "prismatic-void",
+      "phase": 3,
+      "file": "boss-prismatic-void-phase-3.webp",
+      "bytes": 120692,
+      "sourceSha256": "a5c20be3d3538ed9a03818f13e256f5757ce68f40f39f6736cd897206c748587",
+      "sha256": "1d320089947d49641875c953cb990589544d4e13ba1a530c435e3dc0c4f1e354"
+    },
+    {
+      "boss": "gyo",
+      "phase": 2,
+      "file": "boss-gyo-phase-2.webp",
+      "bytes": 78418,
+      "sourceSha256": "09d46ed734778411d1c55ce50813c5f02f900a50baf29de0c4f7dfce72edfc09",
+      "sha256": "4f932ce0d89a4ef4c2f84597d50211efa39510b078ecaaa7b257da9c7da38744"
+    },
+    {
+      "boss": "gyo",
+      "phase": 3,
+      "file": "boss-gyo-phase-3.webp",
+      "bytes": 79178,
+      "sourceSha256": "6b61eb441f5458c7446f7de072b7ea55c7470b89d8284676e7299635fac5fef4",
+      "sha256": "ad8216029e2b7f0409ab22f0aa09028f924d2d3ef5a074ce9c3b58fbd9b5ca52"
+    },
+    {
+      "boss": "ghidorah-turtle",
+      "phase": 2,
+      "file": "boss-ghidorah-turtle-phase-2.webp",
+      "bytes": 75712,
+      "sourceSha256": "c757edf68f74dbdd19c241bd306016f052132dd4661fd5cb552464cf4955f3e1",
+      "sha256": "1a5670b9e339197c0bf6908428705b6fd322a2c163fc13dbc05a3155c49290f9"
+    },
+    {
+      "boss": "ghidorah-turtle",
+      "phase": 3,
+      "file": "boss-ghidorah-turtle-phase-3.webp",
+      "bytes": 91118,
+      "sourceSha256": "75d9367925decc9c0219cc43b166a8b3fe9e9ee3e4a9b70e2874d40c56ddfedb",
+      "sha256": "443448c450123863f8acda12e35bf15a9ccac7dff3ad40dfff790d0398ead7fe"
+    },
+    {
+      "boss": "gleam-eyes",
+      "phase": 2,
+      "file": "boss-gleam-eyes-phase-2.webp",
+      "bytes": 79106,
+      "sha256": "6deb1d6ec29bca45adec6639ab52ae00e8672e6f23c8358f87998282a34397a9",
+      "sourceSha256": "c83e91883110dc89697e65ad22d97089e9036bfe054a8ff21f93241e33a227de"
+    },
+    {
+      "boss": "gleam-eyes",
+      "phase": 3,
+      "file": "boss-gleam-eyes-phase-3.webp",
+      "bytes": 90758,
+      "sha256": "c2f18301593d9909f74c938645d443fc10ee6cf411d09095013ff0a8c70988d5",
+      "sourceSha256": "c83e91883110dc89697e65ad22d97089e9036bfe054a8ff21f93241e33a227de"
+    },
+    {
+      "boss": "dark-zagi",
+      "phase": 2,
+      "file": "boss-dark-zagi-phase-2.webp",
+      "bytes": 75018,
+      "sha256": "a610cfe0bbed7e18b18c3705c2b7b155e4458a88a8b7a4a3929ad535601537f8",
+      "sourceSha256": "c43abb68abaa66b3cf2e8c043367b5a4bb5f8e957d920a3faf4de2b5be3e192b"
+    },
+    {
+      "boss": "dark-zagi",
+      "phase": 3,
+      "file": "boss-dark-zagi-phase-3.webp",
+      "bytes": 79346,
+      "sha256": "08e71eecf91cbe9892f5b45ee7544f21812e1e69fa21629b95827130d6fb3d1f",
+      "sourceSha256": "c43abb68abaa66b3cf2e8c043367b5a4bb5f8e957d920a3faf4de2b5be3e192b"
+    }
+  ]
+}

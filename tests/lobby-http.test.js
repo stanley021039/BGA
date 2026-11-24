@@ -197,12 +197,14 @@ test('lobby HTTP preserves view, move, options, expression validation and cooldo
     'attacks',
     'background',
     'barrages',
+    'botArrivals',
     'pingContext',
     'selfId',
     'serverNow',
     'visitors',
   ]);
   assert.deepEqual(view.body.arena.covers, []);
+  assert.deepEqual(view.body.botArrivals, []);
   assert.deepEqual(view.body.arena.pickups, []);
   assert.deepEqual(view.body.arena.hazards, []);
   assert.equal(view.body.arena.match, null);

@@ -103,14 +103,34 @@
       "prompt": "Create ONE isolated horror boss game sprite based ONLY on the MONSTER pictured on the RIGHT book cover in this photograph. Ignore the left book, human couple, typography, background and all book edges. Monster features: swollen yellow-ochre head and upper body with mottled round brown spots, long straight black hair draped to both sides, eerie blank cream-white eyes, wide open mouth from which TWO huge long corrugated fleshy grey-purple breathing tubes protrude and curl downward, plus a few dark ribbed support tentacles beneath the mass. Reconstruct into a complete coherent grotesque creature silhouette that can float/crawl at ground level, no missing canvas cuts. This is a fictional supernatural monster, non-graphic: no blood, open wounds, viscera, realistic injury or gore. Premium detailed painted game-creature rendering matching dark kaiju sprites, adult threatening proportions, not cute or chibi. Preserve the distinctive yellow black purple color scheme and unsettling shape. Full appendages inside canvas with generous margins. ONE monster only on fully transparent alpha background, no floor/shadow/backdrop/vignette, no text, logos, frame or book cover composition."
     },
     {
-      "id": "thanos",
-      "name": "薩諾龜",
-      "file": "boss-thanos.webp",
-      "bytes": 53230,
-      "sha256": "a863f4e600c3f3dd8ec7124a407aa3c1c6d9fa5fb4d7bf10f567eadf4dfd8d8e",
-      "sourceFile": "exec-ca282a61-a77d-42f3-b74e-d5518dae583f.png",
-      "sourceSha256": "8b73966f8b777fc1fdadfcdea447183444898dabf60f6f3e43000e801145cee2",
-      "prompt": "請把參考照片中的人物畫成一張完整全身的遊戲角色插畫：保留照片的笑臉、短黑髮、銀色方框眼鏡，以及頭頂淡黃色毛絨蝴蝶結。人物穿著薩諾斯風格的完整金色與深藍色厚重盔甲，胸腹、肩膀、手臂、雙腿和腳都由盔甲覆蓋，身形敦實。左手戴著金色無限手套，手套上清楚鑲嵌六顆藍、紅、紫、綠、黃、橙色寶石，左手平舉展示手套，右手自然垂放。臉部和盔甲都統一為精緻的手繪遊戲美術風格，表情友善開朗，站立不做攻擊動作。只畫這一個角色，不要照片的衣服、座椅或背景。完整保留頭頂蝴蝶結、雙手和雙腳，畫面四周留10%空間。真正透明背景，沒有地板、投影、場景、文字、標誌、邊框或介面。\nRevision:\nEdit this exact armored game avatar ONLY to give him an EXTREMELY OVERSIZED humorous bobblehead. Enlarge the entire human head including hair, glasses, face and yellow fluffy bow to about 2.5 TIMES its current width. Head plus bow should occupy roughly 45% of the figure's total height, as wide as or wider than both armored shoulders. Ignore natural body proportions. Preserve the same recognizable smiling face, teeth, glasses and expression precisely. Keep the existing gold-and-navy fully covered armored BODY, raised golden Infinity Gauntlet, all SIX distinct colored stones, pose, hands, legs and boots unchanged in design. Recompose/extend the canvas as needed so the giant head/bow, full gauntlet fingers and both feet are completely visible with 8–10% margin. Head must join at the neck, not float; don't cover the gauntlet's gemstones. Maintain same detailed painted game illustration. One figure only, genuine transparent alpha background, no floor, shadow backdrop, vignette, fog, text, logo or UI.\nRevision:\nRemove only the background from this existing game character image. Preserve the entire foreground character exactly, including the oversized smiling head, glasses, yellow bow, armor, glove and full body. Output a clean transparent PNG cutout with real alpha."
+      "id": "ghidorah-turtle",
+      "name": "基多龜",
+      "file": "boss-ghidorah-turtle.webp",
+      "bytes": 97384,
+      "sha256": "62b4cd9b2f0c74749b791a1cb786374e6e38161530c45374ab6ed156edb84dfa",
+      "sourceFile": "exec-03287d61-27aa-4b4c-9726-58e7330deb9e.png",
+      "sourceSha256": "ce2218f71207e44a647574ca480240c112f0b9d0da62b6f2960b270d01c6d237",
+      "prompt": "One golden King Ghidorah game sprite with huge wings, three long scaly necks, hind legs and two tails. Replace the three heads with the three user photo references in left-to-right attachment order; preserve each distinct face and glasses, including the centre yellow bow. No photo backgrounds, clothing or caption. Detailed painted non-chibi body, readable faces, complete silhouette and genuine transparent alpha. No floor, shadow, text or UI."
+    },
+    {
+      "id": "gleam-eyes",
+      "name": "閃耀魔眼",
+      "file": "boss-gleam-eyes.webp",
+      "bytes": 61600,
+      "sha256": "034f341f5cb2521f5a8cbc7c32d3eb5806d7c6cf359fd8ba2d7daff5d6ab4d84",
+      "sourceSha256": "c83e91883110dc89697e65ad22d97089e9036bfe054a8ff21f93241e33a227de",
+      "sourceFile": "exec-0b901a0e-98b9-4008-8057-e4dd08943481.png",
+      "prompt": "User-approved new Boss, native-imagegen three phase production sprites; see #410 design/provenance."
+    },
+    {
+      "id": "dark-zagi",
+      "name": "黑暗超人札基",
+      "file": "boss-dark-zagi.webp",
+      "bytes": 59088,
+      "sha256": "2ad098f88f7c13b86cce7c002913355bd2ca63ed77aabcce5e22fd7e794c6474",
+      "sourceSha256": "9ff779ed7f38584a36d16304850b5886c48a5cd8394e43bcc0195bad23757706",
+      "sourceFile": "exec-8217d27e-ffba-4fcc-a18b-82e6fcfccaee.png",
+      "prompt": "User-approved new Boss, native-imagegen three phase production sprites; see #410 design/provenance."
     }
   ]
 }

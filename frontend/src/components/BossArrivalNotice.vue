@@ -8,9 +8,13 @@ const props = defineProps<{
   arrivals: NonNullable<LobbySnapshot['bossArrivals']>;
   now: number;
   connected: boolean;
+  bots?: NonNullable<LobbySnapshot['botArrivals']>;
 }>();
 const pending = computed(() =>
   props.connected ? props.arrivals.filter((a) => props.now < a.spawnAt) : [],
+);
+const pendingBots = computed(() =>
+  props.connected ? (props.bots || []).filter((a) => props.now < a.spawnAt) : [],
 );
 let sounds: ReturnType<typeof createBossWarningSounds> | undefined;
 onMounted(() => {
@@ -25,8 +29,12 @@ onUnmounted(() => sounds?.destroy());
 </script>
 <template>
   <Teleport to="body">
-    <div v-if="pending.length" class="boss-arrival-warning" role="alert">
-      <img :src="warning" alt="WARNING" width="600" height="130" />
+    <div
+      v-if="pending.length || pendingBots.length"
+      class="boss-arrival-warning"
+      :role="pending.length ? 'alert' : 'status'"
+    >
+      <img v-if="pending.length" :src="warning" alt="WARNING" width="600" height="130" />
       <UiNotice
         v-for="a in pending"
         :key="a.id"
@@ -35,6 +43,12 @@ onUnmounted(() => sounds?.destroy());
         :message="
           a.name + ' 即將降臨 · ' + Math.max(1, Math.ceil((a.spawnAt - now) / 1000)) + ' 秒'
         "
+      />
+      <UiNotice
+        v-for="a in pendingBots"
+        :key="a.id"
+        persistent
+        :message="a.name + ' · ' + Math.max(1, Math.ceil((a.spawnAt - now) / 1000)) + ' 秒後進場'"
       />
     </div>
   </Teleport>

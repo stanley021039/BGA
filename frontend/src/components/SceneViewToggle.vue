@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue';
 import UiButton from './UiButton.vue';
-import UiPanel from './UiPanel.vue';
 import '../styles/scene-view.scss';
 const hidden = ref(false);
 const suppressed = new Map<HTMLElement, boolean>();
@@ -10,7 +9,6 @@ function positionLobbyStats() {
   const stats = document.querySelector<HTMLElement>('.vue-lobby-stats');
   if (!stats) return;
   const box = stats.getBoundingClientRect();
-  document.body.style.setProperty('--scene-stats-top', Math.max(16, box.top) + 'px');
   document.body.style.setProperty(
     '--scene-stats-right',
     Math.max(16, innerWidth - box.right) + 'px',
@@ -71,11 +69,6 @@ onBeforeUnmount(() => {
   />
   <Teleport to="body"
     ><div v-if="hidden" class="scene-view-restore"
-      ><UiPanel density="hud" tone="translucent"
-        ><UiButton
-          label="恢復介面（Esc）"
-          caption="Esc"
-          variant="ghost"
-          @click="set(false)" /></UiPanel></div
+      ><UiButton label="恢復介面（Esc）" caption="Esc" @click="set(false)" /></div
   ></Teleport>
 </template>

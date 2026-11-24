@@ -50,7 +50,7 @@
   inset-inline-start: max(var(--stitch-space-16), env(safe-area-inset-left));
   display: grid;
   place-items: center;
-  inline-size: var(--arena-touch-stick-size);
+  inline-size: var(--arena-touch-stick-size, clamp(5rem, 26dvh, 7rem));
   aspect-ratio: 1;
   border: var(--stitch-border);
   border-radius: 50%;

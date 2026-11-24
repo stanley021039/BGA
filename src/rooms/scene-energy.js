@@ -1,3 +1,4 @@
+const { recoveryFactor } = require('./boss-ailments');
 const { HttpError } = require('../http/errors');
 const { attackKind } = require('./attack-kind');
 const { profile } = require('./archetypes');
@@ -20,7 +21,7 @@ function gain(actor, amount, multiplier = profile(actor).energyGain ?? 1, combat
   const author = actor.authorBonus ? authorBonus.energyMultiplier : 1;
   const time = actor.combatAt || 0;
   const bonus = time < (actor.guanyinUntil || 0) ? 1.1 : 1;
-  const debuff = combatGain && time < (actor.energyDebuffUntil || 0) ? 0.9 : 1;
+  const debuff = combatGain ? recoveryFactor(actor, time) : 1;
   const next = (actor.energy || 0) + amount * multiplier * author * bonus * debuff;
   actor.energy = Math.min(maximum(actor), Math.round(next * 10) / 10);
 }

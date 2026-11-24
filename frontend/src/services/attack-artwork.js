@@ -1,7 +1,7 @@
 import { createAreaAttack } from './attack-area.js';
 import { createBossArtwork } from './boss-artwork.js';
 import bossAbilities from '../../../public/shared/boss-abilities.json';
-import { bossZones } from '../engines/boss-geometry.js';
+import { bossZones, bossStageSpec, bossAttackPlan } from '../engines/boss-geometry.js';
 import { drawBossStrike } from './boss-strike-art.js';
 import { createRevisionAttack } from './attack-revision.js';
 import attackEffects from '../../../public/shared/attack-effects.json';
@@ -169,14 +169,25 @@ function drawReturnImprint(ctx, effect, color, from, target, elapsed, travelMs) 
 }
 
 function createReturnArtwork(context, options, hit, from) {
-  const bossSpec = bossAbilities.find((s) => s.id === hit.reflectedBossEffect && s.slot !== 'r');
+  const bossSpec = bossStageSpec(
+    bossAbilities.find((s) => s.id === hit.reflectedBossEffect && s.slot !== 'r'),
+    hit.reflectedBossPhase || 1,
+  );
   if (bossSpec)
     return (elapsed, target) => {
       const aspect = options.aspectRatio || 1.6,
         d = Math.max(1, aspect);
       const origin = { x: (from.x / options.width) * 100, y: (from.y / options.height) * 100 };
       const aim = { x: (target.x / options.width) * 100, y: (target.y / options.height) * 100 };
-      const zones = bossZones(bossSpec, origin, aim, aspect);
+      const strike = bossAttackPlan(bossSpec, origin, aim, aspect)[hit.reflectedBossStrike || 0];
+      const returnedSpec = {
+        ...strike.spec,
+        reverse: false,
+        windup: bossSpec.windup,
+        duration: 500,
+        pulses: 1,
+      };
+      const zones = bossZones(returnedSpec, origin, aim, aspect);
       const travel = combatRules.crystalReflection.travelMs;
       const age =
         elapsed <= travel
@@ -186,7 +197,7 @@ function createReturnArtwork(context, options, hit, from) {
       context.scale((options.width * d) / (100 * aspect), (options.height * d) / 100);
       drawBossStrike(
         context,
-        bossSpec,
+        returnedSpec,
         zones,
         {
           ...options,

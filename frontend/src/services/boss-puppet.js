@@ -1,7 +1,11 @@
+import { bossStageSpec } from '../engines/boss-geometry.js';
 import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
 import abilities from '../../../public/shared/boss-abilities.json' with { type: 'json' };
 const owners = new Set();
 export function bossMotionProfile(id) {
+  if (id === 'gleam-eyes') return { gait: 'stalk', period: 1250, sway: 3.2, lift: 4 };
+  if (id === 'dark-zagi') return { gait: 'float', period: 1650, sway: 1.4, lift: 6 };
+  if (id === 'ghidorah-turtle') return { gait: 'dragon', period: 2000, sway: 2.6, lift: 5 };
   if (['cthulhu', 'mutalith', 'gyo'].includes(id))
     return { gait: 'crawl', period: 2200, sway: 3.5, lift: 2 };
   if (['greeza', 'prismatic-void'].includes(id))
@@ -62,7 +66,8 @@ export function createBossPuppet(node, id) {
       stop();
       return;
     }
-    const next = state.moving ? 'walk' : 'idle';
+    const phase = [1, 2, 3].includes(state.phase) ? state.phase : 1;
+    const next = (state.moving ? 'walk' : 'idle') + phase;
     if (state.arrivalAt && arrivalKey !== state.arrivalAt && now - state.arrivalAt < 1100) {
       arrivalKey = state.arrivalAt;
       arrival = animate(
@@ -82,7 +87,7 @@ export function createBossPuppet(node, id) {
       gait = next;
       clearGait();
       const motion = state.moving ? 1 : 0.35,
-        period = state.moving ? profile.period : profile.period * 1.8;
+        period = (state.moving ? profile.period : profile.period * 1.8) / [1, 1.15, 1.3][phase - 1];
       parts.forEach((part, i) => {
         const sign = i === 1 ? -1 : 1,
           sway = profile.sway * motion * sign,
@@ -114,7 +119,10 @@ export function createBossPuppet(node, id) {
       });
     }
     const intent = state.intent,
-      spec = abilities.find((a) => a.id === intent?.effect);
+      spec = bossStageSpec(
+        abilities.find((a) => a.id === intent?.effect),
+        intent?.attackRate === 1.3 ? 3 : intent?.attackRate === 1.15 ? 2 : 1,
+      );
     if (spec && intent.until > now && intent.until !== castKey) {
       castKey = intent.until;
       attack?.cancel();

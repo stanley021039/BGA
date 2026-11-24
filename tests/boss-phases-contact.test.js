@@ -22,7 +22,7 @@ test('one cast cannot damage the next bar after the two-second lock, while a new
   const combat = createSceneCombat(() => 0.99),
     boss = actor('boss'),
     player = actor('player');
-  boss.bossId = 'thanos';
+  boss.bossId = 'colossal';
   combat.reset(boss, 1000);
   combat.reset(player, 1000);
   boss.baseMaxHealth = boss.maxHealth = boss.health = 900;
@@ -55,7 +55,7 @@ test('real attack timeline shares a bar budget between every segment and return'
       timeline = createAttackTimeline(combat);
     const player = actor('player', 20),
       boss = actor('boss', 40);
-    boss.bossId = 'thanos';
+    boss.bossId = 'colossal';
     combat.reset(player, 1000);
     combat.reset(boss, 1000);
     boss.baseMaxHealth = boss.maxHealth = boss.health = 900;
@@ -164,7 +164,7 @@ test('one damage event cannot cross a boss bar; healing and phase buffs never re
     ),
     boss = actor('boss'),
     player = actor('player');
-  boss.bossId = 'thanos';
+  boss.bossId = 'colossal';
   combat.reset(boss, 1000);
   combat.reset(player, 1000);
   boss.baseMaxHealth = boss.maxHealth = boss.health = 900;
@@ -191,7 +191,7 @@ test('one damage event cannot cross a boss bar; healing and phase buffs never re
     boss.bossPhase = phase;
     boss.health = (boss.maxHealth * (4 - phase)) / 3;
     assert.equal(phaseStats(boss).damage, multiplier);
-    assert.ok(Math.abs(authorSpeed(boss) - multiplier) < 1e-9);
+    assert.ok(Math.abs(authorSpeed(boss) - multiplier * 1.1) < 1e-9);
   }
 });
 
@@ -199,7 +199,7 @@ test('a blocked contact does not consume another boss contact cooldown', () => {
   const driver = createBotDriver(() => 0.5),
     human = actor('human');
   const bots = [
-    { id: 'wall-blocked', bossId: 'thanos' },
+    { id: 'wall-blocked', bossId: 'colossal' },
     { id: 'nearby', bossId: 'cthulhu' },
   ];
   const positions = new Map([human, ...bots.map((b) => actor(b.id))].map((a) => [a.id, a]));
@@ -268,7 +268,7 @@ test('environmental hits also stop at a bar, and rage damage uses the agreed non
   const combat = createSceneCombat(() => 0.99),
     boss = actor('boss'),
     player = actor('player');
-  boss.bossId = 'thanos';
+  boss.bossId = 'colossal';
   combat.reset(boss, 1000);
   combat.reset(player, 1000);
   boss.baseMaxHealth = boss.maxHealth = boss.health = 900;
@@ -286,6 +286,22 @@ test('environmental hits also stop at a bar, and rage damage uses the agreed non
     combat.reset(player, 2000);
     damage.push(combat.hit(boss, player, 2100, 'boss_contact', 0.3).damage);
   }
-  assert.equal(damage[1], Math.round(damage[0] * 1.15));
-  assert.equal(damage[2], Math.round(damage[0] * 1.3));
+  assert.ok(Math.abs(damage[1] - Math.round(damage[0] * 1.15)) <= 1);
+  assert.ok(Math.abs(damage[2] - Math.round(damage[0] * 1.3)) <= 1);
+});
+
+test('boss baseline damage and movement are stronger without changing human stats or phase rates', () => {
+  const combat = createSceneCombat(() => 0.5);
+  const boss = actor('boss'),
+    human = actor('human'),
+    victim = actor('victim');
+  boss.bossId = 'colossal';
+  for (const a of [boss, human, victim]) combat.reset(a, 0);
+  const ordinary = combat.hit(human, victim, 1000, 'boss_contact', 0.3).damage;
+  combat.reset(victim, 1000);
+  const stronger = combat.hit(boss, victim, 1100, 'boss_contact', 0.3).damage;
+  assert.ok(Math.abs(stronger - ordinary * 1.25) <= 1);
+  assert.equal(authorSpeed(human), 1);
+  assert.equal(authorSpeed(boss), 1.1);
+  assert.equal(phaseStats(boss).attackRate, 1);
 });

@@ -351,7 +351,7 @@ let AudioSettings;
           : null;
       const clip = playClip(cue[0], cue[1], {
         onError: options.onError,
-        priority: kind.startsWith('arena-countdown'),
+        priority: kind.startsWith('arena-countdown') || kind === 'boss-warning',
         onStop: (item) => {
           release?.();
           options.onStop?.(item);
@@ -364,7 +364,7 @@ let AudioSettings;
               ? 10000
               : kind.startsWith('ping-voice-')
                 ? 5000
-                : ['ingredient-draw', 'quacks-draw', 'quacks-stop'].includes(kind)
+                : ['ingredient-draw', 'quacks-draw', 'quacks-stop', 'boss-warning'].includes(kind)
                   ? 3000
                   : kind.startsWith('arena-countdown')
                     ? 350

@@ -80,6 +80,35 @@ test('training scenes isolate users, keep preview settings and do not grant publ
     400,
   );
   assert.equal((await request(a, '/api/lobby/bots?arena=1')).status, 409);
+  const trainingBosses = await request(a, '/api/lobby/bosses?training=1');
+  assert.equal(trainingBosses.status, 200);
+  assert.equal(trainingBosses.body.limit, 1);
+  const summoned = await request(a, '/api/lobby/bosses?training=1', {
+    action: 'add',
+    bossId: 'ghidorah-turtle',
+  });
+  assert.equal(summoned.status, 200);
+  const ownBoss = summoned.body.bosses[0];
+  assert.equal(
+    (await request(a, '/api/lobby/bosses?training=1', { action: 'add', bossId: 'gyo' })).status,
+    409,
+  );
+  assert.ok(
+    !(await request(b, '/api/lobby/bosses?training=1')).body.bosses.some(
+      (boss) => boss.id === ownBoss.id,
+    ),
+  );
+  assert.ok(
+    !(await request(a, '/api/lobby/bosses')).body.bosses.some((boss) => boss.id === ownBoss.id),
+  );
+  assert.equal(
+    (await request(b, '/api/lobby/bosses?training=1', { action: 'remove', id: ownBoss.id })).status,
+    403,
+  );
+  assert.equal(
+    (await request(a, '/api/lobby/bosses?training=1', { action: 'remove', id: ownBoss.id })).status,
+    200,
+  );
   assert.equal(
     (await request(a, '/api/lobby/bots?training=1')).body.characters.length,
     require('../src/profiles/appearance').builtinCharacters.length,

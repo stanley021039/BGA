@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, useAttrs, useId, type StyleValue } from 'vue';
+import UiIcon from './UiIcon.vue';
 // A labelled input, select (dropdown) or textarea (Figma 03 C07 「按鈕與表單」).
 // class/style belong to the label; the remaining attributes belong to the control.
 defineOptions({ inheritAttrs: false });
@@ -12,6 +13,7 @@ const props = withDefaults(
     hint?: string;
     error?: string;
     reserveMessage?: boolean;
+    selectedLabel?: string;
     id?: string;
   }>(),
   { control: 'input', reserveMessage: undefined },
@@ -56,7 +58,23 @@ const controlAttrs = computed(() => {
     :data-control="control"
     :data-invalid="error ? '' : undefined"
     ><span class="ui-field-label" :class="{ 'ui-sr-only': labelHidden }">{{ label }}</span
-    ><select v-if="control === 'select'" v-model="model" v-bind="controlAttrs"
+    ><span v-if="control === 'select' && selectedLabel !== undefined" class="ui-field-select-wrap">
+      <span class="ui-field-control ui-field-select-display" aria-hidden="true"
+        ><span class="ui-field-select-label">{{ selectedLabel }}</span
+        ><UiIcon name="next" class="ui-field-select-chevron"
+      /></span>
+      <select v-model="model" v-bind="controlAttrs" class="ui-field-select-native"
+        ><slot
+          ><option
+            v-for="option in options"
+            :key="option.value"
+            :value="option.value"
+            :disabled="option.disabled"
+            >{{ option.label }}</option
+          ></slot
+        ></select
+      > </span
+    ><select v-else-if="control === 'select'" v-model="model" v-bind="controlAttrs"
       ><slot
         ><option
           v-for="option in options"
@@ -109,6 +127,46 @@ const controlAttrs = computed(() => {
   scrollbar-gutter: stable;
   font-size: var(--stitch-text-hint);
   line-height: var(--stitch-line-height-body);
+}
+.ui-field-select-wrap {
+  position: relative;
+  display: block;
+  min-inline-size: 0;
+}
+:root body .ui-field-select-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stitch-space-8);
+  white-space: normal;
+}
+.ui-field-select-label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.ui-field-select-chevron {
+  flex: none;
+  transform: rotate(90deg);
+}
+:root body .ui-field-select-native {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.ui-field-select-wrap:has(select:focus-visible) .ui-field-select-display {
+  outline: var(--stitch-focus-ring);
+  outline-offset: var(--stitch-focus-offset);
+}
+.ui-field-select-wrap:has(select:disabled) .ui-field-select-display {
+  background: var(--stitch-surface-subtle);
+  color: var(--stitch-muted);
+}
+.ui-field[data-invalid] .ui-field-select-display {
+  border-color: var(--stitch-danger-line);
+  background: var(--stitch-danger-bg);
 }
 .ui-field-message-slot:focus-visible {
   outline: var(--stitch-focus-ring);

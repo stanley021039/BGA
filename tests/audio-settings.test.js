@@ -543,3 +543,31 @@ test('arena countdown retains a reserved slot when other effects fill playback',
   assert.ok(ui.api.playEffect('arena-countdown'));
   assert.equal(ui.api.playEffect('arena-countdown'), undefined);
 });
+
+test('boss warning retains the important sound slot during dense combat and still respects mute', () => {
+  const ui = harness();
+  ui.document.body.className = 'scene-ui-hidden motion-reduced';
+  for (const cue of ['turn', 'dice-roll', 'invitation', 'invitation'])
+    assert.ok(ui.api.playEffect(cue));
+  assert.equal(ui.api.playEffect('shot'), undefined);
+  const warning = ui.api.playEffect('boss-warning');
+  assert.ok(warning);
+  assert.equal(ui.api.playEffect('boss-warning'), undefined, 'one important warning at a time');
+  ui.api.set('effects', { enabled: false });
+  assert.equal(warning.paused, true);
+  assert.equal(ui.api.playEffect('boss-warning'), undefined);
+});
+
+test('cold boss warning loading is not cancelled at the ordinary one-second sound deadline', async () => {
+  const ui = harness();
+  const warning = ui.api.playEffect('boss-warning');
+  ui.advance(1500);
+  assert.equal(warning.paused, false);
+  warning.onplaying();
+  await tick();
+  ui.advance(3000);
+  assert.equal(warning.paused, false);
+  ui.api.stopEffect(warning);
+  assert.equal(warning.paused, true);
+  assert.equal(ui.clips.length, 1);
+});

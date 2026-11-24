@@ -76,6 +76,11 @@ export interface LobbyVisitor {
   bossPhase?: number;
   bossPhaseLockMs?: number;
   bossControlImmuneMs?: number;
+  bossAilments?: {
+    type: 'armor' | 'healing' | 'recovery' | 'dimension' | 'stone';
+    percent: number;
+    remainingMs: number;
+  }[];
   bearCompanion?: { index: number; remainingMs: number; lastDrain: number };
   bossIntent?: { effect: string; until: number; attackRate?: number } | null;
   concealed?: boolean;
@@ -152,6 +157,8 @@ export interface LobbyAttackHit {
   reflectionIndex?: number;
   reflectedEffect?: string;
   reflectedBossEffect?: string;
+  reflectedBossPhase?: number;
+  reflectedBossStrike?: number;
   reflectedPhase?: string;
   aimX?: number;
   aimY?: number;
@@ -166,6 +173,7 @@ export interface LobbyAttackHit {
   critical: boolean;
 }
 export interface LobbyAttack {
+  bossPhase?: number;
   bearIndex?: number;
   bossAttackRate?: number;
   cancelled?: boolean;
@@ -204,6 +212,7 @@ export interface AttackHead {
   exploded?: boolean;
 }
 export interface LobbySnapshot {
+  botArrivals?: { id: string; name: string; at: number; spawnAt: number }[];
   bossArrivals?: { id: string; name: string; at: number; spawnAt: number; x: number; y: number }[];
   arena?: LobbyArena | null;
   arenaRoom?: { currentId: string | null; rooms: { id: string; name: string; count: number }[] };
@@ -514,6 +523,32 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
               : {}),
           }
         : {}),
+      ...(item.bossAilments !== undefined
+        ? {
+            bossAilments: array(item.bossAilments)
+              .map((value) => {
+                const entry = record(value);
+                if (
+                  !['armor', 'healing', 'recovery', 'dimension', 'stone'].includes(
+                    String(entry.type),
+                  ) ||
+                  !finite(entry.percent) ||
+                  entry.percent <= 0 ||
+                  entry.percent > 50 ||
+                  !finite(entry.remainingMs) ||
+                  entry.remainingMs <= 0 ||
+                  entry.remainingMs > 3000
+                )
+                  throw Error('Boss狀態資料格式不正確。');
+                return {
+                  type: entry.type as NonNullable<LobbyVisitor['bossAilments']>[number]['type'],
+                  percent: entry.percent,
+                  remainingMs: entry.remainingMs,
+                };
+              })
+              .slice(0, 5),
+          }
+        : {}),
       ...(item.bearCompanion !== undefined
         ? {
             bearCompanion: (() => {
@@ -573,6 +608,20 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
     throw Error('大廳角色身分不一致。');
   return {
     arena: readLobbyArena(row.arena),
+    botArrivals: array(row.botArrivals || [])
+      .slice(0, 5)
+      .map((value) => {
+        const a = record(value);
+        if (
+          !text(a.id) ||
+          !text(a.name) ||
+          !finite(a.at) ||
+          !finite(a.spawnAt) ||
+          a.spawnAt - a.at !== 3000
+        )
+          throw Error('機器人登場資料格式不正確。');
+        return { id: text(a.id), name: text(a.name), at: a.at, spawnAt: a.spawnAt };
+      }),
     bossArrivals: array(row.bossArrivals || [])
       .slice(0, 5)
       .map((value) => {
@@ -612,6 +661,9 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
               !Number.isSafeInteger(a.bearIndex) ||
               Number(a.bearIndex) < 0 ||
               Number(a.bearIndex) > 4)) ||
+          (a.bossPhase !== undefined &&
+            (!bossAbilities.some((s) => s.id === a.effect) ||
+              ![1, 2, 3].includes(Number(a.bossPhase)))) ||
           !(bossAbilities.some((s) => s.id === a.effect)
             ? (a.bossAttackRate === undefined ||
                 [1, 1.15, 1.3].includes(Number(a.bossAttackRate))) &&
@@ -705,6 +757,16 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                       ))
                   )
                     throw Error('反彈招式資料格式不正確。');
+                  if (
+                    (hit.reflectedBossPhase !== undefined ||
+                      hit.reflectedBossStrike !== undefined) &&
+                    (!reflectedBossEffect ||
+                      ![1, 2, 3].includes(Number(hit.reflectedBossPhase)) ||
+                      !Number.isInteger(hit.reflectedBossStrike) ||
+                      Number(hit.reflectedBossStrike) < 0 ||
+                      Number(hit.reflectedBossStrike) > 2)
+                  )
+                    throw Error('Boss反彈階段格式不正確。');
                   const reflectionIndex = hit.reflectionIndex;
                   if (
                     hit.reflectedBossEffect !== undefined &&
@@ -728,6 +790,12 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
                       : {}),
                     ...(reflectedEffect ? { reflectedEffect, reflectedPhase } : {}),
                     ...(reflectedBossEffect ? { reflectedBossEffect } : {}),
+                    ...(hit.reflectedBossPhase !== undefined
+                      ? {
+                          reflectedBossPhase: Number(hit.reflectedBossPhase),
+                          reflectedBossStrike: Number(hit.reflectedBossStrike),
+                        }
+                      : {}),
                     ...(hit.aimX !== undefined && coordinate(hit.aimX) && coordinate(hit.aimY)
                       ? { aimX: hit.aimX, aimY: hit.aimY }
                       : {}),
@@ -791,6 +859,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
             : {}),
           damage: finite(a.damage) ? Math.max(0, a.damage) : undefined,
           critical: a.critical === true,
+          ...(a.bossPhase !== undefined ? { bossPhase: Number(a.bossPhase) } : {}),
           ...(a.bearIndex !== undefined ? { bearIndex: Number(a.bearIndex) } : {}),
           ...([1.15, 1.3].includes(Number(a.bossAttackRate))
             ? { bossAttackRate: Number(a.bossAttackRate) }

@@ -923,20 +923,22 @@ function start(mode: string) {
       aria-label="最後倒數"
       >{{ seconds }}</div
     >
-    <UiPanel v-if="playing" class="lobby-arena-hud" density="compact" aria-label="競技場即時戰況">
-      <UiButton label="切換房間" icon="users" icon-only @click="roomDialog?.open()" />
-      <UiButton
-        :label="musicEnabled ? '關閉背景音樂' : '開啟背景音樂'"
-        :icon="musicEnabled ? 'sound' : 'muted'"
-        icon-only
-        :aria-pressed="musicEnabled"
-        @click="AudioSettings?.set('music', { enabled: !musicEnabled }, { gesture: true })"
-      />
-      <p
-        >{{ openingSeconds ? '準備中' : seconds + ' 秒' }} · {{ self?.score || 0 }} 分 · HP
-        {{ hp }}%</p
-      >
-      <div class="lobby-arena-actions">
+    <UiPanel
+      v-if="playing"
+      class="lobby-arena-hud"
+      density="hud"
+      tone="translucent"
+      aria-label="競技場即時戰況"
+    >
+      <div class="lobby-arena-actions" role="group" aria-label="競技場操作">
+        <UiButton label="切換房間" icon="users" icon-only @click="roomDialog?.open()" />
+        <UiButton
+          :label="musicEnabled ? '關閉背景音樂' : '開啟背景音樂'"
+          :icon="musicEnabled ? 'sound' : 'muted'"
+          icon-only
+          :aria-pressed="musicEnabled"
+          @click="AudioSettings?.set('music', { enabled: !musicEnabled }, { gesture: true })"
+        />
         <SceneNpcControls :bots-locked="true" />
         <UiButton
           icon="leave"
@@ -960,6 +962,10 @@ function start(mode: string) {
           @click="toggle"
         />
       </div>
+      <p
+        >{{ openingSeconds ? '準備中' : seconds + ' 秒' }} · {{ self?.score || 0 }} 分 · HP
+        {{ hp }}%</p
+      >
     </UiPanel>
   </Teleport>
 </template>

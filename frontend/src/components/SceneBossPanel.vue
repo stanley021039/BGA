@@ -7,6 +7,7 @@ import UiField from './UiField.vue';
 import UiPanel from './UiPanel.vue';
 import { sizedImage } from '../services/image-size';
 import StatusSlot from './StatusSlot.vue';
+import bossRules from '../../../public/shared/boss-rules.json';
 type Entry = {
   id: string;
   name: string;
@@ -61,7 +62,11 @@ onMounted(() => {
       :src="sizedImage(selected.image, 256)"
       :alt="selected.name"
     />
-    <p>{{ selected?.description }}。生命為一般角色的8倍，擊倒後會重生。</p>
+    <p
+      >{{ selected?.description }}。生命為一般角色的{{
+        bossRules.strength.healthMultiplier
+      }}倍，擊倒後會重生。</p
+    >
     <UiPanel v-if="selected" title="專屬招式" density="compact">
       <p v-for="skill in selected.abilities" :key="skill.id"
         >{{ skill.slot === 'r' ? '蓄力大招' : '普通招式' }}：{{ skill.name

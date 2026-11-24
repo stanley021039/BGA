@@ -83,10 +83,18 @@ const source = fs
       .readFileSync(path.join(__dirname, '../src/engines/boss-geometry.js'), 'utf8')
       .replace(/^export /gm, ''),
   )
-  .replace(/^import .*boss-strike-art.js';\n/m, () =>
-    require('node:fs')
-      .readFileSync(path.join(__dirname, '../src/services/boss-strike-art.js'), 'utf8')
-      .replace(/^export /gm, ''),
+  .replace(
+    /^import .*boss-strike-art.js';\n/m,
+    () =>
+      'const ghidorahMouthsFor=(()=>{' +
+      fs
+        .readFileSync(path.join(__dirname, '../src/services/boss-mouths.js'), 'utf8')
+        .replace(/^export /gm, '') +
+      '\nreturn ghidorahMouthsFor;})();\n' +
+      require('node:fs')
+        .readFileSync(path.join(__dirname, '../src/services/boss-strike-art.js'), 'utf8')
+        .replace(/^import .*\n/gm, '')
+        .replace(/^export /gm, ''),
   )
   .replace(/^import .*motion-lifetime.js';\n/m, '')
   .replace(/^import combatRules .*scene-rules.json';\n/m, '')

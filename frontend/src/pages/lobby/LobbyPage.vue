@@ -410,18 +410,15 @@ onBeforeUnmount(() => {
   </div>
   <Teleport to="body">
     <aside class="lobby-scene-stats" aria-label="場景戰鬥資訊">
-      <UiPanel density="hud" tone="translucent">
-        <SceneKda :value="self?.kda" :self="self" :connected="lobby.connected" />
-      </UiPanel>
+      <SceneKda :value="self?.kda" :self="self" :connected="lobby.connected" />
     </aside>
     <aside class="lobby-scene-npc" aria-label="場景夥伴管理">
       <UiPanel density="hud" tone="translucent">
         <div class="lobby-scene-npc-tools">
-          <div v-show="!npcMinimized"><SceneNpcControls variant="ghost" /></div>
+          <div v-show="!npcMinimized"><SceneNpcControls /></div>
           <UiButton
             :icon="npcMinimized ? 'users' : 'minimize'"
             icon-only
-            variant="ghost"
             :label="npcMinimized ? '展開機器人與 Boss' : '最小化機器人與 Boss'"
             :aria-expanded="!npcMinimized"
             @click="npcMinimized = !npcMinimized"

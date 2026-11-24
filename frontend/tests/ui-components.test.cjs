@@ -104,6 +104,45 @@ test('UiField labels its control and wires hint, error and caller attributes', a
   assert.match(select, /role="alert"/);
 });
 
+test('wrapping select keeps a single labelled native control and exposes the complete selected name visually', async () => {
+  const selectedLabel = '龍鱗・反發・成雙之流星（完整異色名稱）';
+  const html = await render('UiField.vue', {
+    id: 'long-skill',
+    label: '大招',
+    control: 'select',
+    selectedLabel,
+    modelValue: 'b',
+    disabled: true,
+    options: [
+      { value: 'a', label: '普通招式' },
+      { value: 'b', label: selectedLabel },
+    ],
+  });
+  const { document } = require('linkedom').parseHTML(html);
+  const select = document.querySelector('select');
+  assert.equal(document.querySelectorAll('select').length, 1);
+  assert.equal(document.querySelector('label').getAttribute('for'), select.id);
+  assert.equal(select.id, 'long-skill');
+  assert.equal(select.hasAttribute('disabled'), true);
+  assert.equal(select.querySelectorAll('option').length, 2);
+  assert.equal(document.querySelector('.ui-field-select-label').textContent, selectedLabel);
+  assert.equal(
+    document.querySelector('.ui-field-select-display').getAttribute('aria-hidden'),
+    'true',
+  );
+});
+
+test('dialog can keep navigation outside the scrolling content without changing its named heading', async () => {
+  const html = await render(
+    'UiDialog.vue',
+    { title: '管理' },
+    { 'before-content': () => h('nav', { 'aria-label': '固定分頁' }, '機器人與Boss') },
+  );
+  assert.ok(html.indexOf('</header>') < html.indexOf('固定分頁'));
+  assert.match(html, /aria-labelledby=/);
+  assert.match(html, />管理<\/h2>/);
+});
+
 test('UiPanel names its region by its title and renders the action slot', async () => {
   const html = await render(
     'UiPanel.vue',

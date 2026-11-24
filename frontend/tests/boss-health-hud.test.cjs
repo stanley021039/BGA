@@ -47,7 +47,7 @@ async function render(visitors, connected = true) {
 const boss = (id, health = 750) => ({
   id,
   name: 'Boss ' + id,
-  bossId: 'thanos',
+  bossId: 'colossal',
   health,
   maxHealth: 1000,
 });

@@ -61,7 +61,7 @@ class MediaThumbnails {
   }
   // Returns the derivative, { same: true } when the original should be served,
   // or null while it is being prepared.
-  async variant(bytes, size) {
+  async variant(bytes, size, { wait = false } = {}) {
     await this.load();
     const key = `${contentHash(bytes)}-${size}`,
       kind = this.known.get(key);
@@ -74,7 +74,20 @@ class MediaThumbnails {
         this.known.delete(key);
       }
     }
-    this.prepare(bytes, [size]);
+    if (wait) {
+      // A displayed image waits for its requested size instead of downloading
+      // the full original on the first visit. Share the existing serial job.
+      try {
+        await this.prepare(bytes, [size]);
+        const ready = this.known.get(key);
+        if (ready === 'same') return { same: true };
+        if (ready === 'webp') return { bytes: await fs.readFile(this.file(key, 'webp')) };
+      } catch {
+        // Cache I/O failure keeps the existing non-cacheable recovery path.
+      }
+      return null;
+    }
+    void this.prepare(bytes, [size]).catch(() => {});
     return null;
   }
   // Queues every missing size; work runs one image at a time.

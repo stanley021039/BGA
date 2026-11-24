@@ -8,6 +8,7 @@ import SceneHealth from '../../components/SceneHealth.vue';
 import SummonArtwork from '../../components/SummonArtwork.vue';
 import { sceneWalkWithSpeed } from '../../engines/scene-path.js';
 import { interpolateSceneVisitor } from '../../services/scene-interpolation';
+import { sceneCorrection, reconcileScenePosition } from '../../services/scene-reconciliation.js';
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
@@ -25,6 +26,7 @@ const props = defineProps<{
     open: boolean;
     connected: boolean;
     serverNow?: number;
+    snapshotAgeMs?: number;
     arrive?: boolean;
     followCamera?: boolean;
     showSummon?: boolean;
@@ -223,6 +225,7 @@ watch(
   { immediate: true, flush: 'post' },
 );
 let moveFrame = 0;
+let moveIdentity: { reset: number; teleport: number; dead: boolean } | null = null;
 const wrap = (value: number) => ((value % 100) + 100) % 100;
 watch(
   [() => props.visitor, () => props.reset, () => props.connected, still],
@@ -230,41 +233,65 @@ watch(
     if (moveFrame) cancelAnimationFrame(moveFrame);
     const epoch = ++revision,
       visitor = props.visitor;
-    placing.value = true;
+    const previous = moveIdentity;
+    moveIdentity = { reset: props.reset, teleport: visitor.teleportId, dead: visitor.health === 0 };
     duration.value = 0;
-    left.value = visitor.x;
-    top.value = visitor.y;
-    await nextTick();
-    if (disposed || epoch !== revision) return;
-    placing.value = false;
-    if (!props.connected || document.hidden) return;
-    if (still.value || !visitor.moving || !visitor.remainingMs) {
-      left.value = wrap(visitor.targetX);
-      top.value = wrap(visitor.targetY);
+    if (!props.connected || document.hidden) {
+      placing.value = false;
       return;
     }
+    const age = Math.max(0, Math.min(500, props.snapshotAgeMs || 0));
+    const predict = (elapsed: number) => {
+      if (still.value || !visitor.moving || !visitor.remainingMs)
+        return { x: visitor.x, y: visitor.y, remainingMs: 0 };
+      return (visitor.archetype ||
+        visitor.pickupEffects?.speedUntil ||
+        visitor.bossId ||
+        visitor.bossBlessingMs) &&
+        !visitor.passage
+        ? interpolateSceneVisitor(visitor, elapsed + age)
+        : sceneWalkWithSpeed(
+            visitor,
+            { x: visitor.targetX, y: visitor.targetY },
+            elapsed + age,
+            visitor.passage,
+            visitor,
+          );
+    };
+    const correction = sceneCorrection(
+      { x: left.value, y: top.value },
+      predict(0),
+      !!previous &&
+        previous.reset === props.reset &&
+        previous.teleport === visitor.teleportId &&
+        !previous.dead &&
+        visitor.health !== 0 &&
+        !still.value &&
+        !visitor.passage &&
+        !visitor.knockback &&
+        (visitor.immobileUntil || 0) <= (props.serverNow || 0),
+    );
+    if (!correction) {
+      placing.value = true;
+      const position = predict(0);
+      left.value = wrap(position.x);
+      top.value = wrap(position.y);
+      await nextTick();
+      if (disposed || epoch !== revision) return;
+    }
+    placing.value = false;
+    if (!correction && predict(0).remainingMs <= 0) return;
     const started = performance.now();
     const tick = (time: number) => {
       moveFrame = 0;
       if (disposed || epoch !== revision || document.hidden || !props.connected) return;
-      const position =
-        (visitor.archetype ||
-          visitor.pickupEffects?.speedUntil ||
-          visitor.bossId ||
-          visitor.bossBlessingMs) &&
-        !visitor.passage
-          ? interpolateSceneVisitor(visitor, time - started)
-          : sceneWalkWithSpeed(
-              visitor,
-              { x: visitor.targetX, y: visitor.targetY },
-              time - started,
-              visitor.passage,
-              visitor,
-            );
+      const elapsed = time - started;
+      const position = reconcileScenePosition(predict(elapsed), correction, elapsed);
       left.value = wrap(position.x);
       top.value = wrap(position.y);
       if (hasSpeech.value) positionBubble();
-      if (position.remainingMs > 0) moveFrame = requestAnimationFrame(tick);
+      if (position.remainingMs > 0 || (correction && elapsed < 160))
+        moveFrame = requestAnimationFrame(tick);
     };
     moveFrame = requestAnimationFrame(tick);
   },

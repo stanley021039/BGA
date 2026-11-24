@@ -90,6 +90,24 @@ const newAilments = computed<Indicator[]>(() => {
   const state = status.value;
   const items: Indicator[] = [];
   if (!props.connected || !props.self?.health) return items;
+  const descriptions: Record<string, { icon: string; label: string }> = {
+    armor: { icon: 'attack-up', label: '裂甲：受到Boss傷害 +' },
+    healing: { icon: 'healing', label: '回復抑制：回血 −' },
+    recovery: { icon: 'regen-up', label: '回能抑制：回能 −' },
+    dimension: { icon: 'lock', label: '次元印記：異瞳命中額外扣3能量' },
+    stone: { icon: 'paralysis', label: '石化蓄積：留意末段石化光' },
+  };
+  for (const ailment of props.self?.bossAilments || []) {
+    const info = descriptions[ailment.type];
+    if (info)
+      items.push({
+        icon: info.icon,
+        label:
+          info.label +
+          (['armor', 'healing', 'recovery'].includes(ailment.type) ? ailment.percent + '%' : ''),
+        tone: 'danger',
+      });
+  }
   if (state?.paralysisMs)
     items.push({
       icon: 'paralysis',

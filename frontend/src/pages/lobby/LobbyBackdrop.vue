@@ -409,7 +409,7 @@ defineExpose({ openChat });
   <MobileSceneControls
     :controls="controls"
     :enabled="sceneEnabled"
-    :battle="battlePlaying"
+    :battle="battlePlaying || !!props.trainingLoadout"
     :locked-loadout="
       props.trainingLoadout ||
       (battlePlaying
@@ -440,6 +440,7 @@ defineExpose({ openChat });
       ><div ref="world" class="arena-camera-world" :class="{ 'is-expanded': expanded }">
         <BossArrivalNotice
           :arrivals="sceneSnapshot?.bossArrivals || []"
+          :bots="sceneSnapshot?.botArrivals || []"
           :now="sceneSnapshot?.serverNow || 0"
           :connected="lobby.connected" />
         <LobbyAttackLayer
@@ -523,6 +524,7 @@ defineExpose({ openChat });
             :follow-camera="expanded && visitor.id === lobby.snapshot?.selfId"
             @position="moveCamera"
             :reset="lobby.positionReset"
+            :snapshot-age-ms="lobby.snapshotAgeMs"
             :server-now="sceneSnapshot?.serverNow"
             :open="opened"
             :connected="lobby.connected"

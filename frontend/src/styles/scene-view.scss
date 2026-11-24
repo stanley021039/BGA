@@ -1,4 +1,5 @@
 body.scene-ui-hidden {
+  --scene-stats-top: max(var(--stitch-space-16), env(safe-area-inset-top));
   [data-site-header],
   .vue-lobby,
   .vue-game-workspace > :not(.vue-game-grid),
@@ -16,8 +17,8 @@ body.scene-ui-hidden {
 }
 .scene-view-restore {
   position: fixed;
-  inset-block-start: var(--stitch-space-16);
-  inset-inline-start: var(--stitch-space-16);
+  inset-block-start: max(var(--stitch-space-16), env(safe-area-inset-top));
+  inset-inline-start: max(var(--stitch-space-16), env(safe-area-inset-left));
   z-index: 3000;
 }
 .lobby-scene-stats,
@@ -27,9 +28,20 @@ body.scene-ui-hidden {
   z-index: 30;
 }
 .lobby-scene-stats {
-  inset-block-start: var(--scene-stats-top, 76px);
-  inset-inline-end: var(--scene-stats-right, var(--stitch-space-16));
-  max-inline-size: min(400px, calc(100vw - var(--stitch-space-32)));
+  inset-block-start: var(--scene-stats-top, var(--stitch-space-16));
+  inset-inline-end: max(
+    var(--scene-stats-right, var(--stitch-space-16)),
+    env(safe-area-inset-right)
+  );
+  max-inline-size: min(
+    400px,
+    calc(
+      100vw - max(var(--stitch-space-16), env(safe-area-inset-left)) - max(
+          var(--stitch-space-16),
+          env(safe-area-inset-right)
+        ) - var(--stitch-control-height) - var(--stitch-space-32)
+    )
+  );
 }
 .lobby-scene-npc {
   inset-block-end: max(var(--stitch-space-16), env(safe-area-inset-bottom));
@@ -50,7 +62,9 @@ body.scene-ui-hidden .lobby-scene-npc {
     overflow: auto;
   }
   body.scene-ui-hidden:has(.lobby-scene-stats) .boss-health-hud {
-    inset-block-start: calc(var(--scene-stats-top, 130px) + 150px + var(--stitch-space-8));
+    inset-block-start: calc(
+      var(--scene-stats-top, var(--stitch-space-16)) + 150px + var(--stitch-space-8)
+    );
   }
   body.scene-ui-hidden:has(.lobby-scene-npc) .mobile-scene-controls {
     inset-inline-start: var(--stitch-space-16);

@@ -249,10 +249,21 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
       body: JSON.stringify({ version: 5, characterId: own.id, expression: 'happy' }),
     });
     assert.equal(selectOwn.status, 200);
-    assert.equal(
-      (await fetch(base + view.players[0].avatar, { headers })).headers.get('content-type'),
-      'image/gif',
-    );
+    const animatedAvatar = await fetch(base + view.players[0].avatar, { headers });
+    assert.equal(animatedAvatar.headers.get('content-type'), 'image/webp');
+    const sharp = require('sharp');
+    const resizedMetadata = await sharp(Buffer.from(await animatedAvatar.arrayBuffer()), {
+      animated: true,
+    }).metadata();
+    const originalMetadata = await sharp(gif, { animated: true }).metadata();
+    assert.equal(resizedMetadata.pages, originalMetadata.pages);
+    assert.ok(resizedMetadata.pages > 1);
+    assert.ok(resizedMetadata.width <= 256 && resizedMetadata.pageHeight <= 256);
+    const originalAvatar = new URL(view.players[0].avatar, base);
+    originalAvatar.searchParams.delete('size');
+    const originalResponse = await fetch(originalAvatar, { headers });
+    assert.equal(originalResponse.headers.get('content-type'), 'image/gif');
+    assert.deepEqual(Buffer.from(await originalResponse.arrayBuffer()), gif);
     const emote = await fetch(base + '/api/social', {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json' },
