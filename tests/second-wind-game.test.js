@@ -4,8 +4,9 @@ const assert = require('node:assert/strict');
 const { SecondWindGame } = require('../src/games/second-wind/game');
 const { SecondWindRoom } = require('../src/games/second-wind/room');
 const { randomUUID } = require('node:crypto');
+const replayGame = require('./helpers/second-wind-replay.cjs');
 
-function advance(game, players, choose = 0) {
+function advance(game, players, choose = 0, trace) {
   const v = game.view(players[0]);
   let id, action;
   if (['draft-rolloff', 'race-rolloff'].includes(v.phase)) {
@@ -36,6 +37,7 @@ function advance(game, players, choose = 0) {
     id = v.first;
     action = { type: 'next-race' };
   } else return false;
+  trace?.push({ id, action, revision: v.revision });
   game.act(id, action, v.revision);
   return true;
 }
@@ -77,21 +79,25 @@ test('racer events preserve the player identity that owned the racer at event ti
 
 test('complete four races across all three packs, seeded rosters, private choices and preserved racer counts', () => {
   for (let seed = 0; seed < 120; seed++) {
+    const { Game, entropy } = replayGame(seed ^ 0x9e3779b9);
+    const actions = [];
     const players = Array.from({ length: 3 + (seed % 4) }, (_, i) => 'p' + i),
-      game = new SecondWindGame({
+      game = new Game({
         playerIds: players,
         seed,
         racerSet: ['second-wind', 'base', 'mixed'][seed % 3],
       });
     let steps = 0;
     while (game.view(players[0]).phase !== 'finished' && steps++ < 1800)
-      advance(game, players, steps);
+      advance(game, players, steps, actions);
     const v = game.view(players[0]);
     assert.equal(
       v.phase,
       'finished',
       JSON.stringify({
         seed,
+        entropy,
+        actions,
         phase: v.phase,
         steps,
         pending: v.pending,
@@ -111,6 +117,23 @@ test('complete four races across all three packs, seeded rosters, private choice
     assert.equal(JSON.stringify(v).includes('randomKey'), false);
     assert.equal(JSON.stringify(v).includes('secretNumber'), false);
   }
+});
+
+test('recorded race entropy and actions replay the same private choices and public events', () => {
+  const players = ['p0', 'p1', 'p2'];
+  const original = replayGame(404);
+  const game = new original.Game({ playerIds: players, seed: 107, racerSet: 'mixed' });
+  const actions = [];
+  for (let step = 0; step < 100; step++) {
+    if (!advance(game, players, step, actions)) break;
+  }
+  assert.ok(original.entropy.draws.length > 0, 'includes race dice and deck shuffles');
+  const replay = replayGame(0, original.entropy.draws);
+  const restored = new replay.Game({ playerIds: players, seed: 107, racerSet: 'mixed' });
+  for (const { id, action, revision } of actions) restored.act(id, action, revision);
+  for (const id of players) assert.deepEqual(restored.view(id), game.view(id));
+  assert.deepEqual(replay.entropy.draws, original.entropy.draws);
+  assert.equal(replay.entropy.uuidCount, original.entropy.uuidCount);
 });
 test('invalid choice, outsider and stale revision leave game unchanged', () => {
   const game = new SecondWindGame({ playerIds: ['a', 'b', 'c'], seed: 7 });

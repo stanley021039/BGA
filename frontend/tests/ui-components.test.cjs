@@ -67,6 +67,18 @@ test('UiLink is drawn as a Stitch button', async () => {
   assert.match(html, /data-stitch-variant="secondary"/);
 });
 
+test('waiting shortcuts precede the artwork and do not add an action for read-only viewers', async () => {
+  const props = { type: 'poker', title: '牌桌', description: '等待入座', facts: [] };
+  const html = await render('RoomWaitingTemplate.vue', {
+    ...props,
+    quickAction: { href: '#room-waiting-start-poker', label: '前往開局' },
+  });
+  assert.match(html, /href="#room-waiting-start-poker"/);
+  assert.ok(html.indexOf('前往開局') < html.indexOf('vue-waiting-hero'));
+  const viewer = await render('RoomWaitingTemplate.vue', props);
+  assert.doesNotMatch(viewer, /href="#room-waiting-start/);
+});
+
 test('UiField labels its control and wires hint, error and caller attributes', async () => {
   const html = await render('UiField.vue', {
     id: 'nickname',

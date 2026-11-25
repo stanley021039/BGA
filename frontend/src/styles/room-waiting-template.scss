@@ -306,14 +306,7 @@
     }
   }
 }
-:root body[data-visual-theme] .vue-waiting-quick-action {
-  display: none;
-}
-
 @media (max-width: 760px) {
-  :root body[data-visual-theme] .vue-waiting-quick-action {
-    display: inline-flex;
-  }
   :root body[data-visual-theme] .vue-room-waiting-template {
     min-block-size: 0;
     .vue-waiting-hero {
@@ -358,6 +351,16 @@
     }
     .vue-waiting-settings .mq-banks {
       grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+@media (max-width: 1180px) {
+  :root body[data-visual-theme] .vue-room-waiting-template {
+    grid-template-rows: none;
+    align-content: start;
+    &.has-mode-picker {
+      grid-template-rows: none;
     }
   }
 }

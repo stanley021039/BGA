@@ -370,6 +370,61 @@ test('fixed-die repeated states ask for a ruling rather than silently inventing 
   }
   assert.equal(h.state.pending.kind, 'deadlock');
 });
+test('a forced Skipper warp loop is detected even when its owner has another unforced racer', () => {
+  const g = fixture(['skipper', 'stunner', 'mole']);
+  g.racer('r0').position = 4;
+  g.racer('r1').position = 5;
+  g.racer('r2').position = 20;
+  g.state.racers.push({
+    ...g.racer('r2'),
+    id: 'extra',
+    racerId: 're-runner',
+    playerId: 'a',
+  });
+  g.state.nextRacerId = 'r0';
+  g.state.loopStates = [];
+  g.beginPlayerTurn();
+  g.drain();
+  for (let i = 0; i < 12 && !g.state.pending; i++)
+    g.act(g.state.turnId, { type: 'roll' }, g.state.revision);
+  assert.equal(g.state.pending?.kind, 'deadlock');
+  assert.equal(g.state.pending.playerId, 'a');
+  assert.equal(g.racer('extra').position, 20, 'unscheduled racer never acts');
+  assert.ok(g.state.events.some((event) => event.type === 'warp'));
+  g.act(
+    'a',
+    {
+      type: 'choice',
+      choiceId: g.state.pending.id,
+      value: 'continue',
+    },
+    g.state.revision,
+  );
+  assert.equal(g.state.phase, 'racing');
+  assert.equal(g.state.context.actor, 'r0');
+  for (let i = 0; i < 12 && !g.state.pending; i++)
+    g.act(g.state.turnId, { type: 'roll' }, g.state.revision);
+  assert.equal(g.state.pending?.kind, 'deadlock');
+  g.act('a', { type: 'choice', choiceId: g.state.pending.id, value: 'end' }, g.state.revision);
+  assert.equal(g.state.phase, 'race-result');
+  assert.equal(g.state.results[0].ranking.length, 0);
+});
+
+test('an unforced scheduled racer is not ruled a loop because its teammate is forced', () => {
+  const g = fixture(['skipper', 'stunner', 'mole']);
+  g.racer('r0').position = 20;
+  g.racer('r1').position = 5;
+  g.state.racers.push({ ...g.racer('r2'), id: 'extra', playerId: 'a', position: 4 });
+  g.state.loopStates = [];
+  for (let i = 0; i < 3; i++) {
+    g.state.nextRacerId = 'r0';
+    g.state.queue = [];
+    g.beginPlayerTurn();
+  }
+  assert.equal(g.state.pending, null);
+  assert.equal(g.state.loopStates.length, 0);
+});
+
 test('the chain budget spans a whole player turn, so answered choices cannot restart it', () => {
   // A forced Hopfrog extra turn that rolls 1 asks Critic every lap; each answer
   // resumes the chain in a new drain, which used to reset a per-call budget.

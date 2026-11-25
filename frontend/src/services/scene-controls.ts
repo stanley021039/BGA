@@ -17,7 +17,7 @@ export function sceneInputBlocked() {
     !!document.querySelector('dialog[open], :popover-open, .vue-room-drawer-backdrop') ||
     (active instanceof Element &&
       !!active.closest(
-        'input,textarea,select,[contenteditable]:not([contenteditable="false"]),[inert]',
+        'form,input,textarea,select,[contenteditable]:not([contenteditable="false"]),[inert]',
       ))
   );
 }

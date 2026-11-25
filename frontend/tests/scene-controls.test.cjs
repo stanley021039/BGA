@@ -78,6 +78,7 @@ function fixture(send = async () => true) {
   );
   return {
     controls,
+    inputBlocked: loaded.exports.sceneInputBlocked,
     state,
     document,
     Element,
@@ -218,6 +219,27 @@ test('hidden, dialogs, input, disconnected and knocked-out characters cannot act
     f.dispose();
   }
 });
+test('moving focus from an input to its submit button keeps scene controls blocked until leaving the form', async () => {
+  const { document } = require('linkedom').parseHTML(
+    '<html><body><form><input id="answer"><button id="submit">送出</button></form><button id="outside">角色操作</button></body></html>',
+  );
+  const f = fixture();
+  const focused = new f.Element();
+  try {
+    f.document.activeElement = focused;
+    for (const id of ['answer', 'submit']) {
+      focused.closest = (selector) => document.getElementById(id).closest(selector);
+      assert.equal(f.inputBlocked(), true, id);
+      assert.equal(await f.controls.run('q'), false, id);
+    }
+    focused.closest = (selector) => document.getElementById('outside').closest(selector);
+    assert.equal(f.inputBlocked(), false);
+    assert.equal(await f.controls.run('q'), true);
+  } finally {
+    f.dispose();
+  }
+});
+
 test('recent server attack recovers remaining cooldown; other players do not lock controls', async () => {
   const f = fixture();
   try {

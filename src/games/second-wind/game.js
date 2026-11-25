@@ -257,11 +257,14 @@ class SecondWindGame {
   }
   beginPlayerTurn(checkLoop = true) {
     const s = this.state;
+    const candidates = s.racers.filter((r) => alive(r) && r.playerId === s.turnId);
+    const scheduled = s.nextRacerId ? candidates.filter((r) => r.id === s.nextRacerId) : candidates;
     // A forced Skipper can repeatedly take the next turn while other seats
-    // never roll. Detect repetition of the forced seat, not only all seats.
-    const forced = this.active()
-      .filter((r) => r.playerId === s.turnId)
-      .every(
+    // never roll. Only the scheduled racer acts after that handoff; a teammate
+    // elsewhere on the board must not hide its fixed-die loop.
+    const forced =
+      scheduled.length > 0 &&
+      scheduled.every(
         (r) =>
           s.fixed[r.playerId] ||
           this.active().some(
@@ -297,10 +300,7 @@ class SecondWindGame {
         return;
       }
     }
-    const candidates = s.racers.filter((r) => alive(r) && r.playerId === s.turnId);
-    s.playerTurn = s.nextRacerId
-      ? candidates.filter((r) => r.id === s.nextRacerId).map((r) => r.id)
-      : candidates.map((r) => r.id);
+    s.playerTurn = scheduled.map((r) => r.id);
     s.nextRacerId = null;
     s.turnCount++;
     s.chainSteps = 0;
