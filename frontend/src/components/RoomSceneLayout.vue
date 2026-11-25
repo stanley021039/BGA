@@ -54,7 +54,7 @@ async function closePanels() {
 }
 function breakpoint() {
   mobile.value = narrow.matches;
-  if (mobile.value && rosterOpen.value && chatOpen.value) rosterOpen.value = false;
+  if (mobile.value) rosterOpen.value = chatOpen.value = false;
 }
 narrow.addEventListener('change', breakpoint);
 onBeforeUnmount(() => narrow.removeEventListener('change', breakpoint));

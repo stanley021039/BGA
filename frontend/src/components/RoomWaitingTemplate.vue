@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useId } from 'vue';
-import UiLink from './UiLink.vue';
+import RoomWaitingAction from './RoomWaitingAction.vue';
 import '../styles/room-waiting-template.scss';
 defineProps<{
   type: string;
@@ -27,6 +27,7 @@ const heading = useId();
     :data-waiting-game="type"
     :aria-labelledby="heading"
   >
+    <RoomWaitingAction :action="quickAction" />
     <div v-if="$slots['mode-picker']" class="vue-waiting-mode-picker"
       ><slot name="mode-picker"
     /></div>
@@ -46,11 +47,7 @@ const heading = useId();
       <div class="vue-waiting-hero-copy"
         ><h1 :id="heading">{{ heroTitle || title }}</h1
         ><p>{{ heroDescription || description }}</p
-        ><UiLink
-          v-if="quickAction"
-          class="vue-waiting-quick-action"
-          :href="quickAction.href"
-          :label="quickAction.label" /><slot name="hero-actions"
+        ><slot name="hero-actions"
       /></div>
     </header>
     <div class="vue-waiting-lower">
