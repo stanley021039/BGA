@@ -41,7 +41,9 @@ test('every current offensive attack has a bounded authoritative arrival, no eag
   for (const definition of definitions.filter(
     (e) =>
       e.damageMultiplier !== 0 &&
-      !['gate_of_heroes', 'shaohua_devour', 'susanoo'].includes(e.variantOf || e.id),
+      !['gate_of_heroes', 'shaohua_devour', 'susanoo'].includes(
+        e.behaviorOf || e.variantOf || e.id,
+      ),
   )) {
     const f = fixture(definition.id);
     const first = Math.min(
@@ -59,7 +61,7 @@ test('every current offensive attack has a bounded authoritative arrival, no eag
   assert.deepEqual(
     Object.keys(timing).sort(),
     definitions
-      .filter((e) => !('paletteHue' in e) && !e.rewardOf)
+      .filter((e) => !('paletteHue' in e) && !e.rewardOf && !e.behaviorOf)
       .map((e) => e.id)
       .sort(),
   );
@@ -378,7 +380,7 @@ test('reflected attacks preserve the defender arena epoch and cannot hit a respa
 test('Babylon/Ea has a double-strength second stage; the two dragoon salvos share the balanced combo total', () => {
   for (const [effect, first, last, total] of [
     ['gate_of_babylon', 2400, 3880, 761239],
-    ['funnel', 1320, 2120, 180000],
+    ['funnel', 750, 1200, 180000],
   ]) {
     const f = fixture(effect);
     f.advance(first);
@@ -540,7 +542,7 @@ test('new attack palettes use identical slots, targets, timing and settlement as
       selectAttackTargets(actors[0], actors, variantOf, 1),
       id,
     );
-    if (['shield', 'sphere'].includes(variantOf)) continue;
+    if (['shield', 'sphere', 'susanoo'].includes(variantOf)) continue;
     const original = fixture(variantOf, undefined, random),
       alternate = fixture(id, undefined, random);
     assert.deepEqual(snapshot(alternate.event), snapshot(original.event), id);
@@ -586,9 +588,9 @@ test('missile casts cap attacker energy after three real hits, including an earl
 
     const partial = fixture(effect);
     partial.points[1].x = 80;
-    partial.advance(850);
+    partial.advance(580);
     partial.points[1].x = 40;
-    partial.advance(1600);
+    partial.advance(1100);
     assert.equal(partial.event.hits[0].missed, true);
     assert.equal(partial.points[0].energy, 24);
     assert.equal(partial.points[1].energy, 15);

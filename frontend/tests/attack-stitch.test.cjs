@@ -66,17 +66,17 @@ test('eight physical chains converge around the target from all sides and hit on
 });
 test('DRAGOON pods travel and charge before crossfire, then return without repeat damage', () => {
   const f = fixture('funnel');
-  for (const t of [0, 400, 1000, 1299]) f.draw(t);
+  for (const t of [0, 250, 450, 749]) f.draw(t);
   assert.equal(f.impacts(), 0);
   assert.ok(!f.calls.some((c) => c.name === 'lineTo' && c.args[0] === 640 && c.args[1] === 380));
   f.reset();
-  f.draw(1400);
+  f.draw(750);
   assert.ok(f.calls.some((c) => c.name === 'lineTo' && c.args[0] === 640 && c.args[1] === 380));
-  f.draw(1600);
-  f.draw(2200);
+  f.draw(900);
+  f.draw(1200);
   assert.equal(f.impacts(), 1);
   f.reset();
-  f.draw(3200);
+  f.draw(1500);
   assert.equal(f.calls.length, 0);
 });
 test('ice crystals emerge in staggered sizes and mushroom cap follows the casting circle', () => {

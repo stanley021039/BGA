@@ -1,3 +1,4 @@
+import BarrageFrames from '../engines/barrage-frames.js';
 import { playActionFeedback, rememberRoomEntryFeedback } from '../services/action-sounds';
 import { preloadAllowed, warm, whenIdle } from '../services/preload';
 import { sizedImage } from '../services/image-size';
@@ -329,6 +330,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       const result = await request('/api/lobby/attack', {
         requestId: crypto.randomUUID(),
         slot,
+        builtinFrameId: BarrageFrames?.get().selected || 'default',
         aspectRatio: Math.max(0.2, Math.min(5, innerWidth / innerHeight)),
       });
       if (current(epoch, account)) {

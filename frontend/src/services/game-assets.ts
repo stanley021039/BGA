@@ -5,7 +5,7 @@ import { record, strings } from './validation';
 import { preloadAllowed, warm, whenIdle } from './preload';
 import AudioSettings from '../engines/audio-settings.js';
 import athleteTrackPreview from '../assets/second-wind/twisty-twirl-1600.webp';
-import { summonAssets } from './summon-assets';
+import { summonAssets, summonImage } from './summon-assets';
 import { bearPortrait, bearSquad } from './attack-single-ultimates.js';
 import { malicePortrait } from './attack-ultimate-extra.js';
 
@@ -32,9 +32,16 @@ export function warmGachaAudio(): void {
       warm([...AudioSettings.gachaEffectAssets, sound('quacks-card.wav')], { idle: false });
   });
 }
-export function warmNewSkillAssets(effect: string, width = 0, height = 0) {
+export function warmNewSkillAssets(effect: string, width = 0, height = 0, previewWidth = 0) {
   const summon = summonAssets(effect);
-  if (summon) warm([summon[1]]);
+  if (summon) {
+    const mobile = typeof window === 'object' && window.innerWidth <= 640;
+    const size = previewWidth
+      ? Math.min(previewWidth * 0.78, 380, window.innerHeight * 0.7)
+      : (mobile ? 192 : 276) * (effect === 'susanoo_blue' ? 1.2 : 1);
+    const image = summonImage(effect, size);
+    if (image) warm([image]);
+  }
   if (effect.replace(/_alt$/, '') === 'rainbow_bear')
     warm([bearPortrait(width, height), bearSquad(width, height)]);
   if (effect.replace(/_alt$/, '') === 'human_malice') warm([malicePortrait(width, height)]);

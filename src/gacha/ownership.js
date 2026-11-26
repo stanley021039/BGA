@@ -25,6 +25,15 @@ function appearance(db, userId) {
 }
 function ownedIds(db, userId, kind, saved = appearance(db, userId)) {
   const result = new Set();
+  if (kind === 'attacks' && enabled(db)) {
+    const receipt = db
+      .prepare('SELECT value FROM gacha_settings WHERE name=?')
+      .get('susanoo_blue_retained:' + userId);
+    const complete = db
+      .prepare("SELECT value FROM gacha_settings WHERE name='susanoo_blue_split_v1'")
+      .get();
+    if (validAt(receipt?.value) && validAt(complete?.value)) result.add('susanoo_blue');
+  }
   if (enabled(db))
     for (const row of db
       .prepare('SELECT reward_id,source FROM gacha_ownership WHERE user_id=? AND kind=?')

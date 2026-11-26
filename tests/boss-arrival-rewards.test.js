@@ -3,6 +3,7 @@ const { test } = require('node:test'),
 const { createLobby } = require('../src/rooms/lobby');
 const { createBossRewards } = require('../src/rooms/boss-rewards');
 const { createSceneCombat, authorSpeed } = require('../src/rooms/scene-combat');
+const { BUILTIN_FRAME_OPTIONS } = require('../src/barrage/builtins');
 const chars = require('../src/profiles/appearance').builtinCharacters.map((c) => ({
   id: c.id,
   name: c.name,
@@ -23,6 +24,45 @@ function fixture(options = {}) {
     step: (ms) => (t += ms),
   };
 }
+
+test('boss reward announcement uses the killer frame and a short blessing message', () => {
+  const frame = BUILTIN_FRAME_OPTIONS.find((entry) => entry.id !== 'default').id;
+  const killer = {
+    id: 'killer',
+    name: '玩家',
+    health: 50,
+    maxHealth: 100,
+    lifeId: 'life',
+    barrageFrameId: frame,
+  };
+  const events = [];
+  const reward = createBossRewards(
+    new Map([[killer.id, killer]]),
+    new Map([['boss', { bossId: 'mutalith' }]]),
+    (event) => events.push(event),
+  );
+  reward({ id: killer.id, energyLifeId: 'life' }, { id: 'boss', name: '漩渦獸' }, 1000);
+  assert.equal(events[0].frame.id, frame);
+  assert.equal(events[0].message, '擊敗 漩渦獸｜獵王祝福 15 秒');
+  assert.equal(killer.bossBlessingUntil, 16000);
+});
+
+test('player same-slot cooldown rejects 1199ms and accepts 1200ms', () => {
+  const { lobby, step } = fixture({ training: true });
+  lobby.view(user);
+  lobby.view(guest);
+  lobby.bots(user, { action: 'add', mode: 'idle' });
+  lobby.attack(user, { requestId: 'first-attack', slot: 'q', aspectRatio: 1.6 });
+  step(1199);
+  assert.throws(
+    () => lobby.attack(user, { requestId: 'early-attack', slot: 'q', aspectRatio: 1.6 }),
+    (error) => error.code === 'ATTACK_COOLDOWN',
+  );
+  step(1);
+  assert.doesNotThrow(() =>
+    lobby.attack(user, { requestId: 'ready-attack', slot: 'q', aspectRatio: 1.6 }),
+  );
+});
 test('boss reserves capacity, warns for five seconds, falls before attacking, and can be cancelled', () => {
   const { lobby, step } = fixture();
   const b = lobby.bosses(user, { action: 'add', bossId: 'colossal' }).bosses[0];

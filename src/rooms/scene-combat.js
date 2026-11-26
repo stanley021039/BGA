@@ -95,6 +95,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     actor.hazardTickAt = actor.emberTrailUntil = 0;
     actor.severed = false;
     actor.drillDot = null;
+    actor.amaterasuDot = null;
     actor.ordinaryDot = null;
     actor.bearCompanion = null;
     actor.bossAilments = {};
@@ -121,16 +122,33 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       reset(actor, time);
     }
     while (actor.health > 0) {
-      const { drillDot, ordinaryDot } = actor;
-      const ordinary = (ordinaryDot?.nextAt ?? Infinity) < (drillDot?.nextAt ?? Infinity);
-      const dot = ordinary ? ordinaryDot : drillDot;
+      const next = ['drillDot', 'ordinaryDot', 'amaterasuDot']
+        .filter((key) => actor[key])
+        .sort((a, b) => actor[a].nextAt - actor[b].nextAt)[0];
+      const dot = actor[next];
       if (!dot || dot.nextAt > time) break;
       const at = dot.nextAt;
-      dot.nextAt += ordinary ? rules.ordinaryDot.intervalMs : 1000;
-      if (--dot.remaining === 0) actor[ordinary ? 'ordinaryDot' : 'drillDot'] = null;
-      const result = ordinary
-        ? hit(dot.from, actor, at, dot.effect, rules.ordinaryDot.damageWeight, 'ordinary-dot')
-        : hit(dot.from, actor, at, 'giga_drill', 0.1);
+      if (next === 'amaterasuDot') {
+        const owner = dot.from.energyActor || dot.from;
+        if (
+          !owner.health ||
+          owner.lifeId !== dot.from.energyLifeId ||
+          (owner.combatEpoch || 0) !== dot.from.combatEpoch ||
+          policy.sourcePresent?.(owner) === false ||
+          !canContinueCast(dot.from, actor, at)
+        ) {
+          actor.amaterasuDot = null;
+          continue;
+        }
+      }
+      dot.nextAt += next === 'ordinaryDot' ? rules.ordinaryDot.intervalMs : 1000;
+      if (--dot.remaining === 0) actor[next] = null;
+      const result =
+        next === 'amaterasuDot'
+          ? hit(dot.from, actor, at, 'susanoo', dot.weight, 'ordinary-dot')
+          : next === 'ordinaryDot'
+            ? hit(dot.from, actor, at, dot.effect, rules.ordinaryDot.damageWeight, 'ordinary-dot')
+            : hit(dot.from, actor, at, 'giga_drill', 0.1);
       actor.dotPulse = { id: `${actor.lifeId}:${at}`, at, ...result };
     }
     collect(actor);
@@ -613,6 +631,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     return policy.canContinueCast?.(source, actor, time) ?? true;
   }
   function hit(from, to, time, effect, weight = 1, phase = '') {
+    const susanooStyle = from.susanooStyle || (attackKind(effect) === 'susanoo' ? effect : '');
     effect = attackKind(effect);
     if (!canHit(from, to, time, effect)) {
       const coverImpact = policy.coverImpact?.(from, to, time, effect);
@@ -668,7 +687,9 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
             (validCaster && time < (caster.bossBlessingUntil || 0) ? 1.1 : 1)
           : base *
             weight *
-            (damageMultipliers.get(effect) ?? 1) *
+            (damageMultipliers.get(effect === 'susanoo' ? susanooStyle : effect) ??
+              damageMultipliers.get(effect) ??
+              1) *
             (effect === 'explosion' ? 1.5 : 1) *
             (areaEffects.has(effect) ? rules.areaDamageMultiplier : 1) *
             (critical ? rules.damage.criticalMultiplier : 1) *
@@ -683,6 +704,15 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       blockedPercent = min + Math.floor(random() * (max - min + 1));
       if (time >= to.shieldUntil) blockedPercent *= rules.shield.residualMultiplier;
     }
+    const pierce =
+      effect === 'susanoo' && susanooStyle === 'susanoo_cyan' && phase === 'sweep3'
+        ? rules.susanoo.styles.susanoo_cyan.shieldPierce
+        : 0;
+    blockedPercent *= 1 - pierce;
+    const susanooGuard =
+      to.summon?.effect === 'susanoo_orange' && to.summon.until > time
+        ? 1 - rules.susanoo.styles.susanoo_orange.guardReduction
+        : 1;
     const cover = policy.damageThroughCover?.(from, to, effect) ?? 1;
     const owner = from.energyActor;
     const outgoing =
@@ -697,7 +727,9 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
               Math.max(
                 0,
                 to.health * (to.bossId ? bossInteractions.rules.devourCurrentHealthFraction : 0.9),
-              ) * cover,
+              ) *
+                cover *
+                susanooGuard,
             ),
           )
         : Math.round(
@@ -711,9 +743,10 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
               profile(to).defense *
               outgoing *
               (1 - blockedPercent / 100) *
-              (time < (to.pickupShieldUntil || 0) ? 0.7 : 1) *
+              susanooGuard *
+              (time < (to.pickupShieldUntil || 0) ? 1 - 0.3 * (1 - pierce) : 1) *
               (time < (to.excaliburUntil || 0)
-                ? 1 - rules.excaliburGuard.reductionPercent / 100
+                ? 1 - (rules.excaliburGuard.reductionPercent / 100) * (1 - pierce)
                 : 1),
           );
     const damage = capBossDamage(
@@ -729,6 +762,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     const weakened =
       damage > 0 &&
       (cover < 1 ||
+        susanooGuard < 1 ||
         (effect !== 'shaohua_devour' &&
           (blockedPercent > 0 ||
             profile(to).defense < 1 ||
@@ -797,6 +831,64 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     policy.onDamage?.(from, to, time, Math.min(to.health, damage));
     to.health = Math.max(0, to.health - damage);
     advanceBossPhase(to, time, random);
+    if (
+      to.health > 0 &&
+      damage > 0 &&
+      validCaster &&
+      effect === 'susanoo' &&
+      phase !== 'ordinary-dot'
+    ) {
+      const style = rules.susanoo.styles[susanooStyle] || {};
+      if (style.burnTicks) {
+        from.susanooBurned ||= new WeakSet();
+        if (!from.susanooBurned.has(to)) {
+          from.susanooBurned.add(to);
+          to.amaterasuDot = {
+            from,
+            nextAt: time + 1000,
+            remaining: style.burnTicks,
+            weight: style.burnWeight,
+          };
+        }
+      }
+      if (!bossInteractions.immune(to, time)) {
+        if (style.slowMs) to.slowUntil = Math.max(to.slowUntil || 0, time + style.slowMs);
+        if (phase === 'sweep3' && style.sealMs) {
+          if (to.bossId) bossInteractions.sealBoss(to, time, style.sealMs);
+          else to.sealedUntil = Math.max(to.sealedUntil || 0, time + style.sealMs);
+        }
+        if (phase === 'sweep3' && style.knockback) {
+          const aspect = from.aspectRatio || 1.6,
+            origin = from.energyActor || from;
+          const dx = (to.x - origin.x) * aspect || 0.001,
+            dy = to.y - origin.y;
+          const length = Math.hypot(dx, dy);
+          const before = { x: to.x, y: to.y };
+          const point = passageTarget(
+            to,
+            {
+              x: Math.max(
+                1,
+                Math.min(
+                  99,
+                  to.x + ((dx / length) * style.knockback * Math.max(1, aspect)) / aspect,
+                ),
+              ),
+              y: Math.max(
+                1,
+                Math.min(99, to.y + (dy / length) * style.knockback * Math.max(1, aspect)),
+              ),
+            },
+            to.passage,
+          );
+          to.x = to.targetX = point.x;
+          to.y = to.targetY = point.y;
+          to.moveId = (to.moveId || 0) + 1;
+          freeze(to, time, 200);
+          to.knockback = { id: `${to.lifeId}:${time}`, fromX: before.x, fromY: before.y, at: time };
+        }
+      }
+    }
     to.lastHitAt = to.regenAt = time;
     if (!to.health) {
       if (!policy.isObjective?.(to)) {
@@ -813,6 +905,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
     return { damage, critical, ...(weakened && { weakened }) };
   }
   function clearDeath(actor, time) {
+    actor.amaterasuDot = null;
     actor.bearCompanion = null;
     actor.bossAilments = {};
     actor.bossControlProtectUntil = 0;
@@ -922,6 +1015,13 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
                 : 0,
               regenBlockedMs: living ? Math.max(0, (actor.regenBlockedUntil || 0) - time) : 0,
               sealedMs: living ? Math.max(0, (actor.sealedUntil || 0) - time) : 0,
+              amaterasuMs:
+                living && actor.amaterasuDot
+                  ? Math.max(
+                      0,
+                      actor.amaterasuDot.nextAt + (actor.amaterasuDot.remaining - 1) * 1000 - time,
+                    )
+                  : 0,
               teleportBlockedMs: living ? Math.max(0, (actor.teleportBlockedUntil || 0) - time) : 0,
               ordinaryDotMs:
                 living && actor.ordinaryDot

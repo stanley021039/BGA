@@ -47,7 +47,7 @@ export function previewAttackOptions(effect: string, stageWidth: number, stageHe
   const width = stageWidth / renderScale;
   const height = stageHeight / renderScale;
   const definition = attackEffects.find((entry) => entry.id === effect);
-  const original = definition?.variantOf || effect;
+  const original = definition?.behaviorOf || definition?.variantOf || effect;
   const closeArea = original === 'guanyin_barrage' || original === 'dimension_cleave';
   const unit = closeArea ? Math.min(width / 92, height / 57) : Math.min(width / 110, height / 62);
   const mid = width / 2;

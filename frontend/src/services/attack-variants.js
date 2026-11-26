@@ -5,7 +5,7 @@ export const attackVariant = (id) => {
   const effect = byId.get(id);
   return effect?.paletteHue === undefined ? undefined : effect;
 };
-export const attackArtworkKind = (id) => byId.get(id)?.variantOf ?? id;
+export const attackArtworkKind = (id) => byId.get(id)?.behaviorOf ?? byId.get(id)?.variantOf ?? id;
 export const isDefensiveAttack = (id) =>
   ['shield', 'sphere', 'crystal_reflection'].includes(attackArtworkKind(id));
 export const isReflectableAttack = (id) => {

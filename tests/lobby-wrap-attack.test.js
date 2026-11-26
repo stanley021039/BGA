@@ -135,12 +135,12 @@ test('attack requires presence, finds nearest other visitor, has cooldown and id
     () => f.lobby.attack(f.a, { ...input, requestId: 'request-0002' }),
     (e) => e.code === 'ATTACK_COOLDOWN',
   );
-  f.tick(1599);
+  f.tick(1199);
   assert.throws(
     () => f.lobby.attack(f.a, { ...input, requestId: 'request-0002' }),
     (e) => e.code === 'ATTACK_COOLDOWN',
   );
-  f.tick(201);
+  f.tick(601);
   assert.equal(f.lobby.view(f.b).attacks.length, 1);
   f.tick(2600);
   assert.equal(f.lobby.view(f.b).attacks.length, 0);

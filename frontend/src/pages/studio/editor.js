@@ -1,3 +1,4 @@
+import StrokeCanvas from '../../engines/stroke-canvas.js';
 // Raster renderer leaf: Vue owns its host, Pinia owns network and gallery state.
 // This module exclusively owns the v-once canvas/tools subtree.
 export function mountStudioEditor(root) {

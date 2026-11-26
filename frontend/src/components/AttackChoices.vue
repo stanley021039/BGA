@@ -312,6 +312,13 @@ async function randomize() {
   gap: var(--stitch-gap-controls);
   min-inline-size: 0;
 }
+.attack-current-previews > :deep(.ui-panel) {
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+}
+.attack-current-previews > :deep(.ui-panel > .ui-panel-heading) {
+  align-items: flex-start;
+}
 .attack-loadout {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -358,9 +365,6 @@ async function randomize() {
   background: var(--stitch-artwork-preview-bg);
 }
 .attack-preview-main {
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 1;
   block-size: clamp(180px, 34dvh, 310px);
 }
 .attack-preview-main.is-ultimate {
@@ -384,6 +388,7 @@ async function randomize() {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 .attack-effect-heading {
   display: flex;

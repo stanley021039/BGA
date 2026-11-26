@@ -6,15 +6,22 @@ withDefaults(
     kind?: 'page' | 'section' | 'prompt' | 'card';
     cardSize?: 'section' | 'page';
     label?: string;
+    tone?: 'default' | 'artwork';
   }>(),
   {
     level: 2,
     kind: 'section',
+    tone: 'default',
   },
 );
 </script>
 <template>
-  <component :is="`h${level}`" class="ui-heading" :data-kind="kind" :data-card-size="cardSize"
+  <component
+    :is="`h${level}`"
+    class="ui-heading"
+    :data-kind="kind"
+    :data-card-size="cardSize"
+    :data-tone="tone"
     ><span v-if="label" class="ui-heading-label">{{ label }}</span
     ><span class="ui-heading-text"><slot /></span
   ></component>

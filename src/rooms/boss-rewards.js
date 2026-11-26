@@ -21,13 +21,8 @@ function createBossRewards(visitors, bots, publish) {
       kind: 'barrage',
       playerId: from.id,
       name: from.name || killer?.name || '挑戰者',
-      message: (
-        (from.name || killer?.name || '挑戰者') +
-        ' 擊倒 ' +
-        to.name +
-        (eligible ? '，獲得獵王祝福！' : '！')
-      ).slice(0, 160),
-      frame: builtinFrameDescriptor(),
+      message: ('擊敗 ' + to.name + (eligible ? '｜獵王祝福 15 秒' : '')).slice(0, 160),
+      frame: builtinFrameDescriptor(killer?.barrageFrameId),
       at: time,
     });
   };

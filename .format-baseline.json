@@ -190,7 +190,6 @@
     "tests/helpers/watch-browser.cjs": "b263a152232b9c5b616da8dc4a693c1bbf0b48602247c9b14479ff867302374d",
     "tests/hub-resume.test.js": "2529cfe1023564de0276b2d32d4e3b7563d796c043fdb12923ce36120c80577c",
     "tests/kick.test.js": "3bcff45799f078c7b568700dca2769ff63af9625f9efe28b94024696e11c7e96",
-    "tests/lobby-routes.test.js": "aa084ab338594630d33784dbaf7606d497485ab14404a5817f5c9bf0396b9ca5",
     "tests/majority.test.js": "a10ae7d9d735cecc7c4fbe892d17ea853a666c21f9add64070d2c08ad6baaeab",
     "tests/market-automation-browser.test.js": "f4db23d78504661e369bc042a7e4885d311f084235f61c38595776159b4ea8c5",
     "tests/market-curve-browser.test.js": "6542f12e7c9b2ac8ebcf870b495aa2361de95b2f8bec57c3eefa35a9fed03bc0",

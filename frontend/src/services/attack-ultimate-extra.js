@@ -779,6 +779,7 @@ export function createExtraUltimate(ctx, options, picture) {
     }
   }
   function swordSweeps(t, hits) {
+    const madara = options.summonStyle === 'susanoo_blue';
     for (const [index, [at, , phase]] of stages.entries()) {
       if (t < at - 235 || t > at + 300) continue;
       const landed = hits.find((hit) => hit.phase === phase && !hit.pending && !hit.missed);
@@ -812,8 +813,20 @@ export function createExtraUltimate(ctx, options, picture) {
           direction < 0,
         );
         ctx.strokeStyle = paint;
-        ctx.lineWidth = thickness;
+        ctx.lineWidth = thickness * (index === 2 ? 1.25 : 1.1) * (madara ? 1.25 : 1);
         ctx.stroke();
+      }
+      if (madara) {
+        for (const [paint, weight] of [
+          [color, index === 2 ? 3.8 : 2.6],
+          [ivory, 0.7],
+        ]) {
+          ctx.beginPath();
+          ctx.arc(0, 0, radius * 0.93, -sweep + direction * arcLength, -sweep, direction > 0);
+          ctx.strokeStyle = paint;
+          ctx.lineWidth = weight;
+          ctx.stroke();
+        }
       }
       for (let i = 0; i < 7; i++) {
         const a = sweep - direction * (i * 0.29 + 0.08);
@@ -833,6 +846,34 @@ export function createExtraUltimate(ctx, options, picture) {
         const echo = clamp((t - at) / 300);
         ctx.globalAlpha = (1 - echo) * 0.6;
         ring(0, 0, radius * (0.61 + echo * 0.53), radius * (0.61 + echo * 0.53), color, 0.8);
+        if (madara) {
+          for (const factor of [0.48, 0.78])
+            ring(
+              0,
+              0,
+              radius * (factor + echo * 0.65),
+              radius * (factor + echo * 0.65),
+              ivory,
+              0.45,
+            );
+          for (let shard = 0; shard < 8; shard++) {
+            const angle = (shard * tau) / 8;
+            const distance = radius * (0.4 + echo * 0.65);
+            ctx.save();
+            ctx.translate(Math.cos(angle) * distance, Math.sin(angle) * distance);
+            ctx.rotate(angle + echo);
+            polygon(
+              [
+                [-0.7, 0],
+                [0, -1.8 - echo],
+                [1.1, 0.4],
+              ],
+              color,
+              ivory,
+            );
+            ctx.restore();
+          }
+        }
       }
       ctx.restore();
     }

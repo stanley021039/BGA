@@ -304,7 +304,7 @@ let AudioSettings;
         },
         set volume(value) {
           volume = value;
-          output.gain.value = value * 0.4;
+          output.gain.value = value * 0.7;
         },
       };
       clip.volume = settings.volume;

@@ -821,7 +821,7 @@ function drawPlasma(c, o, t) {
   impact(c, o, t, col);
 }
 function drawMissiles(c, o, t) {
-  if (!alive(t, 2100)) return;
+  if (!alive(t, 1350)) return;
   const col = color(o, 'missiles'),
     paint = material(o, 'missiles');
   c.save();
@@ -841,7 +841,7 @@ function drawMissiles(c, o, t) {
         circle(c, w, y, 4, '#101b25', col);
         c.restore();
         if (o.reflectedPhase && o.reflectedPhase !== 'hit' + (k + 1)) continue;
-        const p = (t - [850, 1100, 1350, 1600][k] + 700) / 700;
+        const p = (t - [580, 750, 930, 1100][k] + 450) / 450;
         if (p < 0 || p > 1) continue;
         const bend = (k - 1.5) * 25,
           x = mix(w, L, p),

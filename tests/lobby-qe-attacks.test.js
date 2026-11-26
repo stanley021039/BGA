@@ -32,8 +32,11 @@ test('both crescent variants are separate selectable persistent artwork IDs', ()
   const effects = require('../public/shared/attack-effects.json');
   assert.equal(
     effects.filter((effect) => !('paletteHue' in effect) && !effect.rewardOf).length,
-    55,
+    56,
   );
+  const madara = effects.find((effect) => effect.id === 'susanoo_blue');
+  assert.equal(madara.behaviorOf, 'susanoo');
+  assert.equal(madara.rewardOf, undefined);
   assert.equal(new Set(effects.map((e) => e.id)).size, effects.length);
   assert.ok(!effects.some((e) => e.id === 'flame_kick'));
   const original = effects.find((e) => e.id === 'blade_aura');

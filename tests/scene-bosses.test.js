@@ -1,4 +1,5 @@
 const { test } = require('node:test');
+const { bossStageSpec } = require('../frontend/src/engines/boss-geometry.js');
 const assert = require('node:assert/strict');
 const { createLobby } = require('../src/rooms/lobby');
 const { bosses, driveBoss } = require('../src/rooms/scene-bosses');
@@ -126,7 +127,7 @@ test('all thirteen boss patterns wind up before casting, cycle their attacks and
     const bot = { bossId: spec.id };
     for (let n = 0; n < 3; n++) {
       const at = state.attackAt;
-      const ability = definitions.find((a) => a.id === spec.sequence[n]);
+      const ability = bossStageSpec(definitions.find((a) => a.id === spec.sequence[n]));
       assert.equal(driveBoss(bot, actor, target, at, state), ability.id);
       assert.equal(actor.bossIntent.until, at + ability.windup);
       assert.equal(actor.bossIntent.ultimate, n === 2);

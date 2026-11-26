@@ -59,9 +59,10 @@ test('boss puppets cap native tracks, synchronise windup and impact, and release
   ];
   assert.ok(extra.every(Boolean));
   assert.equal(f.scope.create(f.element(), 'gyo'), null);
-  const spec = require('../../public/shared/boss-abilities.json').find(
+  const authored = require('../../public/shared/boss-abilities.json').find(
     (a) => a.boss === 'colossal' && a.slot === 'r',
   );
+  const spec = require('../src/engines/boss-geometry.js').bossStageSpec(authored);
   const state = {
     moving: true,
     connected: true,
@@ -101,16 +102,16 @@ test('boss fall is finite, seeks the authoritative arrival time and is not repla
     puppet = f.scope.create(f.element(), 'colossal');
   const state = { moving: false, connected: true, health: 100, arrivalAt: 1000 };
   puppet.update(state, 1200);
-  const fall = f.created.find((a) => a.options.duration === 1100);
+  const fall = f.created.find((a) => a.options.duration === 1000);
   assert.ok(fall);
   assert.equal(fall.currentTime, 200);
   assert.equal(fall.frames[1].offset, 700 / 1100);
   puppet.update(state, 1300);
-  assert.equal(f.created.filter((a) => a.options.duration === 1100).length, 1);
+  assert.equal(f.created.filter((a) => a.options.duration === 1000).length, 1);
   puppet.dispose();
   assert.ok(f.created.every((a) => a.cancelled));
   const late = f.scope.create(f.element(), 'colossal');
   late.update(state, 3000);
-  assert.equal(f.created.filter((a) => a.options.duration === 1100).length, 1);
+  assert.equal(f.created.filter((a) => a.options.duration === 1000).length, 1);
   late.dispose();
 });

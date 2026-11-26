@@ -894,7 +894,10 @@ function createLobby(
       input.aspectRatio > 5 ||
       (input.slot !== undefined && !['q', 'e', 'r'].includes(input.slot)) ||
       (input.effect !== undefined && !ATTACK_EFFECTS.has(input.effect)) ||
-      Object.keys(input).some((k) => !['requestId', 'aspectRatio', 'slot', 'effect'].includes(k))
+      (input.builtinFrameId !== undefined && typeof input.builtinFrameId !== 'string') ||
+      Object.keys(input).some(
+        (k) => !['requestId', 'aspectRatio', 'slot', 'effect', 'builtinFrameId'].includes(k),
+      )
     )
       throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
     const slot = input.slot || 'q';
@@ -903,7 +906,8 @@ function createLobby(
     if (slot === 'r' && !selected)
       throw new HttpError(409, 'NO_MULTI_ATTACK_LOADOUT', '請先在設定配裝 R 鍵多人招式');
     const effect = selected || 'barrage';
-    const fingerprint = JSON.stringify([input.aspectRatio, slot, effect]);
+    const frame = builtinFrameDescriptor(input.builtinFrameId);
+    const fingerprint = JSON.stringify([input.aspectRatio, slot, effect, frame.id]);
     const key = 'attack:' + user.id + ':' + input.requestId,
       prior = receipts.get(key);
     if (prior) {
@@ -918,7 +922,7 @@ function createLobby(
       throw new HttpError(
         429,
         'ATTACK_COOLDOWN',
-        slot.toUpperCase() + ' 攻擊冷卻中，請稍候 1.6 秒',
+        slot.toUpperCase() + ' 攻擊冷卻中，請稍候 ' + combatRules.attackCooldownMs / 1000 + ' 秒',
       );
     for (const visitor of visitors.values()) advance(visitor, time);
     energy.check(self, slot, effect);
@@ -952,6 +956,7 @@ function createLobby(
       defensive && !reflection
         ? combat.protect(self, time, effect)
         : { damage: 0, critical: false };
+    self.barrageFrameId = frame.id;
     self.lastAttacks ||= {};
     self.lastAttacks[slot] = time;
     const event = {

@@ -282,7 +282,14 @@ export function createAttackScene(context, options) {
   const boss = createBossArtwork(context, options);
   if (boss) return boss;
   if (attackArtworkKind(options.effect) === 'susanoo') {
-    options = { ...options, effect: 'susanoo' };
+    const summon = attackEffects.find((effect) => effect.id === options.effect);
+    options = {
+      ...options,
+      area: summon?.area,
+      color: summon?.slashColor || options.color,
+      summonStyle: options.effect,
+      effect: 'susanoo',
+    };
   }
   const variant = attackVariant(options.effect);
   const base = variant && attackEffects.find((effect) => effect.id === variant.variantOf);
@@ -309,7 +316,9 @@ export function createAttackScene(context, options) {
     !options.readHits &&
     !['shield', 'sphere', 'crystal_reflection'].includes(options.effect)
   ) {
-    const effect = attackEffects.find((effect) => effect.id === options.effect);
+    const effect = attackEffects.find(
+      (effect) => effect.id === (options.summonStyle || options.effect),
+    );
     const area = effect?.area;
     const base =
       ((combatRules.damage.min + combatRules.damage.max) / 2) *
@@ -635,19 +644,22 @@ export function createAttackScene(context, options) {
       case 14: // 14 // 光輝天降神聖箭雨 (Celestial Rain of Arrows)
         projectiles.push({ type: 'burning_bow', x: originX, y: originY, life: 45 });
         for (let i = 0; i < 18; i++) {
-          later(() => {
-            const rx = targetX + (Math.random() - 0.5) * 180;
-            projectiles.push({
-              type: 'sacred_arrow',
-              x: rx - 120,
-              y: -50,
-              tx: rx,
-              ty: targetY + (Math.random() - 0.5) * 50,
-              speed: Math.max(26 * state.speed, Math.hypot(120, Math.abs(targetY) + 75) / 42),
-              color: '#ff5a24',
-              life: 60,
-            });
-          }, i * 35);
+          later(
+            () => {
+              const rx = targetX + (Math.random() - 0.5) * 180;
+              projectiles.push({
+                type: 'sacred_arrow',
+                x: rx - 120,
+                y: -50,
+                tx: rx,
+                ty: targetY + (Math.random() - 0.5) * 50,
+                speed: Math.hypot(120, Math.abs(targetY) + 50) / 27,
+                color: '#ff5a24',
+                life: 60,
+              });
+            },
+            [675, 1010, 1200][Math.floor(i / 6)] - 450 + (i % 6) * 8,
+          );
         }
         break;
 
@@ -834,7 +846,9 @@ export function createAttackScene(context, options) {
     arrow_volley: 14,
     flame_vortex: 15,
   };
-  const definition = attackEffects.find((effect) => effect.id === options.effect);
+  const definition = attackEffects.find(
+    (effect) => effect.id === (options.summonStyle || options.effect),
+  );
   const area = definition?.area;
   const areaImpact = () => {
     if (options.readHits) return;
@@ -881,6 +895,11 @@ export function createAttackScene(context, options) {
     return true;
   }
   const start = performance.now() - Math.max(0, Math.min(4100, options.ageMs || 0));
+  const playbackLimit = ['funnel', 'micro_missiles', 'arrow_volley', 'orbital'].includes(
+    options.effect,
+  )
+    ? 2100
+    : 4200;
   const emitted = new Set();
   const poolLimit = Math.round(220 * fx.density);
   function dispose() {
@@ -894,7 +913,7 @@ export function createAttackScene(context, options) {
     casterSample = undefined;
     const anchor = options.readAnchor?.();
     if (
-      now - start > 4200 ||
+      now - start > playbackLimit ||
       (options.readAnchor && (!anchor || now - start >= combatRules.shield.durationMs))
     ) {
       dispose();

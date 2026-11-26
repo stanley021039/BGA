@@ -80,3 +80,10 @@ test('coffin dance uses the user-approved chant without substituting the draft',
     '今夜不送別，只迎我登場',
   ]);
 });
+
+test('independent Madara uses the two lines confirmed by the user', () => {
+  assert.deepEqual(chant(catalog.find((item) => item.key === 'attacks:susanoo_blue')), [
+    '蒼藍之焰，鑄成完全體武神。',
+    '野獸在此刀下倒下，我才是木葉最強！',
+  ]);
+});

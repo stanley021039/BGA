@@ -3,7 +3,12 @@ const assert = require('node:assert/strict');
 const { abilities, createBossCombat } = require('../src/rooms/boss-combat');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
 const { createAttackTimeline } = require('../src/rooms/attack-timeline');
-const { bossZones, inBossZones } = require('../frontend/src/engines/boss-geometry.js');
+const {
+  bossZones,
+  inBossZones,
+  bossStageSpec,
+  bossAttackPlan,
+} = require('../frontend/src/engines/boss-geometry.js');
 function fixture() {
   const combat = createSceneCombat(() => 0.99),
     boss = { id: 'boss', name: 'Boss', x: 20, y: 70 },
@@ -44,17 +49,18 @@ test('all thirty nine abilities have distinct IDs, two normals and one longer ch
   });
 });
 test('all authoritative warning shapes delay damage and hit only inside their locked zones', () => {
-  for (const spec of abilities) {
+  for (const spec of abilities.map((entry) => bossStageSpec(entry))) {
     const f = fixture(),
       original = f.player.health;
     const event = f.system.prepare({ bossId: spec.boss }, f.boss, spec.id, f.player, 0);
     const zones = bossZones(spec, f.boss, f.player);
+    const firstZones = bossAttackPlan(spec, f.boss, f.player)[0].zones;
     let inside, outside;
     for (let x = 3; x <= 96; x += 3)
       for (let y = 15; y <= 96; y += 3) {
         const p = { x, y };
-        if (inBossZones(zones, p)) inside ||= p;
-        else outside ||= p;
+        if (inBossZones(firstZones, p)) inside ||= p;
+        if (!inBossZones(zones, p)) outside ||= p;
       }
     assert.ok(inside && outside, spec.id);
     Object.assign(f.player, inside);
@@ -176,7 +182,7 @@ test('every custom renderer shares the stage clock and disposes within the exist
       set: () => true,
     },
   );
-  for (const spec of abilities) {
+  for (const spec of abilities.map((entry) => bossStageSpec(entry))) {
     const scene = createBossArtwork(ctx, {
       effect: spec.id,
       width: 600,

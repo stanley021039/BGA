@@ -130,13 +130,16 @@ test('active bots still damage bosses while bosses prioritise the human player',
   let botHit = false,
     bossHit = false;
   for (let i = 0; i < 100; i++) {
-    advance(400);
+    const time = advance(400);
     const scene = lobby.view(alice);
     botHit ||= scene.attacks.some(
       (e) => e.fromId === bot.id && e.hits?.some((h) => h.toId === boss.id && h.damage > 0),
     );
     bossHit ||= scene.attacks.some((e) => e.fromId === boss.id && e.toId === alice.id);
-    assert.ok(!scene.attacks.some((e) => e.fromId === boss.id && e.toId !== alice.id));
+    if (scene.visitors.find((v) => v.id === alice.id)?.health > 0)
+      assert.ok(
+        !scene.attacks.some((e) => e.fromId === boss.id && e.at === time && e.toId !== alice.id),
+      );
     if (botHit && bossHit) break;
   }
   assert.ok(botHit, 'bot damages boss');

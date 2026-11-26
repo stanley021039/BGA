@@ -31,7 +31,9 @@ const fallback = {
     <LobbyBackgroundArt v-if="kind === 'backgrounds'" :id="effect" fit="contain" />
     <template v-else-if="kind === 'attacks' || kind === 'entrances'">
       <UiIcon :name="fallback[kind]" />
-      <UiHeading :level="3" kind="card">{{ label }}</UiHeading>
+      <UiHeading :level="3" kind="card" :tone="kind === 'attacks' ? 'artwork' : 'default'">{{
+        label
+      }}</UiHeading>
     </template>
     <UiIcon v-else :name="fallback[kind]" />
   </div>
@@ -52,6 +54,9 @@ const fallback = {
 .gacha-reward-thumbnail[data-kind='entrances'] {
   border-radius: 0;
   background: transparent;
+}
+.gacha-reward-thumbnail[data-kind='attacks'] {
+  color: var(--stitch-artwork-preview-ink);
 }
 .gacha-reward-thumbnail.is-compact {
   inline-size: min(100%, 160px);

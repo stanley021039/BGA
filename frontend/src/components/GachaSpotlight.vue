@@ -53,6 +53,7 @@ const attackChants: Partial<Record<string, readonly [string, string]>> = {
   world_stasis: ['指針，停在這一刻。', '等我走過之後，時間才准繼續。'],
   human_malice: ['所有炮口，都轉過來。', '笑一個。最後一發，就在我腳下。'],
   susanoo: ['以查克拉之焰，披上武神的甲。', '此身所在，我才是最強！'],
+  susanoo_blue: ['蒼藍之焰，鑄成完全體武神。', '野獸在此刀下倒下，我才是木葉最強！'],
   starburst_stream: ['幫我撐10秒，雙刃已出鞘。', '在星光熄滅前，數完這十六刀。'],
   rainbow_bear: ['彩虹那端，有誰張開了雙臂？', '抓到你囉♡，接住這個大擁抱！'],
   zero_equation: ['將未知數交給我。', '當最後一道等式成立，一切歸零。'],
@@ -106,6 +107,8 @@ function selectStyle(id: string | number | null | undefined) {
 }
 const shaohua = computed(() => props.attackId === 'shaohua_devour');
 const chant = computed(() => {
+  if (props.item.kind === 'attacks' && attackChants[props.item.id])
+    return attackChants[props.item.id];
   if (props.attackId && attackChants[props.attackId]) return attackChants[props.attackId];
   const variant = entrance.value && entranceVariant(entrance.value);
   return rewardChants[variant ? 'entrances:' + variant.variantOf : props.item.key];
