@@ -92,7 +92,7 @@ test('different area shapes distinguish side targets and fan width, with a bound
 });
 
 for (const { id: effect } of effects)
-  test(`${effect} settles two room targets once, excludes other rooms and honours the 1.6-second boundary`, () => {
+  test(`${effect} settles two room targets once, excludes other rooms and honours the 1.2-second boundary`, () => {
     let now = 1000;
     const space = createRoomSpace(
       () => now,
@@ -119,7 +119,7 @@ for (const { id: effect } of effects)
     space.move(room, 'a', input, effect);
     assert.equal(space.view(room, 'a').visitors.find((v) => v.id === 'b').health, 1200000);
     assert.equal(space.view(other, 'a').attacks.length, 0);
-    now += 1599;
+    now += 1199;
     assert.throws(() => space.move(room, 'a', { ...input, requestId: 'area-room-0002' }, effect), {
       code: 'ATTACK_COOLDOWN',
     });
@@ -127,7 +127,7 @@ for (const { id: effect } of effects)
     assert.throws(() => space.move(room, 'a', { ...input, requestId: 'area-room-0002' }, effect), {
       code: 'INSUFFICIENT_SCENE_ENERGY',
     });
-    now += 2500; // first cast age 4100; all five Guanyin stages have arrived.
+    now += 2900; // first cast age 4100; all five Guanyin stages have arrived.
     snapshot = space.view(room, 'a');
     for (const id of ['b', 'c']) {
       const first = snapshot.attacks[0].hits.filter((hit) => hit.toId === id && !hit.pending);

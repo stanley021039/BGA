@@ -31,7 +31,14 @@
   },
   "susanoo": {
     "durationMs": 5000,
-    "radius": 24
+    "radius": 24,
+    "styles": {
+      "susanoo": { "burnTicks": 2, "burnWeight": 0.075 },
+      "susanoo_orange": { "guardReduction": 0.2, "sealMs": 800 },
+      "susanoo_alt": { "slowMs": 1200 },
+      "susanoo_cyan": { "shieldPierce": 0.5 },
+      "susanoo_blue": { "radius": 30, "knockback": 6 }
+    }
   },
   "rainbowBear": {
     "durationMs": 3000,
@@ -92,7 +99,7 @@
     "energyMultiplier": 1.1,
     "speedMultiplier": 1.15
   },
-  "attackCooldownMs": 1600,
+  "attackCooldownMs": 1200,
   "maximumAreaTargets": 32,
   "chains": {
     "immobilizeChance": 0.2,

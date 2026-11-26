@@ -1,7 +1,7 @@
 const { versionedAsset } = require('../http/asset-version');
 const abilities = require('../../public/shared/boss-abilities.json');
 const { bossStageSpec } = require('../../frontend/src/engines/boss-geometry.js');
-const { phases } = require('../../public/shared/boss-rules.json');
+const { phases, strength } = require('../../public/shared/boss-rules.json');
 const { bossPhase, phaseStats } = require('./boss-phases');
 const bossInteractions = require('./boss-interactions');
 const definitions = [
@@ -172,7 +172,11 @@ function driveBoss(bot, actor, target, time, state) {
           (actor.bossRDelayMs || 0) + 5 * bossInteractions.rules.drainDelayPerEnergyMs,
         );
     }
-    state.attackAt = time + (state.step % 3 === 0 ? 4200 : 2600) / rate;
+    state.attackAt =
+      time +
+      ((state.step % 3 === 0 ? 4200 : 2600) *
+        (bossPhase(actor) === 3 ? strength.finalCooldownMultiplier : strength.cooldownMultiplier)) /
+        rate;
     return null;
   }
   if (time >= state.attackAt) {

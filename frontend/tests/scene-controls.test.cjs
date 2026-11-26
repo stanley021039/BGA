@@ -144,7 +144,7 @@ test('one pending request per slot, independent slots and server cooldown after 
     await Promise.all([q, e]);
     assert.equal(f.controls.seconds('q'), 2);
     assert.equal(await f.controls.run('q'), false);
-    await f.advance(1599);
+    await f.advance(1199);
     assert.equal(f.controls.disabled('q'), true);
     await f.advance(1);
     assert.equal(f.controls.disabled('q'), false);
@@ -254,7 +254,7 @@ test('recent server attack recovers remaining cooldown; other players do not loc
     await vue.nextTick();
     assert.equal(f.controls.seconds('q'), 1);
     assert.equal(f.controls.seconds('e'), 0);
-    await f.advance(599);
+    await f.advance(199);
     assert.equal(f.controls.disabled('q'), true);
     await f.advance(1);
     assert.equal(f.controls.disabled('q'), false);

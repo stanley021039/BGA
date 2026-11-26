@@ -39,7 +39,7 @@ async function play() {
   const { width, height } = stage.value.getBoundingClientRect();
   if (!width || !height) return;
   const options = previewAttackOptions(props.effect, width, height);
-  warmNewSkillAssets(props.effect, options.width, options.height);
+  warmNewSkillAssets(props.effect, options.width, options.height, width);
   if (summonAssets(props.effect)) previewSummon.value = epoch;
   cleanup = playAttackArtwork(surface.value, {
     ...options,

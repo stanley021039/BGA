@@ -510,7 +510,10 @@ test('every new palette is an independent draw and exchange reward with the orig
   assert.ok(
     attacks.every(
       (e) =>
-        covered.has(e.id) || e.variantOf || ['blade_aura', 'blade_aura_crimson'].includes(e.id),
+        covered.has(e.id) ||
+        e.variantOf ||
+        e.behaviorOf ||
+        ['blade_aura', 'blade_aura_crimson'].includes(e.id),
     ),
   );
   for (const [kind, entries] of [
@@ -575,22 +578,24 @@ for (const kind of ['frames', 'attacks'])
     for (const id of [user, other]) assert.ok(Ownership.ownedIds(db, id, kind).includes(item.id));
   });
 
-test('Susanoo has two reward records and their separate style sets share the correct ownership', (t) => {
+test('Susanoo has three rewards, with Madara independent from future alternate-group purchases', (t) => {
   const { db, store, user, other } = fixture(t);
   fund(store, db, user, 2000, 2000);
   fund(store, db, other, 2000, 2000);
   const settings = require('../src/profiles/settings');
   const susanoo = poolItems('attacks').filter((item) => item.id.startsWith('susanoo'));
-  assert.deepEqual(
-    susanoo.map((item) => item.id),
-    ['susanoo', 'susanoo_alt'],
-  );
+  assert.deepEqual(susanoo.map((item) => item.id).sort(), [
+    'susanoo',
+    'susanoo_alt',
+    'susanoo_blue',
+  ]);
   store.exchange(user, { key: 'attacks:susanoo', requestId: randomUUID() });
   store.exchange(other, { key: 'attacks:susanoo_alt', requestId: randomUUID() });
+  assert.equal(store.owned(other).attacks.has('susanoo_blue'), false);
   const loadout = { q: 'barrage', e: 'beam' };
   for (const [owner, allowed, locked] of [
     [user, ['susanoo', 'susanoo_orange'], 'susanoo_blue'],
-    [other, ['susanoo_alt', 'susanoo_blue', 'susanoo_cyan'], 'susanoo_orange'],
+    [other, ['susanoo_alt', 'susanoo_cyan'], 'susanoo_orange'],
   ]) {
     for (const r of allowed) {
       settings.setAttackSettings(db, owner, { ...loadout, r });
@@ -600,6 +605,74 @@ test('Susanoo has two reward records and their separate style sets share the cor
       code: 'ATTACK_REWARD_LOCKED',
     });
   }
+  assert.throws(() => settings.setAttackSettings(db, other, { ...loadout, r: 'susanoo_blue' }), {
+    code: 'ATTACK_REWARD_LOCKED',
+  });
+  store.exchange(other, { key: 'attacks:susanoo_blue', requestId: randomUUID() });
+  settings.setAttackSettings(db, other, { ...loadout, r: 'susanoo_blue' });
+  assert.equal(settings.getAttackSettings(db, other).r, 'susanoo_blue');
+});
+
+test('existing alternate owners retain Madara once; later purchases do not gain it retroactively', (t) => {
+  const db = openDatabase(':memory:');
+  t.after(() => db.close());
+  const old = addUser(db, 'old-owner'),
+    fresh = addUser(db, 'new-owner'),
+    legacy = addUser(db, 'retired-owner');
+  const at = '2026-11-26T00:00:00.000Z';
+  const grant = db.prepare(
+    'INSERT INTO gacha_ownership(user_id,kind,reward_id,source,acquired_at) VALUES(?,?,?,?,?)',
+  );
+  grant.run(old, 'attacks', 'susanoo_alt', 'draw', at);
+  grant.run(legacy, 'attacks', 'susanoo_alt', 'legacy', at);
+  const store = new GachaStore(db, { clock: () => Date.parse(at) });
+  assert.ok(store.owned(old).attacks.has('susanoo_blue'));
+  assert.equal(store.owned(legacy).attacks.has('susanoo_blue'), false);
+  grant.run(fresh, 'attacks', 'susanoo_alt', 'exchange', at);
+  assert.equal(store.owned(fresh).attacks.has('susanoo_blue'), false);
+  const reopened = new GachaStore(db, { clock: () => Date.parse(at) + 1000 });
+  assert.ok(reopened.owned(old).attacks.has('susanoo_blue'));
+  assert.equal(reopened.owned(fresh).attacks.has('susanoo_blue'), false);
+  assert.equal(
+    db
+      .prepare("SELECT COUNT(*) n FROM gacha_settings WHERE name LIKE 'susanoo_blue_retained:%'")
+      .get().n,
+    1,
+  );
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM gacha_ledger').get().n, 0);
+  require('../src/gacha/validation').validateGachaDatabase(db);
+  const dir = mkdtempSync(path.join(tmpdir(), 'madara-retained-'));
+  const copyPath = path.join(dir, 'copy.sqlite');
+  db.prepare('VACUUM INTO ?').run(copyPath);
+  const copy = openDatabase(copyPath);
+  try {
+    const restored = new GachaStore(copy);
+    assert.ok(restored.owned(old).attacks.has('susanoo_blue'));
+    assert.equal(restored.owned(fresh).attacks.has('susanoo_blue'), false);
+    require('../src/gacha/validation').validateGachaDatabase(copy);
+  } finally {
+    copy.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('ineligible starter-pack data cannot manufacture an old Madara entitlement', (t) => {
+  const db = openDatabase(':memory:');
+  t.after(() => db.close());
+  const old = addUser(db);
+  db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+    JSON.stringify({
+      starterRewardPack: {
+        version: 1,
+        redeemedAt: '2026-11-26T00:00:00.000Z',
+        grants: { attacks: ['susanoo_alt'] },
+      },
+    }),
+    old,
+  );
+  const store = new GachaStore(db);
+  assert.equal(store.owned(old).attacks.has('susanoo_blue'), false);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM gacha_requests').get().n, 0);
 });
 
 test('legendary frames and player styles require independent ownership', (t) => {

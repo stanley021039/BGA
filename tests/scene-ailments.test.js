@@ -210,13 +210,13 @@ test('orbital can block only teleport for one second without rerolling on its se
   const f = fixture('orbital');
   const [, target] = f.actors;
   f.rolls([0.5, 0.9, 0.299999, 0.5, 0.9, 0]);
-  f.advance(1000);
-  assert.throws(() => f.combat.canTeleport(target, 1999), { code: 'SCENE_TELEPORT_BLOCKED' });
+  f.advance(860);
+  assert.throws(() => f.combat.canTeleport(target, 1859), { code: 'SCENE_TELEPORT_BLOCKED' });
   assert.doesNotThrow(() => f.combat.canMove(target, 1500));
   assert.doesNotThrow(() => f.combat.canCast(target, 1500));
-  f.advance(1400);
-  assert.equal(target.teleportBlockedUntil, 2000);
-  assert.doesNotThrow(() => f.combat.canTeleport(target, 2000));
+  f.advance(1200);
+  assert.equal(target.teleportBlockedUntil, 1860);
+  assert.doesNotThrow(() => f.combat.canTeleport(target, 1860));
 });
 
 test('vortex rolls once and deals two energy-neutral ticks on success', () => {

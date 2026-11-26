@@ -795,11 +795,17 @@ export function createRevisionAttack(ctx, options, onImpact) {
   const unit = Math.min(1.2, Math.max(0.5, height / 600));
   let hit = false;
   return (elapsed) => {
-    if (elapsed < 0 || elapsed > 3600) return;
+    const duration = options.effect === 'orbital' ? 1500 : 3600;
+    if (elapsed < 0 || elapsed > duration) return;
     const dx = to.x - from.x,
       dy = to.y - from.y,
       dist = Math.hypot(dx, dy);
-    const p = elapsed / 3600;
+    const p =
+      options.effect === 'orbital'
+        ? elapsed <= 860
+          ? (elapsed / 860) * 0.22
+          : 0.22 + ((elapsed - 860) / (1500 - 860)) * 0.78
+        : elapsed / duration;
     ctx.save();
     ctx.globalAlpha = Math.min(1, (1 - p) / 0.15);
     if (options.effect === 'orbital') ctx.translate(to.x, to.y);

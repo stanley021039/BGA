@@ -689,14 +689,14 @@ test('teleport synthesis is soft, bounded, shares game caps and follows live vol
   await tick();
   assert.equal(ui.clips.length, 0, 'no media request');
   assert.equal(synth.contexts.length, 1);
-  assert.equal(synth.gains.at(-1).gain.value, 0.25 * 0.4);
+  assert.equal(synth.gains.at(-1).gain.value, 0.25 * 0.7);
   assert.equal(synth.sources[0].stopped[0], 0.22);
   assert.equal(synth.sources[1].stopped[0], 0.16);
   assert.equal(ui.api.playEffect('teleport'), undefined, 'one synth voice');
   assert.ok(ui.api.playEffect('shot'));
   assert.equal(ui.api.playEffect('shot'), undefined, 'existing two-game cap');
   ui.api.set('effects', { volume: 0.5 });
-  assert.equal(synth.gains.at(-1).gain.value, 0.5 * 0.4);
+  assert.equal(synth.gains.at(-1).gain.value, 0.5 * 0.7);
   ui.api.set('effects', { enabled: false });
   assert.ok(synth.contexts[0].closed);
   assert.ok(synth.nodes.every((n) => n.disconnected));

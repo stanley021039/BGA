@@ -41,8 +41,11 @@ export function useSceneControls(options: {
     clearTimeout(timer);
     timer = undefined;
     now.value = Date.now();
-    if (!disposed && !document.hidden && Object.values(until).some((value) => value > now.value))
-      timer = setTimeout(tick, 100);
+    const remaining = Object.values(until)
+      .filter((value) => value > now.value)
+      .map((value) => value - now.value);
+    if (!disposed && !document.hidden && remaining.length)
+      timer = setTimeout(tick, Math.min(100, ...remaining));
   }
   function seconds(action: SceneAction) {
     return Math.max(0, Math.ceil(((until[group(action)] || 0) - now.value) / 1000));

@@ -499,9 +499,15 @@ window.addEventListener('resize', positionBubble);
 </template>
 <style scoped>
 .lobby-avatar[data-scene-boss] .scene-avatar-image {
-  width: min(210px, 44vh, 32vw);
-  height: min(218px, 46vh, 33.2vw);
+  width: min(315px, 66vh, 48vw);
+  height: min(327px, 69vh, 49.8vw);
   object-fit: contain;
+}
+@media (max-height: 500px) {
+  .lobby-avatar[data-scene-boss] .scene-avatar-image {
+    width: min(315px, 44vh, 48vw);
+    height: min(327px, 46vh, 49.8vw);
+  }
 }
 .lobby-avatar[data-scene-boss] > span:last-child {
   max-width: min(190px, 30vw);

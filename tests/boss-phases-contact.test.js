@@ -4,6 +4,7 @@ const { createSceneCombat, authorSpeed } = require('../src/rooms/scene-combat');
 const { createBotDriver } = require('../src/rooms/scene-bots');
 const { createBossCombat, abilityFor } = require('../src/rooms/boss-combat');
 const { bossPhase, phaseStats } = require('../src/rooms/boss-phases');
+const { bossStageSpec } = require('../frontend/src/engines/boss-geometry.js');
 const { createLobby } = require('../src/rooms/lobby');
 const { createAttackTimeline } = require('../src/rooms/attack-timeline');
 const actor = (id, x = 50) => ({
@@ -186,12 +187,12 @@ test('one damage event cannot cross a boss bar; healing and phase buffs never re
   for (const [phase, multiplier] of [
     [1, 1],
     [2, 1.15],
-    [3, 1.3],
+    [3, 1.65],
   ]) {
     boss.bossPhase = phase;
     boss.health = (boss.maxHealth * (4 - phase)) / 3;
     assert.equal(phaseStats(boss).damage, multiplier);
-    assert.ok(Math.abs(authorSpeed(boss) - multiplier * 1.1) < 1e-9);
+    assert.ok(Math.abs(authorSpeed(boss) - multiplier * 1.3) < 1e-9);
   }
 });
 
@@ -227,7 +228,7 @@ test('enraged authoritative windup and hit times use the rate fixed at cast crea
   combat.reset(player, 1000);
   boss.bossPhase = 2;
   const event = runtime.prepare({ bossId: 'gatanozoa' }, boss, 'boss_gatanozoa_q', player, 2000),
-    spec = abilityFor(event.effect);
+    spec = bossStageSpec(abilityFor(event.effect), 2);
   assert.equal(event.bossAttackRate, 1.15);
   const positions = new Map([
     [boss.id, boss],
@@ -287,7 +288,7 @@ test('environmental hits also stop at a bar, and rage damage uses the agreed non
     damage.push(combat.hit(boss, player, 2100, 'boss_contact', 0.3).damage);
   }
   assert.ok(Math.abs(damage[1] - Math.round(damage[0] * 1.15)) <= 1);
-  assert.ok(Math.abs(damage[2] - Math.round(damage[0] * 1.3)) <= 1);
+  assert.ok(Math.abs(damage[2] - Math.round(damage[0] * 1.65)) <= 1);
 });
 
 test('boss baseline damage and movement are stronger without changing human stats or phase rates', () => {
@@ -302,6 +303,6 @@ test('boss baseline damage and movement are stronger without changing human stat
   const stronger = combat.hit(boss, victim, 1100, 'boss_contact', 0.3).damage;
   assert.ok(Math.abs(stronger - ordinary * 1.25) <= 1);
   assert.equal(authorSpeed(human), 1);
-  assert.equal(authorSpeed(boss), 1.1);
+  assert.equal(authorSpeed(boss), 1.3);
   assert.equal(phaseStats(boss).attackRate, 1);
 });

@@ -3,6 +3,15 @@ const { createHash } = require('node:crypto');
 const { validAt } = require('./ownership');
 const digest = (v) => createHash('sha256').update(JSON.stringify(v)).digest('hex');
 function validateGachaDatabase(db) {
+  const split = db
+    .prepare("SELECT value FROM gacha_settings WHERE name='susanoo_blue_split_v1'")
+    .get();
+  if (split && !validAt(split.value)) throw Error('Invalid Susanoo split receipt');
+  for (const row of db
+    .prepare("SELECT name,value FROM gacha_settings WHERE name GLOB 'susanoo_blue_retained:*'")
+    .iterate())
+    if (!split || !validAt(row.value) || row.name === 'susanoo_blue_retained:')
+      throw Error('Invalid retained Susanoo entitlement');
   const flag = db.prepare("SELECT value FROM gacha_settings WHERE name='legacy_imported_at'").get();
   if (!flag || !validAt(flag.value)) throw Error('Missing gacha migration receipt');
   require('./odds').read(db);

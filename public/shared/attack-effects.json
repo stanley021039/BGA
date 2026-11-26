@@ -860,12 +860,13 @@
     "styleLabel": "原版・紫（佐助）",
     "color": "#bc8cff",
     "summonStyle": "violet",
-    "description": "跟隨自身5秒；三次範圍揮擊各自判定命中。",
+    "description": "跟隨自身5秒；三次範圍揮擊，首度命中附2秒天照灼傷。",
     "gachaOnly": true,
     "area": {
       "shape": "selfBurst",
       "radius": 24
-    }
+    },
+    "slashColor": "#e1bfff"
   },
   {
     "id": "susanoo_orange",
@@ -873,44 +874,48 @@
     "styleLabel": "原版・橘（鼬）",
     "color": "#ff994f",
     "summonStyle": "orange",
-    "description": "跟隨自身5秒；三次範圍揮擊各自判定命中。",
+    "description": "跟隨自身5秒並減傷20%；末擊短暫封印敵人0.8秒。",
     "gachaOnly": true,
     "area": {
       "shape": "selfBurst",
       "radius": 24
     },
     "variantOf": "susanoo",
-    "rewardOf": "susanoo"
+    "rewardOf": "susanoo",
+    "slashColor": "#ffdb91"
   },
   {
     "id": "susanoo_alt",
-    "label": "素戔嗚尊・須佐能乎（異色版）",
+    "label": "素戔嗚尊・須佐能乎（綠・止水）",
     "styleLabel": "異色・綠（止水）",
     "color": "#52f7a5",
     "summonStyle": "jade",
-    "description": "跟隨自身5秒；三次範圍揮擊各自判定命中。",
+    "description": "跟隨自身5秒；殘影三連斬，命中減速20%持續1.2秒。",
     "gachaOnly": true,
     "area": {
       "shape": "selfBurst",
       "radius": 24
     },
     "variantOf": "susanoo",
-    "paletteHue": 151
+    "paletteHue": 151,
+    "slashColor": "#a0ffd2"
   },
   {
     "id": "susanoo_blue",
-    "label": "素戔嗚尊・須佐能乎（藍・斑）",
-    "styleLabel": "異色・藍（斑）",
+    "label": "素戔嗚尊・須佐能乎（斑・完全體）",
+    "styleLabel": "完全體・藍（斑）",
     "color": "#518aff",
     "summonStyle": "blue",
-    "description": "跟隨自身5秒；三次範圍揮擊各自判定命中。",
+    "description": "完全體跟隨自身5秒；範圍+25%、傷害+35%，末擊震地擊退。",
     "gachaOnly": true,
     "area": {
       "shape": "selfBurst",
-      "radius": 24
+      "radius": 30
     },
-    "variantOf": "susanoo",
-    "rewardOf": "susanoo_alt"
+    "behaviorOf": "susanoo",
+    "slashColor": "#a7ddff",
+    "gachaExclusive": true,
+    "damageMultiplier": 1.35
   },
   {
     "id": "susanoo_cyan",
@@ -918,14 +923,15 @@
     "styleLabel": "異色・青藍（卡卡西）",
     "color": "#48e8fa",
     "summonStyle": "cyan",
-    "description": "跟隨自身5秒；三次範圍揮擊各自判定命中。",
+    "description": "跟隨自身5秒；末擊穿透50%的護盾減傷。",
     "gachaOnly": true,
     "area": {
       "shape": "selfBurst",
       "radius": 24
     },
     "variantOf": "susanoo",
-    "rewardOf": "susanoo_alt"
+    "rewardOf": "susanoo_alt",
+    "slashColor": "#c6ffff"
   },
   {
     "id": "starburst_stream",

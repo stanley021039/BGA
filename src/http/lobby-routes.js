@@ -34,9 +34,12 @@ function createLobbyHandlers({
     if (
       !data ||
       typeof data !== 'object' ||
-      Object.keys(data).some((k) => !['requestId', 'aspectRatio', 'slot'].includes(k))
+      Object.keys(data).some(
+        (k) => !['requestId', 'aspectRatio', 'slot', 'builtinFrameId'].includes(k),
+      )
     )
       throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
+    if (data.builtinFrameId !== undefined) assertFrame(user, data.builtinFrameId);
     const effect = attackLoadout(user)[data.slot || 'q'];
     return withLobbyMedia(user, lobby.attack(user, { ...data, effect: effect || undefined }));
   }

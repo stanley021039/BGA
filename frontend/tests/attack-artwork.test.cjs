@@ -382,9 +382,9 @@ test('every current offensive renderer waits for both authoritative settlement a
   for (const effect of require('../../public/shared/attack-effects.json').filter(
     (e) => e.damageMultiplier !== 0,
   )) {
-    const [delayMs, , phase] = (timing[effect.id] || timing[effect.variantOf]).find(
-      (stage) => stage[1] > 0,
-    );
+    const [delayMs, , phase] = (
+      timing[effect.id] || timing[effect.behaviorOf || effect.variantOf]
+    ).find((stage) => stage[1] > 0);
     const hit = {
       toId: 'victim',
       x: 640,
@@ -889,4 +889,17 @@ test('crystal reflection paints each boss ordinary strike through its original r
     assert.ok(art.lines.length || art.arcs.length, spec.id);
     assert.ok(art.texts.includes('1,234'), spec.id);
   }
+});
+
+test('five Susanoo slash palettes stay distinct and Madara adds crossing arcs', () => {
+  const definitions = require('../../public/shared/attack-effects.json');
+  const styles = ['susanoo', 'susanoo_orange', 'susanoo_alt', 'susanoo_cyan', 'susanoo_blue'];
+  const counts = new Map();
+  for (const effect of styles) {
+    const definition = definitions.find((e) => e.id === effect);
+    const result = run(effect, definition.color, 1, () => 0.5, { ageMs: 1000, preview: true });
+    assert.ok(result.colors.includes(definition.slashColor), effect + ' slash color');
+    counts.set(effect, result.arcs.length);
+  }
+  assert.ok(counts.get('susanoo_blue') > counts.get('susanoo'), 'crossing slash adds arcs');
 });

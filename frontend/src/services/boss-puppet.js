@@ -68,7 +68,7 @@ export function createBossPuppet(node, id) {
     }
     const phase = [1, 2, 3].includes(state.phase) ? state.phase : 1;
     const next = (state.moving ? 'walk' : 'idle') + phase;
-    if (state.arrivalAt && arrivalKey !== state.arrivalAt && now - state.arrivalAt < 1100) {
+    if (state.arrivalAt && arrivalKey !== state.arrivalAt && now - state.arrivalAt < 1000) {
       arrivalKey = state.arrivalAt;
       arrival = animate(
         node,
@@ -78,7 +78,7 @@ export function createBossPuppet(node, id) {
           { transform: 'translateY(-12px) scale(.96,1.05)', offset: 0.83 },
           { transform: 'translateY(0) scale(1,1)', offset: 1 },
         ],
-        { duration: 1100, easing: 'cubic-bezier(.4,0,1,1)' },
+        { duration: 1000, easing: 'cubic-bezier(.4,0,1,1)' },
         null,
       );
       if (arrival) arrival.currentTime = Math.max(0, now - state.arrivalAt);

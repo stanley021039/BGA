@@ -90,6 +90,14 @@ const newAilments = computed<Indicator[]>(() => {
   const state = status.value;
   const items: Indicator[] = [];
   if (!props.connected || !props.self?.health) return items;
+  if (props.self.summon?.effect === 'susanoo_orange' && props.self.summon.remainingMs > 0)
+    items.push({ icon: 'shield', label: '八咫鏡 · 減傷20%', tone: 'info' });
+  if (state?.amaterasuMs)
+    items.push({
+      icon: 'scene-damage',
+      label: '天照灼傷 · ' + Math.ceil(state.amaterasuMs / 1000) + '秒',
+      tone: 'danger',
+    });
   const descriptions: Record<string, { icon: string; label: string }> = {
     armor: { icon: 'attack-up', label: '裂甲：受到Boss傷害 +' },
     healing: { icon: 'healing', label: '回復抑制：回血 −' },

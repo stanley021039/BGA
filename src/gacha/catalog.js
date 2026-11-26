@@ -68,6 +68,7 @@ for (const e of attacks.filter(
         : 'rare',
     [e.achievementId],
     false,
+    e.gachaExclusive === true,
   );
 for (const e of require('../../public/shared/entrance-requirements.json'))
   add('entrances', e.id, e.label, intro(e.achievementId), [e.achievementId]);

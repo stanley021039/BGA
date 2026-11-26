@@ -60,6 +60,7 @@ export interface SceneCombatStatus {
   sealedMs?: number;
   teleportBlockedMs?: number;
   ordinaryDotMs?: number;
+  amaterasuMs?: number;
   regenPerSecond: number;
 }
 export interface SceneEquationPuzzle {
@@ -445,6 +446,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           sealedMs: Number(status.sealedMs || 0),
           teleportBlockedMs: Math.min(1000, counter(status.teleportBlockedMs)),
           ordinaryDotMs: Math.min(2000, counter(status.ordinaryDotMs)),
+          amaterasuMs: Math.min(2000, counter(status.amaterasuMs)),
           regenPerSecond: Number(status.regenPerSecond),
         };
       })(),

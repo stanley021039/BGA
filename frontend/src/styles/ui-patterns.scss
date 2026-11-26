@@ -125,6 +125,9 @@
   font-size: var(--stitch-text-section);
   font-weight: var(--stitch-weight-title);
   line-height: var(--stitch-line-height-heading);
+  &[data-tone='artwork'] {
+    color: var(--stitch-artwork-preview-ink);
+  }
   .ui-heading-text {
     min-inline-size: 0;
     overflow-wrap: anywhere;

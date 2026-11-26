@@ -119,6 +119,8 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
     if (effect === 'bijuu_beam')
       event.rays = selectBijuuDirections(self, actors, event.aspectRatio);
     const source = {
+      susanooStyle: effect === 'susanoo' ? event.effect : undefined,
+      aspectRatio: event.aspectRatio,
       energyActor: self,
       energyLifeId: self.lifeId,
       ordinaryHitIndex: 0,
@@ -162,7 +164,7 @@ function createAttackTimeline(combat, afterAdvance = () => {}, wallsFor = () => 
     for (const [delay, weight, phase] of phases) {
       const radius =
         effect === 'susanoo'
-          ? rules.susanoo.radius
+          ? rules.susanoo.styles[event.effect]?.radius || rules.susanoo.radius
           : phase === 'detonation'
             ? rules.humanMalice.detonationRadius
             : 0;

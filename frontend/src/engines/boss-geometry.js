@@ -4,8 +4,10 @@ export function bossStageSpec(spec, phase = 1) {
   phase = [1, 2, 3].includes(Number(phase)) ? Number(phase) : 1;
   if (spec.phase === phase) return spec;
   const stage = spec.stages?.[phase];
-  const windup =
-    spec.slot === 'r' ? spec.windup : Math.max(spec.windup, 550 * [1, 1.15, 1.3][phase - 1]);
+  const windup = Math.max(
+    spec.windup * 0.85,
+    (spec.slot === 'r' ? 1400 : 550) * [1, 1.15, 1.3][phase - 1],
+  );
   return {
     ...spec,
     ...(stage || {}),

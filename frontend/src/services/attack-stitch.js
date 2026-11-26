@@ -147,10 +147,10 @@ export function createStitchAttack(ctx, options, onImpact) {
     }
   }
   function drawDragoons(t) {
-    const travel = 850,
-      charge = 450,
+    const travel = 450,
+      charge = 300,
       fireStart = travel + charge;
-    const returnTo = t >= 2550 ? options.readCaster?.() || from : from;
+    const returnTo = t >= 1300 ? options.readCaster?.() || from : from;
     DRAGOONS.forEach(([dx, dy], n) => {
       const sx = returnTo.x + (n % 2 ? 24 : -24) * size;
       const sy = returnTo.y + (n - 2.5) * 14 * size;
@@ -168,12 +168,12 @@ export function createStitchAttack(ctx, options, onImpact) {
           (1 - f) * (cx - sx) + f * (ex - cx),
         );
         line(x, y, x - Math.cos(angle) * 28 * size, y - Math.sin(angle) * 28 * size, '#00f0ff', 2);
-      } else if (t < 2550) {
+      } else if (t < 1300) {
         x = ex;
         y = ey;
         angle = Math.atan2(target.y - y, target.x - x);
       } else {
-        const f = ease((t - 2550) / 500);
+        const f = ease((t - 1300) / 200);
         x = ex + (sx - ex) * f;
         y = ey + (sy - ey) * f;
         angle = Math.atan2(sy - ey, sx - ex);
@@ -185,16 +185,16 @@ export function createStitchAttack(ctx, options, onImpact) {
         0,
         0,
         angle,
-        t < travel || t >= 2550 ? 1 : 0.2,
+        t < travel || t >= 1300 ? 1 : 0.2,
         t >= travel && t < fireStart,
         clamp((t - travel) / charge),
       );
       ctx.restore();
-      const shotTime = t < 2000 ? fireStart : fireStart + 800;
-      const firing = t - (shotTime + n * 65);
-      if (firing >= 0 && firing < 190) {
+      const shotTime = t < 1050 ? fireStart : fireStart + 450;
+      const firing = t - (shotTime + n * 10);
+      if (firing >= 0 && firing < 120) {
         ctx.save();
-        ctx.globalAlpha = clamp(1 - firing / 190);
+        ctx.globalAlpha = clamp(1 - firing / 120);
         ctx.shadowBlur = 18;
         ctx.shadowColor = '#00f0ff';
         line(x, y, target.x, target.y, '#007aff', 10 * size);
@@ -202,7 +202,7 @@ export function createStitchAttack(ctx, options, onImpact) {
         line(x, y, target.x, target.y, '#ffffff', 1.6 * size);
         ctx.restore();
         impact();
-        flare(target.x, target.y, 1 - firing / 190);
+        flare(target.x, target.y, 1 - firing / 120);
       }
     });
   }
@@ -515,6 +515,7 @@ export function createStitchAttack(ctx, options, onImpact) {
   }
   return (elapsed) => {
     if (elapsed < 0 || elapsed > 3100) return;
+    if (options.effect === 'funnel' && elapsed >= 1500) return;
     ctx.save();
     switch (options.effect) {
       case 'sphere':

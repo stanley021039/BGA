@@ -29,6 +29,7 @@ class GachaStore {
     this.clock = clock;
     this.choose = choose;
     this.dailyCache = new Map();
+    require('./retained-rewards').retainExistingMadara(db, this.at());
   }
   at() {
     return new Date(this.clock()).toISOString();

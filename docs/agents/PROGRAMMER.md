@@ -88,7 +88,6 @@
 
 2026-11-01 #335：依#291最終稿落實CEO／運動員介面，候選3.15.0；共用數據、持續提示／真實重試slot、完整能力與結算、手機收合邊框修正。後端2171／前端259及264組合法快照布局通過；真實開桌／收購／招募與Esc另驗。Bridge本輪0連線，依先前已核對readback作業，沒有宣稱即時核稿；人工驗收／最終CI／部署未完成。詳[本批證據](../specs/CEO-ATHLETE-UI-335.md)，取代舊筆「只有設計尚未實作」作為本輪現況，歷史來源不改。
 
-
 2026-10-27 #301候選3.11.0：使用者澄清手機場景操作，新增共用可收合攻擊一／二、瞬移、四向控制，包含大廳／休憩及13款遊戲；鍵盤共用鎖與冷卻。實際驗收發現並修正room store自動附加遊戲版本欄位造成room-space嚴格驗證拒絕，保留遊戲指令版本防護。後端2094、前端232及固定build雙玩家矩陣／focused通過，實機手機未驗；證據與初期失敗界線見[本批紀錄](../specs/MOBILE-SCENE-CONTROLS-301.md)。使用者已於2026-10-27明確要求「幫我pr」，本次PR #309兩輪審查完成；最終head CI與合併狀態以PR為準，未部署。
 
 2026-10-27 #304 候選3.10.0：收到新邀請以帳號／本分頁ID去重，沿用既有壓縮短音、效果音偏好及全站四聲道；拒播時收件匣提供啟用按鈕，接受／婉拒不受影響。已整合main a522206 的桌機面板預設；Windows完整affected2093過／0敗／1缺ffmpeg略、前端225通過，Edge真拒播／點擊playing、四張深淺／桌機手機、隱藏／離頁／重載與靜音補驗通過。使用者「可以pr了」接受本機交付，兩輪審查無待修finding；來源與未驗限制見[本批紀錄](../INVITATION-SOUND-304-PROGRESS.md)，新PR仍待具體發布確認，未開PR／CI／合併／部署。
@@ -144,7 +143,6 @@ Windows Node 26.2.0：test:affected 因共用／未知路徑回退全部226檔�
 ## 2026-10-25 #265／#220：管理者設定與開局候選
 
 隔離 main 3ddf7c0d，候選 2.46.0、codex/issues-220-265：共用 canManageSettings／canStartGame 連接八款既有設定及十一款開始／再玩一局；保留 host 身分、房主角色管理及局中專屬操作。郎中建房先加入房主再 configure，純 AI 引擎真實 bot 房主仍可初始化，公開角色不授權 bot。猜歌表單接共用 checkbox 陣列／label slot；畫猜 footer 依內容保留高度，修正失敗重試被開始鈕蓋住。44 組等待室與後續流程合計 48 筆 Edge 桌機／390px、深淺色及權限／保存／失敗重試／實際開局再玩驗收通過；前端129及針對性權限／SSE24通過。Windows Node24 最終全套1,894項中1,893通過、0失敗、1項缺ffmpeg略過，退出0；建置、格式、UI與build效能預算及minor release check通過。完整證據與交付狀態見[本輪證據](../specs/ROOM-MANAGER-265.md)。#220 既有背景入口已由 #254 合入並複驗，票已標完成。尚未發 PR、合併或部署；人工驗收及後續兩輪審查／CI 待完成。
-
 
 2026-10-25 #266：候選3.1.0（原2.47.0）以Document PiP把同一組媒體節點搬進獨立小視窗，不支援時隱藏按鈕。PiP文件是about:blank、iframe不帶Referer會讓YouTube錯誤153，改先載入無腳本的同源`/media-pip-frame`（僅此路徑frame-ancestors 'self'）再搬入；內外兩層pagehide都還原，避免frame先拆掉後節點失去事件監聽。Playwright對PiP視窗的請求攔截會卡住（含CSS），驗收不可用ctx.route。真Edge 8組通過，特效僅沿用框飾；停在第4階段待驗收，未開PR、未部署。證據見[本輪紀錄](../specs/MEDIA-PIP-266.md)。
 2026-10-25 #256／#261：候選2.46.0在同房空清單開始播放時自動開啟既有compact播放器，初載／重連不重播、手動關閉後加歌／切歌不重開；hidden、modal、手機抽屜與背景／全螢幕延後，過期事件失效。只在current／queue皆空的新點播可重啟stop後播放，有待播內容的stop仍保持停止。試玩追加已同意影片直接加入：開窗／返回可見時補joinVideo，不只依賴current改變；保留拒絕與自動播放受阻退路。真Edge雙玩家桌機1920／手機390深淺色、影音拒絕無iframe與焦點驗證通過；追加12組provider fixture驗直接播放接線，非真YouTube聽感。使用者已驗收並授權合併，進入兩輪審查與最終Linux CI，最終結果以本批PR為準，未部署。測試失敗／重跑與完整結果依[本輪證據](../specs/MEDIA-AUTO-OPEN-256-261.md)。取代共用媒體舊規格對「即使全空後新點播也不再開窗／播放」的描述，其餘權限及個人同意不變；#266尚未實作。
@@ -229,7 +227,6 @@ Windows 受影響選取回退全套：2555／2555；Vue 型別、前端建置、
 
 2026-10-19 傳情畫意／繪畫圖庫接續：目前十九份候選文件、五款遊戲。傳情畫意三十四項實際 API（兩頁真實九十秒）及本人＋兩個腳本夥伴的 Vue 正常兩頁、草稿刷新、提交／選簿回顧已觀察；桌機完整畫布與320px寬核對。Studio 保留既有raster JS leaf與typed API，Vue/Pinia持有網路與圖庫；實際落筆儲存、PNG尺寸、重載圖層、復原／尺寸／去背與還原背景已觀察，自建儲存物件已清理。共用圖片選項已修直排，詳 [最新接續與證據界線](../refactors/VUE-FRONTEND.md)。弱網模擬未造成此次草稿失敗，不可列為重試通過；六款遊戲與兩份一般文件尚未接入，全站驗收仍未完成。
 
-
 2026-10-18 續作：修正 allowlisted 情境 SVG MIME 並加限制 CSP，HTTP 回歸先失敗後通過；淘汰賽等待室CSS與手機換階段捲動、共用終局面板高度修復。555首去重資料及合作主署名報告更新；完整2436／後續metadata與格式focused46通過，未提交／PR／部署。[證據與限制](../CONTINUATION-ACCEPTANCE-20261018.md)。
 2026-10-16 合併前追加：#140／PR #141 最終採原創圖示、預設無聲、無左下入口；帳號自訂 UI 留 #142。修正已持筆按 P 意外開輪盤及大廳串流容量，43 項相關回歸通過；原生雙席兩輪、P 畫布標記、換輪清空及專注 Esc 已觀察。原生同時持筆按 P 與逐幀畫面受自動化限制，依 [規格限制](../specs/ROOM-PINGS.md) 保留待實機驗收，不能宣稱全時序通過。最終 SHA／雙平台 CI／兩輪審查與合併狀態以 PR #141 為準，未部署。
 
@@ -242,7 +239,6 @@ Windows 受影響選取回退全套：2555／2555；Vue 型別、前端建置、
 2026-10-15 架構 PR 驗證（2.8.1）：取代本批候選「套件未執行」的狀態。Linux Node v22.22.1 完整 `npm test` 2229/2229 通過，無失敗、取消或略過；設定保存競態新增 6 項，共用實體操作元件驗房主／容量／階段／pending／焦點／跨房間回應。修正測試 fixture 接線及過時 DOM 斷言，保留畫布像素／中途筆跡與協定斷言；復原測試等待 renderer，不等待刻意未回覆的筆畫 HTTP。67 個變更 JS 語法、CSS ownership、11 頁載入順序、patch release check 與 staged diff check 通過。瀏覽器證據沿用同日實作驗收，沒有新增九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
 
 2026-10-15 前端 UI 階層：以畫猜／郎中為基準，RoomUI 單次分派 snapshot；RoomLayout／DrawingLayout 集中 host 位置與畫板幾何，移除 primitives→Template 反向依賴及 Stitch 全 body 版面觀察；全遊戲房間操作改明確 adapter，設定保存失敗阻止開局。CSS 分成 tokens／skin／composition 與郎中 theme／layout，122 處等值 token；72 組真 Chromium 前後比較 computedStyle 一致。測試站已驗畫猜持筆／ACK／SSE／換輪／結束再玩及設定失敗恢復、郎中一回合採購／女巫、其餘九款房主／訪客／滿員／開局防重；pageerror 皆空。套件未執行，無完整九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
-
 
 2026-10-15 架構 2／3／4：郎中改用具名槽位、單次採購呈現、直接女巫動作與穩定焦點 key；房間玩家／AI／timer 共用 transitions，保留歷史失敗可離席與清理；畫猜 session 集中 canonical／draft／quota／ACK／reset／renderer。測試站真 Chromium 已驗一回合郎中買退與女巫、雙席持筆／ACK／SSE／reset、undo／clear／重連／換輪／倒數、桌機與390／320；隔離 HTTP 驗 kick 確認／禁重入及歷史 quota 失敗離席。套件測試未執行，語法及 diff check 通過；無九回合／實機觸控／全遊戲結論。詳 [實作與驗收](../refactors/ARCHITECTURE-234.md)。
 
@@ -302,7 +298,6 @@ Windows 受影響選取回退全套：2555／2555；Vue 型別、前端建置、
 
 2026-10-08 正式驗收：v1.16.0／固定 source 8a9cbfd，Windows 與 Linux 各1,518項通過；三款正式正常回合解鎖、18筆 own 新徽章／3 receipt／9探索 rows，以及背景 Chrome 高亮／日期／桌機手機／鍵盤通過。9帳號全欄位、13市場圖片與舊16徽章保留，own房與登入／分頁／代理已清理。卡片可見解鎖字樣已移除，读屏狀態保留；畫猜局內合併提示、永久勝場及跨程序outbox尚待。此筆取代本批候選待驗狀態，不宣稱真人訪談、完整讀屏或全瀏覽器；詳細範圍見成就單位進度。
 
-
 本次相容修正：保留資料庫帳號 ID 原始大小寫，包含合法大寫 UUID 的匯入帳號；去重仍辨識大小寫變體。卡片依最新使用者指示改為高亮區分取得狀態，可見解鎖文字移除，讀屏狀態與日期保留。
 
 本批已實作 source 與 focused 測試，正式版本、完整 suite、原生瀏覽器與部署結果由主流程更新 [成就單位進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)，不能從本節推定已發布。對應 [成就與戰績 spec](../specs/ACHIEVEMENTS-AND-RECORDS.md) 的第一批 round 成就；下方「成就／ledger 仍缺」須拆成已完成的單位 receipt／探索進度與仍未完成的永久勝場／durable outbox。
@@ -330,7 +325,6 @@ Store 的 `processed_unit_events` 按 UUID、單位唯一關係與 facts 指紋�
 2026-10-07最新正式 **v1.14.0／b4ebb15**：圓角骰子與連續暖色WebGL氮氣已發布，雙平台各1,413通過；正式三席13骰／9資源與真nitro移動、21non-session表rows+BLOB／9帳戶allfields保留。sessions225→232是驗證登入變化，own房／登入／代理／tabs已清理。骰子geometry按job cache，shadow與cube各一draw（state.drawCalls只計cube）；氮氣沿同context／program／buffer以6vertices持續畫，只有live callback可continuous，discard stop(eventId)，車尾取carrier CTM(-20,0)。 完整source／備份／原生範圍見 [本批進度](../RACE-FX-VISUAL-REFINEMENT-PROGRESS.md)／[spec](../specs/RACE-FX-VISUAL-REFINEMENT.md)。下方1.13與pending均為歷史，此筆取代其現況；沒有新PR／push。native hidden／200%／讀屏／玻璃跳台道路pan及FPS未驗，不以完整suite推定。
 
 2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。
-
 
 正式 shhuang.cc 已以私有 server token 啟用既有本站→stanley021039/BGA Issue／comment／admin status 同步。程式仍v1.12.0／83ffcab，沒有runtime修改或新PR；設定前outbox空、zero-room guard後重載。Issue48正式新增、同UUID重送不重複、前端reply與adminclose均同步，ordinary status403，3筆done無待處理；沒有GitHub→本站同步或legacy backfill。憑證不得放前端／Git／logs；維護與精確scope見 [同步紀錄](../GITHUB-BOARD-SYNC.md)。
 
@@ -602,16 +596,13 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 
 2026-10-08部署教訓：SIGTERM健康逾時不可按原pin盲重啟或刪活data locks；先分current pointer與實際PID cwd/port，保持9帳戶/21表/env核對。已授權zero-room更新可重連已驗UID/command/Restart=always的既有代理協助HTTP drain，保server自然close。writePrivate wx是不可覆寫的證據契約；失敗receipt另存，confirmed另建並以受驗內容原子換入，不可在catch迴圈重複對同名wx寫入或拿verification failure當runtime failure。不要早於activation完成跑dependent公開smoke；本批舊版讀取失敗发生於0登入/0房。詳完整還原進度，不宣稱一般情況都需restart proxy。
 
-
 ## 2026-10-08 紙卡大廳 Draft
 
 已確認 shhuang.cc 是 Linux 部署 8a9cbfd 的六款遊戲專案；Windows BGA-main 舊版不是改動目標。獨立分支 codex/playful-board-game-ui，使用者接受紙卡範本並要求原角色移動功能保持原樣。這輪僅大廳啟用 tokens／六卡輪播／建立房間 dialog，hub.js、lobby.js、遊戲／房間／帳號／資料庫模組未改。五款房間遊戲實際 UI 建立與等待頁、market直接導航、兩帳號移動／表情同步及Chromium觸控驗證通過。完整測試1,519項、1,518通過、原版同項SQLite I/O失敗。其他頁面仍待視覺確認；未部署、未完成全站實玩驗收、未打發行tag。证据見 docs/playful-ui/README.md 與 test-results.md。此紀錄取代本輪將 Windows 舊三款遊戲來源視為正式專案的假設，不代表撤銷既有其他功能契約。
 
-
 ### 2026-10-08 授權部署更新
 
 使用者明確要求更新 shhuang.cc 測試，1.17.0／6be11b4／v1.17.0 已部署。原先 SQLite I/O 測試失敗因 /tmp 空間不足，改用磁碟 TMPDIR 後 1,519/1,519 全部通過；未改測試或 storage。正式瀏覽器驗證登入保留、輪播／建立 dialog／六張插畫與設定版號，origin八資源驗證、DB完整性/schema/四資料表指紋保留通過。此筆取代前一筆未部署／原版測試仍失敗狀態；其餘頁面尚未改造。證據 docs/playful-ui/deployment.md。
-
 
 ## 2026-10-08 全站紙卡延伸，候選1.17.1
 
@@ -637,12 +628,9 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 
 2026-10-08 PR57：7d20d1b已整合PR53/main，候選1.19/schema19，Linux1726全通過；78矩陣、manual toggle/320px、五款三席/200%與main數值市場ACK通過。雙回合詳 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)。尚未合併或部署，正式仍1.18，archive ba0811b不移動。
 
-
 2026-10-08 PR57 追加：雷霆賽道紀錄 16px 內距／標題 8px 間距，撲克未入座使用 hidden 槽位保留 nth-child，雷霆不產生空車隊。離線／出局實際玩家保留，API／同步未改。Linux 41 項、release check、36 組亮暗／三尺寸／2、3、滿席與兩人 playing 通過；前後截圖、範圍及兩回合審查見 [本輪證據](../playful-ui/seat-spacing/README.md)。候選 v1.19.0 未合併／未部署，正式仍 v1.18.0；既有 archive 與 tag 不動。
 
-
 2026-10-08 PR57評論修正：滑動防護只豁免controller同步選中的卡片，避免鍵盤／前後切換與create type不同步；承接PR53 bf545ae混合真人AI成就。69項與原生Chromium滑鼠／瀏覽器鍵盤事件／真create通過；固定head與兩回合審查見 [證據](../playful-ui/PR57-COMMENT-FIXES.md)。未部署／未合併main，舊收據不修補。
-
 
 ## 2026-10-08：每日官方收盤抓取候選（Issue66，未部署）
 
@@ -656,6 +644,7 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 後續章節／timer 教學殼仍手寫，未宣稱完整單一來源，未引入產生器。
 來源邊界與驗證方法見 [race 教學來源](../RACE-TEACHING-SOURCES.md)。
 本地驗證及發布狀態以本切片審查證據為準，不沿用既有 main CI 當新 head 通過。
+
 ## 2026-10-09: local lobby handler extraction (#73)
 
 Four lobby handlers now have explicit app-local dependencies in `src/http/lobby-routes.js`; path/method matching, parsing, login, error serialization and media access callbacks stay in app.js. Route inventory, limits and unextracted groups: [lobby slice](../refactors/LOBBY-ROUTES.md). HTTP characterization uses #70's fixture, including simultaneous app isolation and private image/sound access. This is an unpublished local slice, not merged or deployed; full-suite `/api/info` environment failure remains a release blocker. No RoomRuntime extraction or version/schema change is included.
@@ -663,6 +652,7 @@ Four lobby handlers now have explicit app-local dependencies in `src/http/lobby-
 ## 2026-10-09：遊戲與資料契約盤點（#77，文件）
 
 固定程式基線 `2a5a197094c254d4a16cdec682d441af31692c76` 的 [契約矩陣](../GAME-DATA-CONTRACTS.md) 區分現有行為、已存在 coverage 與 #78 最小測試提案。保留 explicit game dispatch；schema19 的歷史 feature-shape 分支、restore 新代 fence 及同程序 achievement retry 已有實作，不代表跨程序 outbox 或記憶體房間續玩。#53 已是基線祖先，不沿用歷史 Draft 狀態。這次不改 runtime/schema/backup 格式、不升版；app 接線於 #73/#74 整合後須重新核對。操作復原程序另由 [#79](https://github.com/stanley021039/BGA/issues/79) 整理，不能把契約盤點當正式移轉驗收。
+
 ## 2026-10-09: Room runtime local candidate (#74)
 
 Per-app room/seat/reconnect/stream registries and scheduler ownership now have a
@@ -683,10 +673,10 @@ RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三�
 細節、已驗與未驗範圍見 [race controller](../RACE-CONTROLLER.md)。
 原生 browser 無法連 executor loopback，全套仍受既有 api/info 環境問題限制；
 不把 focused／VM 通過視為全部驗收或准許推送，沒有部署／正式資料操作。
+
 ## 2026-10-09 Issue 75 同步 controller（本機候選，未推送）
 
 畫猜同步/取消 ownership 已抽為 DrawController；頁面保留 canonical state、input、renderer、transport/playback 專用責任，沿用 1.23.1。85/85 focused 通過，完整 suite 及原生 acceptance 的實際狀態、固定 code SHA、兩回合審查見 [本切片證據](../DRAW-CONTROLLER-REFACTOR-PROGRESS.md)。dot cloud browser 無法連入隔離 localhost，途中 frame／desktop/mobile/touch/keyboard 不算驗收；不可用 VM raster、OS stub 或跳過失敗替代 required native／完整 suite。沒有新 PR、部署、schema 或正式資料操作。
-
 
 2026-10-10 瞎掰王口說版：feat/bluff-king 本機候選 1.28.0，基線 main 4664916；60 題（冷知識 30、迷因 15、文學 15），開桌前可選看身分 10／30／60 秒。到期自動口說並隱去私人角色／答案，AI 只保存自己的卡片記憶。Windows 1991 全通過、Chromium 實驗 10 秒到期／重載／新輪倒數；真人語音、實體觸控、Linux 未驗，未發 PR／部署。取代上輪 1.27.0／15 題／1979 數字；接手讀 [本輪證據](../BLUFF-KING-PROGRESS.md) 與 [規格](../specs/BLUFF-KING.md)。
 
@@ -694,13 +684,11 @@ RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三�
 
 2026-10-10 主頁圖片：五款新遊戲原創 SVG 與共用圖片卡片，現在11款全有圖；精確圖片路徑／輪播相關6項通過，桌機亮色與390px深色驗證，未發布。接手見 [主頁圖片證據](../GAME-CARD-ART-PROGRESS.md)。
 
-
 ## 2026-10-10 PR 發布前最終驗證
 
 候選版 1.28.0；完整 node --test tests/*.test.js：2006/2006 通過，fail/cancel/skip 0，93923ms。這筆更新取代上一輪未重跑完整 2006 的驗證限制。另有倒數音效 focused 56/56，以及 Chromium 原生播放五項案例通過；仍未驗證喇叭／耳機主觀聽感、Safari、真人跨裝置語音與弱網。完整記錄保留於 ignored work/bluff-pr-final-tests.log；原生證據沿用 work/bluff-preview/sound-qa/results.json。
 
 目標 stanley021039/BGA，feat/bluff-king → main；本機準備提交供發布確認，尚未推送、建立 PR、合併或部署。
-
 
 ## 2026-10-11 PR #95 與 main 衝突整合
 
@@ -708,12 +696,9 @@ RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三�
 
 Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip 0，110968ms，含新增的共用日夜配色回歸。node tools/release.cjs check --base origin/main --type minor 與 diff check 通過。ignored 證據 work/pr95-main-integration-tests.log。本輪未重跑原生瀏覽器或主觀音效驗收，先前證據維持原版本範圍。整合後沿用 PR #95 推送，不另開 PR、不合併或部署。
 
-
 2026-10-12 組隊房間分離：十款等待畫面採雷霆之路模板，遊玩資訊等待時隱藏，瞎掰王與傳情畫意設定自動提交。40布局／十次開局及有限設定邊界已驗；完整測試、原生作畫补验、兩輪審查及部署以 [組隊房間進度](../WAITING-ROOMS-PROGRESS.md) 與 PR #96最新留言為準；未驗設備與全phase不冒稱完成。
 
-
 2026-10-12 頁首深色模式修正（1.28.2候選）：使用者截圖中的直向文字來自trpg.html漏載ui-primitives.css，icon-only的ui-sr-only caption未被裁切。只補共用stylesheet引用，沒有改遊戲或頁首CSS；新增全站header資源契約回歸。headless Chrome 25頁／1440与390／日夜100組合通過，caption裁切、圖示範圍及切換前後44px按鈕尺寸已驗；非真人觸控或全phase。最終測試、審查、PR與正式部署結果以本批PR驗收留言為準。
-
 
 2026-10-12 共用文字徽章1.28.3：ui-badge以共用tokens提供內距2px／8px、gap4px、min-height28px；實際狀態／類別／計數入口已opt-in並移除各頁重複幾何，房間操作欄保留120px。七頁28布局與有限原生畫猜已驗，完整測試／PR／公開結果以 [徽章契約](../specs/SHARED-BADGES.md) 與本批PR留言為準。玩家資訊卡、D符號與装饰籌碼不套用。
 
@@ -723,16 +708,13 @@ Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip
 
 2026-10-12 共用操作按鈕1.28.6：native action與ui-button共用999px橢圓／2px框線，晚載頁面不覆寫；icon44px圓形、內容選擇卡保持幾何。離房dialog confirm/cancel明確接GameUI中文label與primary/secondary。25頁100layout、十房40waiting／start、自動設定、五dialog20layout／取消／Escape／503留房／重試返大廳及畫猜15持筆／ACK／觀看者／倒數／揭曉／換輪已驗；完整suite與正式結果以 [按鈕契約](../specs/SHARED-BUTTON-FRAMES.md) 和本批PR留言為準，原生播放器／browser confirm不聲稱重繪。
 
-
 2026-10-12 組隊布局與聊天室1.29.0候選：十款統一上列介紹／設定、下列固定人員卡／聊天室；手機換列且內容框內捲動。五款補共用聊天依賴，單client/mountIn保留草稿與輪詢，開局恢復操作節點與原展開狀態；TRPG公開角色名出現在名單。等待特殊設定留在共用欄，賽道／手牌／畫布／播放器／身分與揭曉保留遊玩專用布局。驗收範圍、完整suite、PR與公開結果見[共用組隊與聊天契約](../specs/SHARED-WAITING-CHAT.md)與本批PR留言，不推定全phase或真人觸控。
-
 
 2026-10-12 聊天文字配色1.29.1候選：1.29.0公開幾何／收發驗證通過後，截圖發現同頻頁全域p的#6e7c71滲入聊天室，深色訊息對比不足。chat.css讓p／label／time繼承面板配對文字，不借各遊戲舊字色；保留等待retention專用muted token。共用scope與明暗contrast回歸、十款實際等待／遊玩文字對比及最終完整suite／CI／公開結果以本批PR證據為準；不是已驗全站所有文字或所有遊戲phase。
 
 同批追加捲動驗收：ui-foundation的room-sidebar:has(action-slot)原為playing popover保留overflow:visible，搬入固定等待grid後會讓互動／離房工具溢出並覆蓋聊天室。waiting控制槽明確overflow:auto覆寫，遊玩側欄維持原規則；驗證框內捲動與工具／表情彈窗，不以框尺寸一致代表子內容沒有溢出。
 
 2026-10-12 共用房間操作與彈幕獨立分支：chat table POST 與 social message／barrage 共用 sendRoomMessage，相同 requestId 只產生一組全文／短彈幕；160 字以 Unicode code points 驗證，emoji／expression 補聊天紀錄。RoomControls 轉接原有操作與欄位，設定搬移修正畫猜讀取／委派範圍，雷霆保留原有 AI 並轉接 restart；共用離房支援送出中、503 與重試。Linux 2049 通過，原生十款及畫猜／離房流程已驗，無 schema 或引擎規則變更；未整合 main 或發布。見 [規格](../specs/SHARED-ROOM-SOCIAL.md) 與 [證據](../SHARED-ROOM-SOCIAL-PROGRESS.md)。
-
 
 2026-10-12 PR #109 整合複驗：取代上一筆本分支「未整合 main」狀態，候選 1.31.0 已整合 f2689a4，保留房間內設定、傳情畫意共用畫板與導覽元件。2057 Linux 全通過、原生十款40布局、畫猜持筆／時序／倒數／換輪與傳情畫意作畫／送出／下一頁已驗；結算150分／4輪及非房主唯讀設定已驗。CI、合併與正式結果以 PR #109 及 [本輪紀錄](../SHARED-ROOM-SOCIAL-PROGRESS.md) 為準；未驗真人觸控或十款完整場次。
 
@@ -750,7 +732,6 @@ Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip
 
 2026-10-12 候選 1.29.0：瞎掰王三選一、真人多數全站禁題與本機轉檔反應音效；11 款遊戲共用專注切換，新遊戲接入規則已寫 AGENTS。初次40 focused／2019完整，後續原生頁面修正與最終驗證見 [本輪證據](../BLUFF-ROUND-FOCUS-PROGRESS.md)。未發布或部署，永久記憶及轉檔工具保持 ignored。
 
-
 ## 2026-10-12 最終交付驗證
 
 完整 Windows 2023/2023 通過，fail/cancel/skip 0，132730ms（work/bluff-focus-final-tests.log）；此後補跨房間禁題即時替換選項，受影響瞎掰王引擎／真 HTTP／前端反應／專注測試 33/33 通過（work/bluff-final-game-tests.log）。專注最後補 root 幾何標記與外層單欄 CSS；交付前對共用資源／圖示配色與 overlay 再驗。
@@ -761,9 +742,7 @@ Chromium 隔離實際房間 BB07C0：想想三題中選海洋雪後才顯示30�
 
 候選仍1.29.0，release check以origin/main de526dc為minor通過；永久記憶更新本機且ignored。未推送、發布新PR、合併或部署。原生OS全螢幕、實機Safari、真人語音與主觀聽感仍未驗，沿用此前限制。
 
-
 2026-10-12／1.29.0 本輪補強（取代舊非想想權限與 60 題現況）：題庫保持單檔供歷史保存、穩定 ID 相容禁題；secretExplanation 與 secretAnswer 同期限授權；共用專注取消祖先占位，保留 hidden 與畫布比例。驗證與限制見 [最新交付紀錄](../BLUFF-ROUND-FOCUS-PROGRESS.md#2026-10-12-題庫與專注尺寸補強最新)。未發布／部署。
-
 
 ## 2026-10-13 郎中闖江湖試玩版
 
@@ -776,15 +755,16 @@ Chromium 隔離實際房間 BB07C0：想想三題中選海洋雪後才顯示30�
 完整回歸2055、最終相關27均通過；實際 UI 驗證投票、抽牌、抽藥／停止、公開大釜切換、藥材提示、擲骰與效果確認。1280視窗專注大釜寬672.4→742.95；390手機模擬無橫向溢出。動畫為在線新揭曉觸發、重連不重播，減少動態靜態卡；未驗證實機手機或原生全螢幕。此項取代早先整套配書／自動骰流程；未部署。細節與證據見 [郎中進度](../QUACKS-PROGRESS.md)。
 
 ### 2026-10-13 最新：郎中沉浸介面與成就
+
 取代前述整套預設和整場一次藥袋配額；每輪私有快照一次、逐色隨機票、唯一鍋色／公開鍋名、白色炸彈、召喚翻牌與公共骰動畫／結果、原創資源和爆炸WAV、回合火焰與尾巴格、永久液滴／老鼠石分離。五枚郎中徽章由固定開局帳號及合法九輪操作伺服器判定，交易回滾與刪房後同程序重試、AI/test/tutorial排除；既有schema/單位帳本不變。完整2078通过，SVG排版渲染檢視；本輪沒有新增真瀏覽器或喇叭聽感驗證。來源、範圍、跨程序及跨桌限制見 [最新郎中進度](../QUACKS-PROGRESS.md)。未發PR／部署，候選仍1.29.0。
 
 ### 2026-10-13 PR準備更新：候選2.2.0
+
 本批已整合main共用房間UI及最新畫猜曲線／點時間更新（base a54a6b9、main2.1.0）；取代先前本批1.29.0／2.1.0候選狀態。郎中接共用控制／等待室／聊天室／AI席位，保持配書投票可見與开局還原。最終功能程式完整2150/2150，升版／快取後11/11；最終真瀏覽器／手機／喇叭驗收待验，先準備Draft，未推送／發PR／部署。兩輪範圍、固定提交及限制見 [PR準備](../PR-QUACKS-BLUFF-2.3.0-PREPARATION.md)。
 
-
 ### 2026-10-13 PR #115 衝突修正
-已整合 main 3dc4a55（2.2.0）；唯一衝突是 CHANGELOG 版本項目。保留 main 的市場自動查核 2.2.0，將本批功能升至 2.3.0，並更新套件版本、焦點資源快取與回歸測試期望。完整測試尚未在新合併提交上重跑，PR 維持 Draft。
 
+已整合 main 3dc4a55（2.2.0）；唯一衝突是 CHANGELOG 版本項目。保留 main 的市場自動查核 2.2.0，將本批功能升至 2.3.0，並更新套件版本、焦點資源快取與回歸測試期望。完整測試尚未在新合併提交上重跑，PR 維持 Draft。
 
 ### 2026-10-14 瞎掰王中央揭曉介面（候選）
 
@@ -792,13 +772,11 @@ Chromium 隔離實際房間 BB07C0：想想三題中選海洋雪後才顯示30�
 
 隔離站三個實際帳號完成三輪與重開：上述顯示條件、換輪、計分揭曉、禁題投票（1/2，未達永久禁用）、專注進出、輪詢捲動／焦點保留正常。Chrome 桌機 1440、手機模擬 390／320 像素亮暗模式無橫向溢出；揭曉槽 440px，結束時桌機隨操作區等高 574px、手機仍 440px，長回顧可捲動。此筆只描述候選瀏覽器實際操作；未驗實機手機／Safari，沒有正式發布證據。
 
-
 ### 2026-10-14 遊戲操作與聊天室共用獨立框（候選）
 
 RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 SharedChat 聊天室。操作節點保留原 handler，等待室還原原位置；畫猜選題移入操作框，撲克下注與雷霆儀表板接入，傳情畫意／極簡的送出按鈕由共用代理沿用原邏輯及 disabled 狀態。聊天室獨立保留外框、440px 槽位與底部狀態／工具／輸入列，操作內容於自己的 viewport 捲動；不再依操作內容或玩家欄計算聊天室高度。低高度桌機模板側欄可捲動兩個框，操作槽至少220px，不壓縮聊天室。專注模式保留雷霆操作，隱藏聊天；320px 音樂播放器受容器寬度限制。
 
 隔離站11款遊戲在1440／1000／390／320亮暗畫面共88組確認外框獨立、同欄寬、操作在聊天上方、長操作內容不改變聊天室／輸入列尺寸、無橫向溢出，實際傳送聊天訊息與專注進出正常。畫猜實際選題、持筆15次途中取樣／放開／stroke ACK、觀看者途中取樣逐步增加、猜中揭曉與換輪通過；傳情畫意確認送出與送出後倒數、極簡非空幾何作畫送出與猜測代理按鈕通過。Chrome手機模擬，未驗實機手機／Safari；取樣不是逐幀FPS證據。此筆是候選介面實作／實際操作證據，沒有正式發布證據。
-
 
 ### 2026-10-14 線上朋友房間邀請（候選2.4.0）
 
@@ -806,88 +784,90 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 
 獨立站三個既有測試帳號實際完成邀請、通知、接受跳转／入座、婉拒不入座、重複邀請同一ID、非房員／非收件者拒絕、離線排除、已開局與已滿的接受拒絕、邀請者離席失效。人物／AI分別可操作；修正畫猜等待時玩家加入的局部刷新漏掉AI按鈕。11款等待入口／不同圖示及遊玩入口，1440／390／320亮暗畫面共66組無横向溢出、邀請dialog六組保持視窗內，聊天室高度440px維持。未以這筆證據宣稱5分鐘到期的實際等待、實機手機、Safari或正式發布已驗；普通房員邀請權限由後端入座檢查及共用入口提供，三人主流程邀請者為房主。來源版號升為2.4.0；驗證用常駐程序在升版前啟動，API版號仍為啟動時2.3.3，不能冒稱正式2.4.0發布。
 
-
 ### 2026-10-14 雷霆之路房間空框與留白（候選2.4.0）
 
 等待房間原有 race-utility-panel 的內容已交由 SharedChat 呈現，原容器仍有邊框與留白，形成空框；等待階段隱藏此舊容器，遊玩階段還原供獨立操作／聊天室使用。等待側欄不再保留多餘的父層捲軸槽，設定框與聊天室左右邊線一致。共用 room-waiting.css 定義1800px外框上限及24px／12px外層inset；畫猜沿用原尺寸，雷霆一般房間使用相同寬度與有效左右留白，教學與專注模式維持各自布局。
 
 隔離站Chrome實際比較1920／1440／1100／1000／600／390／320像素亮暗模式，14組畫猜與雷霆成對畫面左右邊線／內容寬度一致、無橫向溢出；設定與聊天室同欄邊線對齊且高度440px。實際切换主遊戲／惡魔賽道、加入AI，設定框尺寸穩定且沒有空框；開局正常擲骰／確認，操作與聊天還原，1440／390／320遊玩版面無橫向溢出，專注進出保留操作並恢復聊天。第一次追加專注驗證未先完成擲骰dialog而逾時；補齊正常擲骰與確認前置後，全程重驗通過。未驗實機手機／Safari；此筆為候選瀏覽器驗收，沒有正式發布證據。
 
-
 ### 2026-10-14 大廳與畫猜共用紙卡模板
 
 新增 opt-in GameUI.Template 元件階層，沿用原 carousel、角色圖、表情與 canvas controller；語意 tokens、panel header/body/footer、roster、toolbar 與頁面 adapter 分層。桌機 1280×720 實際走過等待、選題、作畫、猜題、聊天室、表情、結算、最近畫作及再開局；390px 手機與亮暗模式驗收。設定移至共用 slot 後仍能自動儲存，數值 input 有行為回歸測試。長內容採區塊內捲動，保留原資訊及控制項。元件契約見 docs/specs/SHARED-GAME-TEMPLATE.md；此筆本身不代表正式發布完成。
 
 ## 2026-10-14 Stitch 共用模板
-補 dialogPanel、等待室聊天与下局設定 portal；不重建有事件的欄位或畫布。hidden／高度樣式僅於值改變時更新，避免觀察器反覆排程；畫布依實際 grid 槽量測。原生對局／收藏／重開与畫筆取樣證據見 STITCH-UI-IMPLEMENTATION.md，未更改同步引擎、資料 schema 或原站計分。
 
+補 dialogPanel、等待室聊天与下局設定 portal；不重建有事件的欄位或畫布。hidden／高度樣式僅於值改變時更新，避免觀察器反覆排程；畫布依實際 grid 槽量測。原生對局／收藏／重開与畫筆取樣證據見 STITCH-UI-IMPLEMENTATION.md，未更改同步引擎、資料 schema 或原站計分。
 
 ## 2026-10-14 Stitch 功能與版面 2.5.0
 
 2.5.0 使用每次已接受快照更新 Stitch adapter，避免只在大場景重建時更新就緒／狀態。等待室搬完整 controls 宿主，保留內部 settings slot；新 ready／skip／transfer-host／解散／取消個人收藏均經後端權限及必要的 epoch 檢查。公開 snapshot 維持不可變與八輪限制，原計分與 DB schema 不變；獨立 PNG／ZIP encoder 與小型 matchSummary 補齊真實功能。 詳 [本輪證據與限制](../STITCH-UI-IMPLEMENTATION.md)。
 
 ### 2026-10-13 煉金術士本機完成
+
 八病患三選一、四面愚人草、特效藥／第9輪規則與20張符號過濾占卜牌已實作；私有預抽、連鎖安全抽藥、同級交換與真實格位回退、AI與歷史來源同步接入。全套Windows Node24 2168/2168通過；真無視窗Edge設定保存、兩人病患／特效藥操作、專注與390px排版通過，沒有JS錯誤。細節見 [規格](../specs/QUACKS-ALCHEMISTS.md) 與 [交付證據](../QUACKS-PROGRESS.md)。本輪新增內容只在本機；沒有推送或部署。仍有限供應／背面大釜、跨程序成就outbox與實機／聽感限制。
 
-
 ### 2026-10-14 精簡遊戲介面
+
 郎中資源整合大釜、藥材／獎勵滑過提示與卡片式設定；郎中和瞎掰王採左朋友／中遊戲／右聊天，保留當輪禁題投票、揭曉及專注切換，移除房間過往回合清單。採最新 main c544ebd 共用設定／彈幕修正，候選仍2.4.0同批。全套2168、最後共用22與隔離真Edge桌機／390px／日夜操作證據、已發現問題及限制見 [介面規格](../specs/QUACKS-WORKSHOP-UI.md)。本輪未推送／發布／部署；取代先前大卡片及展開全文效果介面。3005 靜態資源即時更新，保留既有測試程序。
 
 ### 2026-10-14 暗夜霓光與藥水瓶圖示
+
 使用者選C；大釜右下改藥袋／舉手／玻璃藥水瓶與女巫幣操作，特效藥文字精簡到病患／數字格提示及合法格確認，回合2／3／6／9有里程碑。整合main bd036b6，2172全套後最終受影響20及真Edge抽停／收回白色炸彈／下一輪／專注／390px通過。來源授權、測試證據與限制見 [介面規格](../specs/QUACKS-WORKSHOP-UI.md)。舊3005程序已停止後沿用隔離資料重啟，房號以runtime為準；本輪本機候選2.4.0未推送或部署。
 
 ### 2026-10-14 手勢更新（取代舉手停止）
+
 依使用者最後提供的姿勢，繼續抽改為原創「手從藥袋拈出藥材」SVG，停止改為原創雙手食指交叉成X；不是角色截圖或第三方插畫。原創藥水瓶保留。三圖示維持既有操作、滑過提示／可讀名稱與禁用。最終隔離真Edge完整本輪驗收再通過（含原生抽停與藥水瓶回袋、數字格／下一回合、專注與390px無橫溢出、零JS錯誤），截圖 work/qa/quacks-workshop/neon-potion-controls.png。共用registry仍包含已合法授權的Lucide Hand，但郎中停止按鈕已改為原創交叉食指。本輪同批2.4.0，本機修改未推送／PR／部署。
 
 ### 2026-10-14 人物按鈕與全桌爆鍋
+
 本輪取代原創手勢按鈕：使用者圖輕微Q化，喝啤酒字幕還要爽爽；停止保留食指打叉。哭哭橫幅按公共explosionId在全桌呈現，靜態縮減動態仍可見，音效沿用共用原創WAV。受影響88及真Edge雙視窗每端1次原生playing、重複／重連抑制、390px專注通過。來源、完整提示詞、證據与限制見[素材與橫幅規格](../specs/QUACKS-PORTRAIT-ASSETS.md)。候選2.4.0同批未推送／發布／部署。
 
 ### 2026-10-14 特效藥自動格數、分明圖示與抽藥／抽卡音效
+
 特效藥結算自動推到本輪上限但須本人確認，可選低格，瓶身顯示公式及凍結加總；抽停照片縮小，分數星星／藥材杵臼／占卜卡牌分開，哭哭圖大、文字小、卡片字體更清楚。私有draw事件逐個排隊播原創音效，爆鍋提示優先且同批合併。完整2181及最後35／真Edge每端8抽藥＋1抽卡＋1爆炸原生playing通過。新3006隔離站保留3005牌局；詳[本輪規格與證據](../specs/QUACKS-ESSENCE-AUDIO-REFINEMENTS.md)。候選2.4.0本機未發布。
 
 ## 2026-10-14：離房縮圖 #120 候選
 
 共用與備援離房視窗新增使用者提供圖片的完整比例縮圖、中文替代文字，最大360px並隨容器縮放；候選2.4.0。相關13測試及Chromium日夜／桌機／手機直橫向12組離房流程通過，未驗實機手機／讀屏／完整遊戲實玩、未部署。來源、範圍與最終全套／CI證據見 [離房縮圖進度](../ROOM-LEAVE-THUMBNAIL-PROGRESS.md) 及原PR。
 
-
-
 ### 2026-10-14 可取消購物、兩步開局與檔案音效
+
 本輪先整合main 1ca5eb1離房縮圖，候選改2.5.0。原按鈕再點取消交易／精確退藥與退款，雙買贈片及黑5鄰座／液滴同步還原，後續效果提交後不再取消。勾選房間設定auto-save，完成後選藥材書；抽停與瓶66×64、大釜頂部／工具左下、占卜依timing紫藍無文字標籤。改用使用者抽卡1.5秒低通／抽藥0.65秒片段，原創爆炸不變。完整2191與真Edge購買取消／設定／尺寸／專注390px、每端1抽卡6抽藥1爆鍋playing通過；聽感／實機未驗，未推送或部署。詳[本輪證據](../specs/QUACKS-CART-CUES-SETUP.md)。
 
-
 ### 2026-10-14 共選效果、鍋邊視野、溢出盆與樹脂骰
+
 使用者取消投票，所有真人直接選共享藥材效果（最後成功指令採用），圖示逐面、提示與雙方即時同步；房主設定後可原生開始。購物grid、鍋邊左右控制／小女巫幣、整口鍋可見、特效藥縮整、記分板放大、結算圖示、補瓶／水滴圖示與水滴術語、本人600ms喝藥水聲已完成。第52格之後的擴充溢出盆按既有引擎計分，隐藏他人盆；樹脂骰按擲骰當時鍋色。完整2196及最後25、真Edge選書同步／開局／購物／喝藥水playing／大釜視野／記分板／390px／專注通過；材質fixture與真雙人爆鍋複验、限制見[本輪紀錄](../specs/QUACKS-KETTLE-SHARED-EFFECTS.md)。仍同批2.5.0本機未發布，舊試玩牌局保留，另建新版3008。
 
-
 ### 2026-10-14 結算音效與鍋邊縮整
+
 本輪新增420ms結算音效、私有成功確認事件與容量等待，放大可見大釜、縮小左下工具及400px特效藥軌；收回藥材／特效藥消耗圖示化，移除滑過提醒，黑綠紫實際結算觸發框發光。Windows完整2203通過；真Edge雙人結算9次native playing、等待同伴確認、桌機全鍋與390px／專注通過，發光與收回為獨立呈現fixture＋實際引擎回歸。仍未驗主觀聽感／實機，未推送或部署，3009另建隔離桌保留3008牌局。詳[本輪證據與限制](../specs/QUACKS-SETTLEMENT-GLOW-LAYOUT.md)。
 
 ## 2026-10-14 Stitch 與 main 整合 2.6.0
 
 合併 3eccd1f / 88823b6，靜態路徑、圖示、音效採聯集；郎中新引擎保持 main 原檔。補上共用 primaryAction prepare/start 契約以處理設定確認按鈕被捲動槽遮住，producer 是郎中的原生開始／選書按鈕。DOM 文字以 dataset 簽章去重，不按可能不存在的 aria-label 重建；驗證實際 Enter 開局 HTTP 200。畫猜桌機／390px、四次 stroke ACK、結算及 gallery／離房原生流程通過；細節及未驗範圍見 STITCH-UI-IMPLEMENTATION.md。
 
-
 ### 2026-10-14 殘酷2選1與 fish 爆鍋聲
+
 同頻新增60張原創雙圖題／120張SVG，4／6／8人雙人隊與1–12人個人玩法、真正solo十題回顧、全場每人一次換題，延遲舊題／私有答案／離席／平票由引擎判定。朋友左／題卡中／聊天右及手機專注通過，修正共用設定切換遺失native操作。郎中專用cue串接原創840ms爆炸＋20ms空隙＋使用者fish約567ms；其他遊戲音源不改。完整2216與真Edge組隊／solo／一般模式、全桌爆鍋每端一次native playing／重載抑制通過；來源、規則與限制見[本輪證據](../specs/MAJORITY-CRUEL-AND-QUACKS-FISH.md)。本機候選2.6.0，未發新PR或部署。
 
 ## 2026-10-14：郎中選藥介面 #119 本機候選
+
 使用者要求先開票、本機開發並預覽、不提PR。2.3.4候選以獨立翻面／明確選擇、右上個人已選印章、價格／效果上下分區取代下拉與比較區；保留票數、平票裁決及共用UI。Windows全套2148通過，後續受影響26項複驗通過；隔離實際瀏覽器驗投票／鍵盤／日夜／390px／1440px及專注恢復。真觸控、讀屏、Linux／CI未驗；未推送、PR或部署。證據：[本輪進度](../QUACKS-BOOK-VOTING-UI-PROGRESS.md)。
 
-
 ## 2026-10-14：#119 最新 main 整合與說明高度
-取代上一筆2.3.4個人投票候選：已整合main88823b6，使用者確認全桌最後選擇；2.5.1保留煉金術士與設定先行，選藥採翻面／明確選擇／全桌印章。說明區預留每色最長面高度，非當前面不可見及aria-hidden；全套2207通過後31受影響項通過，隔離瀏覽器卡高／按鈕位置一致。最新授權建立Draft PR供換環境接續；Linux／CI／真觸控仍待驗，不合併部署。詳[最新進度](../QUACKS-BOOK-VOTING-UI-PROGRESS.md)。
 
+取代上一筆2.3.4個人投票候選：已整合main88823b6，使用者確認全桌最後選擇；2.5.1保留煉金術士與設定先行，選藥採翻面／明確選擇／全桌印章。說明區預留每色最長面高度，非當前面不可見及aria-hidden；全套2207通過後31受影響項通過，隔離瀏覽器卡高／按鈕位置一致。最新授權建立Draft PR供換環境接續；Linux／CI／真觸控仍待驗，不合併部署。詳[最新進度](../QUACKS-BOOK-VOTING-UI-PROGRESS.md)。
 
 2026-10-14 本輪最終整合：保留main 931b602／PR123最新藥材書介面與說明，候選2.6.0。整合後完整2225全通過，真Edge殘酷組隊／solo／一般分類、暗色／390px與專注重新通過；3011十個服務資源匹配，舊牌局保留。仍未發布本次新功能，詳[最終整合](../specs/MAJORITY-CRUEL-AND-QUACKS-FISH.md#最終-main-整合2026-10-14)。
 
-
 ## 2026-10-15：三款遊戲音效、提示與題庫
+
 本機候選2.7.0：郎中換用使用者停止1765ms／結算660ms錄音；停止由伺服器私人有效事件觸發，排除爆炸與自動停止，保留靜音及重整抑制。修正藥材提示框邊界、購物多餘圖示與三色結算重複規則。瞎掰王「好了啦」及老實人單段解釋，160題；殘酷2選1共96張原創雙圖題／192圖，含先前照片主題改寫。真Edge1440／390提示、價格、兩音效原生playing、重載與角色卡通過；殘酷多人／單人回歸通過。完整測試最終紀錄、來源及限制集中於[本批驗證](../specs/THREE-GAME-REFINEMENT.md)。未發布本批PR或部署；3012獨立預覽保留舊牌局。
 
 最終固定資產 Windows 全套2228／2228，fail／cancel／skip／todo皆0；release minor與diff check通過。前述介面QA使用引擎快照與真HTTP資產／Audio，非完整多人傳輸；細節與先前失敗的原因見本批spec。
 
-
 ## 2026-10-15：大釜配置、預設音效與多人質疑
+
 本機候選2.8.0取代2.7.0反應名稱：瞎掰王「哦是哦」，多名玩家的「質疑你」各顯示五秒，保留音效冷卻。全站效果音預設開啟，version2一次遷移舊設定並保留之後手動靜音；郎中釜名左上、設定在查看玩家右側、水滴入框，只有結算階段切換發聲，輪到本人占卜牌亮且可鍵盤抽取。真Edge1440／390、reduce motion與專注／九人提示通過，完整2232／2232通過；不是真人網路／真觸控／喇叭聽感驗收。來源、前輪fixture修正與限制見[本批紀錄](../specs/QUACKS-LAYOUT-AUDIO-AND-BLUFF-REACTIONS.md)。未發布本批PR／部署，原牌局保留。
 
 2026-10-15：v2.9.0本機候選加入下一格結算框、左上釜名自適應置中、起始玩家中央自動抽牌、哦是哦照片及同頻指定結算錄音。原生1440／390與音效事件證據、範圍及限制見 [本批規格](../specs/QUACKS-AUTO-FORTUNE-AND-MEDIA.md)；未發布／部署。
@@ -914,26 +894,24 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 
 8080隔離測試站實際驗證暱稱儲存、角色切換、重載保留、1440亮色／1280深色／390與320手機選單；儲存按鈕88×44、圖文間距8px，角色圖片56px高。320頁面原有整頁橫溢出仍存在，帳號選單及本次控制均在視窗內；未擴大修改大廳布局。完成JS語法／diff／版號一致性檢查，未跑test套件；未PR、推送、main合併或正式發布。
 
-
 ### 2026-10-15 彈幕外觀目前選用預覽
+
 設定頁新增右側固定預覽槽，直接使用 BarrageFrames.decorate 與 subscribe，同步選框與跨頁重載保存，手機700px以下上下排列。8080隔離站實際驗證預設→星際軌道即時更新、重載保存、1280亮暗與390手機版，框與裝飾位於面板內。JS語法、diff及版號一致性檢查通過；沿用同批2.9.1，未跑test套件、未PR或正式發布。
 
-
 ## 2026-10-15 表情20字與15格
+
 候選2.10.0。表情名稱原有20字驗證保留；大廳speech取消110px單行省略，使用12em上限與完整換行，依舞台左右邊緣調整位置。選單名稱同樣換行。自訂表情上限6→15，服務端與角色管理說明同步（主圖neutral另計）。
 8080測試服務重啟載入來源；實際HTTP建立一位QA角色及15個表情，第16個回400 EXPRESSION_LIMIT，20字名稱保存及大廳選單15項通過。首次批量新增遇既有429，依60秒限制等待重試後完成，未放寬限制。桌機及390手機實際發送20中文字，scrollWidth/clientWidth及scrollHeight/clientHeight一致，完整文字無裁切；手機氣泡左右在舞台內。來源版號2.10.0，服務於升版前啟動、API版號仍2.9.1。語法／diff／版號一致性通過；未執行test套件、未PR、推送、main合併或正式發布。
 
-
 ## 2026-10-15 PR127 main衝突整合
+
 整合main bf8eb4e至架構PR e56aac3。保留兩邊角色記錄與main 2.9.0／2.10.0變更，候選升2.10.1；stitch-fidelity維持tokens／skin／composition載入入口，帳號按鈕44px、角色56px／四欄與固定狀態槽移到composition，不恢復舊整包CSS。保留main彈幕預覽、20字換行、15表情、共用setBusy與原PR架構；此筆是衝突整合紀錄，未新增正式發布證據。
 
 2026-10-15 PR準備候選2.13.0：整合main bf8eb4e／#129最新個人設定與表情功能，保留本聊天三遊戲、八人、音效及隨機先手；完整2277、三款原生複驗與兩輪自查完成。範圍、限制與未發布狀態見[PR準備](../specs/THREE-GAME-PR-PREPARATION.md)。尚未推送／建立PR／合併／部署。
 
-
 2026-10-15 候選2.13.1：最新 main eb648ce／#130 合併後，移除藥材書標題的說明與設定控制，隨機事件同步全桌左右書頁，普通輪詢保留手動瀏覽。13項單元與Edge真HTTP雙玩家1280暗／390亮通過；證據、原生焦點及手機限制見[本輪修正](../specs/QUACKS-BOOK-RANDOM-SYNC.md)。本機3021獨立試玩，未推送／發新PR／部署。
 
 本批2.13.1最終：完整2280／2280、版本patch及diff檢查通過，3021版號與公開資源匹配；僅本機交付，未推送／發新PR／部署。
-
 
 2026-10-15候選2.14.0：十一遊戲右上房間管理、郎中藥材蓋數字／盆提示離開即關／階段置中放大；共用播放器獨立最小化、結束續播、清單捲動保留與同桌影片選擇重整保留。157受影響回歸、Edge1280暗／390亮十一款入口與郎中角色升降／媒體真HTTP＋YT fixture通過。詳細證據與限制見[本批紀錄](../specs/ROOM-MEDIA-POT-POLISH.md)。僅本機3022試玩，未推送／新PR／部署。
 
@@ -942,16 +920,13 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 
 2026-10-15 共用 UI 候選 2.13.2：畫猜／郎中共用 RoomChrome、SharedChat 與手機聊天彈窗，固定操作槽並修正專注入口；已整合 PR #127 最新基底並完成隔離預覽複驗，範圍、來源與未驗項目見 [共用 UI 驗證](../SHARED-STITCH-UI-20261015.md)。未合併或正式發布。
 
-
 2026-10-16候選2.14.1：整合最新main f17ea43（共用架構、RoomChrome／聊天／手機與設計規範），保留本聊天功能；大廳與郎中候場依100%視窗配置，已放藥材格不再建立底下數字。Windows完整2301／2301、123受影響項、Edge20頁矩陣／48次選卡、十一款管理與媒體、雙席途中筆跡／ACK／SSE／倒數／換輪及郎中一輪通過。詳[本批紀錄](../specs/DEFAULT-LAYOUT-FIT.md)。本機3023獨立試玩、舊桌保留；真YT／實機觸控與九輪未新增驗收，未推送／新PR／部署。
-
 
 2026-10-16 候選2.15.0：藥材選擇全面接共用圖示（含愚人草、特效藥、複數候選與交換前後），快速成交先選幣再選藥材；修正52格後overflow-only未觸發大釜重畫，保留原爆炸與分數規則。特效藥四尺寸無內層捲動；播放器分小視窗／56px橫條，依最新指示橫條音樂及影片音訊續播，工具完整可視。126受影響測試與Edge四尺寸郎中、1280暗／390亮媒體／十一遊戲管理回歸通過。實際範圍及YT fixture限制見[本批紀錄](../specs/QUACKS-CHOICE-OVERFLOW-MEDIA.md)。本機3024，舊站保留，未推送／發新PR／部署。
 
 2026-10-16特效藥2.15.1：中央面板改直向置中，燒瓶／確認框共用中心；確認字16px、高44px、內距較小。Edge四尺寸中心偏差0px且無內層捲動，詳[本批補充](../specs/QUACKS-CHOICE-OVERFLOW-MEDIA.md)。3024只更新靜態CSS，房間保留、API仍2.15.0；未發布。
 
 2026-10-16免費來訪女巫2.15.2：僅witch-visit當輪顯示「免」入口、效果提示與說明窗完整卡片；原三位保留，免費操作沿用server驗證，不扣幣，mine.visitorUsed區分本輪已用。Edge1440暗／390亮／320亮驗一次請求、換普通卡收起與舊窗停用；完整2314及最終受影響複驗，詳[本批補充](../specs/QUACKS-CHOICE-OVERFLOW-MEDIA.md)。3025獨立試玩、3024保留，未發布。
-
 
 2026-10-16候選2.16.0：播放器／點播／清單統合一窗，移除舊清單入口，最小橫條縮至164×56px並維持聲音；使用彈幕24模板提供個人播放器風格，不改他人或彈幕設定。藥材書未選面淺紙深字、至少7:1對比。139受影響項與Edge雙帳號／桌機手機及320窄視窗通過，詳[本批紀錄](../specs/UNIFIED-MEDIA-PERSONAL-FRAMES.md)。3026獨立試玩、舊站保留；真YT與實機觸控未新增驗收，未發布。
 
@@ -960,6 +935,7 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 2026-10-16最新回合決策：全員購物完成進round-intro，nextRoundAt固定2000ms、400ms scheduler自動推進；提示期間拒絕next／draw-fortune，重試不重複存結果，九輪直接finished。第一輪不加提示，第2–9輪顯示下一輪號碼；舊骰動畫於提示／結果清空。九輪HTTP＋Edge已見最終結果與九筆紀錄，最新預覽3028保留舊桌。
 
 ## 2026-10-16 登入／註冊圖片 #132
+
 候選 2.14.0，基線 main f17ea43；登入／註冊分頁各用使用者指定圖片，單一 img 依 srcset／sizes 載入縮圖，重設密碼不載入圖，七個白名單 WebP 不包含原始 JPG。5 項相關回歸與 Edge 12 組桌機／手機／亮暗／DPR 首載、鍵盤切換、草稿及錯誤恢復已驗證。完整套件結果與限制見 [本輪證據](../specs/AUTH-ARTWORK-132.md)，本機預覽未推送／PR／合併／部署。
 
 本批 #132 最終：完整 npm test 2290/2290，fail/cancel/skip 0，132901ms；minor release check、語法、diff check 通過。本機候選與預覽狀態不變，詳 AUTH-ARTWORK-132.md。
@@ -973,9 +949,11 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 2026-10-16 #132 PR交付最新：使用者授權開PR及merge。最終功能樹完整2290/2290（fail/cancel/skip 0、141198ms），12組響應式＋10組桌機高度複驗、minor release／語法／diff通過；取代本批前述未重跑全套限制。兩輪固定提交審查與CI／合併結果以PR對話為準；未部署。
 
 ## 2026-10-16 受影響測試與CI分工
+
 使用者明確要求新增npm run test:affected、本機受影響測試、同commit CI全套、仍保留兩輪審查及開PR／merge。工具採明確路徑表；未知／核心／共用／fixture／刪測試回退全套，差異取branch/index/worktree/untracked聯集；套件例外比對三種snapshot。AGENTS／PR審查／打版及README已對齊，CI明確checkout並驗head SHA，完整npm test仍跑Linux／Windows。17項本機focused通過，未本機全套；僅開發工具／流程，不升產品版號。範圍／限制與最新PR證據入口見[測試分工](../TESTING.md)，未部署。
 
 ## 2026-10-16 Windows CI 耗時分析
+
 PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 38842723647 的同 head 084e4016：Windows 全套 2302 項 817269ms，Linux 77599ms；前輪 run 38841283889 Windows 402309ms、Linux 114757ms，Windows runner 映像同為 20261007.264.1，不能歸因映像升級。最慢個案為 market-images 配額驗證 106760ms、quacks retry HTTP 96360ms，以及三款房間 1000 次加入／離開 90600／83420／64950ms（四捨五入）。並行個案時間不可相加當作 job wall time。
 配額 fixture 約 1065 次逐筆 SQLite 寫入，含 65 筆 4MiB BLOB；優先評估按驗證階段 transaction 批次準備，保留配額與解碼順序斷言。三款房間隔離本機 Windows 量測共 12437 次 fsync、耗時約 5583ms，四項選定測試皆通過；這不是 CI 磁碟瓶頸的直接量測。後續先收集 CI 每檔／setup/body/cleanup 與 runner 資源，再比較 Windows 分片及明確 concurrency；保留同 head 全套門檻與真實持久化驗證，不以移除 fsync 或減少壓力迴圈作結論。原始分析留於本機忽略目錄 work/windows-ci-analysis，未部署。
 
@@ -987,6 +965,7 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 原版五案例組wall：concurrency1為92.21／76.96s，concurrency3為103.06／106.27s；quacks retry單檔4.24–4.65s、並行14.94–16.37s，draw churn單檔19.49–27.99s、並行60.70–66.38s。這組負載的並行成本有直接證據，但只有單一runner／兩輪完整配對，尚不直接修改全套concurrency。下一步先實作批次fixture並補能抓到各quota移除的斷言，再用固定head完整CI驗證；重複認證／靜態資源斷言及媒體fixture註冊列為後續精簡，不刪retry／耐久性／引擎差異驗證。原始結構化結果work/windows-ci-analysis/ci-results.json；沒有產品修改、PR、merge、tag或部署。
 
 ## 2026-10-16 備份驗證與輕量測試實作
+
 使用者確認讓備份驗證接受可信任的收緊限制，以有效小圖片取代260MiB假資料，並實作先前確認的批次fixture及重複流程精簡。分支codex/lightweight-backup-tests，基線main46cbeee；診斷分支的workflow／工具未帶入。validateMarketImagesDatabase沿用imageLimits，拒絕未知／非正整數／高於預設的設定；正式data-transfer入口仍省略覆寫，維持256MiB／1000／100等預設，不讀備份內限制。驗證器對圖片解碼與receipt上限也沿用收緊的policy，未改正式路徑行為，依release規範測試／等同行為整理不升版。
 配額拆成三張有效PNG的單人／總張數／容量邊界，另驗一位元組邊界、PNG decoder呼叫順序、正式預設容量常數與未超容量的損壞圖片。default容量案例只注入聚合bytes，不冒稱真的寫入；小圖真SQLite案例驗SUM(length(bytes))。cold export正式單人101張測試批次transaction，原有跨作者1001張整合案例保留。媒體fixture批次預建獨立成員、四帳戶仍真登入；郎中三purpose仍完整九輪／history／achievements與retry刪房後不重複授獎，僅共通權限／靜態資源檢查集中production。未縮減churn／關閉fsync或更改CI門檻。
 四檔focused97/97通過；五種隔離記憶體mutation（刪單人／總數／容量guard、<=改<、quota移到解碼後）均被對應新測試抓到。單次本機比較原混合quota2827ms，五個替代案例合計269ms；整組三檔44項9479ms／新48項10312ms，未證實整組或全套加速，不外推CI收益。結果留本機work/windows-ci-analysis。test:affected因共用來源回退全233檔，依規範實際執行；全套結果另記。
@@ -995,8 +974,8 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 2026-10-16 PR交付授權增量：使用者明確要求開PR、固定提交兩輪審查、等待同一head雙平台CI通過後merge，並比較Windows全套耗時。本機已測程式差異hash仍為00d1e3a7436bdbccb9fa61fa75d2019517618ef0a2ba90ab1f252442dd5bb876；本次提交只增加交付意圖記錄，未改已驗程式。最新固定提交審查、CI／比較及合併證據以本次PR對話為準；不包含部署授權。
 
 ## 2026-10-16 #136 測試分層實作
-使用者確認規劃並要求先拉最新；已整合 main 1872f78／v2.16.1。僅七個測試檔及文件：churn 記憶體 1000 次＋真磁碟兩次輪替、賽跑引擎／歷史拆分、聊天室獨立帳號、框飾隔離 fixture、郎中保留五組完整九輪但僅 production 真計時、畫猜保留 48／49 邊界而減少重複像素成本。六種故障注入均被抓到；本機與最新固定 head PR／CI 證據見 [實作對照](../TEST-LAYERING-136.md)。未改產品、移除等待室歷史、升版或部署；未盤點全套每項測試。
 
+使用者確認規劃並要求先拉最新；已整合 main 1872f78／v2.16.1。僅七個測試檔及文件：churn 記憶體 1000 次＋真磁碟兩次輪替、賽跑引擎／歷史拆分、聊天室獨立帳號、框飾隔離 fixture、郎中保留五組完整九輪但僅 production 真計時、畫猜保留 48／49 邊界而減少重複像素成本。六種故障注入均被抓到；本機與最新固定 head PR／CI 證據見 [實作對照](../TEST-LAYERING-136.md)。未改產品、移除等待室歷史、升版或部署；未盤點全套每項測試。
 
 ## 2026-10-19 Vue 多頁前端基礎
 
@@ -1020,21 +999,19 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 
 2026-10-17／2.18.0本機候選：猜歌雙階段、十二遊戲成就獎勵、大廳彈幕及郎中檢視／有限庫存。已整合main a1cfde9；實作、原生驗收、Stitch保留決策與未校正副歌時碼等限制見 [本批驗收](../MUSICQUIZ-LOBBY-REWARDS-PROGRESS.md)。未發布／部署，不能沿用本機檢視代替最終SHA兩輪PR審查與雙平台CI。
 
-
 ## 2026-10-17 同頻題庫與淘汰賽底層
 
 新規格／狀態：docs/specs/MAJORITY-TOURNAMENT-20261017.md、docs/MAJORITY-TOURNAMENT-PROGRESS.md。mode=music／scenario 引擎採8／16／32強，每輪唯一多數+1，平票0分但公開抽籤晉級，最終選項冠軍及玩家並列排行。一般抽題／佇列／投稿不得取得cruel／music／scenario題庫。首輪完整2410/2411暴露普通Majority歷史快照誤帶大型曲庫的容量回歸；改模式按需載入及開局按模式保存來源，容量／新模式／曲庫34/34回歸通過，最終全套另記進度。新模式UI尚未接入，不視為可玩交付。
 
 2026-10-17 同頻淘汰賽後續（取代先前「Stitch／UI待接入」狀態）：已取得Stitch實稿與8張原創情境PNG、接四玩法／主題賽程／個人試聽／雙排行。曲庫205（日語53）、情境256、一般366、殘酷144；真HTTP兩種8強賽與IAB桌面／手機／專注／重連已驗。試聽內嵌顯示無法播放、2pick四來源仍安全驗證未讀完，未虛報播放或原站比例篩選。來源、證據與最終測試見[本次進度](../MAJORITY-TOURNAMENT-PROGRESS.md)。未PR／CI／部署。
 
-
 ## 2026-10-18 我的角色表情編輯／刪除
+
 本機 2.18.0 候選新增作者改名／換圖與二次確認刪除；交易保留音效、引用回退 neutral、房間／大廳短暫表情清理、主圖片保護。全套2416/2416＋新增UI4/4及IAB桌機／手機深淺色驗證；未發布／部署。證據與限制見 [本次進度](../PROFILE-EXPRESSION-EDIT-PROGRESS.md)。
 
-
 ## 2026-10-18 六類曲庫與題庫盤點
-曲庫205→308，六分類皆擴充；日語91，YUI官方來源14，流行63／搖滾49／動漫35為重疊標籤。同頻猜歌排除既有冷門後307；原創情境256仍待原站資料。核對曲目身份、原始年份與特殊古典年份基準，逐首播放／副歌仍未驗。23/23相關驗證，完整測試結果另記 [本輪進度](../MUSIC-EXPANSION-20261018.md)；未PR／部署。
 
+曲庫205→308，六分類皆擴充；日語91，YUI官方來源14，流行63／搖滾49／動漫35為重疊標籤。同頻猜歌排除既有冷門後307；原創情境256仍待原站資料。核對曲目身份、原始年份與特殊古典年份基準，逐首播放／副歌仍未驗。23/23相關驗證，完整測試結果另記 [本輪進度](../MUSIC-EXPANSION-20261018.md)；未PR／部署。
 
 2026-10-18歌曲資料增量：指定35位歌手／樂團新增172首，musicquiz-songs.json現480（zh120/jp163/en107/kr53/viral19/classical18），同頻music池479。新增4項回歸測試檢查覆蓋、25種曲風上限、特定版本及實際答案別名，相關27/27通過。完整affected結果待本輪結束追加。前奏／副歌與地區實播未驗，clipReviewed及playbackVerified維持false；航海の唄為官方短版。詳docs/MUSIC-REQUESTED-ARTISTS-20261018.md。未PR／推送／部署，2.18.0同批不再升版。
 
@@ -1062,16 +1039,13 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 
 2026-10-19最新完整affected259檔2473/2473通過，252.26秒。猜歌挑戰四種個人判定及同頻三席多數／少數原生音效已驗；完整曲庫開局保留歷史完整results。詳GAME-AUDIO-20261019.md最後段；手機收藏兩卡撐寬屬另外未修布局問題，勿宣稱全部手機UI通過。
 
-
 ## 2026-10-21 共用房間介面精簡
 
 2.17.5 先修共用 RoomChat／RoomHeader，移除指定提示、字數 footer、彈幕框入口與房間手動更新；媒體／表情同式置於輸入框上方。郎中等待中央只留當局設定與配書／開局，遊玩三工具移頂欄，獨立工具視窗替代七分頁；極簡移除回顧及可見鍵盤提示、預留單行倒數與等高聊天室。無呼叫端的 expose／席位參數與舊導覽／樣式已清除。第三份 Figma 原生共用元件及 42 張相關畫板同步，RQ13 改更多工具並保留 frame ID。實際桌機／手機取樣、選書開局、聊天／表情／媒體開合、幾何自動同步與十秒截止已觀察；型別／多頁建置／格式／版本／diff check 通過。詳細範圍、尺寸與未驗分支見 [本批紀錄](../refactors/SHARED-ROOM-UI-SIMPLIFICATION.md)；不把本輪局部驗收外推成全站完整回歸或所有音效／播放皆通過。
 
-
 ## 2026-10-21 玩家卡片與間距（2.17.6）
 
 依 C02 恢復共用玩家卡片框線／圓角／留白與間距，名單操作置中；聊天回饋槽移到分隔線上，工具列上下皆 8px。郎中占卜列 border-box 避免裁切，獎勵選擇移除空圖示，UiIcon 無圖案時不佔位。實際桌機／手機、亮暗色、畫猜與極簡共用名單及郎中爆炸後領獎觀察通過；完整證據與未驗範圍見 [共用房間精簡紀錄](../refactors/SHARED-ROOM-UI-SIMPLIFICATION.md)。
-
 
 ## 2026-10-21 全站共用介面巡檢（2.17.7）
 
@@ -1152,12 +1126,10 @@ Windows Edge 自動回歸涵蓋 1920×1080、1280×720、390×844、320×568、6
 
 本輪本機全套結果補記：292檔、2691項，2689通過／2失敗／0略過；兩項均為未修改的data-transfer schema4／5 HTTP驗證，Node26 fetch回報bad port（系統隨機埠被Fetch禁用），非資料斷言失敗。同環境單獨重跑兩項全通過。最終新增音量回歸另跑auth-entry 11／11通過；不得把原全套寫成零失敗或宣稱包含新增測試。Linux Node22最終同SHA完整CI仍是合併必要門檻。
 
-
 2026-10-24 #227：使用者明確開始 Second Wind 原版；分支 codex/second-wind-227 基於 cfcc116，36角色／13Twist資料、兩輪蛇形選秀、私人鎖角與競速事實／能力失效投影已實作首批，尚非完整遊戲。原版後三場積分及 Twist 精確格位仍待核對，Figma依指示暫停。證據與未完成範圍見 docs/specs/SECOND-WIND-227.md；不混入 CEO、不開 PR／CI／合併／部署。
 
 #227本批驗證補記：Windows Node26完整affected293檔2707/2707，fail/cancel/skip/todo 0；focused15含240組招募種子。格式／UI ratchet／無新媒體perf／minor版本檢查通過，未前端build或實玩。詳細界線見SECOND-WIND-227.md；第3階段未完成整個遊戲。
 2026-10-24 #226 接續：使用者暫停 Figma，CEO Vue 試玩頁及大廳入口、受 frontendEnabled 控制的 create 接線、共用等待室 flow 與不依賴舊樣式的 icon/button 幾何已實作。替代牌庫／耗盡規則維持明示。測試及實際瀏覽器證據以 docs/specs/NEW-GAMES-226-227.md 最新段為準；待人工驗收，無 PR／CI／合併／部署。
-
 
 2026-10-24 #230 Draft PR #242 整合候選：RoomSceneLayout接十一款（股市除外），保留main 0f47f58的郎中流程列、人物卡切鍋與設定預覽；C00整桌／側欄表面排除has-room-space。最新main整合後後端2710過／0敗／1環境略、297檔，前端107/107；型別、正式建置、UI ratchet、效能、版號與格式檢查通過。Edge畫面88組無pageerror；撲克手機首次縮放有單次寬度瞬間讀值，單獨重測寬度390px正常；十一款桌機與手機側欄操作通過。所有階段測試依使用者要求暫停；三人兩輪未重現，不宣稱修復。PR仍為Draft，未合併、部署或跑CI。詳docs/specs/ALL-GAME-SCENES-230.md。
 
@@ -1169,9 +1141,7 @@ Windows Edge 自動回歸涵蓋 1920×1080、1280×720、390×844、320×568、6
 2026-10-24 #227 快速重入／同格X：移除250ms重開死區；超過2位改X→可移入頭像層→被動詳情，manual top layer保留父層，200ms僅橋接間隙。Esc／點外部防焦點還原重開。125前端、2373完整與25組同格／鍵盤／觸控fixture通過，詳 [最新回饋](../specs/SECOND-WIND-FEEDBACK-227.md)。未部署。
 2026-10-24 #227 入口文案澄清：X是人數變數，改顯示實際同格數；標題改「第{進度格數}格（{人數}位）」。沿用兩層hover契約，取代先前字面X。見 [最新回饋](../specs/SECOND-WIND-FEEDBACK-227.md)，未部署。
 
-
 2026-10-24／#246：場景戰鬥共用規則新增other兌換資格、25%暴擊及2秒護盾減傷。房間座位ID經私有seats對應帳號；不接受客戶端加成、重複兌換不疊加，不改桌遊分數／歷史。最新main獨立候選的驗證與限制見 docs/specs/SCENE-COMBAT-VFX-246.md。
-
 
 ## 2026-10-24：#233 共用腳本 ESM 模組化驗收
 
@@ -1213,6 +1183,7 @@ Windows Edge 自動回歸涵蓋 1920×1080、1280×720、390×844、320×568、6
 3.22.0 新增電波畫家、戲精酒吧與塗鴉神諭的一輪教學。手動模式使用正式遊戲的場景及動作，可切換教學席位。自動模式跟隨當前示範角色，完成後停在揭曉。教學由既有獨立桌管理，語音玩法使用文字提示與示範答牌。
 
 前端 293 項、教學相關 50 項及後端全套 2,275 項通過，後端另有 1 項可選測試略過。正式建置的本機 HTTP 驗證涵蓋三個教學網址、各階段、重新練習及關閉。此環境的瀏覽器工具因 Windows 沙箱路徑解析錯誤而未能執行桌機與手機的操作驗收。
+
 # 2026-11-08 · #358 觀戰名單
 
 遊戲房用獨立唯讀 SSE 登記已驗權的觀眾，沿用現有遊戲快照供入座玩家查看暱稱。抽卡沿用場次清單 SSE，僅傳給該場抽卡者。兩者依帳號去重，連線離開時更新。共用 Stitch 按鈕與緊湊彈窗放在房號旁及召喚結果頁首。HTTP 回歸涵蓋遊戲房重複分頁、離開、身分拒絕及抽卡名單的存取邊界。Edge 雙帳號驗證遊戲房與抽卡的離開更新，以及關閉名單後保留召喚結果。
@@ -1235,10 +1206,13 @@ Windows Edge 自動回歸涵蓋 1920×1080、1280×720、390×844、320×568、6
 
 2026-11-15 #410：前批機器人兩模式／互打／分層Boss已保存57156b29，舊內部stationary／retaliate呼叫修成idle／attack；本批主大廳Boss2、競技場每房Boss1，五秒預告才建實體、700ms墜落與800ms落地特效，預留名額／取消／離線清理；競技場機器人強制attack、Boss不算PvP席位／積分／KDA，保護候場者。玩家最後一擊觸發彈幕與獵王祝福：回血10%、15秒傷害+10%／移速+8%／瞬移耗能20→10，刷新不疊加，死亡重置清除，UI與按鍵採伺服器teleportCost。完整affected294檔2481過／0敗／1缺ffmpeg略（574.7秒），前端352過；最後容量／HUD追加另14／9項過，型別／Vite／UI／效能／版號／1330檔格式過。51843真實HTTP確認5秒與36ms生成差、單Boss／強制attack及房間隔離。Stitch攻擊特效大改明確暫緩；瀏覽器連線限制，手動畫面／接縫／落地質感未驗。詳[BOSS-ARENA-ARRIVAL-410](../specs/BOSS-ARENA-ARRIVAL-410.md)。未PR／CI／合併／部署。
 
-
 2026-11-15 #410 黑框修正：BossPuppet分層span被舊名牌樣式污染，巢狀img也受頭像尺寸限制；改div／SVG image並明確控制朝向，手機加vw尺寸上限。新增真實SFC編譯回歸，完整affected2482過／0敗／1缺ffmpeg略、前端353過及型別／Vite／UI／效能／修改檔格式通過。隔離Edge實測XENORPH與薩諾龜深淺色桌機1920×1080、手機390×844及減少動態，圖層透明無框、手機約187×194、無頁面錯誤。詳LOBBY-BOSSES-410最新節；未逐驗全部33招／GPU，Stitch精修仍延後。51843已更新，未PR／CI／部署。
 
 2026-11-15 #410續修：Stitch連線恢復，實際匯出R2（project2224308089524822640／frame f9c0c67633164424a98fba37fe4f423b），保留正式Boss圖與33招判定，取觸鞭伸展回收、拋射、三段爆破分鏡補肢體發射／命中與清場；原型共用三招與簡化角色不整頁移植。新增BossHealthHud獨立生命長條，大廳2／競技場1，數字預留位置、手機避開操作區，離線移除清除。完整affected2482過／0敗／1缺ffmpeg略，944.226秒；前端356過，最後鏡像／排版等另36項及權威5項過；型別／Vite／UI／效能／1335檔格式過。33招真renderer自動截圖，兩隻Boss實際桌機／手機、深淺色／reduce與血條清理驗證。未逐一手玩全33招／GPU；詳BOSS-ABILITIES-410最新節及候選來源。51843已更新，未PR／推送／CI／部署。
 2026-11-15 #410階段與警笛：Boss優先人類→機器人→Boss，接觸半徑5、傷害權重0.3、跨Boss每人800ms間隔，掩體阻擋不消耗有效接觸間隔。三段紅血條，同施放所有段數／持續／折返最多打一條，破前兩條各鎖血2秒，二／三階段傷害／速度／頻率×1.15／1.30；每階段保留獨立技能sequence，現仍33招。傷害預算以共用空token連到模組私有WeakMap，避免原版異色狀態比較與序列化污染。WARNING加入原創2.2秒警笛（實際MP3 27405 bytes），沿GameSounds／AudioSettings處理音量、去重及取消／隱藏／卸載停止。隔離試玩預設全92攻擊／78進場含異色，永久規則已同步AGENTS。最終完整affected295檔2492過／0敗／1缺ffmpeg略（512.999秒）；前端360、型別／建置／UI／效能／格式過；桌機手機與競技場真實血條、單次音效播放呼叫驗證，未做實體喇叭聽感評分。詳BOSS-ARENA-ARRIVAL-410。51843已更新，未PR／推送／CI／合併／部署。
 
 2026-11-15 #410最新介面／進場：攻擊特效入口改共用AttackChoiceTools放標題actions，收藏純特效改UiPanel去空篩選留白。Boss總生命恢復與傷害同單位的完整千分位數字；單一16px紅條以兩刻線分三段，第三階段更名最終階段，桌機720px置中。純背景模式新增body層KDA／加成／機器人與Boss管理，保留原大廳inert，關閉動態仍可操作。時之領域12.12→4.2秒、王之財寶7.12→3.8秒、冰輪丸6.12→3.6秒，CSS整段加速、角色舞台同步收尾，異色同長；40原版＋40異色清單見ENTRANCE-TIMINGS-410。新Boss階段機制／外觀／攻擊大幅精修先設計、不實裝，現有33招差別及玩家招式互動缺口見BOSS-STAGE-DESIGN-410；新Boss永久規則同步AGENTS。最終完整affected295檔2492過／0敗／1缺ffmpeg略，313.466秒；前端362、型別／建置／UI／效能／1346格式過。真Edge驗純背景＋motion off加入NPC成功、單條三段生命、三款CSS倍率及結束清場，無頁面錯誤。51843更新，未PR／推送／CI／合併／部署。
+
+2026-11-26 #429–#434 本機3.37.0候選：Boss尺寸／階段節奏、1.2秒冷卻、1秒進場、四招時序與五版須佐分化已實裝。斑獨立傳說並原子保留舊合法異色持有權；新異色不再附斑。實際桌機／手機模擬、素材與生命週期證據及限制見 docs/specs/SUSANOO-VARIANTS-434.md、docs/specs/BOSS-SIZE-PREVIEW-429-430.md；未PR／CI／部署，不視為正式站完成。
+
+2026-11-26 #436 介面巡檢：37頁面入口、9設定分區、18類等待室及收藏／抽卡／彈窗，三尺寸246狀態另加十連結果3組；修正Studio缺失import與flex-wrap造成的工具跨欄裁切、淺色抽卡靜態預覽深底黑字。前端412與完整後端2559過／0敗／1缺FFmpeg略；未覆蓋每個遊戲後續對局階段／實機鍵盤，詳docs/specs/UI-ALIGNMENT-AUDIT-436.md。未PR／CI／部署。
