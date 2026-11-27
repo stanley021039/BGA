@@ -221,3 +221,5 @@ unpublished, dependent on #70/#73; see [ownership and validation](../refactors/R
 
 ### 2026-10-13 煉金術士本機完成
 八病患三選一、四面愚人草、特效藥／第9輪規則與20張符號過濾占卜牌已實作；私有預抽、連鎖安全抽藥、同級交換與真實格位回退、AI與歷史來源同步接入。全套Windows Node24 2168/2168通過；真無視窗Edge設定保存、兩人病患／特效藥操作、專注與390px排版通過，沒有JS錯誤。細節見 [規格](../specs/QUACKS-ALCHEMISTS.md) 與 [交付證據](../QUACKS-PROGRESS.md)。本輪新增內容只在本機；沒有推送或部署。仍有限供應／背面大釜、跨程序成就outbox與實機／聽感限制。
+
+2026-11-27 #438：本輪只修改前端場景transport，不改SSE頻率、伺服器傷害或權限。兩份隔離資料庫及前後正式bundle量測慢HTTP／即時SSE並行，確認舊回應不能倒退快照、背景GET可取消而移動POST仍串行；新快照過期仍走離線。不是正式網路／大容量驗收。見[場景延遲](../specs/SCENE-LATENCY-438.md)，未PR／部署。

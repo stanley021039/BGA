@@ -404,7 +404,7 @@ function createLobby(
         actor.bossBlessingUntil = 0;
         if (isBoss(actor.id)) {
           actor.combatEpoch = (actor.combatEpoch || 0) + 1;
-          combat.reset(actor, time);
+          if (actor.health > 0) combat.reset(actor, time);
         }
       }
     }
