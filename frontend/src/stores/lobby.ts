@@ -33,7 +33,8 @@ import { useLobbyBackgroundStore } from './lobby-background';
 // Lobby changes arrive over a server-sent stream (#322); polling slows to a
 // safety check while it is live and takes over whenever it is not.
 const STREAM_POLL_MS = 10000,
-  STREAM_RETRY_MS = 5000;
+  STREAM_RETRY_MS = 5000,
+  STREAM_FRESH_MS = 1500;
 
 export const useLobbyStore = defineStore('lobby', () => {
   const session = useSessionStore();
@@ -72,6 +73,9 @@ export const useLobbyStore = defineStore('lobby', () => {
   let stream: EventSource | null = null,
     streamLive = false,
     streamTried = 0;
+  let presenceRead: AbortController | null = null,
+    snapshotRevision = 0,
+    receivedAt = 0;
   const controllers = new Set<AbortController>();
   const snapshotClock = createSceneSnapshotClock();
   const monotonic = () => (typeof performance === 'object' ? performance.now() : Date.now());
@@ -154,6 +158,8 @@ export const useLobbyStore = defineStore('lobby', () => {
       return;
     }
     if (snapshot.value && next.serverNow < snapshot.value.serverNow) return;
+    snapshotRevision++;
+    receivedAt = monotonic();
     snapshotAgeMs.value = snapshotClock.age(next.serverNow, monotonic());
     const first = !snapshot.value;
     snapshot.value = next;
@@ -184,6 +190,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     const epoch = generation,
       account = identity.value;
     try {
+      presenceRead?.abort();
       await presenceJob;
       if (!current(epoch, account)) return false;
       consume(await request('/api/lobby/teleport', { entrance: entranceEffect.value }));
@@ -230,7 +237,9 @@ export const useLobbyStore = defineStore('lobby', () => {
       if (!presenceJob) schedulePresence(backoff);
     });
     source.addEventListener('state', (event) => {
-      if (stream !== source || !current(epoch, account) || presenceJob) return;
+      // HTTP and SSE are independent transports. A slow HTTP reply must not
+      // freeze live players, hits or boss intent; consume rejects older views.
+      if (stream !== source || !current(epoch, account)) return;
       try {
         consume(JSON.parse((event as MessageEvent<string>).data));
       } catch {
@@ -257,6 +266,8 @@ export const useLobbyStore = defineStore('lobby', () => {
     if (target) {
       queued = target;
       destination.value = 'x' in target ? target : null;
+      // Only preempt a replaceable safety GET, never an in-flight movement POST.
+      presenceRead?.abort();
     }
     if (presenceJob || emotePending.value || teleportPending.value) return presenceJob;
     if (presenceTimer) clearTimeout(presenceTimer);
@@ -265,12 +276,16 @@ export const useLobbyStore = defineStore('lobby', () => {
       account = identity.value,
       next = queued;
     queued = null;
+    const read = next ? null : new AbortController(),
+      receivedBefore = snapshotRevision;
+    presenceRead = read;
     const job = (async () => {
       try {
         consume(
           await request(
             next ? '/api/lobby/move' : '/api/lobby?entrance=' + entranceEffect.value,
             next || undefined,
+            read?.signal,
           ),
         );
         if (current(epoch, account)) backoff = 500;
@@ -279,9 +294,17 @@ export const useLobbyStore = defineStore('lobby', () => {
           current(epoch, account) &&
           !(cause instanceof DOMException && cause.name === 'AbortError')
         ) {
-          connected.value = false;
-          queued = null;
-          destination.value = null;
+          // A failed redundant HTTP request does not invalidate a fresh live
+          // scene. Without a recent accepted frame, retain the offline fallback.
+          const live =
+            streamLive &&
+            snapshotRevision > receivedBefore &&
+            monotonic() - receivedAt <= STREAM_FRESH_MS;
+          if (!live) {
+            connected.value = false;
+            queued = null;
+            destination.value = null;
+          }
           presenceStatus.value = cause instanceof Error ? cause.message : '大廳暫時無法連線。';
           backoff = Math.min(10000, backoff * 2);
         }
@@ -291,6 +314,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     await job;
     if (presenceJob === job) {
       presenceJob = null;
+      if (presenceRead === read) presenceRead = null;
       if (current(epoch, account)) {
         if (queued && connected.value) void sync();
         else {
@@ -586,6 +610,9 @@ export const useLobbyStore = defineStore('lobby', () => {
     for (const controller of controllers) controller.abort();
     controllers.clear();
     presenceJob = null;
+    presenceRead = null;
+    snapshotRevision = 0;
+    receivedAt = 0;
     roomsJob = null;
     expressionsJob = null;
     snapshot.value = null;

@@ -178,7 +178,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       }
     }
     bossInteractions.advanceCycle(actor, time, random);
-    if (actor.respawnAt && time >= actor.respawnAt) {
+    if (actor.bossId) actor.respawnAt = 0;
+    else if (actor.respawnAt && time >= actor.respawnAt) {
       const oldX = actor.x;
       actor.authorBonus = entitled;
       reset(actor, time);
@@ -948,7 +949,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       actor.pickupAttackUntil =
         0;
     actor.lastPickup = null;
-    actor.respawnAt = time + rules.respawnMs;
+    actor.respawnAt = actor.bossId ? 0 : time + rules.respawnMs;
     actor.targetX = actor.x;
     actor.targetY = actor.y;
     actor.wallRoute = [];

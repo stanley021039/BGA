@@ -107,6 +107,11 @@ test('thin living HP bars track health without visible numbers; death and respaw
     visitor.health = 0;
     await vue.nextTick();
     assert.equal(host.querySelector('.scene-energy'), null, 'no energy under a tombstone');
+    Object.assign(visitor, { bossId: 'colossal', respawnAt: 0, respawnRemainingMs: 0 });
+    await vue.nextTick();
+    assert.match(host.textContent, /不會自動重生/);
+    assert.doesNotMatch(host.textContent, /秒後重生/);
+    assert.equal(timers.size, 0, 'defeated bosses do not keep a respawn countdown timer');
   } finally {
     app.unmount();
     host.remove();

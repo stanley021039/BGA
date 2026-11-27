@@ -10,9 +10,13 @@ const props = withDefaults(
 const seconds = ref(3);
 let timer: ReturnType<typeof setInterval> | undefined;
 watch(
-  () => props.visitor.respawnAt,
+  [() => props.visitor.respawnAt, () => props.visitor.bossId, () => props.visitor.health === 0],
   () => {
     clearInterval(timer);
+    if (props.visitor.bossId) {
+      seconds.value = 0;
+      return;
+    }
     const remaining = props.visitor.respawnRemainingMs ?? 3000;
     const deadline = performance.now() + remaining;
     seconds.value = Math.ceil(remaining / 1000);
@@ -33,7 +37,8 @@ onBeforeUnmount(() => clearInterval(timer));
         ><b class="scene-tombstone-name">{{ visitor.name }}</b
         ><b>死了</b></strong
       >
-      <small>{{ seconds }} 秒後重生</small>
+      <small v-if="visitor.bossId">不會自動重生</small>
+      <small v-else>{{ seconds }} 秒後重生</small>
     </div>
     <img :src="tombstone" width="80" height="90" alt="" />
   </div>
