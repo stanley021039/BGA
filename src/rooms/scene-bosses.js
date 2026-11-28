@@ -152,7 +152,7 @@ function driveBoss(bot, actor, target, time, state) {
       actor.y = actor.targetY;
       actor.teleportId++;
     }
-    state.moveAt = time + (spec.movement === 'stalk' ? 1800 : 3000);
+    state.moveAt = time + (spec.movement === 'stalk' ? 1100 : 1800);
   }
   if (state.pending) {
     if (time < state.pending.until) return null;

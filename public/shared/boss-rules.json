@@ -2,10 +2,10 @@
   "lobbyLimits": { "bots": 5, "bosses": 5 },
   "strength": {
     "healthMultiplier": 12,
-    "damageMultiplier": 1.25,
-    "speedMultiplier": 1.3,
-    "cooldownMultiplier": 0.8,
-    "finalCooldownMultiplier": 0.55
+    "damageMultiplier": 1.65,
+    "speedMultiplier": 1.65,
+    "cooldownMultiplier": 0.55,
+    "finalCooldownMultiplier": 0.38
   },
   "contact": { "radius": 5, "intervalMs": 800, "damageWeight": 0.3 },
   "phaseLockMs": 2000,

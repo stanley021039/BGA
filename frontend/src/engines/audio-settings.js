@@ -274,7 +274,7 @@ let AudioSettings;
       const context = (teleportContext ||= new Context());
       if (!teleportBuffer) {
         const rate = Math.min(48000, context.sampleRate);
-        teleportBuffer = context.createBuffer(1, Math.ceil(rate * 0.22), rate);
+        teleportBuffer = context.createBuffer(1, Math.ceil(rate * 0.42), rate);
         const data = teleportBuffer.getChannelData(0);
         for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.45;
       }
@@ -337,19 +337,23 @@ let AudioSettings;
           const at = context.currentTime;
           filter.frequency.setValueAtTime(1400, at);
           filter.frequency.exponentialRampToValueAtTime(6200, at + 0.035);
-          filter.frequency.exponentialRampToValueAtTime(1000, at + 0.2);
+          filter.frequency.exponentialRampToValueAtTime(1800, at + 0.16);
+          filter.frequency.exponentialRampToValueAtTime(650, at + 0.41);
           chirp.frequency.setValueAtTime(2500, at);
           chirp.frequency.exponentialRampToValueAtTime(4300, at + 0.025);
-          chirp.frequency.exponentialRampToValueAtTime(850, at + 0.15);
+          chirp.frequency.exponentialRampToValueAtTime(1300, at + 0.17);
+          chirp.frequency.exponentialRampToValueAtTime(600, at + 0.35);
           envelope.gain.setValueAtTime(0.001, at);
           envelope.gain.exponentialRampToValueAtTime(1, at + 0.008);
-          envelope.gain.exponentialRampToValueAtTime(0.001, at + 0.215);
+          envelope.gain.exponentialRampToValueAtTime(0.32, at + 0.14);
+          envelope.gain.exponentialRampToValueAtTime(0.48, at + 0.21);
+          envelope.gain.exponentialRampToValueAtTime(0.001, at + 0.415);
           noise.onended = finish;
           noise.start(at);
-          noise.stop(at + 0.22);
+          noise.stop(at + 0.42);
           chirp.start(at);
-          chirp.stop(at + 0.16);
-          deadline = setTimeout(finish, 350);
+          chirp.stop(at + 0.36);
+          deadline = setTimeout(finish, 600);
         })
         .catch(() => {
           finish();

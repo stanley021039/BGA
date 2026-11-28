@@ -192,7 +192,7 @@ test('one damage event cannot cross a boss bar; healing and phase buffs never re
     boss.bossPhase = phase;
     boss.health = (boss.maxHealth * (4 - phase)) / 3;
     assert.equal(phaseStats(boss).damage, multiplier);
-    assert.ok(Math.abs(authorSpeed(boss) - multiplier * 1.3) < 1e-9);
+    assert.ok(Math.abs(authorSpeed(boss) - multiplier * 1.65) < 1e-9);
   }
 });
 
@@ -301,8 +301,8 @@ test('boss baseline damage and movement are stronger without changing human stat
   const ordinary = combat.hit(human, victim, 1000, 'boss_contact', 0.3).damage;
   combat.reset(victim, 1000);
   const stronger = combat.hit(boss, victim, 1100, 'boss_contact', 0.3).damage;
-  assert.ok(Math.abs(stronger - ordinary * 1.25) <= 1);
+  assert.ok(Math.abs(stronger - ordinary * 1.65) <= 1);
   assert.equal(authorSpeed(human), 1);
-  assert.equal(authorSpeed(boss), 1.3);
+  assert.equal(authorSpeed(boss), 1.65);
   assert.equal(phaseStats(boss).attackRate, 1);
 });

@@ -218,7 +218,7 @@ const groups = computed(() => [
       <span v-if="!connected">連線中</span>
     </div>
     <div v-if="self?.maxHealth" class="scene-self-status" role="group" aria-label="自己的戰鬥狀態">
-      <div class="scene-bonuses" aria-label="增益與回復狀態">
+      <div class="scene-bonuses" role="group" tabindex="0" aria-label="增益與回復狀態，可左右捲動">
         <div
           v-for="group in groups"
           v-show="
@@ -256,7 +256,7 @@ const groups = computed(() => [
 .scene-stats {
   display: grid;
   gap: var(--stitch-space-8);
-  max-inline-size: min(24rem, calc(100vw - 32px));
+  max-inline-size: min(48rem, calc(100vw - var(--stitch-space-32)));
   font-variant-numeric: tabular-nums;
 }
 .scene-self-status {
@@ -266,14 +266,18 @@ const groups = computed(() => [
 }
 .scene-bonuses {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-x: auto;
   gap: var(--stitch-space-8);
   min-block-size: var(--stitch-space-24);
   align-items: center;
 }
 .scene-effect-group {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex: none;
   align-items: center;
   gap: var(--stitch-space-8);
 }

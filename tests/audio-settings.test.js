@@ -653,7 +653,7 @@ function installTeleportContext(ui, pending = false) {
     }
     createBuffer(_channels, length, rate) {
       this.buffers++;
-      assert.ok(length <= 10560);
+      assert.ok(length <= 20160);
       return { getChannelData: () => new Float32Array(length) };
     }
     createBufferSource() {
@@ -690,8 +690,8 @@ test('teleport synthesis is soft, bounded, shares game caps and follows live vol
   assert.equal(ui.clips.length, 0, 'no media request');
   assert.equal(synth.contexts.length, 1);
   assert.equal(synth.gains.at(-1).gain.value, 0.25 * 0.7);
-  assert.equal(synth.sources[0].stopped[0], 0.22);
-  assert.equal(synth.sources[1].stopped[0], 0.16);
+  assert.equal(synth.sources[0].stopped[0], 0.42);
+  assert.equal(synth.sources[1].stopped[0], 0.36);
   assert.equal(ui.api.playEffect('teleport'), undefined, 'one synth voice');
   assert.ok(ui.api.playEffect('shot'));
   assert.equal(ui.api.playEffect('shot'), undefined, 'existing two-game cap');

@@ -1,3 +1,7 @@
+2026-11-28 #449：Boss多人壓制與大招強化已接本機3.39.0：傷害1.65、移速1.65、普通空檔0.55／最終0.38；39招及階段覆寫擴大，單線改三線。R額外×1.2並依Boss加裂甲／拉扯／減速／扣能／抑療／回能抑制；保留預警及控制保護。117組多人與安全區、39組大招狀態、54直接相關測試通過，前端438通過；桌機／手機78次真施放與78組原生Canvas、途中關閉／reduce／hidden清理通過。完整回歸以本輪規格最後記錄為準。獨立3203，共用站未更新，未PR／CI／部署；詳[本輪規格](../specs/BOSS-PRESSURE-449.md)。
+
+2026-11-28 #447：Boss控制權限與大廳選擇沿使用者JSON擴充；僅兌換碼入口寫入權限，個人設定更新保留既有欄位且忽略偽造輸入。fresh account兌換前未存角色時須補defaults；真HTTP回歸覆蓋登入重讀、一次領取及重送、ordinary profile保存與場域隔離。沒有操作正式／共用資料；3202獨立資料庫，未刪除舊測試殘留鎖。詳[規格與證據](../specs/PLAYER-BOSS-CONTROL-447.md)。
+
 2026-10-27 #311 逐版測試資料：五個固定commit的隔離測試站各三輪，每次建立全新暫存DB與十位合成玩家，結束關閉並釋放，未切換原共用站或正式站。來源／manifest前後一致且五版同一硬體／harness；server VMware GPU／VRAM均保留unavailable／null。15輪及資源、流量、同步波動證據見[跨版本紀錄](../specs/PERFORMANCE-BENCHMARK-HISTORY-311.md)，取代先前尚未逐版比較狀態。
 
 2026-10-27 #311 量測資料隔離：現有測試站曾於執行中被另一批重新建置，該輪無效；改固定3.11.1來源的獨立QA服務完成三輪。每輪僅建立／清理本次十個合成帳號及session，確認剩餘benchmark帳號0；原有三個合成QA種子帳號保留。沒有操作正式資料或重啟原共用站。server由/proc量CPU／RSS／private bytes，VMware vmwgfx不提供GPU／VRAM counter，記null與原因，不能寫成0或已驗GPU效能。證據及未驗範圍見[本批實測](../specs/PERFORMANCE-BENCHMARK-311.md)。

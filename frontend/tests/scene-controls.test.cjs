@@ -6,6 +6,40 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const vue = require('vue');
 
+test('manual Boss cast and phase cooldowns gate input while allowing movement between casts', async () => {
+  const f = fixture();
+  try {
+    f.state.snapshot = {
+      ...f.state.snapshot,
+      visitors: [
+        {
+          ...f.state.snapshot.visitors[0],
+          controlledBoss: true,
+          bossCastUntil: 11000,
+          bossReadyAt: 13000,
+          bossRReadyAt: 14000,
+          energy: 100,
+          energyMaximum: 100,
+        },
+      ],
+    };
+    await vue.nextTick();
+    for (const action of ['q', 'e', 'r', 'c', 'up'])
+      assert.equal(f.controls.disabled(action), true, action);
+    await f.advance(1100);
+    assert.equal(f.controls.disabled('up'), false);
+    assert.equal(f.controls.disabled('q'), true);
+    await f.advance(2000);
+    assert.equal(f.controls.disabled('q'), false);
+    assert.equal(f.controls.disabled('r'), true);
+    await f.advance(1000);
+    assert.equal(f.controls.disabled('r'), false);
+    assert.equal(f.controls.disabled('c'), true);
+  } finally {
+    f.dispose();
+  }
+});
+
 function fixture(send = async () => true) {
   let time = 10000,
     id = 0;

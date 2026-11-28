@@ -8,6 +8,27 @@ const props = withDefaults(
   { self: false, connected: true },
 );
 const seconds = ref(3);
+const bossTombstoneVisible = ref(false);
+let tombstoneTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  [
+    () => props.visitor.bossId,
+    () => props.visitor.health,
+    () => props.visitor.bossTombstoneRemainingMs,
+  ],
+  () => {
+    clearTimeout(tombstoneTimer);
+    const remaining = Math.max(0, Math.min(3000, props.visitor.bossTombstoneRemainingMs || 0));
+    bossTombstoneVisible.value =
+      !!props.visitor.bossId && props.visitor.health === 0 && remaining > 0;
+    if (bossTombstoneVisible.value)
+      tombstoneTimer = setTimeout(() => {
+        bossTombstoneVisible.value = false;
+      }, remaining);
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => clearTimeout(tombstoneTimer));
 let timer: ReturnType<typeof setInterval> | undefined;
 watch(
   [() => props.visitor.respawnAt, () => props.visitor.bossId, () => props.visitor.health === 0],
@@ -31,7 +52,11 @@ watch(
 onBeforeUnmount(() => clearInterval(timer));
 </script>
 <template>
-  <div v-if="visitor.health === 0" class="scene-tombstone" role="status">
+  <div
+    v-if="visitor.health === 0 && (!visitor.bossId || bossTombstoneVisible)"
+    class="scene-tombstone"
+    role="status"
+  >
     <div class="scene-tombstone-caption">
       <strong :title="visitor.name + '死了'"
         ><b class="scene-tombstone-name">{{ visitor.name }}</b
@@ -43,7 +68,9 @@ onBeforeUnmount(() => clearInterval(timer));
     <img :src="tombstone" width="80" height="90" alt="" />
   </div>
   <div
-    v-else-if="visitor.maxHealth && visitor.health !== undefined"
+    v-else-if="
+      !visitor.bossId && visitor.maxHealth && visitor.health !== undefined && visitor.health > 0
+    "
     class="scene-health-bar"
     role="progressbar"
     :aria-label="visitor.name + '的HP'"

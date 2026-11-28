@@ -51,6 +51,27 @@ function loader(mocks = {}) {
   };
 }
 
+test('boss tombstone deadlines use server time, expire on reconnect and have bounded legacy fallbacks', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  const raw = createLobby(() => 1000).view({ id: 'a', display_name: 'A' });
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  Object.assign(raw.visitors[0], { bossId: 'colossal', health: 0, bossTombstoneUntil: 4000 });
+  for (const [serverNow, remaining] of [
+    [1000, 3000],
+    [3600, 400],
+    [4000, 0],
+    [9000, 0],
+  ]) {
+    raw.serverNow = serverNow;
+    assert.equal(read(raw).visitors[0].bossTombstoneRemainingMs, remaining);
+  }
+  raw.serverNow = 1000;
+  raw.visitors[0].bossTombstoneUntil = 100000;
+  assert.equal(read(raw).visitors[0].bossTombstoneRemainingMs, 3000);
+  delete raw.visitors[0].bossTombstoneUntil;
+  assert.equal(read(raw).visitors[0].bossTombstoneRemainingMs, 0);
+});
+
 test('enraged boss phase and cast rate survive the real lobby parser with bounded fallbacks', () => {
   const { createLobby } = require('../../src/rooms/lobby');
   const { createSceneCombat } = require('../../src/rooms/scene-combat');

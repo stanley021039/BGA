@@ -32,6 +32,8 @@ function redeemedAt(db, userId, group) {
   return grants(db, userId)[group] || null;
 }
 function redeem(store, userId, code) {
+  if (typeof code === 'string' && code.length <= 80 && code.trim() === '野獸前輩')
+    return require('../profiles/boss-control').redeem(store, userId);
   if (
     typeof code === 'string' &&
     code.length <= 80 &&

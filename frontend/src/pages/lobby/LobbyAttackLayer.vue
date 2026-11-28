@@ -7,6 +7,7 @@ import { createAttackStage } from '../../services/attack-artwork';
 import { attackColor, attackOptions } from '../../services/attack-placement';
 import { sizedImage } from '../../services/image-size';
 import { playHeroFlight } from '../../services/scene-hero-flight.js';
+import { replaceableAttack } from '../../services/attack-capacity';
 import SceneEquation from '../../components/SceneEquation.vue';
 import BossTelegraphs from '../../components/BossTelegraphs.vue';
 import BossLandingImpacts from '../../components/BossLandingImpacts.vue';
@@ -267,8 +268,7 @@ watch(
       const arena = snapshot.arena?.match?.phase === 'running';
       const limit = arena ? 6 : 3;
       if (active.value.length >= limit) {
-        const ordinary = active.value.find((item) => item.slot !== 'r');
-        const dropped = ordinary || (event.slot === 'r' ? active.value[0] : undefined);
+        const dropped = replaceableAttack(active.value);
         if (!dropped) continue;
         stage?.remove(dropped.id);
         flights.get(dropped.id)?.();

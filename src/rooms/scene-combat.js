@@ -1054,6 +1054,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false, poli
       health: actor.health,
       maxHealth: actor.maxHealth,
       respawnAt: actor.respawnAt,
+      ...(actor.bossId && !living ? { bossTombstoneUntil: actor.lastHitAt + 3000 } : {}),
       kda: { ...stats(actor) },
       immobileUntil: actor.immobileUntil || 0,
       guardFullMs: living ? Math.max(0, guardFullUntil - time) : 0,

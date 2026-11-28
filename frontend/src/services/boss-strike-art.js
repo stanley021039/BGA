@@ -2,6 +2,7 @@
 // Adapt material, impact and silhouette details to the authoritative clock/zones;
 // do not import the prototype's actors, damage simulation, shake or timers.
 import { ghidorahMouthsFor } from './boss-mouths.js';
+import { traceBossZone } from '../engines/boss-geometry.js';
 export function drawBossStrike(ctx, spec, zones, options, age) {
   const aspect = options.aspectRatio || 1.6,
     d = Math.max(1, aspect);
@@ -96,6 +97,47 @@ export function drawBossStrike(ctx, spec, zones, options, age) {
         r = (1 - charge) * 5 + 1;
       shard(source.x + Math.cos(a) * r, source.y + Math.sin(a) * r, 0.25 + charge * 0.25, a);
     }
+  }
+  // Ultimate accents are bounded to the cast clock, not a second particle loop.
+  // The short impact outline follows actual zones, including their safe corridors.
+  if (spec.slot === 'r') {
+    ctx.save();
+    if (!active) {
+      ctx.globalAlpha = alpha * charge * 0.65;
+      for (let i = 0; i < 2; i++) {
+        const radius = 3 + (1 - charge) * (8 + i * 3);
+        ring(source.x, source.y, radius, 0.2 + charge * 0.3, i ? spec.color : spec.accent);
+      }
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * Math.PI) / 6 + age / 1800;
+        const radius = 3 + (1 - charge) * 12;
+        shard(
+          source.x + Math.cos(angle) * radius,
+          source.y + Math.sin(angle) * radius,
+          0.3 + charge * 0.6,
+          angle + Math.PI,
+        );
+      }
+    } else if (impactAge < 280) {
+      ctx.globalAlpha = alpha * (1 - impactAge / 280) * 0.65;
+      ctx.strokeStyle = spec.accent;
+      for (const zone of zones) {
+        ctx.lineWidth = zone.shape === 'line' ? zone.w : 0.7;
+        traceBossZone(ctx, zone);
+        ctx.stroke();
+      }
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * Math.PI) / 6;
+        const radius = 2 + impactAge / 24;
+        shard(
+          source.x + Math.cos(angle) * radius,
+          source.y + Math.sin(angle) * radius,
+          1.4 * (1 - impactAge / 280),
+          angle,
+        );
+      }
+    }
+    ctx.restore();
   }
   for (const [index, z] of zones.entries()) {
     ctx.save();

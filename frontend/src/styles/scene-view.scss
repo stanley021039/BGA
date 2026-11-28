@@ -34,7 +34,7 @@ body.scene-ui-hidden {
     env(safe-area-inset-right)
   );
   max-inline-size: min(
-    400px,
+    48rem,
     calc(
       100vw - max(var(--stitch-space-16), env(safe-area-inset-left)) - max(
           var(--stitch-space-16),

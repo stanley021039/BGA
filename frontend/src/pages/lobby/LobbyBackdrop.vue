@@ -106,7 +106,12 @@ const sceneSnapshot = computed(() => {
 });
 const controls = useSceneControls({
   teleportCost: sceneRules.energy.lobbyTeleportCost,
-  context: () => [lobby.snapshot?.selfId, lobby.snapshot?.arena?.match?.id].join(':'),
+  context: () =>
+    [
+      lobby.snapshot?.selfId,
+      lobby.snapshot?.arena?.match?.id,
+      lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId)?.bossId,
+    ].join(':'),
   enabled: () => sceneEnabled.value && !props.arenaWarmup,
   snapshot: () => lobby.snapshot,
   send: async (action, direction) => {
@@ -363,7 +368,7 @@ function key(event: KeyboardEvent) {
       dy += d[1];
     }
   }
-  if (dx || dy) lobby.step(Math.sign(dx), Math.sign(dy));
+  if ((dx || dy) && !controls.disabled('up')) lobby.step(Math.sign(dx), Math.sign(dy));
 }
 
 function visibility() {
@@ -405,12 +410,24 @@ async function openChat() {
 defineExpose({ openChat });
 </script>
 <template>
-  <BossHealthHud :visitors="sceneSnapshot?.visitors || []" :connected="sceneEnabled" />
+  <BossHealthHud
+    :visitors="sceneSnapshot?.visitors || []"
+    :connected="sceneEnabled"
+    :self-id="sceneSnapshot?.selfId"
+  />
   <MobileSceneControls
     :controls="controls"
     :enabled="sceneEnabled"
-    :battle="battlePlaying || !!props.trainingLoadout"
+    :battle="
+      battlePlaying ||
+      !!props.trainingLoadout ||
+      !!lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId)?.controlledBoss
+    "
+    :disable-teleport="
+      !!lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId)?.controlledBoss
+    "
     :locked-loadout="
+      lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId)?.bossLoadout ||
       props.trainingLoadout ||
       (battlePlaying
         ? lobby.snapshot?.arena?.match?.players.find((p) => p.id === lobby.snapshot?.selfId)

@@ -402,6 +402,10 @@ function initializeApp(config, dataLock, acquired) {
   const makeLobby = (requireReady = false, options = {}) =>
     createLobby(undefined, (userId) => portraitUrl(userId), undefined, authorCombatBonus, {
       attackLoadout: (userId) => require('./profiles/settings').getAttackSettings(db, userId),
+      playerBoss: {
+        read: (userId) => require('./profiles/boss-control').state(db, userId),
+        write: (userId, bossId) => require('./profiles/boss-control').select(db, userId, bossId),
+      },
       startDelayMs: 5000,
       requireReady,
       expandedMap: requireReady,
@@ -1920,6 +1924,14 @@ function initializeApp(config, dataLock, acquired) {
             : lobbyHandlers);
         if (url.pathname === '/api/lobby' && req.method === 'GET')
           return send(lobbyChanged(scopedLobby.view(user, url.searchParams.get('entrance'))));
+        if (url.pathname === '/api/lobby/self-boss' && ['GET', 'POST'].includes(req.method)) {
+          if (url.searchParams.has('arena') && !url.searchParams.has('training'))
+            throw new HttpError(403, 'BOSS_CONTROL_SCOPE', 'Boss 操控目前開放大廳與訓練場');
+          if (req.method === 'POST') limitRate(roomRate, 'self-boss:' + user.id, 30);
+          const result = scopedLobby.controlBoss(user, req.method === 'POST' ? data : undefined);
+          if (req.method === 'POST') lobbyChanged();
+          return send(result);
+        }
         if (url.pathname === '/api/lobby/bosses' && ['GET', 'POST'].includes(req.method)) {
           if (
             url.searchParams.has('arena') &&

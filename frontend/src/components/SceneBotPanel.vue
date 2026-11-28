@@ -51,7 +51,7 @@ const defaults = () => ({
   q: 'barrage',
   e: 'beam',
   r: 'guanyin_barrage',
-  mode: arena ? 'attack' : 'idle',
+  mode: 'attack',
   team: 'blue',
 });
 const form = ref(defaults());

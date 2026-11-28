@@ -37,6 +37,7 @@ export interface FrameOption {
   id: string;
   label: string;
   group?: string;
+  achievementId?: string;
 }
 interface FrameState {
   version: number;

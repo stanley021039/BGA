@@ -74,6 +74,11 @@ export interface LobbyVisitor {
   bossBlessingMs?: number;
   teleportCost?: number;
   bossId?: string;
+  controlledBoss?: boolean;
+  bossCastUntil?: number;
+  bossReadyAt?: number;
+  bossRReadyAt?: number;
+  bossLoadout?: { q: string; e: string; r: string };
   bossPhase?: number;
   bossPhaseLockMs?: number;
   bossControlImmuneMs?: number;
@@ -135,6 +140,7 @@ export interface LobbyVisitor {
   maxHealth?: number;
   respawnAt?: number;
   respawnRemainingMs?: number;
+  bossTombstoneRemainingMs?: number;
   id: string;
   name: string;
   image: string;
@@ -409,6 +415,9 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         };
       })(),
       passage: validPassage(item.passage) ? item.passage : null,
+      bossTombstoneRemainingMs: finite(item.bossTombstoneUntil)
+        ? Math.max(0, Math.min(3000, item.bossTombstoneUntil - Number(row.serverNow)))
+        : 0,
       respawnRemainingMs: finite(item.respawnAt)
         ? Math.max(0, item.respawnAt - Number(row.serverNow))
         : 0,
@@ -516,6 +525,19 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       ...(typeof item.bossId === 'string' ? { bossId: item.bossId } : {}),
       ...(typeof item.bossId === 'string'
         ? {
+            ...(item.controlledBoss === true
+              ? {
+                  controlledBoss: true,
+                  bossCastUntil: finite(item.bossCastUntil) ? item.bossCastUntil : 0,
+                  bossReadyAt: finite(item.bossReadyAt) ? item.bossReadyAt : 0,
+                  bossRReadyAt: finite(item.bossRReadyAt) ? item.bossRReadyAt : 0,
+                  bossLoadout: {
+                    q: text(record(item.bossLoadout).q),
+                    e: text(record(item.bossLoadout).e),
+                    r: text(record(item.bossLoadout).r),
+                  },
+                }
+              : {}),
             bossPhase: [1, 2, 3].includes(Number(item.bossPhase)) ? Number(item.bossPhase) : 1,
             bossPhaseLockMs: finite(item.bossPhaseLockMs)
               ? Math.max(0, Math.min(2000, item.bossPhaseLockMs))

@@ -175,6 +175,15 @@
   box-sizing: border-box;
   flex-direction: column;
   align-items: stretch;
+  &[data-content-align='center'] {
+    align-items: center;
+    text-align: center;
+    > .ui-choice-label,
+    > .ui-choice-state {
+      inline-size: 100%;
+      text-align: center;
+    }
+  }
   justify-content: flex-start;
   gap: var(--stitch-gap-label);
   min-inline-size: var(--stitch-control-height);
