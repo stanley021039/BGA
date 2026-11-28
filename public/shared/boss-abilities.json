@@ -11,10 +11,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "stages": {
       "2": {
         "steps": [
@@ -45,7 +45,8 @@
           "ms": 2000
         }
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_mutalith_e",
@@ -59,9 +60,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "spots",
     "pull": 3,
     "stages": {
@@ -82,20 +83,21 @@
             "delay": 0,
             "weight": 0.5,
             "side": -7,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 650,
             "weight": 0.5,
             "side": 7,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           }
         ],
         "effects": {
           "pull": 3
         }
       }
-    }
+    },
+    "spotRadius": 7.425
   },
   {
     "id": "boss_mutalith_r",
@@ -108,10 +110,10 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
     "geometry": "ring",
     "pull": 4,
     "stages": {
@@ -121,7 +123,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 18,
+            "radius": 24.3,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -130,7 +132,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 22,
+            "radius": 29.7,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 20
@@ -139,14 +141,16 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 26,
+            "radius": 35.1,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 40
           }
         ],
         "effects": {
-          "pull": 3
+          "pull": 5,
+          "armor": 20,
+          "ms": 1800
         }
       },
       "3": {
@@ -155,7 +159,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 18,
+            "radius": 24.3,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -164,7 +168,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 24,
+            "radius": 32.4,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 85
@@ -173,16 +177,23 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 30,
+            "radius": 40.5,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 170
           }
         ],
         "effects": {
-          "pull": 3
+          "pull": 5,
+          "armor": 20,
+          "ms": 1800
         }
       }
+    },
+    "effects": {
+      "pull": 5,
+      "armor": 20,
+      "ms": 1800
     }
   },
   {
@@ -197,10 +208,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "slow": 700,
     "stages": {
       "2": {
@@ -243,7 +254,8 @@
           "ms": 800
         }
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_cthulhu_e",
@@ -257,9 +269,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "cross",
     "stages": {
       "2": {
@@ -305,10 +317,10 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
     "geometry": "circle",
     "slow": 1000,
     "stages": {
@@ -318,13 +330,13 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "circle",
-            "radius": 18
+            "radius": 24.3
           },
           {
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 24,
+            "radius": 32.4,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -333,15 +345,16 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 28,
+            "radius": 37.8,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
           }
         ],
         "effects": {
-          "slow": 20,
-          "ms": 1000
+          "slow": 30,
+          "ms": 1600,
+          "recovery": 25
         }
       },
       "3": {
@@ -350,7 +363,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 22,
+            "radius": 29.7,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -359,7 +372,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 25,
+            "radius": 33.75,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 80
@@ -368,17 +381,23 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 28,
+            "radius": 37.8,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 160
           }
         ],
         "effects": {
-          "slow": 20,
-          "ms": 1000
+          "slow": 30,
+          "ms": 1600,
+          "recovery": 25
         }
       }
+    },
+    "effects": {
+      "slow": 30,
+      "recovery": 25,
+      "ms": 1600
     }
   },
   {
@@ -393,10 +412,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "stages": {
       "2": {
         "steps": [
@@ -428,7 +447,8 @@
           "ms": 2000
         }
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_gatanozoa_e",
@@ -442,9 +462,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "spots",
     "slow": 800,
     "stages": {
@@ -467,18 +487,18 @@
             "delay": 0,
             "weight": 0.34,
             "side": -7,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 500,
             "weight": 0.33,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 1000,
             "weight": 0.33,
             "side": 7,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           }
         ],
         "effects": {
@@ -487,7 +507,8 @@
           "ms": 2000
         }
       }
-    }
+    },
+    "spotRadius": 7.425
   },
   {
     "id": "boss_gatanozoa_r",
@@ -500,11 +521,11 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
-    "geometry": "line",
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
+    "geometry": "lanes",
     "root": 800,
     "stages": {
       "2": {
@@ -527,7 +548,8 @@
         ],
         "effects": {
           "stone": true,
-          "ms": 1200
+          "ms": 1600,
+          "slow": 25
         }
       },
       "3": {
@@ -552,9 +574,15 @@
         ],
         "effects": {
           "stone": true,
-          "ms": 1200
+          "ms": 1600,
+          "slow": 25
         }
       }
+    },
+    "spacing": 10,
+    "effects": {
+      "slow": 25,
+      "ms": 1600
     }
   },
   {
@@ -569,10 +597,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "slow": 600,
     "stages": {
       "2": {
@@ -604,7 +632,8 @@
           "ms": 2000
         }
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_arkveld_e",
@@ -618,10 +647,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "stages": {
       "2": {
         "steps": [
@@ -651,7 +680,8 @@
           "pull": 2.5
         }
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_arkveld_r",
@@ -664,10 +694,10 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
     "geometry": "fan",
     "stages": {
       "2": {
@@ -675,20 +705,23 @@
           {
             "delay": 0,
             "weight": 0.34,
-            "width": 6
+            "width": 10.2
           },
           {
             "delay": 550,
             "weight": 0.33,
-            "width": 6
+            "width": 10.2
           },
           {
             "delay": 1100,
             "weight": 0.33,
-            "width": 6
+            "width": 10.2
           }
         ],
-        "effects": {}
+        "effects": {
+          "armor": 25,
+          "ms": 2200
+        }
       },
       "3": {
         "steps": [
@@ -696,17 +729,24 @@
             "delay": 0,
             "weight": 0.5,
             "rotation": -20,
-            "width": 6
+            "width": 10.2
           },
           {
             "delay": 750,
             "weight": 0.5,
             "rotation": 20,
-            "width": 6
+            "width": 10.2
           }
         ],
-        "effects": {}
+        "effects": {
+          "armor": 25,
+          "ms": 2200
+        }
       }
+    },
+    "effects": {
+      "armor": 25,
+      "ms": 2200
     }
   },
   {
@@ -721,9 +761,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "cross",
     "stages": {
       "2": {
@@ -768,9 +808,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "ring",
     "drain": 5,
     "stages": {
@@ -791,7 +831,7 @@
             "delay": 0,
             "weight": 1,
             "geometry": "ring",
-            "radius": 14,
+            "radius": 18.9,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -814,10 +854,10 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
     "geometry": "cross",
     "root": 400,
     "stages": {
@@ -839,7 +879,9 @@
             "root": 400
           }
         ],
-        "effects": {}
+        "effects": {
+          "drain": 20
+        }
       },
       "3": {
         "steps": [
@@ -862,8 +904,13 @@
             "root": 400
           }
         ],
-        "effects": {}
+        "effects": {
+          "drain": 20
+        }
       }
+    },
+    "effects": {
+      "drain": 20
     }
   },
   {
@@ -878,10 +925,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "stages": {
       "2": {
         "steps": [
@@ -914,7 +961,8 @@
         ],
         "effects": {}
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_hyper_zetton_e",
@@ -928,9 +976,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "spots",
     "stages": {
       "2": {
@@ -952,23 +1000,24 @@
             "delay": 0,
             "weight": 0.34,
             "side": -9,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 450,
             "weight": 0.33,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 900,
             "weight": 0.33,
             "side": 9,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           }
         ],
         "effects": {}
       }
-    }
+    },
+    "spotRadius": 7.425
   },
   {
     "id": "boss_hyper_zetton_r",
@@ -981,10 +1030,10 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
     "geometry": "circle",
     "stages": {
       "2": {
@@ -993,7 +1042,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 18,
+            "radius": 24.3,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1002,7 +1051,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 22,
+            "radius": 29.7,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1011,13 +1060,16 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 26,
+            "radius": 35.1,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
           }
         ],
-        "effects": {}
+        "effects": {
+          "healing": 50,
+          "ms": 2500
+        }
       },
       "3": {
         "steps": [
@@ -1025,7 +1077,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 16,
+            "radius": 21.6,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1034,7 +1086,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 23,
+            "radius": 31.05,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 35
@@ -1043,14 +1095,21 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 30,
+            "radius": 40.5,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 70
           }
         ],
-        "effects": {}
+        "effects": {
+          "healing": 50,
+          "ms": 2500
+        }
       }
+    },
+    "effects": {
+      "healing": 50,
+      "ms": 2500
     }
   },
   {
@@ -1065,9 +1124,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "circle",
     "stages": {
       "2": {
@@ -1080,7 +1139,7 @@
             "delay": 600,
             "weight": 0.3,
             "geometry": "ring",
-            "radius": 16,
+            "radius": 21.6,
             "innerRatio": 0.55
           }
         ],
@@ -1092,13 +1151,13 @@
             "delay": 0,
             "weight": 0.5,
             "side": -6,
-            "radius": 11
+            "radius": 14.85
           },
           {
             "delay": 600,
             "weight": 0.5,
             "side": 6,
-            "radius": 11
+            "radius": 14.85
           }
         ],
         "effects": {}
@@ -1117,9 +1176,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "circle",
     "slow": 700,
     "stages": {
@@ -1141,14 +1200,14 @@
             "delay": 0,
             "weight": 0.5,
             "geometry": "sector",
-            "coneDegrees": 90,
+            "coneDegrees": 103.49999999999999,
             "rotation": -35
           },
           {
             "delay": 650,
             "weight": 0.5,
             "geometry": "sector",
-            "coneDegrees": 90,
+            "coneDegrees": 103.49999999999999,
             "rotation": 35
           }
         ],
@@ -1170,10 +1229,10 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
     "geometry": "circle",
     "stages": {
       "2": {
@@ -1182,7 +1241,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 14,
+            "radius": 18.9,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1191,7 +1250,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 22,
+            "radius": 29.7,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1200,13 +1259,16 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 30,
+            "radius": 40.5,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
           }
         ],
-        "effects": {}
+        "effects": {
+          "slow": 35,
+          "ms": 1500
+        }
       },
       "3": {
         "steps": [
@@ -1214,7 +1276,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 14,
+            "radius": 18.9,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1223,7 +1285,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 23,
+            "radius": 31.05,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 65
@@ -1232,14 +1294,21 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 32,
+            "radius": 43.2,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 130
           }
         ],
-        "effects": {}
+        "effects": {
+          "slow": 35,
+          "ms": 1500
+        }
       }
+    },
+    "effects": {
+      "slow": 35,
+      "ms": 1500
     }
   },
   {
@@ -1254,9 +1323,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "spots",
     "stages": {
       "2": {
@@ -1278,18 +1347,19 @@
             "delay": 0,
             "weight": 0.5,
             "side": -8,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 600,
             "weight": 0.5,
             "side": 8,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           }
         ],
         "effects": {}
       }
-    }
+    },
+    "spotRadius": 7.425
   },
   {
     "id": "boss_steel_behemoth_e",
@@ -1303,9 +1373,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "spots",
     "stages": {
       "2": {
@@ -1313,12 +1383,12 @@
           {
             "delay": 0,
             "weight": 0.5,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 600,
             "weight": 0.5,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           }
         ],
         "effects": {}
@@ -1329,23 +1399,24 @@
             "delay": 0,
             "weight": 0.34,
             "side": -10,
-            "spotRadius": 4
+            "spotRadius": 5.4
           },
           {
             "delay": 450,
             "weight": 0.33,
-            "spotRadius": 4
+            "spotRadius": 5.4
           },
           {
             "delay": 900,
             "weight": 0.33,
             "side": 10,
-            "spotRadius": 4
+            "spotRadius": 5.4
           }
         ],
         "effects": {}
       }
-    }
+    },
+    "spotRadius": 7.425
   },
   {
     "id": "boss_steel_behemoth_r",
@@ -1358,11 +1429,11 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
-    "geometry": "line",
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
+    "geometry": "lanes",
     "stages": {
       "2": {
         "steps": [
@@ -1370,25 +1441,28 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "lanes",
-            "spacing": 9,
-            "width": 4
+            "spacing": 10.8,
+            "width": 6.8
           },
           {
             "delay": 550,
             "weight": 0.33,
             "geometry": "lanes",
-            "spacing": 9,
-            "width": 4
+            "spacing": 10.8,
+            "width": 6.8
           },
           {
             "delay": 1100,
             "weight": 0.33,
             "geometry": "lanes",
-            "spacing": 9,
-            "width": 4
+            "spacing": 10.8,
+            "width": 6.8
           }
         ],
-        "effects": {}
+        "effects": {
+          "armor": 30,
+          "ms": 1800
+        }
       },
       "3": {
         "steps": [
@@ -1396,22 +1470,30 @@
             "delay": 0,
             "weight": 0.34,
             "side": -9,
-            "width": 4
+            "width": 6.8
           },
           {
             "delay": 550,
             "weight": 0.33,
-            "width": 4
+            "width": 6.8
           },
           {
             "delay": 1100,
             "weight": 0.33,
             "side": 9,
-            "width": 4
+            "width": 6.8
           }
         ],
-        "effects": {}
+        "effects": {
+          "armor": 30,
+          "ms": 1800
+        }
       }
+    },
+    "spacing": 10,
+    "effects": {
+      "armor": 30,
+      "ms": 1800
     }
   },
   {
@@ -1426,10 +1508,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "stages": {
       "2": {
         "steps": [
@@ -1461,7 +1543,8 @@
           "ms": 2000
         }
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_prismatic_void_e",
@@ -1475,9 +1558,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
     "geometry": "spots",
     "drain": 5,
     "stages": {
@@ -1499,18 +1582,18 @@
             "delay": 0,
             "weight": 0.34,
             "side": -9,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 500,
             "weight": 0.33,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           },
           {
             "delay": 1000,
             "weight": 0.33,
             "side": 9,
-            "spotRadius": 4.5
+            "spotRadius": 6.08
           }
         ],
         "effects": {
@@ -1518,7 +1601,8 @@
           "markedDrain": 3
         }
       }
-    }
+    },
+    "spotRadius": 7.425
   },
   {
     "id": "boss_prismatic_void_r",
@@ -1531,10 +1615,10 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
     "geometry": "circle",
     "slow": 900,
     "stages": {
@@ -1559,7 +1643,11 @@
             "pull": 0
           }
         ],
-        "effects": {}
+        "effects": {
+          "drain": 15,
+          "slow": 25,
+          "ms": 1400
+        }
       },
       "3": {
         "steps": [
@@ -1567,7 +1655,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "circle",
-            "radius": 12,
+            "radius": 16.2,
             "color": "#f06ba6",
             "pull": 0
           },
@@ -1575,7 +1663,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 22,
+            "radius": 29.7,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 55,
@@ -1586,7 +1674,7 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 30,
+            "radius": 40.5,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 110,
@@ -1594,8 +1682,17 @@
             "pull": 0
           }
         ],
-        "effects": {}
+        "effects": {
+          "drain": 15,
+          "slow": 25,
+          "ms": 1400
+        }
       }
+    },
+    "effects": {
+      "drain": 15,
+      "slow": 25,
+      "ms": 1400
     }
   },
   {
@@ -1610,10 +1707,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "stages": {
       "2": {
         "steps": [
@@ -1644,7 +1741,8 @@
         ],
         "effects": {}
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_gyo_e",
@@ -1658,10 +1756,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 12,
-    "width": 5,
-    "range": 40,
-    "geometry": "line",
+    "radius": 16.2,
+    "width": 8.5,
+    "range": 48,
+    "geometry": "lanes",
     "slow": 800,
     "stages": {
       "2": {
@@ -1683,7 +1781,7 @@
             "delay": 0,
             "weight": 1,
             "geometry": "fork",
-            "width": 4
+            "width": 6.8
           }
         ],
         "effects": {
@@ -1692,7 +1790,8 @@
           "ms": 2000
         }
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_gyo_r",
@@ -1705,10 +1804,10 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7000000000000001,
-    "radius": 22,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 29.7,
+    "width": 13.6,
+    "range": 78,
     "geometry": "circle",
     "slow": 1000,
     "stages": {
@@ -1718,7 +1817,7 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 18,
+            "radius": 24.3,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1727,7 +1826,7 @@
             "delay": 550,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 22,
+            "radius": 29.7,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1736,7 +1835,7 @@
             "delay": 1100,
             "weight": 0.33,
             "geometry": "ring",
-            "radius": 26,
+            "radius": 35.1,
             "innerRatio": 0.6,
             "gapDegrees": 85,
             "rotation": 0
@@ -1744,7 +1843,8 @@
         ],
         "effects": {
           "slow": 20,
-          "ms": 1000
+          "ms": 2500,
+          "healing": 50
         }
       },
       "3": {
@@ -1753,28 +1853,33 @@
             "delay": 0,
             "weight": 0.34,
             "geometry": "spots",
-            "spotRadius": 6,
+            "spotRadius": 8.1,
             "side": -8
           },
           {
             "delay": 550,
             "weight": 0.33,
             "geometry": "spots",
-            "spotRadius": 6
+            "spotRadius": 8.1
           },
           {
             "delay": 1100,
             "weight": 0.33,
             "geometry": "spots",
-            "spotRadius": 6,
+            "spotRadius": 8.1,
             "side": 8
           }
         ],
         "effects": {
           "slow": 20,
-          "ms": 1000
+          "ms": 2500,
+          "healing": 50
         }
       }
+    },
+    "effects": {
+      "healing": 50,
+      "ms": 2500
     }
   },
   {
@@ -1784,9 +1889,9 @@
     "windup": 700,
     "duration": 700,
     "pulses": 1,
-    "radius": 18,
-    "width": 4,
-    "range": 60,
+    "radius": 24.3,
+    "width": 6.8,
+    "range": 72,
     "id": "boss_ghidorah_turtle_q",
     "slot": "q",
     "name": "三首引力射線",
@@ -1803,8 +1908,9 @@
           {
             "delay": 650,
             "weight": 0.4,
-            "geometry": "line",
-            "width": 5
+            "geometry": "lanes",
+            "width": 8.5,
+            "spacing": 10
           }
         ],
         "effects": {
@@ -1817,22 +1923,25 @@
           {
             "delay": 0,
             "weight": 0.34,
-            "geometry": "line",
+            "geometry": "lanes",
             "rotation": -28,
-            "head": 0
+            "head": 0,
+            "spacing": 10
           },
           {
             "delay": 450,
             "weight": 0.33,
-            "geometry": "line",
-            "head": 1
+            "geometry": "lanes",
+            "head": 1,
+            "spacing": 10
           },
           {
             "delay": 900,
             "weight": 0.33,
-            "geometry": "line",
+            "geometry": "lanes",
             "rotation": 28,
-            "head": 2
+            "head": 2,
+            "spacing": 10
           }
         ],
         "effects": {
@@ -1849,9 +1958,9 @@
     "windup": 700,
     "duration": 700,
     "pulses": 1,
-    "radius": 18,
-    "width": 4,
-    "range": 60,
+    "radius": 24.3,
+    "width": 6.8,
+    "range": 72,
     "id": "boss_ghidorah_turtle_e",
     "slot": "e",
     "name": "金翼裂空",
@@ -1884,14 +1993,14 @@
             "weight": 0.5,
             "geometry": "sector",
             "rotation": -48,
-            "coneDegrees": 65
+            "coneDegrees": 74.75
           },
           {
             "delay": 700,
             "weight": 0.5,
             "geometry": "sector",
             "rotation": 48,
-            "coneDegrees": 65
+            "coneDegrees": 74.75
           }
         ],
         "effects": {
@@ -1908,40 +2017,42 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "radius": 18,
-    "width": 4,
-    "range": 60,
+    "radius": 24.3,
+    "width": 6.8,
+    "range": 72,
     "id": "boss_ghidorah_turtle_r",
     "slot": "r",
     "name": "王者・三重引力風暴",
     "motif": "beam",
     "geometry": "lanes",
-    "spacing": 10,
-    "damage": 0.7,
+    "spacing": 12,
+    "damage": 0.84,
     "stages": {
       "2": {
         "steps": [
           {
             "delay": 0,
             "weight": 0.34,
-            "width": 3
+            "width": 5.1
           },
           {
             "delay": 550,
             "weight": 0.33,
-            "width": 3,
+            "width": 5.1,
             "side": 5
           },
           {
             "delay": 1100,
             "weight": 0.33,
-            "width": 3,
+            "width": 5.1,
             "side": -5
           }
         ],
         "effects": {
           "pull": 2,
-          "ms": 1000
+          "ms": 2000,
+          "drain": 20,
+          "recovery": 30
         }
       },
       "3": {
@@ -1956,9 +2067,10 @@
           {
             "delay": 550,
             "weight": 0.33,
-            "geometry": "line",
-            "width": 7,
-            "head": 1
+            "geometry": "lanes",
+            "width": 11.9,
+            "head": 1,
+            "spacing": 10
           },
           {
             "delay": 1100,
@@ -1970,9 +2082,16 @@
         ],
         "effects": {
           "pull": 2,
-          "ms": 1000
+          "ms": 2000,
+          "drain": 20,
+          "recovery": 30
         }
       }
+    },
+    "effects": {
+      "drain": 20,
+      "recovery": 30,
+      "ms": 2000
     }
   },
   {
@@ -1987,11 +2106,11 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 17,
-    "width": 4,
-    "range": 48,
+    "radius": 22.95,
+    "width": 6.8,
+    "range": 57.6,
     "geometry": "sector",
-    "coneDegrees": 100,
+    "coneDegrees": 114.99999999999999,
     "stages": {
       "2": {
         "steps": [
@@ -2020,9 +2139,10 @@
           {
             "delay": 650,
             "weight": 0.5,
-            "geometry": "line",
-            "range": 32,
-            "width": 6
+            "geometry": "lanes",
+            "range": 38.4,
+            "width": 10.2,
+            "spacing": 10
           }
         ]
       }
@@ -2040,10 +2160,10 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 17,
-    "width": 4,
-    "range": 48,
-    "geometry": "line",
+    "radius": 22.95,
+    "width": 6.8,
+    "range": 57.6,
+    "geometry": "lanes",
     "stages": {
       "2": {
         "steps": [
@@ -2077,7 +2197,8 @@
           }
         ]
       }
-    }
+    },
+    "spacing": 10
   },
   {
     "id": "boss_gleam_eyes_r",
@@ -2090,12 +2211,12 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7,
-    "radius": 24,
-    "width": 8,
-    "range": 65,
+    "damage": 0.84,
+    "radius": 32.4,
+    "width": 13.6,
+    "range": 78,
     "geometry": "sector",
-    "coneDegrees": 110,
+    "coneDegrees": 126.49999999999999,
     "stages": {
       "1": {
         "steps": [
@@ -2112,11 +2233,17 @@
           {
             "delay": 1100,
             "weight": 0.34,
-            "geometry": "line",
-            "range": 38,
-            "width": 8
+            "geometry": "lanes",
+            "range": 45.6,
+            "width": 13.6,
+            "spacing": 10
           }
-        ]
+        ],
+        "effects": {
+          "armor": 20,
+          "slow": 25,
+          "ms": 1800
+        }
       },
       "2": {
         "steps": [
@@ -2134,26 +2261,33 @@
             "delay": 1100,
             "weight": 0.34,
             "geometry": "ring",
-            "radius": 22,
+            "radius": 29.7,
             "innerRatio": 0.4,
             "gapDegrees": 80,
             "rotation": 3.141592653589793
           }
-        ]
+        ],
+        "effects": {
+          "armor": 20,
+          "slow": 25,
+          "ms": 1800
+        }
       },
       "3": {
         "steps": [
           {
             "delay": 0,
             "weight": 0.33,
-            "geometry": "line",
-            "rotation": -0.35
+            "geometry": "lanes",
+            "rotation": -0.35,
+            "spacing": 10
           },
           {
             "delay": 550,
             "weight": 0.33,
-            "geometry": "line",
-            "rotation": 0.35
+            "geometry": "lanes",
+            "rotation": 0.35,
+            "spacing": 10
           },
           {
             "delay": 1100,
@@ -2163,8 +2297,18 @@
             "gapDegrees": 80,
             "rotation": 3.141592653589793
           }
-        ]
+        ],
+        "effects": {
+          "armor": 20,
+          "slow": 25,
+          "ms": 1800
+        }
       }
+    },
+    "effects": {
+      "armor": 20,
+      "slow": 25,
+      "ms": 1800
     }
   },
   {
@@ -2179,11 +2323,11 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.7,
-    "radius": 16,
-    "width": 4,
-    "range": 48,
+    "radius": 21.6,
+    "width": 6.8,
+    "range": 57.6,
     "geometry": "sector",
-    "coneDegrees": 85,
+    "coneDegrees": 97.74999999999999,
     "stages": {
       "2": {
         "steps": [
@@ -2234,9 +2378,9 @@
     "duration": 700,
     "pulses": 1,
     "damage": 0.85,
-    "radius": 17,
-    "width": 3.5,
-    "range": 48,
+    "radius": 22.95,
+    "width": 5.95,
+    "range": 57.6,
     "geometry": "fork",
     "stages": {
       "2": {
@@ -2257,20 +2401,23 @@
           {
             "delay": 0,
             "weight": 0.34,
-            "geometry": "line",
-            "rotation": -0.48
+            "geometry": "lanes",
+            "rotation": -0.48,
+            "spacing": 10
           },
           {
             "delay": 600,
             "weight": 0.33,
-            "geometry": "line",
-            "rotation": 0.48
+            "geometry": "lanes",
+            "rotation": 0.48,
+            "spacing": 10
           },
           {
             "delay": 1200,
             "weight": 0.33,
-            "geometry": "line",
-            "rotation": -0.48
+            "geometry": "lanes",
+            "rotation": -0.48,
+            "spacing": 10
           }
         ]
       }
@@ -2287,11 +2434,11 @@
     "windup": 2600,
     "duration": 1100,
     "pulses": 3,
-    "damage": 0.7,
-    "radius": 24,
-    "width": 8,
-    "range": 65,
-    "geometry": "line",
+    "damage": 0.84,
+    "radius": 32.4,
+    "width": 13.6,
+    "range": 78,
+    "geometry": "lanes",
     "stages": {
       "1": {
         "steps": [
@@ -2299,7 +2446,12 @@
             "delay": 0,
             "weight": 1
           }
-        ]
+        ],
+        "effects": {
+          "drain": 25,
+          "healing": 35,
+          "ms": 2000
+        }
       },
       "2": {
         "steps": [
@@ -2313,7 +2465,12 @@
             "geometry": "fork",
             "motif": "rifts"
           }
-        ]
+        ],
+        "effects": {
+          "drain": 25,
+          "healing": 35,
+          "ms": 2000
+        }
       },
       "3": {
         "steps": [
@@ -2331,8 +2488,19 @@
             "weight": 0.33,
             "rotation": 0.4
           }
-        ]
+        ],
+        "effects": {
+          "drain": 25,
+          "healing": 35,
+          "ms": 2000
+        }
       }
+    },
+    "spacing": 10,
+    "effects": {
+      "drain": 25,
+      "healing": 35,
+      "ms": 2000
     }
   }
 ]

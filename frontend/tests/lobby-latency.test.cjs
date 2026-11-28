@@ -132,6 +132,8 @@ function fixture(t) {
     document,
     timers,
     session,
+    apiError: (status) =>
+      Object.assign(new mocks['../services/http'].ApiError('refused'), { status }),
     advance: (ms) => (now += ms),
   };
 }
@@ -222,6 +224,19 @@ test('without a newer live snapshot a failed read still reports disconnection', 
     .reject(Error('offline'));
   await read;
   assert.equal(f.store.connected, false);
+});
+
+test('a refused movement keeps the scene connected even before the next stream frame', async (t) => {
+  for (const status of [409, 0, 401, 500]) {
+    const f = fixture(t);
+    await f.start();
+    f.store.step(1, 0);
+    await flush();
+    f.pending.find((r) => r.url === '/api/lobby/move').reject(f.apiError(status));
+    await flush();
+    assert.equal(f.store.connected, status === 409, `HTTP ${status}`);
+    if (status === 409) assert.ok(f.store.snapshot, 'the authoritative snapshot remains available');
+  }
 });
 test('an old or malformed frame cannot conceal an actual connection failure', async (t) => {
   for (const bad of ['old', 'malformed', 'expired']) {

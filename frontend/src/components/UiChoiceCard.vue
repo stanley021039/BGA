@@ -9,6 +9,7 @@ withDefaults(
     unavailable?: boolean;
     readableDisabled?: boolean;
     imageOnly?: boolean;
+    contentAlign?: 'start' | 'center';
   }>(),
   { selected: false, disabled: false, action: false, unavailable: false, readableDisabled: false },
 );
@@ -20,6 +21,7 @@ withDefaults(
     :data-choice-state="disabled || unavailable ? 'disabled' : selected ? 'selected' : 'default'"
     :data-readable-disabled="(readableDisabled && (disabled || unavailable)) || undefined"
     :data-image-only="imageOnly || undefined"
+    :data-content-align="contentAlign"
     :aria-label="label"
     :aria-pressed="action ? undefined : selected"
     :aria-disabled="unavailable || undefined"

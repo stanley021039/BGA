@@ -26,7 +26,7 @@ function botSettings(input, characters) {
     throw new HttpError(400, 'INVALID_SCENE_BOT', '機器人設定不正確');
   const characterId = input.characterId ?? characters[0]?.id;
   const entrance = input.entrance ?? 'classic';
-  const mode = input.mode ?? 'idle';
+  const mode = input.mode ?? 'attack';
   const team = input.team ?? 'blue';
   const loadout = {
     q: input.q ?? 'barrage',
@@ -53,6 +53,7 @@ function createBotDriver(random = Math.random) {
   function drive({
     time,
     bots,
+    manualBosses = [],
     positions,
     events,
     cast,
@@ -65,8 +66,9 @@ function createBotDriver(random = Math.random) {
     if (driving || time - lastTick < 400) return;
     lastTick = time;
     driving = true;
-    const ids = new Set(bots.map((b) => b.id));
-    const bossIds = new Set(bots.filter((b) => b.bossId).map((b) => b.id));
+    const participants = [...bots, ...manualBosses];
+    const ids = new Set(participants.map((b) => b.id));
+    const bossIds = new Set(participants.filter((b) => b.bossId).map((b) => b.id));
     const human = isHuman || ((p) => !ids.has(p.id));
     for (const [id, entry] of contacts) {
       const p = positions.get(id);
@@ -75,7 +77,7 @@ function createBotDriver(random = Math.random) {
     for (const id of states.keys()) if (!ids.has(id)) states.delete(id);
     let casts = 0;
     try {
-      for (const bot of bots) {
+      for (const bot of participants) {
         const actor = positions.get(bot.id);
         if (!actor?.health || time < (actor.bossArrivalAt || 0) + 700 || !canAct(actor)) continue;
         if (actor.botArrivalAt && time < actor.botArrivalAt + 1500) continue;
@@ -101,7 +103,7 @@ function createBotDriver(random = Math.random) {
             if (touchBoss(bot, victim, time) !== false)
               contacts.set(victim.id, { lifeId: victim.lifeId, until: time + contact.intervalMs });
           }
-          if (casts >= 1) continue;
+          if (bot.manual || casts >= 1) continue;
           const effect = driveBoss(bot, actor, target, time, state);
           if (effect) {
             try {

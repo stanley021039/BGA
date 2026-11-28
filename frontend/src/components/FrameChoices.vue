@@ -53,7 +53,9 @@ function select(id: string) {
       ><template #selection
         ><span class="barrage-frame-selection ui-choice-state">{{
           !prefs.canUse(option.id, kind)
-            ? '成就尚未解鎖'
+            ? option.achievementId
+              ? '成就尚未解鎖'
+              : '抽卡或碎片兌換解鎖'
             : selected === option.id
               ? '✓ 使用中'
               : '套用外觀'

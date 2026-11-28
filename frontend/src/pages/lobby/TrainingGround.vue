@@ -127,7 +127,7 @@ function randomize() {
       <div v-show="expanded" :id="controlsId" class="training-tools">
         <div class="training-quick-actions" role="group" aria-label="訓練管理">
           <UiButton label="招式設定" icon="settings" @click="dialog?.open()" />
-          <SceneNpcControls caption="陪練／Boss" />
+          <SceneNpcControls caption="陪練／Boss" @training-settings="settings = $event" />
         </div>
         <div class="training-energy" role="group" aria-label="能量補給">
           <div class="training-energy-meter">

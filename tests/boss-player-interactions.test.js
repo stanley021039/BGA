@@ -73,8 +73,8 @@ test('final cycle random ranges refresh immunity and bursts without refreshing h
     combat.advance(boss, cycle.immuneUntil);
     assert.equal(interactions.immune(boss, cycle.immuneUntil), false);
     assert.equal(interactions.cycleState(boss, cycle.immuneUntil).mode, 'dash');
-    assert.ok(Math.abs(authorSpeed(boss, cycle.immuneUntil) - 4.29) < 1e-9);
-    assert.ok(Math.abs(authorSpeed(boss, cycle.burstUntil) - 2.145) < 1e-9);
+    assert.ok(Math.abs(authorSpeed(boss, cycle.immuneUntil) - 5.445) < 1e-9);
+    assert.ok(Math.abs(authorSpeed(boss, cycle.burstUntil) - 2.7225) < 1e-9);
     combat.advance(boss, cycle.until);
     assert.equal(interactions.cycleState(boss, cycle.until).mode, 'immune');
     assert.equal(boss.bossFinalCycle.index, 1);

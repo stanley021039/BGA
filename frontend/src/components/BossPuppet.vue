@@ -10,16 +10,65 @@ import { createBossPuppet } from '../services/boss-puppet.js';
 import { bossPhaseArt, bossPhaseImage } from '../services/boss-body-art';
 import { warm } from '../services/preload';
 import { sizedImage } from '../services/image-size';
+import { playBossTransformation, bossTransformPlan } from '../services/boss-transformation.js';
+import AudioSettings from '../engines/audio-settings.js';
 const props = defineProps<{
   visitor: LobbyVisitor;
   src: string;
   active: boolean;
+  connected?: boolean;
   serverNow: number;
 }>();
 const phase = computed(() => props.visitor.bossPhase || 1);
+const displayPhase = ref(phase.value);
+let stopTransformation: (() => void) | null = null;
+let transformSound: HTMLAudioElement | undefined;
+watch(
+  [
+    () => props.visitor.bossId,
+    phase,
+    () => props.connected ?? props.active,
+    () => props.visitor.health === 0,
+  ],
+  ([id, next, active, dead], previous) => {
+    stopTransformation?.();
+    stopTransformation = null;
+    if (transformSound) AudioSettings?.stopEffect?.(transformSound);
+    transformSound = undefined;
+    const reveal = () => {
+      displayPhase.value = Number(next);
+    };
+    if (
+      !node.value ||
+      !active ||
+      dead ||
+      !previous ||
+      !previous[2] ||
+      previous[3] ||
+      id !== previous[0] ||
+      Number(next) <= Number(previous[1]) ||
+      !bossTransformPlan(String(id), Number(next), props.visitor.bossPhaseLockMs || 0)
+    ) {
+      reveal();
+      return;
+    }
+    beamIntent.value = null;
+    transformSound = AudioSettings?.playEffect?.(
+      Number(next) === 3 ? 'combat-critical' : 'combat-block',
+    );
+    stopTransformation = playBossTransformation(
+      node.value,
+      String(id),
+      Number(next),
+      props.visitor.bossPhaseLockMs || 0,
+      reveal,
+    );
+  },
+  { flush: 'post' },
+);
 const imageSize = ref<128 | 256 | 512>(256);
 const body = computed(() =>
-  bossPhaseImage(props.visitor.bossId || '', phase.value, props.src, imageSize.value),
+  bossPhaseImage(props.visitor.bossId || '', displayPhase.value, props.src, imageSize.value),
 );
 watch(
   () => [props.visitor.bossId, imageSize.value] as const,
@@ -125,6 +174,14 @@ function refresh() {
 onMounted(refresh);
 watch(() => [props.visitor, props.active, props.serverNow], refresh, { flush: 'post' });
 function visibility() {
+  if (document.hidden && transformSound) {
+    AudioSettings?.stopEffect?.(transformSound);
+    transformSound = undefined;
+  }
+  if (document.hidden) {
+    stopTransformation?.();
+    stopTransformation = null;
+  }
   if (document.hidden) beamIntent.value = null;
   puppet?.dispose();
   puppet = null;
@@ -132,6 +189,8 @@ function visibility() {
 }
 onMounted(() => document.addEventListener('visibilitychange', visibility));
 onBeforeUnmount(() => {
+  if (transformSound) AudioSettings?.stopEffect?.(transformSound);
+  stopTransformation?.();
   sizeObserver?.disconnect();
   beamIntent.value = null;
   puppet?.dispose();
@@ -149,7 +208,7 @@ onBeforeUnmount(() => {
       <BossMouths
         v-if="visitor.bossId === 'ghidorah-turtle'"
         :src="body"
-        :phase="phase"
+        :phase="displayPhase"
         :openings="mouthOpenings"
         :energy="beamPose?.energy || ''"
       />
@@ -166,7 +225,7 @@ onBeforeUnmount(() => {
           <BossMouths
             v-if="visitor.bossId === 'ghidorah-turtle' && part === 'head'"
             :src="body"
-            :phase="phase"
+            :phase="displayPhase"
             :openings="mouthOpenings"
             :energy="beamPose?.energy || ''"
           />
@@ -186,6 +245,15 @@ onBeforeUnmount(() => {
 .boss-puppet {
   display: inline-block;
   position: relative;
+}
+.boss-puppet :deep(.boss-transform-shell) {
+  position: absolute;
+  inset: -15%;
+  width: 130%;
+  height: 130%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 5;
 }
 .boss-puppet svg {
   display: block;

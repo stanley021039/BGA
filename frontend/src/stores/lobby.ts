@@ -300,7 +300,11 @@ export const useLobbyStore = defineStore('lobby', () => {
             streamLive &&
             snapshotRevision > receivedBefore &&
             monotonic() - receivedAt <= STREAM_FRESH_MS;
-          if (!live) {
+          // A gameplay refusal is an authoritative response, not a lost
+          // connection. Keep active effects alive while the next snapshot
+          // refreshes the movement lock (including an in-flight race).
+          const movementRefused = next && cause instanceof ApiError && cause.status === 409;
+          if (!live && !movementRefused) {
             connected.value = false;
             queued = null;
             destination.value = null;

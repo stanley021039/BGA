@@ -117,6 +117,12 @@ function setProfileSettings(db, userId, data) {
       avatar,
       pings,
       attackLoadout: getAttackSettings(db, userId),
+      ...(savedProfile(db, userId).bossControlGrantedAt
+        ? {
+            bossControlGrantedAt: savedProfile(db, userId).bossControlGrantedAt,
+            controlledBossId: savedProfile(db, userId).controlledBossId ?? null,
+          }
+        : {}),
       ...(savedProfile(db, userId).rewardCodePacks
         ? { rewardCodePacks: savedProfile(db, userId).rewardCodePacks }
         : {}),
@@ -154,6 +160,8 @@ function preserveAvatar(db, userId, appearance) {
     attackLoadout,
     starterRewardPack,
     rewardCodePacks,
+    bossControlGrantedAt,
+    controlledBossId,
   } = savedProfile(db, userId);
   return {
     ...appearance,
@@ -166,6 +174,9 @@ function preserveAvatar(db, userId, appearance) {
     ...(achievementResetAt ? { achievementResetAt } : {}),
     ...(achievementRewardCodeAt ? { achievementRewardCodeAt } : {}),
     ...(achievementRewardCodes ? { achievementRewardCodes } : {}),
+    ...(bossControlGrantedAt
+      ? { bossControlGrantedAt, controlledBossId: controlledBossId ?? null }
+      : {}),
   };
 }
 module.exports = {

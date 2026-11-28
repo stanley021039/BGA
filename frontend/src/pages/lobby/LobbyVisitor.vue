@@ -366,7 +366,14 @@ window.addEventListener('resize', positionBubble);
     :data-arena-team="team"
     :data-scene-boss="visitor.bossId || undefined"
     :data-arena-concealed="visitor.concealed || undefined"
-    :aria-label="self ? visitor.name + '（你），點一下發表情，C 鍵瞬移、R 鍵施放大招' : undefined"
+    :aria-label="
+      self
+        ? visitor.name +
+          (visitor.controlledBoss
+            ? '（你），點一下發表情，Q、E、R 施放 Boss 招式'
+            : '（你），點一下發表情，C 鍵瞬移、R 鍵施放大招')
+        : undefined
+    "
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"
@@ -428,6 +435,7 @@ window.addEventListener('resize', positionBubble);
         :visitor="visitor"
         :src="sizedImage(visitor.image, 256)"
         :active="connected && !still"
+        :connected="connected"
         :server-now="serverNow || Date.now()"
       />
       <img
@@ -487,7 +495,10 @@ window.addEventListener('resize', positionBubble);
       </svg>
     </div>
     <SceneHealth
-      v-if="visitor.maxHealth && (!visitor.bossId || visitor.health === 0)"
+      v-if="
+        visitor.maxHealth &&
+        (!visitor.bossId || visitor.health === 0 || (self && visitor.controlledBoss))
+      "
       :visitor="visitor"
       :self="self"
       :connected="connected"

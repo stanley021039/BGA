@@ -113,11 +113,11 @@ test('lobby bot arrival is authoritative, cancellable and uses the latest select
   assert.ok(!lobby.view(alice).visitors.some((v) => v.id === cancelled.id));
 });
 
-test('only walk and attack modes are accepted, with idle as the default', () => {
+test('only walk and attack modes are accepted, with active attack as the default', () => {
   const { lobby } = fixture();
   for (const mode of ['stationary', 'retaliate', 'unknown'])
     assert.throws(() => lobby.bots(alice, { action: 'add', mode }), { code: 'INVALID_SCENE_BOT' });
-  assert.equal(lobby.bots(alice, { action: 'add' }).bots[0].mode, 'idle');
+  assert.equal(lobby.bots(alice, { action: 'add' }).bots[0].mode, 'attack');
 });
 
 test('active bots still damage bosses while bosses prioritise the human player', () => {

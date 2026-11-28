@@ -68,6 +68,8 @@ export function useSceneControls(options: {
       !!pending[group(action)] ||
       seconds(action) > 0 ||
       (until.flight || 0) > now.value ||
+      (until.bossCast || 0) > now.value ||
+      (action === 'c' && own.value?.controlledBoss === true) ||
       (!(action in sceneDirections) && (until.seal || 0) > now.value) ||
       (action === 'c' &&
         ((until.teleportBlocked || 0) > now.value ||
@@ -111,6 +113,16 @@ export function useSceneControls(options: {
       if (!snapshot) return;
       const own = snapshot.visitors.find((v) => v.id === snapshot.selfId);
       until.flight = Date.now() + Math.max(0, (own?.heroFlightUntil || 0) - snapshot.serverNow);
+      until.bossCast = Date.now() + Math.max(0, (own?.bossCastUntil || 0) - snapshot.serverNow);
+      if (own?.controlledBoss) {
+        for (const slot of ['q', 'e', 'r'])
+          until[slot] =
+            Date.now() +
+            Math.max(
+              0,
+              (slot === 'r' ? own.bossRReadyAt || 0 : own.bossReadyAt || 0) - snapshot.serverNow,
+            );
+      }
       until.seal = Date.now() + Math.max(0, (own?.sealedUntil || 0) - snapshot.serverNow);
       until.teleportBlocked =
         Date.now() + Math.max(0, (own?.teleportBlockedUntil || 0) - snapshot.serverNow);

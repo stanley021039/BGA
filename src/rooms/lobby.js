@@ -310,7 +310,7 @@ function createLobby(
     () => mapChoices,
     arenaOptions.onFinish,
   );
-  const isBoss = (id) => !!sceneBots.get(id)?.bossId;
+  const isBoss = (id) => !!visitors.get(id)?.bossId || !!sceneBots.get(id)?.bossId;
   function bossPair(from, to, time) {
     if (!isBoss(from.id) && !isBoss(to.id)) return null;
     if (
@@ -339,20 +339,24 @@ function createLobby(
       if (barrages.length > 50) barrages.shift();
     },
   );
-  const combat = createSceneCombat(random, authorBonus, {
-    ...arena,
-    sourcePresent: (actor) => visitors.get(actor.id) === actor,
-    canHit: (from, to, time, effect) =>
-      bossPair(from, to, time) ?? arena.canHit(from, to, time, effect),
-    onDamage: (from, to, time, damage) => {
-      if (!isBoss(from.id) && !isBoss(to.id)) arena.onDamage(from, to, time, damage);
+  const combat = createSceneCombat(
+    random,
+    (id, actor) => !actor?.controlledBoss && authorBonus(id, actor),
+    {
+      ...arena,
+      sourcePresent: (actor) => visitors.get(actor.id) === actor,
+      canHit: (from, to, time, effect) =>
+        bossPair(from, to, time) ?? arena.canHit(from, to, time, effect),
+      onDamage: (from, to, time, damage) => {
+        if (!isBoss(from.id) && !isBoss(to.id)) arena.onDamage(from, to, time, damage);
+      },
+      onHit: (from, to, time, damage) => {
+        if (!isBoss(from.id) && !isBoss(to.id)) arena.onHit(from, to, time, damage);
+      },
+      onKill: rewardBossKill,
+      isObjective: (actor) => isBoss(actor.id),
     },
-    onHit: (from, to, time, damage) => {
-      if (!isBoss(from.id) && !isBoss(to.id)) arena.onHit(from, to, time, damage);
-    },
-    onKill: rewardBossKill,
-    isObjective: (actor) => isBoss(actor.id),
-  });
+  );
   const pickups = createLobbyPickups(now, random, arena, () => geometry.covers, expanded);
   const timeline = createAttackTimeline(
     combat,
@@ -366,6 +370,28 @@ function createLobby(
     attacks = [],
     receipts = new Map();
   let bossScope = null;
+  const playerBoss = require('./player-boss-control').createPlayerBossControl({
+    now,
+    enabled: !expanded,
+    training: !!arenaOptions.training,
+    settings: arenaOptions.playerBoss,
+    combat,
+    bossCombat,
+    actors: visitors,
+    events: attacks,
+    receipts,
+    bossCount: () =>
+      [...sceneBots.values()].filter((b) => b.bossId).length +
+      [...visitors.values()].filter((a) => a.controlledBoss).length,
+    canTarget: (from, to, time) =>
+      (bossPair(from, to, time) ?? arena.canPair(from.id, to.id)) && canSee(from.id, to.id, time),
+  });
+  function controlBoss(user, input) {
+    const actor = enter(user);
+    if (input && arena.active(actor.id))
+      throw new HttpError(409, 'BOSS_CONTROL_SCOPE', '請先離開競技場再切換 Boss');
+    return input ? playerBoss.configure(user, actor, input) : playerBoss.state(user, actor);
+  }
   function removeBot(id) {
     sceneBots.delete(id);
     visitors.delete(id);
@@ -412,6 +438,7 @@ function createLobby(
       if (time - visitor.seenAt > PRESENCE_MS) visitors.delete(id);
     timeline.advance(attacks, visitors.values(), time, advance);
     bossCombat.advance(attacks, visitors, time, advance);
+    for (const actor of visitors.values()) playerBoss.advance(actor, time);
     arena.finish(time, visitors);
     pickups.advance(visitors.values(), time);
     for (let i = attacks.length - 1; i >= 0; i--)
@@ -645,6 +672,7 @@ function createLobby(
     arena.attach(visitor);
     visitor.name = user.display_name;
     visitor.seenAt = time;
+    if (!sceneBots.has(user.id)) playerBoss.attach(visitor);
     if (ENTRANCE_EFFECTS.has(entrance)) visitor.entrance = entrance;
     return visitor;
   }
@@ -669,6 +697,9 @@ function createLobby(
     botDriver.drive({
       time,
       bots: [...sceneBots.values()],
+      manualBosses: [...visitors.values()]
+        .filter((a) => a.controlledBoss)
+        .map((a) => ({ id: a.id, bossId: a.bossId, manual: true })),
       positions: visitors,
       events: attacks,
       canAct: () => !arena.warmingUp(time),
@@ -771,15 +802,29 @@ function createLobby(
           id: visitor.id,
           name: visitor.name,
           archetype: visitor.archetype || null,
-          ...(sceneBots.get(visitor.id)?.bossId
+          ...(visitor.bossId
             ? {
-                bossId: sceneBots.get(visitor.id).bossId,
+                bossId: visitor.bossId,
                 bossPhase: bossPhase(visitor),
                 bossPhaseLockMs: Math.max(0, (visitor.bossPhaseLockUntil || 0) - time),
                 bossArrivalAt: visitor.bossArrivalAt || 0,
                 energy: visitor.bossCharge || 0,
                 energyMaximum: 100,
                 bossIntent: visitor.bossIntent?.until > time ? visitor.bossIntent : null,
+                ...(visitor.controlledBoss
+                  ? {
+                      controlledBoss: true,
+                      bossCastUntil: visitor.health > 0 ? visitor.bossCastUntil || 0 : 0,
+                      bossReadyAt: visitor.health > 0 ? visitor.bossReadyAt || 0 : 0,
+                      bossRReadyAt:
+                        visitor.health > 0
+                          ? (visitor.bossReadyAt || 0) + (visitor.bossRDelayMs || 0)
+                          : 0,
+                      bossLoadout: Object.fromEntries(
+                        bossFor(visitor.bossId).abilities.map((a) => [a.slot, a.id]),
+                      ),
+                    }
+                  : {}),
               }
             : {}),
           concealed: !!(
@@ -799,10 +844,12 @@ function createLobby(
           remainingMs: remainingMs(visitor, time),
           facing: visitor.facing,
           moving: Math.hypot(visitor.targetX - visitor.x, visitor.targetY - visitor.y) > 0.05,
-          image: sceneBots.has(visitor.id)
-            ? bossFor(sceneBots.get(visitor.id).bossId)?.image ||
-              botCharacters.find((c) => c.id === sceneBots.get(visitor.id).characterId)?.image
-            : portrait(visitor.id),
+          image: visitor.controlledBoss
+            ? bossFor(visitor.bossId).image
+            : sceneBots.has(visitor.id)
+              ? bossFor(sceneBots.get(visitor.id).bossId)?.image ||
+                botCharacters.find((c) => c.id === sceneBots.get(visitor.id).characterId)?.image
+              : portrait(visitor.id),
           emote: visitor.emote && visitor.emote.until > time ? visitor.emote : null,
           entrance: visitor.lockedEntrance || visitor.entrance || 'classic',
         })),
@@ -856,6 +903,8 @@ function createLobby(
       time = now();
     arena.assertStarted(visitor.id, time);
     advance(visitor, time);
+    if (visitor.controlledBoss && time < (visitor.bossCastUntil || 0))
+      throw new HttpError(409, 'SCENE_IMMOBILIZED', 'Boss 施放招式中，請稍候移動');
     combat.canMove(visitor, time);
     if (arena.active(visitor.id) && walls) {
       const dest = step
@@ -901,6 +950,11 @@ function createLobby(
     )
       throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
     const slot = input.slot || 'q';
+    if (self.controlledBoss) {
+      for (const actor of visitors.values()) advance(actor, time);
+      playerBoss.attack(self, input);
+      return view(user);
+    }
     const locked = arena.active(self.id) ? self.lockedAttackLoadout : null;
     const selected = locked ? locked[slot] : input.effect;
     if (slot === 'r' && !selected)
@@ -1075,6 +1129,8 @@ function createLobby(
   }
   function teleport(user, entrance) {
     const visitor = enter(user, entrance);
+    if (visitor.controlledBoss)
+      throw new HttpError(409, 'BOSS_TELEPORT_UNAVAILABLE', 'Boss 請使用方向鍵或搖桿移動');
     arena.assertStarted(visitor.id, now());
     combat.advance(visitor, now());
     combat.canTeleport(visitor, now());
@@ -1125,7 +1181,9 @@ function createLobby(
     return view(user);
   }
   function arenaCommand(user, input) {
-    enter(user);
+    const self = enter(user);
+    if (self.controlledBoss)
+      throw new HttpError(403, 'BOSS_CONTROL_SCOPE', '請先恢復普通角色再參加競技場');
     arena.view(visitors);
     arena.command(user, input, visitors, combat.reset);
     return view(user);
@@ -1240,7 +1298,11 @@ function createLobby(
       if (!spec) throw new HttpError(400, 'INVALID_BOSS', '請選擇有效Boss');
       const limit = expanded || arenaOptions.training ? 1 : lobbyLimits.bosses;
       if (
-        current().length >= limit ||
+        current().length +
+          (arenaOptions.training
+            ? 0
+            : [...visitors.values()].filter((a) => a.controlledBoss).length) >=
+          limit ||
         visitors.size + [...sceneBots.values()].filter((b) => b.spawnAt && !b.arrived).length >=
           MAX_VISITORS
       )
@@ -1287,7 +1349,8 @@ function createLobby(
     const self = enter(user, entrance);
     if (action === 'reset') {
       for (const actor of visitors.values()) {
-        combat.reset(actor, now());
+        if (actor.controlledBoss) playerBoss.reset(actor);
+        else combat.reset(actor, now());
         actor.energy = combatRules.energy.lobbyMaximum;
         actor.lastAttacks = {};
         actor.kda = { kills: 0, deaths: 0, assists: 0 };
@@ -1295,7 +1358,10 @@ function createLobby(
       botDriver.clear();
       attacks.length = 0;
     }
-    if (['refill', 'reset'].includes(action)) self.energy = combatRules.energy.lobbyMaximum;
+    if (['refill', 'reset'].includes(action)) {
+      self.energy = combatRules.energy.lobbyMaximum;
+      if (self.controlledBoss) self.bossCharge = 100;
+    }
     if (action === 'replay' || action === 'settings') self.teleportId++;
     return view(user);
   }
@@ -1309,6 +1375,7 @@ function createLobby(
     arena.view(visitors);
   }
   return {
+    controlBoss,
     bosses,
     training,
     bots,

@@ -21,14 +21,29 @@ test('every killed boss stays dead after the normal respawn deadline, including 
     const life = boss.lifeId;
     assert.equal(boss.health, 0, spec.id);
     assert.equal(boss.respawnAt, 0, spec.id + ' has no scheduled revival');
+    assert.equal(
+      combat.view(boss).bossTombstoneUntil,
+      4000,
+      'tombstone expires three seconds after the lethal hit',
+    );
     boss.respawnAt = 4000; // A dead actor created before the policy change.
     combat.advance(boss, 6000);
     combat.advance(boss, 60000);
     assert.equal(boss.health, 0, spec.id);
     assert.equal(boss.lifeId, life);
+    assert.equal(
+      combat.view(boss).bossTombstoneUntil,
+      4000,
+      'later polls do not restart the tombstone',
+    );
     combat.reset(boss, 61000);
     assert.ok(boss.health > 0);
     assert.equal(boss.lifeId, life + 1);
+    assert.equal(
+      combat.view(boss).bossTombstoneUntil,
+      undefined,
+      'manual reset clears the defeated view',
+    );
   }
 });
 test('ordinary players and NPCs still respawn automatically', () => {

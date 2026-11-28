@@ -2,7 +2,8 @@
 import { computed } from 'vue';
 import type { LobbyVisitor } from '../contracts/lobby';
 import UiPanel from './UiPanel.vue';
-const props = defineProps<{ visitors: LobbyVisitor[]; connected: boolean }>();
+import SceneEnergy from './SceneEnergy.vue';
+const props = defineProps<{ visitors: LobbyVisitor[]; connected: boolean; selfId?: string }>();
 const bosses = computed(() =>
   props.connected
     ? props.visitors
@@ -10,10 +11,12 @@ const bosses = computed(() =>
           (v) =>
             v.bossId &&
             Number.isFinite(v.health) &&
+            v.health! > 0 &&
             Number.isFinite(v.maxHealth) &&
             v.maxHealth! > 0,
         )
         .slice(0, 5)
+        .sort((a, b) => Number(b.id === props.selfId) - Number(a.id === props.selfId))
     : [],
 );
 const health = (boss: LobbyVisitor) => Math.max(0, Math.min(boss.maxHealth!, boss.health!));
@@ -69,6 +72,16 @@ const phaseLabel = (boss: LobbyVisitor) =>
             aria-hidden="true"
           />
         </div>
+        <div v-if="boss.id === selfId && boss.controlledBoss" class="boss-energy">
+          <div class="boss-energy-caption">
+            <strong>R 大招能量</strong>
+            <span
+              >{{ boss.energy || 0 }} / {{ boss.energyMaximum || 100 }} ·
+              {{ (boss.energy || 0) >= (boss.energyMaximum || 100) ? '蓄力已滿' : '蓄力中' }}</span
+            >
+          </div>
+          <SceneEnergy :visitor="boss" :connected="connected" size="panel" />
+        </div>
         <span v-if="health(boss) === 0" class="boss-health-defeated">已擊倒</span>
       </UiPanel>
     </div>
@@ -88,6 +101,19 @@ const phaseLabel = (boss: LobbyVisitor) =>
 }
 .boss-health-entry {
   min-inline-size: 0;
+}
+.boss-energy {
+  display: grid;
+  gap: var(--stitch-space-4);
+  margin-block-start: var(--stitch-space-8);
+}
+.boss-energy-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--stitch-space-8);
+  flex-wrap: wrap;
+  font-size: var(--stitch-text-label);
+  font-variant-numeric: tabular-nums;
 }
 .boss-health-hud.has-many-bosses {
   max-block-size: min(42dvh, 420px);

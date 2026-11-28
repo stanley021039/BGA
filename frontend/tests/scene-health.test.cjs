@@ -17,7 +17,8 @@ test('thin living HP bars track health without visible numbers; death and respaw
     { id: 'scene-health', inlineTemplate: true },
   ).content;
   const mod = { exports: {} },
-    timers = new Map();
+    timers = new Map(),
+    timeouts = new Map();
   let clock = 0;
   vm.runInNewContext(
     ts.transpileModule(source, {
@@ -49,6 +50,11 @@ test('thin living HP bars track health without visible numbers; death and respaw
         return 1;
       },
       clearInterval: (id) => timers.delete(id),
+      setTimeout: (fn, ms) => {
+        timeouts.set(1, { fn, ms });
+        return 1;
+      },
+      clearTimeout: (id) => timeouts.delete(id),
     }),
   );
   const visitor = vue.reactive({
@@ -107,14 +113,54 @@ test('thin living HP bars track health without visible numbers; death and respaw
     visitor.health = 0;
     await vue.nextTick();
     assert.equal(host.querySelector('.scene-energy'), null, 'no energy under a tombstone');
-    Object.assign(visitor, { bossId: 'colossal', respawnAt: 0, respawnRemainingMs: 0 });
+    Object.assign(visitor, {
+      bossId: 'colossal',
+      respawnAt: 0,
+      respawnRemainingMs: 0,
+      bossTombstoneRemainingMs: 3000,
+    });
     await vue.nextTick();
     assert.match(host.textContent, /不會自動重生/);
     assert.doesNotMatch(host.textContent, /秒後重生/);
     assert.equal(timers.size, 0, 'defeated bosses do not keep a respawn countdown timer');
+    assert.equal(timeouts.get(1).ms, 3000);
+    visitor.bossTombstoneRemainingMs = 400;
+    await vue.nextTick();
+    assert.equal(
+      timeouts.get(1).ms,
+      400,
+      'a later snapshot cannot extend the original death deadline',
+    );
+    timeouts.get(1).fn();
+    await vue.nextTick();
+    assert.equal(host.querySelector('.scene-tombstone'), null);
+    assert.equal(
+      host.querySelector('.scene-health-bar'),
+      null,
+      'expired bosses must not show an empty living HP bar',
+    );
+    visitor.bossTombstoneRemainingMs = 0;
+    await vue.nextTick();
+    assert.equal(timeouts.size, 0);
+    assert.equal(
+      host.querySelector('.scene-tombstone'),
+      null,
+      'an already expired death stays hidden on reconnect',
+    );
+    visitor.health = 11000;
+    await vue.nextTick();
+    assert.equal(host.querySelector('.scene-health-bar'), null, 'Boss HP stays in the shared HUD');
+    assert.ok(
+      host.querySelector('.scene-energy'),
+      'manual revival restores the controlled Boss energy display',
+    );
+    Object.assign(visitor, { health: 0, bossTombstoneRemainingMs: 3000 });
+    await vue.nextTick();
+    assert.ok(host.querySelector('.scene-tombstone'), 'a new death has its own tombstone');
   } finally {
     app.unmount();
     host.remove();
   }
   assert.equal(timers.size, 0);
+  assert.equal(timeouts.size, 0, 'unmount clears the bounded hide timer');
 });

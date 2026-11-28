@@ -17,29 +17,45 @@ const script = compileScript(parse(fs.readFileSync(file, 'utf8'), { filename: fi
 const mod = new Module(file, module);
 mod.filename = file;
 mod.paths = module.paths;
+const energyFile = path.resolve(__dirname, '../src/components/SceneEnergy.vue');
+const energyScript = compileScript(
+  parse(fs.readFileSync(energyFile, 'utf8'), { filename: energyFile }).descriptor,
+  { id: 'boss-energy', inlineTemplate: true, genDefaultAs: '__component' },
+);
+const energyModule = new Module(energyFile, module);
+energyModule.filename = energyFile;
+energyModule.paths = module.paths;
+energyModule._compile(
+  ts.transpileModule(energyScript.content, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText + '\nexports.default=__component;',
+  energyFile,
+);
 mod.require = (name) =>
-  name.endsWith('scene-rules.json')
-    ? { default: require('../../public/shared/scene-rules.json') }
-    : name === './UiPanel.vue'
-      ? {
-          default: {
-            setup:
-              (_, { slots }) =>
-              () =>
-                h('section', {}, slots.default?.()),
-          },
-        }
-      : require(name);
+  name === './SceneEnergy.vue'
+    ? energyModule.exports
+    : name.endsWith('scene-rules.json')
+      ? { default: require('../../public/shared/scene-rules.json') }
+      : name === './UiPanel.vue'
+        ? {
+            default: {
+              setup:
+                (_, { slots }) =>
+                () =>
+                  h('section', {}, slots.default?.()),
+            },
+          }
+        : require(name);
 mod._compile(
   ts.transpileModule(script.content, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText + '\nexports.default=__component;',
   file,
 );
-async function render(visitors, connected = true) {
+async function render(visitors, connected = true, selfId) {
   const context = {};
   await renderToString(
-    createSSRApp({ render: () => h(mod.exports.default, { visitors, connected }) }),
+    createSSRApp({ render: () => h(mod.exports.default, { visitors, connected, selfId }) }),
     context,
   );
   return parseHTML('<html><body>' + (context.teleports?.body || '') + '</body></html>').document;
@@ -60,22 +76,23 @@ test('boss HUD exposes separate named authoritative health bars, clamps values a
     boss('d'),
     boss('e'),
     boss('f'),
+    boss('g'),
   ]);
   const meters = [...doc.querySelectorAll('progress')];
   assert.equal(meters.length, 5);
   assert.equal(meters[0].getAttribute('value'), '1000');
   assert.equal(meters[0].getAttribute('max'), '1000');
   assert.equal(meters[0].getAttribute('aria-label'), 'Boss a的總生命值（三階段）');
-  assert.equal(meters[1].getAttribute('value'), '0');
+  assert.equal(meters[1].getAttribute('value'), '750');
   assert.equal(doc.querySelectorAll('.boss-health-divider').length, 10);
-  assert.match(doc.body.textContent, /已擊倒/);
-  assert.doesNotMatch(doc.body.textContent, /Boss f/);
+  assert.doesNotMatch(doc.body.textContent, /Boss b|已擊倒|Boss g/);
 });
 test('boss HUD clears on disconnect/removal and follows fresh health or respawn snapshots', async () => {
   for (const [visitors, connected] of [
     [[], true],
     [[boss('a')], false],
     [[boss('bad', NaN)], true],
+    [[boss('dead', 0)], true],
   ]) {
     assert.equal((await render(visitors, connected)).querySelectorAll('progress').length, 0);
   }
@@ -111,4 +128,36 @@ test('control immunity label has no countdown and five bars remain scrollable', 
   assert.match(doc.body.textContent, /免控/);
   assert.doesNotMatch(doc.body.textContent, /4.5|秒/);
   assert.ok(doc.querySelector('[tabindex="0"]'));
+});
+
+test('own controlled Boss shows a readable energy meter across all three phases and clears on death or role change', async () => {
+  for (const phase of [1, 2, 3])
+    for (const charge of [0, 50, 100]) {
+      const own = {
+        ...boss('self', (4 - phase) * 250),
+        controlledBoss: true,
+        bossPhase: phase,
+        energy: charge,
+        energyMaximum: 100,
+      };
+      const other = { ...boss('other'), controlledBoss: true, energy: 100, energyMaximum: 100 };
+      const doc = await render([other, own], true, 'self');
+      assert.equal(doc.querySelector('.boss-health-entry').getAttribute('data-boss-id'), 'self');
+      assert.equal(doc.querySelectorAll('.boss-energy').length, 1);
+      assert.match(doc.querySelector('.boss-energy').textContent, new RegExp(`${charge} / 100`));
+      assert.match(
+        doc.querySelector('.boss-energy').textContent,
+        charge === 100 ? /蓄力已滿/ : /蓄力中/,
+      );
+      assert.equal(
+        doc.querySelector('[aria-label="大招能量"]').getAttribute('aria-valuenow'),
+        String(charge),
+      );
+    }
+  for (const visitors of [
+    [{ ...boss('self', 0), controlledBoss: true }],
+    [boss('self')],
+    [boss('other')],
+  ])
+    assert.equal((await render(visitors, true, 'self')).querySelectorAll('.boss-energy').length, 0);
 });

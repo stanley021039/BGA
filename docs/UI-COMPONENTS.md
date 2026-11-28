@@ -1,5 +1,15 @@
 # 共用 UI 元件與 token
 
+操控自己的 Boss 時，BossHealthHud 將本人排在最前，生命條下方重用 SceneEnergy 的 panel 尺寸，顯示 R 大招能量、目前／上限及蓄力狀態；僅對 selfId 且 controlledBoss 顯示。三階段共用同一條權威蓄力，滿值稱「蓄力已滿」，不誤稱冷卻已結束。死亡、斷線、恢復普通角色時移除。
+
+SceneNpcControls 的自己分頁，在大廳與訓練場沿 SceneBossControl 的共用表單選擇已解鎖 Boss，使用 UiPanel／UiField／UiButton／UiList／StatusSlot；普通角色配裝保持獨立。SceneKda 的增益列採單列，桌機最多48rem且受安全區限制，窄螢幕局部橫向捲動，分組、說明與鍵盤焦點保留。玩家Boss仍用共用Boss血條，自己保留能量條；規格見[Boss操控](specs/PLAYER-BOSS-CONTROL-447.md)及[增益列](specs/SCENE-STATUS-ROW-448.md)。
+
+CollectionCard 的圖片框、名稱、來源與操作群組置中；內建圖片透明留白在框內補正，不移動圓形頭像外框。手機與桌機的圖示操作均以44px格置中。FrameChoices 的未取得提示按 achievementId 區分成就與抽卡／碎片兌換，兩種風格共用；兌換碼結果沿 GachaRewardCard，compact 模式一次只啟用一套特效，關閉 dialog／離頁停止預覽及語音。
+
+BossPuppet 的換階包覆共用 boss-transformation，依十三種 Boss 材質畫程序 SVG；二階 660ms、最終 780ms，揭示前保留舊造型。connected 與 active 分開，音效保留獨立偏好；取消後必須揭示最新造型，不留下舊身形。規格與資源上限見 [Boss 短換階](specs/BOSS-TRANSFORMATION-442.md)。
+
+SceneNpcControls 的「自己」分頁沿 SceneSelfPanel 共用表單：UiPanel、UiField、UiButton 與 StatusSlot，Q／E 同列、R 通欄，窄容器改單欄，長選項沿 selectedLabel 完整換行。只有選取自己分頁時載入，對戰中鎖定；訓練場使用獨立設定，不改永久配裝。此分頁不掛載卡片預覽或特效動畫。
+
 攻擊設定的 Q／E／R 目前特效卡共用三列 subgrid（名稱、預覽、重播），同列名稱區依最長內容自然增高，預覽與按鈕對齊。窄畫面按原欄寬重排，長名稱完整換行，不以截斷文字換取等高。
 
 手機等待室的開局／就緒／藥材書捷徑共用RoomWaitingAction，放在等待內容最前方；1180px以下包含短橫向，使用UiLink及sticky布局，不能藏在高插畫之後。錨點預留44px操作與捲動邊距；捷徑只導向既有操作，依原權限及準備狀態提供，不繞過房主權限或郎中藥材書流程。桌機不額外增加捷徑。
@@ -40,7 +50,7 @@ Boss後兩階段的局部外觀共用BossPhaseDetails及boss-phase-art資料，�
 
 競技場同一入口保留Boss管理（最多一隻），機器人行為固定主動攻擊；戰鬥中機器人設定鎖定。Boss登場用獨立WARNING圖與共用UiNotice做五秒預告，關閉動畫也保留必要警告；落地特效依權威時點清除。獵王祝福沿SceneKda既有狀態圖示列，瞬移耗能與按鍵／觸控鎖以伺服器teleportCost同步，不各自寫固定能量門檻。
 
-BossHealthHud共用於大廳與競技場，透過body層固定生命長條，獨立於角色與鏡頭。UiPanel density="hud"採半透明底、名稱與權威HP數字；每隻Boss用一條16px原生progress紅色填量，中間兩道刻線分成三段，顯示第一階段／二階段／最終階段；鎖血僅顯示「鎖血」，免控僅顯示「免控」，不顯示秒數。大廳最多五組，競技場一組；超過兩組時血條區可鍵盤聚焦捲動，不裁掉其餘Boss。總生命顯示完整千分位數字，與傷害跳字使用相同原始單位，不單獨除以unitScale。桌機血條區寬度最多720px、水平置中；手機戰鬥血條放在左上操作區之下。斷線、移除及離開場景清除；零血顯示已擊倒，重生沿新快照回填。不增加逐條計時器或生命推測動畫，不攔截背景點擊，移除Boss身旁重複小血條。
+BossHealthHud共用於大廳與競技場，透過body層固定生命長條，獨立於角色與鏡頭。UiPanel density="hud"採半透明底、名稱與權威HP數字；每隻Boss用一條16px原生progress紅色填量，中間兩道刻線分成三段，顯示第一階段／二階段／最終階段；鎖血僅顯示「鎖血」，免控僅顯示「免控」，不顯示秒數。大廳最多五組，競技場一組；超過兩組時血條區可鍵盤聚焦捲動，不裁掉其餘Boss。總生命顯示完整千分位數字，與傷害跳字使用相同原始單位，不單獨除以unitScale。桌機血條區寬度最多720px、水平置中；手機戰鬥血條放在左上操作區之下。斷線、移除及離開場景清除；零血立即隱藏該 Boss 的血條；手動重置後沿新快照回填。不增加逐條計時器或生命推測動畫，不攔截背景點擊，移除Boss身旁重複小血條。
 
 只顯示背景與角色模式以body層保留操作：左上Esc恢復鈕沿共用UiButton；SceneKda（含加成）沿一般大廳的位置與無額外面板樣式，SceneNpcControls放右下半透明UiPanel並可最小化；不解除原大廳的inert。小螢幕把恢復介面、戰鬥資訊及Boss血條分區，管理彈窗仍走UiDialog的body傳送層。關閉動態不停止戰績／狀態資料同步，也不能隱藏必要管理入口。
 
@@ -136,7 +146,7 @@ SiteHeader C03 在大廳、設定、收藏庫、成就收藏冊及遊戲房間�
 
 元件都在 `frontend/src/components/`。缺元件或缺變體時擴充這些元件並更新本頁，不在頁面另做一份。
 
-`ImageChoiceGrid` 依可用容器寬度自動換欄，預設最小欄寬 8.5rem；宿主可用幾何變數 `--stitch-choice-min-inline` 調整（設定頁 7rem），不要另鎖桌機／手機欄數而壓窄選擇卡。圖片、名稱與選取狀態的槽位仍由共用元件控制。
+`UiChoiceCard` 可透過 `contentAlign="center"` 將圖片卡名稱與狀態置中；預設對齊不變。`ImageChoiceGrid` 統一啟用此選項，並依內建圖片可見範圍補正透明留白；圖片載入與容器縮放時重新計算。`ImageChoiceGrid` 依可用容器寬度自動換欄，預設最小欄寬 8.5rem；宿主可用幾何變數 `--stitch-choice-min-inline` 調整（設定頁 7rem），不要另鎖桌機／手機欄數而壓窄選擇卡。圖片、名稱與選取狀態的槽位仍由共用元件控制。
 
 字體由 `frontend/src/runtime/mount-page.ts` 單一匯入 `frontend/src/styles/noto-sans-tc.css`：108 個 Google Fonts 官方 Noto Sans TC 可變 WOFF2 Unicode 分片放在 `frontend/src/assets/fonts/noto-sans-tc/`，隨 Vite 雜湊打包並自託管，不向 Google 字體服務發出執行期請求。字重範圍 100–900，共用正文使用 400、標題／按鈕使用 700。這是含繁中與拉丁字元的官方網頁子集，不代表全 Unicode CJK 覆蓋；缺字沿既有 sans-serif 字體堆疊回退。
 

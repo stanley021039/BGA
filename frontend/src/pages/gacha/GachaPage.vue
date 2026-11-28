@@ -1223,7 +1223,7 @@ const newCount = computed(() =>
               >本次結算餘額：{{ number(result.wallet.coins) }} 聖潔石／{{
                 number(result.wallet.fragments)
               }}
-              碎片</p
+              碎片／{{ number(store.state?.rewardTickets ?? 0) }} 張抽卡券</p
             >
             <div class="gacha-buttons gacha-reveal-actions">
               <template v-if="repeatPool">
@@ -1237,6 +1237,13 @@ const newCount = computed(() =>
                   variant="primary"
                   :disabled="locked || (store.state?.wallet.coins ?? 0) < 1000"
                   @click="draw(10, repeatPool)"
+                />
+                <UiButton
+                  label="再十連抽 · 10 張抽卡券"
+                  icon="gift"
+                  :disabled="locked || (store.state?.rewardTickets ?? 0) < 10"
+                  :pending="store.pending"
+                  @click="draw(10, repeatPool, false, false, true)"
                 />
               </template>
               <UiButton

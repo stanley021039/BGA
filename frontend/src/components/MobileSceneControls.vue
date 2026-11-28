@@ -4,6 +4,7 @@ import UiButton from './UiButton.vue';
 import UiPanel from './UiPanel.vue';
 import StatusSlot from './StatusSlot.vue';
 import { attackEffects, useAttackLoadoutStore } from '../stores/attack-loadout';
+import bossAbilities from '../../../public/shared/boss-abilities.json';
 import {
   sceneInputBlocked,
   type SceneAction,
@@ -84,6 +85,7 @@ const loadoutReady = computed(() => !!props.lockedLoadout || loadout.ready);
 function effect(slot: 'q' | 'e' | 'r') {
   return (
     attackEffects.find((effect) => effect.id === activeLoadout.value[slot])?.label ||
+    bossAbilities.find((effect) => effect.id === activeLoadout.value[slot])?.name ||
     (loadoutReady.value ? '尚未配裝' : '載入配裝中')
   );
 }
@@ -170,7 +172,9 @@ onBeforeUnmount(() => {
         @click.stop
       >
         <UiButton
-          v-for="slot in ['c', 'q', 'e', 'r'] as const"
+          v-for="slot in disableTeleport
+            ? (['q', 'e', 'r'] as const)
+            : (['c', 'q', 'e', 'r'] as const)"
           :key="slot"
           :label="slot === 'c' ? 'C 瞬移' : slot.toUpperCase() + ' ' + effect(slot)"
           :caption="slot.toUpperCase()"
